@@ -49,10 +49,12 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         if (serverHarness == null) {
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
-            serverHarness.startServer();
+            serverHarness.startServer(getServerEnvironment());
             server = serverHarness.getServer();
         }
     }
+
+    protected Map<String, String> getServerEnvironment() { return null; }
 
     @AfterClass
     public static void stopServer () throws Exception {
