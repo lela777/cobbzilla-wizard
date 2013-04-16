@@ -13,11 +13,12 @@ public class RandomUtil {
     }
 
     public static String randomEmail () {
-        return randomName(5)+System.currentTimeMillis()+ TEST_EMAIL_SUFFIX;
+        return randomName(5) + System.currentTimeMillis() + TEST_EMAIL_SUFFIX;
     }
     public static String randomEmail (int length) {
         final String baseEmail = System.currentTimeMillis() + TEST_EMAIL_SUFFIX;
-        return randomName(length-baseEmail.length()) + baseEmail;
+        final int emailLength = Math.max(10, length - baseEmail.length());
+        return randomName(emailLength) + baseEmail;
     }
 
 }
