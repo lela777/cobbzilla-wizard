@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.common.util;
+package org.cobbzilla.wizard.util;
 
 import lombok.AllArgsConstructor;
 

@@ -12,7 +12,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.wizard.common.util.RestResponse;
 import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
 import org.cobbzilla.wizard.exceptionmappers.InvalidEntityExceptionMapper;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -20,6 +19,7 @@ import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
+import org.cobbzilla.wizard.util.RestResponse;
 import org.junit.AfterClass;
 import org.junit.Before;
 
