@@ -44,13 +44,17 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
     protected static RestServer server = null;
 
+    public void beforeServerStart () throws Exception {}
+
     @Before
     public synchronized void startServer() throws Exception {
         if (serverHarness == null) {
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
-            serverHarness.startServer(getServerEnvironment());
+            serverHarness.init(getServerEnvironment());
             server = serverHarness.getServer();
+            beforeServerStart();
+            serverHarness.startServer();
         }
     }
 
