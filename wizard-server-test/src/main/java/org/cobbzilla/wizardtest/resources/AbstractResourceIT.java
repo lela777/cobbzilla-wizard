@@ -20,7 +20,7 @@ import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.util.RestResponse;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
 
 import java.io.IOException;
@@ -45,10 +45,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static RestServer server = null;
 
     public void beforeServerStart () throws Exception {}
+    public boolean shouldCacheServer () { return true; }
 
     @Before
     public synchronized void startServer() throws Exception {
-        if (serverHarness == null) {
+        if (serverHarness == null || !shouldCacheServer()) {
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
             serverHarness.init(getServerEnvironment());
@@ -60,12 +61,12 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Map<String, String> getServerEnvironment() { return null; }
 
-    @AfterClass
-    public static void stopServer () throws Exception {
-//        if (server != null) {
-//            server.stopServer();
-//            server = null;
-//        }
+    @After
+    public void stopServer () throws Exception {
+        if (server != null && !shouldCacheServer()) {
+            server.stopServer();
+            server = null;
+        }
     }
 
     protected Map<String, ConstraintViolationBean> mapViolations(String json) throws Exception {
