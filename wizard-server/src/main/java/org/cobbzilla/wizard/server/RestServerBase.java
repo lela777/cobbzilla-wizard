@@ -129,6 +129,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             serverHarness.addConfiguration(new FileConfigurationSource(new File(arg)));
         }
 
+        serverHarness.init(System.getenv());
         final S server = serverHarness.getServer();
         server.startServer();
 

@@ -13,9 +13,8 @@ public class MqConfig {
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired private HasMqConfiguration configuration;
 
-    @Bean
-    public MqClient mqClient() {
-        return new MqClientFactory().createClient(configuration.getMq().getClientClass(), configuration.getMq().getProperties());
+    @Bean MqClientFactory mqClientFactory () {
+        return new MqClientFactory(configuration.getMq().getClientClass(), configuration.getMq().getProperties());
     }
 
 }
