@@ -90,6 +90,19 @@
             <version>${org.log4j.version}</version>
         </dependency>
 
+        <!-- mongoDB -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${org.mongodb.version}</version>
+        </dependency>
+        <!-- Morphia Jars  -->
+        <dependency>
+            <groupId>com.github.jmkgreen.morphia</groupId>
+            <artifactId>morphia</artifactId>
+            <version>${morphia.version}</version>
+        </dependency>
+
         <!-- For PSQLExceptionMapper -->
         <dependency>
             <groupId>${jdbcDriver.postgres.groupId}</groupId>
