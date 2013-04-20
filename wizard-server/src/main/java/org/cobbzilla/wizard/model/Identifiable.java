@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.beanutils.BeanUtils;
@@ -8,7 +9,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import javax.persistence.*;
 import java.util.UUID;
 
-@MappedSuperclass
+@MappedSuperclass @EqualsAndHashCode(of={"id"})
 public class Identifiable {
 
     @Id
@@ -46,21 +47,4 @@ public class Identifiable {
     @Column(updatable=false, nullable=false)
     @Getter @Setter
     protected long ctime = System.currentTimeMillis();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Identifiable)) return false;
-
-        Identifiable that = (Identifiable) o;
-
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
 }

@@ -2,7 +2,6 @@ package org.cobbzilla.wizard.resources;
 
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.Identifiable;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -37,8 +36,10 @@ public abstract class AbstractResource<T extends Identifiable> {
     @GET
     public Response find(@PathParam(UUID_PARAM) String uuid) {
         final T thing = dao().findByUuid(uuid);
-        return thing == null ? ResourceUtil.notFound(uuid) : Response.ok(thing).build();
+        return thing == null ? ResourceUtil.notFound(uuid) : Response.ok(postProcess(thing)).build();
     }
+
+    protected T postProcess(T thing) { return thing; }
 
     @Path("/"+UUID)
     @PUT

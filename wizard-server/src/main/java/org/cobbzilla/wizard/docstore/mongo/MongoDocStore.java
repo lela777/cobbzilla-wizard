@@ -8,31 +8,30 @@ import lombok.Getter;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.docstore.DocStore;
 import org.cobbzilla.wizard.server.config.DocStoreConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public class MongoDocStore<T> implements DocStore<T> {
+public abstract class MongoDocStore<T extends MongoDocBase> implements DocStore<T> {
 
-    @Autowired private DocStoreConfiguration configuration;
+    protected abstract DocStoreConfiguration configuration();
 
     private Class<T> clazz;
 
     @Getter(lazy=true) private final Datastore datastore = initDatastore();
 
     private Datastore initDatastore () {
-        this.clazz = (Class<T>) ReflectionUtil.getTypeParameter(getClass());
+        this.clazz = ReflectionUtil.getTypeParameter(getClass(), MongoDocBase.class);
         Mongo mongo;
         try {
-            mongo = new Mongo(configuration.getHost(), configuration.getPort());
+            mongo = new Mongo(configuration().getHost(), configuration().getPort());
         } catch (Exception e) {
             throw new IllegalArgumentException("Error instantiating MongoDocStore<"+clazz.getSimpleName()+">: "+e, e);
         }
         Morphia morphia = new Morphia();
-        for (String entityPackage : configuration.getEntityPackages()) {
+        for (String entityPackage : configuration().getEntityPackages()) {
             morphia.mapPackage(entityPackage);
         }
-        Datastore datastore = morphia.createDatastore(mongo, configuration.getDbName());
+        Datastore datastore = morphia.createDatastore(mongo, configuration().getDbName());
         datastore.ensureIndexes();
         return datastore;
     }
@@ -40,12 +39,24 @@ public class MongoDocStore<T> implements DocStore<T> {
     @Override
     public T findOne(String field, Object value) { return getDatastore().find(clazz, field, value).get(); }
 
+    public T findByUuid (String uuid) { return findOne(MongoDocBase.UUID, uuid); }
+
     @Override
     public List<T> findByFilter(String field, Object value) {
         return getDatastore().createQuery(clazz).field(field).equal(value).asList();
     }
 
     @Override public void save(T thing) { getDatastore().save(thing); }
+
+    public void saveOrUpdate (T thing) {
+        final T found = findByUuid(thing.getUuid());
+        if (found == null) {
+            save(thing);
+        } else {
+            thing.setId(found.getId());
+            getDatastore().merge(thing);
+        }
+    }
 
     @Override public void delete(Object id) { getDatastore().delete(clazz, id); }
 

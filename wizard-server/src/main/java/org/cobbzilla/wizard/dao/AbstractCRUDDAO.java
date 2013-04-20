@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.criterion.Restrictions;
 
 import javax.validation.Valid;
@@ -33,18 +32,14 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return findByUuid(uuid) != null;
     }
 
-//    @Transactional
     public E create(@Valid E entity) {
         entity.beforeCreate();
-//        checkDuplicate(entity);
         entity.setId((Long) hibernateTemplate.save(checkNotNull(entity)));
         return entity;
     }
 
-//    @Transactional
     public E update(@Valid E entity) {
-//        checkDuplicate(entity);
-        return (E) hibernateTemplate.merge(checkNotNull(entity));
+        return hibernateTemplate.merge(checkNotNull(entity));
     }
 
     public E findByUniqueField(String field, Object value) {
