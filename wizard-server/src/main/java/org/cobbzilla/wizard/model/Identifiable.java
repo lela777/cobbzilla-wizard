@@ -7,7 +7,10 @@ import lombok.Setter;
 import org.apache.commons.beanutils.BeanUtils;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.util.UUID;
+
+import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @MappedSuperclass @EqualsAndHashCode(of={"id"})
 public class Identifiable {
@@ -16,12 +19,11 @@ public class Identifiable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     @Column(unique=true, nullable=false, updatable=false)
-    @Getter @Setter
-    protected Long id;
+    @Getter @Setter protected Long id;
 
-    @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
-    @Getter @Setter
-    private volatile String uuid = null;
+    @Column(unique=true, updatable=false, nullable=false, length= UUID_MAXLEN)
+    @Size(max=UUID_MAXLEN, message=ERR_UUID_LENGTH)
+    @Getter @Setter private volatile String uuid = null;
 
     public void beforeCreate() {
         if (uuid != null) throw new IllegalStateException("uuid already initialized");
@@ -45,6 +47,5 @@ public class Identifiable {
     }
 
     @Column(updatable=false, nullable=false)
-    @Getter @Setter
-    protected long ctime = System.currentTimeMillis();
+    @Getter @Setter protected long ctime = System.currentTimeMillis();
 }

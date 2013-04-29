@@ -7,6 +7,7 @@ public class BasicConstraintConstants {
 
     public static final String ERR_UUID_UNIQUE = "{err.uuid.unique}";
     public static final String ERR_UUID_EMPTY = "{err.uuid.empty}";
+    public static final String ERR_UUID_LENGTH = "{err.uuid.length}";
 
     public static final String ERR_SORT_ORDER_INVALID = "{err.sortOrder.invalid}";
 

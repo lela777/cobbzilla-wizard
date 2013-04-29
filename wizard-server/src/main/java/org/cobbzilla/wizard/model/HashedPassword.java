@@ -5,12 +5,13 @@ import lombok.Setter;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.security.bcrypt.BCrypt;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
-import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
+
+import org.cobbzilla.wizard.validation.HasValue;
 
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
