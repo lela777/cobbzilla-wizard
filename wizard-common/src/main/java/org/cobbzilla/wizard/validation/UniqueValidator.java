@@ -43,7 +43,7 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object> {
     public boolean isValid(Object object, ConstraintValidatorContext context) {
 
         final Class<?> entityClass;
-            if (object instanceof EntityMappableResource) {
+        if (object instanceof EntityMappableResource) {
             entityClass = ((EntityMappableResource) object).getEntityClass();
         } else {
             entityClass = object.getClass();
@@ -58,7 +58,7 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object> {
         final StringBuilder queryString
                 = new StringBuilder().append("from ").append(entityClass.getSimpleName())
                 .append(" x where x.").append(persist).append("=:").append(PARAM_FIELD);
-        if (idValue != null) queryString.append(" and x.id != :").append(PARAM_ID);
+        if (idValue != null) queryString.append(" and x.").append(id).append(" != :").append(PARAM_ID);
 
         final List found = hibernateTemplate.findByNamedParam(queryString.toString(), params, values);
         return (found == null || found.size() == 0);

@@ -5,7 +5,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
-public abstract class ChildEntity<C, P> extends Identifiable {
+public abstract class ChildEntity<C, P> extends IdentifiableBase {
 
     public abstract P getParent ();
     public abstract void setParent (P parent);

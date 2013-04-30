@@ -38,6 +38,10 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return entity;
     }
 
+    public E createOrUpdate(@Valid E entity) {
+        return (entity.getId() == null) ? create(entity) : update(entity);
+    }
+
     public E update(@Valid E entity) {
         return hibernateTemplate.merge(checkNotNull(entity));
     }

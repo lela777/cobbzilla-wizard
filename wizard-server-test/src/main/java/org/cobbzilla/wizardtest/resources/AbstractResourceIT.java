@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
 import org.cobbzilla.wizard.exceptionmappers.InvalidEntityExceptionMapper;
@@ -79,7 +80,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected void assertExpectedViolations(RestResponse response, String[] violationMessages) throws Exception{
-        assertEquals(InvalidEntityExceptionMapper.UNPROCESSABLE_ENTITY, response.status);
+        assertEquals(HttpStatusCodes.UNPROCESSABLE_ENTITY, response.status);
         final Map<String, ConstraintViolationBean> violations = mapViolations(response.json);
         assertEquals(violationMessages.length, violations.size());
         for (String message : violationMessages) {
@@ -89,28 +90,38 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected RestResponse doGet(String path) throws Exception {
         HttpClient client = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet(server.getClientUri()+path);
+        final String url = getUrl(path, server.getClientUri());
+        HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
     }
 
     protected RestResponse doPost(String path, String json) throws Exception {
         HttpClient client = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(server.getClientUri()+path);
+        final String url = getUrl(path, server.getClientUri());
+        HttpPost httpPost = new HttpPost(url);
         if (json != null) {
             httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
-            log.info("doPost sending JSON="+json);
+            log.info("doPost("+url+") sending JSON=" + json);
         }
         return getResponse(client, httpPost);
     }
 
     protected RestResponse doPut(String path, String json) throws Exception {
         HttpClient client = new DefaultHttpClient();
-        HttpPut httpPut = new HttpPut(server.getClientUri()+path);
+        final String url = getUrl(path, server.getClientUri());
+        HttpPut httpPut = new HttpPut(url);
         if (json != null) {
             httpPut.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
             log.info("doPut sending JSON="+json);
         }
         return getResponse(client, httpPut);
+    }
+
+    private String getUrl(String path, String clientUri) {
+        if (path.startsWith("/") && clientUri.endsWith("/")) {
+            path = path.substring(1);
+        }
+        return clientUri + path;
     }
 
     protected RestResponse getResponse(HttpClient client, HttpRequestBase request) throws IOException {
