@@ -1,5 +1,6 @@
 package org.cobbzilla.wizardtest.resources;
 
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -14,7 +15,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
-import org.cobbzilla.wizard.exceptionmappers.InvalidEntityExceptionMapper;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
@@ -62,6 +62,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Map<String, String> getServerEnvironment() { return null; }
 
+    protected HttpClient getHttpClient () {
+        return new DefaultHttpClient();
+    }
+
     @After
     public void stopServer () throws Exception {
         if (server != null && !shouldCacheServer()) {
@@ -89,16 +93,16 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected RestResponse doGet(String path) throws Exception {
-        HttpClient client = new DefaultHttpClient();
+        HttpClient client = getHttpClient();
         final String url = getUrl(path, server.getClientUri());
-        HttpGet httpGet = new HttpGet(url);
+        @Cleanup("releaseConnection") HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
     }
 
     protected RestResponse doPost(String path, String json) throws Exception {
-        HttpClient client = new DefaultHttpClient();
+        HttpClient client = getHttpClient();
         final String url = getUrl(path, server.getClientUri());
-        HttpPost httpPost = new HttpPost(url);
+        @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
         if (json != null) {
             httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
             log.info("doPost("+url+") sending JSON=" + json);
@@ -107,9 +111,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected RestResponse doPut(String path, String json) throws Exception {
-        HttpClient client = new DefaultHttpClient();
+        HttpClient client = getHttpClient();
         final String url = getUrl(path, server.getClientUri());
-        HttpPut httpPut = new HttpPut(url);
+        @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
         if (json != null) {
             httpPut.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
             log.info("doPut sending JSON="+json);

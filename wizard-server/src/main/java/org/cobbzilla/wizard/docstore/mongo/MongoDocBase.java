@@ -22,7 +22,8 @@ public class MongoDocBase {
     @Size(max= BasicConstraintConstants.UUID_MAXLEN)
     private String uuid;
 
-    @NotNull @JsonIgnore @Getter @Setter
+    @NotNull @Setter
     private long ctime = System.currentTimeMillis();
+    @JsonIgnore public long getCtime () { return ctime; }
 
 }
