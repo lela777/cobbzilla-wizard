@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.security.bcrypt.BCrypt;
@@ -14,8 +15,12 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
-@Embeddable
+@Embeddable @NoArgsConstructor
 public class HashedPassword {
+
+    public HashedPassword (String password) {
+        resetPassword(password);
+    }
 
     @HasValue(message=ERR_HASHED_PASSWORD_EMPTY)
     @Size(max=HASHEDPASSWORD_MAXLEN, message=ERR_HASHED_PASSWORD_LENGTH)
