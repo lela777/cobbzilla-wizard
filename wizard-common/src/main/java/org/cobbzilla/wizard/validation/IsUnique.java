@@ -19,9 +19,9 @@ public @interface IsUnique {
     String CREATE_ONLY = "-create-only-";
     String SAME_AS_FIELD = "-same-as-field-";
 
-    String id () default CREATE_ONLY;
-    String field ();
-    String persist () default SAME_AS_FIELD;
+    String idFieldName () default CREATE_ONLY;
+    String uniqueFieldName ();
+    String daoBean ();
 
     Class<?>[] groups() default {};
 
@@ -29,12 +29,10 @@ public @interface IsUnique {
 
     String message() default "{err.notUnique}";
 
-
     @Target({TYPE, ANNOTATION_TYPE})
     @Retention(RUNTIME)
     @Documented
-    @interface List
-    {
+    @interface List {
         IsUnique[] value();
     }
 
