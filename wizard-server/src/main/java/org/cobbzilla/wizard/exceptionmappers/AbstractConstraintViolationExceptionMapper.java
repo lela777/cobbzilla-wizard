@@ -1,21 +1,19 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.wizard.validation.ValidationMessages;
+
 import javax.validation.ConstraintViolation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 
 public abstract class AbstractConstraintViolationExceptionMapper<E extends Exception> {
 
-    public static final String VALIDATION_MESSAGES = "ValidationMessages";
-
-    public static final int UNPROCESSABLE_ENTITY = 422;
-
     protected Response buildResponse(E e) {
-        return Response.status(UNPROCESSABLE_ENTITY)
+        return Response.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
                 .type(MediaType.APPLICATION_JSON)
                 .entity(exception2json(e))
                 .build();
@@ -26,7 +24,7 @@ public abstract class AbstractConstraintViolationExceptionMapper<E extends Excep
     }
 
     protected ConstraintViolationBean mapGenericExceptionToConstraintViolationBean(E e) {
-        return new ConstraintViolationBean(scrubMessage(e.getMessage()), translateMessage(e.getMessage()), getInvalidValue(e));
+        return new ConstraintViolationBean(scrubMessage(e.getMessage()), ValidationMessages.translateMessage(e.getMessage()), getInvalidValue(e));
     }
 
     protected List<ConstraintViolationBean> getConstraintViolationBeans(List<ConstraintViolation> violations) {
@@ -42,14 +40,5 @@ public abstract class AbstractConstraintViolationExceptionMapper<E extends Excep
     }
 
     protected String getInvalidValue(Exception e) { return null; }
-
-    protected String translateMessage(String messageTemplate) {
-
-        // strip leading/trailing curlies if they are there
-        if (messageTemplate.startsWith("{")) messageTemplate = messageTemplate.substring(1);
-        if (messageTemplate.endsWith("}")) messageTemplate = messageTemplate.substring(messageTemplate.length()-1);
-
-        return ResourceBundle.getBundle(VALIDATION_MESSAGES).getString(messageTemplate);
-    }
 
 }

@@ -38,8 +38,23 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return entity;
     }
 
+    public E createOrUpdate(@Valid E entity) {
+        return (entity.getId() == null) ? create(entity) : update(entity);
+    }
+
     public E update(@Valid E entity) {
         return hibernateTemplate.merge(checkNotNull(entity));
+    }
+
+    public void delete(Long id) {
+        E found = get(checkNotNull(id));
+        if (found != null) {
+            hibernateTemplate.delete(found);
+        }
+    }
+
+    public void delete(String uuid) {
+        delete(checkNotNull(findByUuid(uuid).getId()));
     }
 
     public E findByUniqueField(String field, Object value) {

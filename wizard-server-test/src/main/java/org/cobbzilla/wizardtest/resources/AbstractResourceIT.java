@@ -1,19 +1,17 @@
 package org.cobbzilla.wizardtest.resources;
 
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
-import org.cobbzilla.wizard.exceptionmappers.InvalidEntityExceptionMapper;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
@@ -61,6 +59,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Map<String, String> getServerEnvironment() { return null; }
 
+    protected HttpClient getHttpClient () {
+        return new DefaultHttpClient();
+    }
+
     @After
     public void stopServer () throws Exception {
         if (server != null && !shouldCacheServer()) {
@@ -79,7 +81,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected void assertExpectedViolations(RestResponse response, String[] violationMessages) throws Exception{
-        assertEquals(InvalidEntityExceptionMapper.UNPROCESSABLE_ENTITY, response.status);
+        assertEquals(HttpStatusCodes.UNPROCESSABLE_ENTITY, response.status);
         final Map<String, ConstraintViolationBean> violations = mapViolations(response.json);
         assertEquals(violationMessages.length, violations.size());
         for (String message : violationMessages) {
@@ -88,29 +90,46 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected RestResponse doGet(String path) throws Exception {
-        HttpClient client = new DefaultHttpClient();
-        HttpGet httpGet = new HttpGet(server.getClientUri()+path);
+        HttpClient client = getHttpClient();
+        final String url = getUrl(path, server.getClientUri());
+        @Cleanup("releaseConnection") HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
     }
 
     protected RestResponse doPost(String path, String json) throws Exception {
-        HttpClient client = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(server.getClientUri()+path);
+        HttpClient client = getHttpClient();
+        final String url = getUrl(path, server.getClientUri());
+        @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
         if (json != null) {
             httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
-            log.info("doPost sending JSON="+json);
+            log.info("doPost("+url+") sending JSON=" + json);
         }
         return getResponse(client, httpPost);
     }
 
     protected RestResponse doPut(String path, String json) throws Exception {
-        HttpClient client = new DefaultHttpClient();
-        HttpPut httpPut = new HttpPut(server.getClientUri()+path);
+        HttpClient client = getHttpClient();
+        final String url = getUrl(path, server.getClientUri());
+        @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
         if (json != null) {
             httpPut.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
             log.info("doPut sending JSON="+json);
         }
         return getResponse(client, httpPut);
+    }
+
+    protected RestResponse doDelete(String path) throws Exception {
+        HttpClient client = getHttpClient();
+        final String url = getUrl(path, server.getClientUri());
+        @Cleanup("releaseConnection") HttpDelete httpDelete = new HttpDelete(url);
+        return getResponse(client, httpDelete);
+    }
+
+    private String getUrl(String path, String clientUri) {
+        if (path.startsWith("/") && clientUri.endsWith("/")) {
+            path = path.substring(1);
+        }
+        return clientUri + path;
     }
 
     protected RestResponse getResponse(HttpClient client, HttpRequestBase request) throws IOException {

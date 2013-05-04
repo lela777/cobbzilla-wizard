@@ -17,11 +17,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface IsUnique {
 
     String CREATE_ONLY = "-create-only-";
-    String SAME_AS_FIELD = "-same-as-field-";
+    String DEFAULT = "-default-";
+    String DEFAULT_ID_PROPERTY = "id";
 
-    String id () default CREATE_ONLY;
-    String field ();
-    String persist () default SAME_AS_FIELD;
+    String idField () default DEFAULT;
+    String id() default DEFAULT_ID_PROPERTY;
+    String uniqueField () default DEFAULT;
+    String unique();
+    String daoBean ();
 
     Class<?>[] groups() default {};
 
@@ -29,12 +32,10 @@ public @interface IsUnique {
 
     String message() default "{err.notUnique}";
 
-
     @Target({TYPE, ANNOTATION_TYPE})
     @Retention(RUNTIME)
     @Documented
-    @interface List
-    {
+    @interface List {
         IsUnique[] value();
     }
 

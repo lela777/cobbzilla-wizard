@@ -1,16 +1,16 @@
 package org.cobbzilla.wizard.model;
 
-public interface Identifiable {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.beanutils.BeanUtils;
 
-<<<<<<< HEAD
 import javax.persistence.*;
-import javax.validation.constraints.Size;
 import java.util.UUID;
 
-import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
-
 @MappedSuperclass @EqualsAndHashCode(of={"id"})
-public class Identifiable {
+public class IdentifiableBase implements Identifiable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,8 +18,7 @@ public class Identifiable {
     @Column(unique=true, nullable=false, updatable=false)
     @Getter @Setter protected Long id;
 
-    @Column(unique=true, updatable=false, nullable=false, length= UUID_MAXLEN)
-    @Size(max=UUID_MAXLEN, message=ERR_UUID_LENGTH)
+    @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
     public void beforeCreate() {
@@ -44,15 +43,7 @@ public class Identifiable {
     }
 
     @Column(updatable=false, nullable=false)
-    @Getter @Setter protected long ctime = System.currentTimeMillis();
-=======
-    public Long getId();
-    public void setId(Long id);
+    @Getter @Setter
+    protected long ctime = System.currentTimeMillis();
 
-    public String getUuid();
-    public void setUuid(String uuid);
-
-    public void beforeCreate();
-
->>>>>>> auth2
 }
