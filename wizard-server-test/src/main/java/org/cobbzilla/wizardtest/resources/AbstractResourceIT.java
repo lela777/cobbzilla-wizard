@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -119,6 +116,13 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             log.info("doPut sending JSON="+json);
         }
         return getResponse(client, httpPut);
+    }
+
+    protected RestResponse doDelete(String path) throws Exception {
+        HttpClient client = getHttpClient();
+        final String url = getUrl(path, server.getClientUri());
+        @Cleanup("releaseConnection") HttpDelete httpDelete = new HttpDelete(url);
+        return getResponse(client, httpDelete);
     }
 
     private String getUrl(String path, String clientUri) {

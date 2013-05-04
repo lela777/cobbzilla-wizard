@@ -46,6 +46,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return hibernateTemplate.merge(checkNotNull(entity));
     }
 
+    public void delete(Long id) {
+        E found = get(checkNotNull(id));
+        if (found != null) {
+            hibernateTemplate.delete(found);
+        }
+    }
+
+    public void delete(String uuid) {
+        delete(checkNotNull(findByUuid(uuid).getId()));
+    }
+
     public E findByUniqueField(String field, Object value) {
         return uniqueResult(Restrictions.eq(field, value));
     }
