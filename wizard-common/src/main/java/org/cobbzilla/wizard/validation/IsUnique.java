@@ -17,10 +17,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface IsUnique {
 
     String CREATE_ONLY = "-create-only-";
-    String SAME_AS_FIELD = "-same-as-field-";
+    String DEFAULT = "-default-";
+    String DEFAULT_ID_PROPERTY = "id";
 
-    String idFieldName () default CREATE_ONLY;
-    String uniqueFieldName ();
+    String idField () default DEFAULT;
+    String id() default DEFAULT_ID_PROPERTY;
+    String uniqueField () default DEFAULT;
+    String unique();
     String daoBean ();
 
     Class<?>[] groups() default {};

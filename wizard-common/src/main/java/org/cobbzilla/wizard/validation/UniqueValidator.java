@@ -10,12 +10,13 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.ws.rs.ext.Provider;
 
-@Provider
-@Service
+@Provider @Service
 public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, ApplicationContextAware {
 
-    private String uniqueFieldName;
-    private String idFieldName;
+    private String uniqueProperty;
+    private String uniqueField;
+    private String idProperty;
+    private String idField;
     private String daoBean;
 
     private static ApplicationContext applicationContext;
@@ -27,8 +28,10 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
 
     @Override
     public void initialize(IsUnique constraintAnnotation) {
-        this.uniqueFieldName = constraintAnnotation.uniqueFieldName();
-        this.idFieldName = constraintAnnotation.idFieldName();
+        this.uniqueProperty = constraintAnnotation.unique();
+        this.uniqueField = constraintAnnotation.uniqueField();
+        this.idProperty = constraintAnnotation.id();
+        this.idField = constraintAnnotation.idField();
         this.daoBean = constraintAnnotation.daoBean();
     }
 
@@ -37,12 +40,16 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
 
         UniqueValidatorDao dao = (UniqueValidatorDao) applicationContext.getBean(daoBean);
 
-        Object idValue = (idFieldName.equals(IsUnique.CREATE_ONLY) || !ReflectionUtil.hasGetter(object, idFieldName)) ? null : ReflectionUtil.get(object, idFieldName);
-        Object fieldValue = ReflectionUtil.get(object, uniqueFieldName);
+        Object idValue = (idProperty.equals(IsUnique.CREATE_ONLY) || !ReflectionUtil.hasGetter(object, idProperty)) ? null : ReflectionUtil.get(object, idProperty);
+        Object fieldValue = ReflectionUtil.get(object, uniqueProperty);
+
+        if (uniqueField.equals(IsUnique.DEFAULT)) uniqueField = uniqueProperty;
+        if (idField.equals(IsUnique.DEFAULT)) idField = idProperty;
+
         if (idValue == null) {
-            return dao.isUnique(uniqueFieldName, fieldValue);
+            return dao.isUnique(uniqueField, fieldValue);
         }
-        return dao.isUnique(uniqueFieldName, fieldValue, idFieldName, idValue);
+        return dao.isUnique(uniqueField, fieldValue, idField, idValue);
     }
 
 }
