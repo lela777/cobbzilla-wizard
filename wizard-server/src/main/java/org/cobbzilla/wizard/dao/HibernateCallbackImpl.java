@@ -6,13 +6,22 @@ import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class HibernateCallbackImpl implements HibernateCallback<List> {
+public class HibernateCallbackImpl<T> implements HibernateCallback<List<T>> {
 
     private String queryString;
     private String[] paramNames;
     private Object[] values;
+
+    private Set<String> paramNamesThatAreLists;
+
+    public void markAsListParameter(String paramName) {
+        if (paramNamesThatAreLists == null) paramNamesThatAreLists = new HashSet<>();
+        paramNamesThatAreLists.add(paramName);
+    }
 
     private int firstResult;
     private int maxResults;
@@ -42,20 +51,23 @@ public class HibernateCallbackImpl implements HibernateCallback<List> {
     }
 
     @Override
-    public List doInHibernate(Session session) throws HibernateException,
-            SQLException {
-        Query query = session.createQuery(queryString);
+    public List<T> doInHibernate(Session session) throws HibernateException, SQLException {
+
+        final Query query = session.createQuery(queryString);
         query.setFirstResult(firstResult);
         query.setMaxResults(maxResults);
 
         // TODO: throw proper exception when paramNames.length != values.length
 
         for (int c=0; c<paramNames.length; c++) {
-            query.setParameter(paramNames[c], values[c]);
+            if (paramNamesThatAreLists.contains(paramNames[c])) {
+                query.setParameterList(paramNames[c], (List) values[c]);
+            } else {
+                query.setParameter(paramNames[c], values[c]);
+            }
         }
 
-        @SuppressWarnings("unchecked")
-        List result = query.list();
+        final List<T> result = query.list();
 
         return result;
     }
