@@ -11,6 +11,8 @@ import java.util.List;
 
 public class ResourceUtil {
 
+    public static Response notFound() { return notFound(null); }
+
     public static Response notFound(String id) {
         if (id == null) id = "-unknown-";
         return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("resource", id)).build();
