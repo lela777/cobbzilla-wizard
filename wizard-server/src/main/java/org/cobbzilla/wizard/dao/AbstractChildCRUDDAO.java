@@ -69,6 +69,10 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
     public C create(String parentUuid, @Valid C child) {
         P parent = findParentByUuid(parentUuid);
         child.setParent(checkNotNull(parent));
+        return create(child);
+    }
+
+    public C create(@Valid C child) {
         child.beforeCreate();
         child.setId((Long) hibernateTemplate.save(checkNotNull(child)));
         return child;
