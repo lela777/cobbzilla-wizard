@@ -18,9 +18,13 @@ public class ResultPage {
     public static final String DEFAULT_SORT = SortOrder.DESC.name();
 
     public static final ResultPage DEFAULT_PAGE = new ResultPage();
-    public static final ResultPage FIRST_RESULT = new ResultPage(1, 1, null, null, null);
+    public static final ResultPage FIRST_RESULT = new ResultPage(1, 1);
 
-    public static final ResultPage LARGE_PAGE = new ResultPage(1, 100, null, null, null);
+    public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
+
+    public ResultPage (int pageNumber, int pageSize) {
+        this(pageNumber, pageSize, null, null, null);
+    }
 
     public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder) {
         this(pageNumber, pageSize, sortField, sortOrder, null);
