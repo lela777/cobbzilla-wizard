@@ -43,7 +43,7 @@ public class IdentifiableBase implements Identifiable {
     }
 
     @Column(updatable=false, nullable=false)
-    @Getter @Setter
+    @Getter @Setter @JsonIgnore
     protected long ctime = System.currentTimeMillis();
 
 }

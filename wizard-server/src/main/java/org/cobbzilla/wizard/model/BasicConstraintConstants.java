@@ -13,7 +13,7 @@ public class BasicConstraintConstants {
 
     public static final String ERR_RESET_TOKEN_LENGTH = "{err.resetToken.length}";
 
-    public static final int UUID_MAXLEN = 50;
+    public static final int UUID_MAXLEN = 100;
     public static final int HASHEDPASSWORD_MAXLEN = 200;
     public static final int RESETTOKEN_MAXLEN = 30;
 
