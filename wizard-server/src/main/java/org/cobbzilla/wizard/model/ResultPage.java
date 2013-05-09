@@ -12,12 +12,15 @@ public class ResultPage {
 
     public static final int MAX_FILTER_LENGTH = 50;
     public static final int MAX_SORTFIELD_LENGTH = 50;
+    public static final String DEFAULT_SORT_FIELD = "ctime";
 
     public enum SortOrder { ASC, DESC }
     public static final String DEFAULT_SORT = SortOrder.DESC.name();
 
     public static final ResultPage DEFAULT_PAGE = new ResultPage();
     public static final ResultPage FIRST_RESULT = new ResultPage(1, 1, null, null, null);
+
+    public static final ResultPage LARGE_PAGE = new ResultPage(1, 100, null, null, null);
 
     public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder) {
         this(pageNumber, pageSize, sortField, sortOrder, null);
@@ -46,10 +49,11 @@ public class ResultPage {
     @Getter @Setter private int pageSize = 10;
 
     @Setter
-    private String sortField = "ctime";
+    private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {
         // only return the first several chars, to thwart a hypothetical injection attack.
-        return StringUtil.prefix(sortField, MAX_SORTFIELD_LENGTH);
+        final String sort = StringUtil.empty(sortField) ? DEFAULT_SORT_FIELD : sortField;
+        return StringUtil.prefix(sort, MAX_SORTFIELD_LENGTH);
     }
     @JsonIgnore public boolean getHasSortField () { return sortField != null; }
 
