@@ -60,7 +60,7 @@ public class HibernateCallbackImpl<T> implements HibernateCallback<List<T>> {
         // TODO: throw proper exception when paramNames.length != values.length
 
         for (int c=0; c<paramNames.length; c++) {
-            if (paramNamesThatAreLists.contains(paramNames[c])) {
+            if (paramNamesThatAreLists != null && paramNamesThatAreLists.contains(paramNames[c])) {
                 query.setParameterList(paramNames[c], (List) values[c]);
             } else {
                 query.setParameter(paramNames[c], values[c]);
