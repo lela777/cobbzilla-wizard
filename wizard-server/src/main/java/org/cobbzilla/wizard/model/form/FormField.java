@@ -19,22 +19,26 @@ import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
 public class FormField extends IdentifiableBase implements Identifiable {
 
     @HasValue(message=ERR_FIELD_NAME_EMPTY)
-    @Size(max=MRFIELD_NAME_MAXLEN, message=ERR_FIELD_NAME_LENGTH)
-    @JsonIgnore
-    @Column(nullable = false, length=MRFIELD_NAME_MAXLEN)
+    @Size(max=FIELD_NAME_MAXLEN, message=ERR_FIELD_NAME_LENGTH)
+    @Column(nullable=false, length=FIELD_NAME_MAXLEN)
     @Getter @Setter private String nameKey;
 
     @Transient
     public String getName () { return getNameKey(); }
     public void setName(String name) { setNameKey(name); }
 
-    @Getter @Setter private String placement;
+    @Size(max=FORM_OWNER_MAXLEN, message=ERR_FORM_OWNER_LENGTH)
+    @Column(length=FORM_OWNER_MAXLEN)
+    @Getter @Setter private String owner;
 
-    @HasValue(message= ERR_FIELD_TYPE_EMPTY)
-    @Size(max=MRFIELD_TYPE_MAXLEN, message=ERR_FIELD_TYPE_LENGTH)
-    @Column(nullable = false, length=MRFIELD_TYPE_MAXLEN)
-    @Getter @Setter
-    private String fieldType;
+    @HasValue(message=ERR_FIELD_TYPE_EMPTY)
+    @Size(max=FIELD_TYPE_MAXLEN, message=ERR_FIELD_TYPE_LENGTH)
+    @Column(nullable=false, length=FIELD_TYPE_MAXLEN)
+    @Getter @Setter private String fieldType;
+
+    @Size(max=FIELD_OPTS_TYPE_MAXLEN, message=ERR_FIELD_OPTS_TYPE_LENGTH)
+    @Column(length=FIELD_OPTS_TYPE_MAXLEN)
+    @Getter @Setter private String fieldOptions;
 
     @NotNull(message=ERR_HAS_DESCRIPTION_EMPTY)
     @Column(nullable=false)

@@ -13,20 +13,20 @@ import javax.validation.constraints.Size;
 import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
 
 @Entity
-public class Form extends IdentifiableBase implements Identifiable {
+public class FormFieldGroup extends IdentifiableBase implements Identifiable {
 
-    @HasValue(message=ERR_FORM_NAME_EMPTY)
-    @Size(max= FORM_NAME_MAXLEN, message=ERR_FORM_NAME_LENGTH)
-    @Column(nullable = false, length=FORM_NAME_MAXLEN)
+    @HasValue(message=ERR_FIELD_GROUP_NAME_EMPTY)
+    @Size(max=FIELD_GROUP_NAME_MAXLEN, message=ERR_FIELD_GROUP_NAME_LENGTH)
+    @Column(nullable = false, length=FIELD_NAME_MAXLEN)
     @Getter @Setter private String nameKey;
-
-    @HasValue(message=ERR_FORM_TYPE_EMPTY)
-    @Size(max= FORM_TYPE_MAXLEN, message=ERR_FORM_TYPE_LENGTH)
-    @Column(nullable = false, length=FORM_TYPE_MAXLEN)
-    @Getter @Setter private String formType;
 
     @Size(max=FORM_OWNER_MAXLEN, message=ERR_FORM_OWNER_LENGTH)
     @Column(length=FORM_OWNER_MAXLEN)
     @Getter @Setter private String owner;
+
+    @HasValue(message=ERR_FIELD_GROUP_TYPE_EMPTY)
+    @Size(max= FIELD_GROUP_TYPE_MAXLEN, message=ERR_FIELD_GROUP_TYPE_LENGTH)
+    @Column(nullable=false, length= FIELD_TYPE_MAXLEN)
+    @Getter @Setter private String fieldGroupType;
 
 }

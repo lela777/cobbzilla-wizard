@@ -15,12 +15,12 @@ import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
 @Embeddable
 public class FormData {
 
-    @Size(max=PMR_VALUE_MAXLEN, message= ERR_FIELD_VALUE_LENGTH)
-    @Column(length= PMR_VALUE_MAXLEN)
+    @Size(max=FIELD_DATA_VALUE_MAXLEN, message=ERR_FIELD_VALUE_LENGTH)
+    @Column(length=FIELD_DATA_VALUE_MAXLEN)
     @Getter @Setter private String value;
 
-    @Size(max=PMR_DESCRIPTION_MAXLEN, message= ERR_FIELD_DESCRIPTION_LENGTH)
-    @Column(length=PMR_DESCRIPTION_MAXLEN)
+    @Size(max=FIELD_DATA_DESCRIPTION_MAXLEN, message=ERR_FIELD_DESCRIPTION_LENGTH)
+    @Column(length=FIELD_DATA_DESCRIPTION_MAXLEN)
     @Getter @Setter private String description;
 
     @JsonIgnore
