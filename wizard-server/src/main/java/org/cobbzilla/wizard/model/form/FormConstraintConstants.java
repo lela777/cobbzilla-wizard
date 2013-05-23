@@ -17,14 +17,17 @@ public class FormConstraintConstants {
     public static final int FORM_OWNER_MAXLEN = 100;
 
     public static final int FIELD_NAME_MAXLEN = 100;
+    public static final String ERR_FIELD_NAME_UNIQUE= "{err.field.name.unique}";
     public static final String ERR_FIELD_NAME_EMPTY= "{err.field.name.empty}";
     public static final String ERR_FIELD_NAME_LENGTH = "{err.field.name.length}";
 
     public static final int FIELD_GROUP_NAME_MAXLEN = 100;
-    public static final String ERR_FIELD_GROUP_NAME_EMPTY= "{err.fieldGroup.name.empty}";
+    public static final String ERR_FIELD_GROUP_NAME_UNIQUE = "{err.fieldGroup.name.unique}";
+    public static final String ERR_FIELD_GROUP_NAME_EMPTY = "{err.fieldGroup.name.empty}";
     public static final String ERR_FIELD_GROUP_NAME_LENGTH = "{err.fieldGroup.name.length}";
 
     public static final int FORM_NAME_MAXLEN = 100;
+    public static final String ERR_FORM_NAME_UNIQUE = "{err.form.name.unique}";
     public static final String ERR_FORM_NAME_EMPTY= "{err.form.name.empty}";
     public static final String ERR_FORM_NAME_LENGTH = "{err.form.name.length}";
 
