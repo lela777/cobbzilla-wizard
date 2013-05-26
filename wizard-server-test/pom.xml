@@ -22,7 +22,7 @@
 
         <dependency>
             <groupId>org.cobbzilla</groupId>
-            <artifactId>wizard-common</artifactId>
+            <artifactId>wizard-client</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
