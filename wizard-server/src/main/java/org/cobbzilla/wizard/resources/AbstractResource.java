@@ -28,8 +28,10 @@ public abstract class AbstractResource<T extends Identifiable> {
 
     @POST
     public Response create(@Valid T thing) {
-        dao().create(thing);
-        return Response.created(URI.create(getEndpoint() + "/" + thing.getUuid())).build();
+        thing = dao().create(thing);
+//        final URI location = URI.create(getEndpoint() + "/" + thing.getUuid());
+        final URI location = URI.create(thing.getUuid());
+        return Response.created(location).build();
     }
 
     @Path("/"+UUID)
@@ -45,7 +47,9 @@ public abstract class AbstractResource<T extends Identifiable> {
     @PUT
     public Response update(@PathParam(UUID_PARAM) String uuid, @Valid T thing) {
         Response response;
-        if (dao().exists(uuid)) {
+        final T found = dao().findByUuid(uuid);
+        if (found != null) {
+            thing.setId(found.getId());
             thing.setUuid(uuid);
             dao().update(thing);
             response = Response.noContent().build();
@@ -53,6 +57,15 @@ public abstract class AbstractResource<T extends Identifiable> {
             response = ResourceUtil.notFound(uuid);
         }
         return response;
+    }
+
+    @Path("/"+UUID)
+    @DELETE
+    public Response delete(@PathParam(UUID_PARAM) String uuid) {
+        final T found = dao().findByUuid(uuid);
+        if (found == null) return ResourceUtil.notFound();
+        dao().delete(uuid);
+        return Response.noContent().build();
     }
 
 }

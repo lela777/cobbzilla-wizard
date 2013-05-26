@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model.form;
+package org.cobbzilla.wizard.form.model;
 
 public enum FormFieldType {
 

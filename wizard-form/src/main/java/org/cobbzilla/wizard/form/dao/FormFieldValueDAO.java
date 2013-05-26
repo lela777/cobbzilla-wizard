@@ -1,7 +1,7 @@
-package org.cobbzilla.wizard.dao.form;
+package org.cobbzilla.wizard.form.dao;
 
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
-import org.cobbzilla.wizard.model.form.FormFieldValue;
+import org.cobbzilla.wizard.form.model.FormFieldValue;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 

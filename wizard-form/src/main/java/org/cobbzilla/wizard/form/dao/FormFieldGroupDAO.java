@@ -1,6 +1,6 @@
-package org.cobbzilla.wizard.dao.form;
+package org.cobbzilla.wizard.form.dao;
 
-import org.cobbzilla.wizard.model.form.FormFieldGroup;
+import org.cobbzilla.wizard.form.model.FormFieldGroup;
 import org.springframework.stereotype.Repository;
 
 @Repository

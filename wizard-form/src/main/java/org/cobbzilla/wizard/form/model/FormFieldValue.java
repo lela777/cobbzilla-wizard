@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model.form;
+package org.cobbzilla.wizard.form.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -11,8 +11,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import static org.cobbzilla.wizard.model.form.FormConstraintConstants.ERR_FORM_OWNER_LENGTH;
-import static org.cobbzilla.wizard.model.form.FormConstraintConstants.FORM_OWNER_MAXLEN;
+import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
 @Entity
 public class FormFieldValue extends IdentifiableBase implements Identifiable {
@@ -24,8 +23,8 @@ public class FormFieldValue extends IdentifiableBase implements Identifiable {
     @NotNull @ManyToOne(optional=false)
     @Getter @Setter private FormField field;
 
-    @Valid @Embedded @JsonIgnore
-    @Getter @Setter private FormData data = new FormData();
+    @Valid @Embedded
+    @JsonIgnore @Getter @Setter private FormData data = new FormData();
 
     @Transient
     public String getValue () { return data == null ? null : data.getValue(); }

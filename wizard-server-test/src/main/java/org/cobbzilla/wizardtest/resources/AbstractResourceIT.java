@@ -3,6 +3,8 @@ package org.cobbzilla.wizardtest.resources;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
@@ -126,8 +128,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     private String getUrl(String path, String clientUri) {
-        if (path.startsWith("/") && clientUri.endsWith("/")) {
-            path = path.substring(1);
+        if (path.startsWith("http://") || path.startsWith("https://")) {
+            return path; // caller has supplied an absolute path
+
+        } else if (path.startsWith("/") && clientUri.endsWith("/")) {
+            path = path.substring(1); // caller has supplied a relative path
         }
         return clientUri + path;
     }
@@ -135,12 +140,23 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected RestResponse getResponse(HttpClient client, HttpRequestBase request) throws IOException {
         final HttpResponse response = client.execute(request);
         final int statusCode = response.getStatusLine().getStatusCode();
-        String responseJson;
-        try (InputStream in = response.getEntity().getContent()) {
-            responseJson = IOUtils.toString(in);
-            log.info("read response callback server: "+responseJson);
+        final String responseJson;
+        final HttpEntity entity = response.getEntity();
+        if (entity != null) {
+            try (InputStream in = entity.getContent()) {
+                responseJson = IOUtils.toString(in);
+                log.info("read response callback server: "+responseJson);
+            }
+        } else {
+            responseJson = null;
         }
-        return new RestResponse(statusCode, responseJson);
+        return new RestResponse(statusCode, responseJson, getLocationHeader(response));
+    }
+
+    public static final String LOCATION_HEADER = "Location";
+    private String getLocationHeader(HttpResponse response) {
+        final Header header = response.getFirstHeader(LOCATION_HEADER);
+        return header == null ? null : header.getValue();
     }
 
     protected <R extends Identifiable> R getEntity(Class<R> clazz, String endpoint, String uuid) throws Exception {

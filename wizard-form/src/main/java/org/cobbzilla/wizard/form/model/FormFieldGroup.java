@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model.form;
+package org.cobbzilla.wizard.form.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.validation.constraints.Size;
 
-import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
+import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
 @Entity
 @IsUnique(unique="nameKey", message=ERR_FIELD_GROUP_NAME_UNIQUE, daoBean="formFieldGroupDAO")

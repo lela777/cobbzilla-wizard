@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model.form;
+package org.cobbzilla.wizard.form.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
+import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
 @Entity
 @IsUnique(unique="nameKey", message=ERR_FIELD_NAME_UNIQUE, daoBean="formFieldDAO")

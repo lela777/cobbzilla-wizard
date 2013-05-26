@@ -1,0 +1,24 @@
+serverName: shareice-api-test
+
+springContextPath: "classpath:/conf/spring-test-form-api.xml"
+
+http:
+  port: 9180
+  baseUri: /
+
+jersey:
+  resourcePackages: [ "org.cobbzilla.wizard.form.resources", "org.cobbzilla.wizard.exceptionmappers" ]
+  responseFilters: [ "org.cobbzilla.wizard.filters.IdScrubber", "org.cobbzilla.wizard.filters.ScrubbableScrubber" ]
+
+database:
+  driver: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/form-test
+  user: postgres
+  password: ""
+
+  hibernate:
+    entityPackages: ["org.cobbzilla.wizard.form.model"]
+    dialect: org.hibernate.dialect.PostgreSQLDialect
+    showSql: true
+    hbm2ddlAuto: create
+    validationMode: ddl

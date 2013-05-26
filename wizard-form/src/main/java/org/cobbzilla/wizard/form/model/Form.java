@@ -1,5 +1,6 @@
-package org.cobbzilla.wizard.model.form;
+package org.cobbzilla.wizard.form.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -11,10 +12,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.validation.constraints.Size;
 
-import static org.cobbzilla.wizard.model.form.FormConstraintConstants.*;
+import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
-@Entity
-@IsUnique(unique="nameKey", message=ERR_FORM_NAME_UNIQUE, daoBean="formDAO")
+@Entity @EqualsAndHashCode(callSuper=false)
+@IsUnique(id="uuid", unique="nameKey", message=ERR_FORM_NAME_UNIQUE, daoBean="formDAO")
 public class Form extends IdentifiableBase implements Identifiable {
 
     @HasValue(message=ERR_FORM_NAME_EMPTY)

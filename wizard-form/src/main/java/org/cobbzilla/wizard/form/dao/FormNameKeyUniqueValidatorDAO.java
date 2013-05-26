@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.dao.form;
+package org.cobbzilla.wizard.form.dao;
 
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.model.Identifiable;
