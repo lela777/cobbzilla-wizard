@@ -23,6 +23,11 @@ public class Form extends IdentifiableBase implements Identifiable {
     @Column(unique=true, nullable=false, length=FORM_NAME_MAXLEN)
     @Getter @Setter private String nameKey;
 
+    @HasValue(message=ERR_FORM_DEFAULT_NAME_EMPTY)
+    @Size(max=FORM_DEFAULT_NAME_MAXLEN, message=ERR_FORM_DEFAULT_NAME_LENGTH)
+    @Column(unique=true, nullable=false, length=FORM_DEFAULT_NAME_MAXLEN)
+    @Getter @Setter private String defaultName;
+
     @HasValue(message=ERR_FORM_TYPE_EMPTY)
     @Size(max= FORM_TYPE_MAXLEN, message=ERR_FORM_TYPE_LENGTH)
     @Column(nullable = false, length=FORM_TYPE_MAXLEN)

@@ -29,7 +29,7 @@ public class FormResourcesIT extends FormResourceITBase {
         apiDocs.startRecording(DOC_TARGET, "with empty payload");
         final RestResponse response = doPost(FormsResource.ENDPOINT, EMPTY_JSON);
         assertExpectedViolations(response, new String[] {
-                ERR_FORM_TYPE_EMPTY, ERR_FORM_NAME_EMPTY
+                ERR_FORM_TYPE_EMPTY, ERR_FORM_NAME_EMPTY, ERR_FORM_DEFAULT_NAME_EMPTY
         });
     }
 
@@ -71,6 +71,7 @@ public class FormResourcesIT extends FormResourceITBase {
         final Form form = new Form();
         form.setFormType(randomName(length == null ? FORM_TYPE_MAXLEN : length));
         form.setNameKey(randomName(length == null ? FORM_NAME_MAXLEN : length));
+        form.setDefaultName(randomName(length == null ? FORM_DEFAULT_NAME_MAXLEN : length));
         form.setOwner(randomName(length == null ? FORM_OWNER_MAXLEN : length));
         return form;
     }

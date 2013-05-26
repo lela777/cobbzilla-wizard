@@ -21,6 +21,10 @@ public class FormConstraintConstants {
     public static final String ERR_FIELD_NAME_EMPTY= "{err.field.name.empty}";
     public static final String ERR_FIELD_NAME_LENGTH = "{err.field.name.length}";
 
+    public static final int FIELD_DEFAULT_NAME_MAXLEN = 1000;
+    public static final String ERR_FIELD_DEFAULT_NAME_EMPTY= "{err.field.default_name.empty}";
+    public static final String ERR_FIELD_DEFAULT_NAME_LENGTH = "{err.field.default_name.length}";
+
     public static final int FIELD_GROUP_NAME_MAXLEN = 100;
     public static final String ERR_FIELD_GROUP_NAME_UNIQUE = "{err.fieldGroup.name.unique}";
     public static final String ERR_FIELD_GROUP_NAME_EMPTY = "{err.fieldGroup.name.empty}";
@@ -30,6 +34,10 @@ public class FormConstraintConstants {
     public static final String ERR_FORM_NAME_UNIQUE = "{err.form.name.unique}";
     public static final String ERR_FORM_NAME_EMPTY= "{err.form.name.empty}";
     public static final String ERR_FORM_NAME_LENGTH = "{err.form.name.length}";
+
+    public static final int FORM_DEFAULT_NAME_MAXLEN = 1000;
+    public static final String ERR_FORM_DEFAULT_NAME_EMPTY= "{err.form.default_name.empty}";
+    public static final String ERR_FORM_DEFAULT_NAME_LENGTH = "{err.form.default_name.length}";
 
     public static final int FORM_TYPE_MAXLEN = 100;
     public static final String ERR_FORM_TYPE_EMPTY= "{err.form.type.empty}";

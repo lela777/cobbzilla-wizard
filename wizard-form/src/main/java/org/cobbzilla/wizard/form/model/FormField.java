@@ -29,6 +29,11 @@ public class FormField extends IdentifiableBase implements Identifiable {
     public String getName () { return getNameKey(); }
     public void setName(String name) { setNameKey(name); }
 
+    @HasValue(message=ERR_FIELD_DEFAULT_NAME_EMPTY)
+    @Size(max=FIELD_DEFAULT_NAME_MAXLEN, message=ERR_FIELD_DEFAULT_NAME_LENGTH)
+    @Column(unique=true, nullable=false, length=FIELD_DEFAULT_NAME_MAXLEN)
+    @Getter @Setter private String defaultName;
+
     @Size(max=FORM_OWNER_MAXLEN, message=ERR_FORM_OWNER_LENGTH)
     @Column(length=FORM_OWNER_MAXLEN)
     @Getter @Setter private String owner;
