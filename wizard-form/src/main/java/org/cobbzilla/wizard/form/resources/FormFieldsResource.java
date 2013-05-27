@@ -16,7 +16,7 @@ public class FormFieldsResource extends AbstractResource<FormField> {
     @Autowired private FormFieldDAO formFieldDAO;
     @Override protected AbstractCRUDDAO<FormField> dao() { return formFieldDAO; }
 
-    public static final String ENDPOINT = "formFields";
+    public static final String ENDPOINT = "/formFields";
     @Override protected String getEndpoint() { return ENDPOINT; }
 
 }

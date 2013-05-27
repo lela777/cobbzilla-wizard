@@ -51,4 +51,6 @@ public class FormConstraintConstants {
     public static final String ERR_FIELD_VALUE_LENGTH = "{err.field.value.length}";
     public static final String ERR_FIELD_DESCRIPTION_LENGTH = "{err.field.description.length}";
 
+    public static final String ERR_FIELD_MEMBERSHIP_PLACEMENT_LENGTH = "{err.formFieldMembership.placement.length}";
+    public static final int FIELD_MEMBERSHIP_PLACEMENT_MAXLEN = 100;
 }
