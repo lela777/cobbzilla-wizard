@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.form.resources;
 
 import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.form.model.Form;
 import org.cobbzilla.wizard.form.model.FormField;
 import org.cobbzilla.wizard.form.model.FormFieldMembership;
@@ -29,14 +30,14 @@ public class FormResourcesIT extends FormResourceITBase {
     @Test
     public void testCreateWithNoPayload () throws Exception {
         apiDocs.startRecording(DOC_TARGET, "with no payload");
-        final RestResponse response = doPost(FormsResource.ENDPOINT, null);
+        final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, null);
         assertEquals(UNSUPPORTED_MEDIA_TYPE, response.status);
     }
 
     @Test
     public void testCreateWithEmptyPayload () throws Exception {
         apiDocs.startRecording(DOC_TARGET, "with empty payload");
-        final RestResponse response = doPost(FormsResource.ENDPOINT, EMPTY_JSON);
+        final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, EMPTY_JSON);
         assertExpectedViolations(response, new String[] {
                 ERR_FORM_TYPE_EMPTY, ERR_FORM_NAME_EMPTY, ERR_FORM_DEFAULT_NAME_EMPTY
         });
@@ -50,7 +51,7 @@ public class FormResourcesIT extends FormResourceITBase {
         final Form form = randomForm(owner);
 
         apiDocs.addNote("create a random form");
-        final RestResponse response = doPost(FormsResource.ENDPOINT, toJson(form));
+        final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, toJson(form));
         assertEquals(CREATED, response.status);
 
         apiDocs.addNote("retrieve the form we just created");
@@ -87,11 +88,11 @@ public class FormResourcesIT extends FormResourceITBase {
         final Form form = randomForm(owner);
 
         apiDocs.addNote("create a new form");
-        final RestResponse response = doPost(FormsResource.ENDPOINT, toJson(form));
+        final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, toJson(form));
         assertEquals(CREATED, response.status);
         final String formLocation = response.location;
-        final String membersPath = formLocation + FormFieldMembershipsResource.ENDPOINT;
-        final String availablePath = formLocation + FormsResource.AVAILABLE_FIELDS_ENDPOINT;
+        final String membersPath = formLocation + FormApiEndpoints.FIELD_MEMBERS_ENDPOINT;
+        final String availablePath = formLocation + FormApiEndpoints.AVAILABLE_FIELDS_ENDPOINT;
 
         apiDocs.addNote("verify there are no field members currently defined");
         FormFieldMembership[] fieldMemberships = fromJson(doGet(membersPath).json, FormFieldMembership[].class);
@@ -112,7 +113,7 @@ public class FormResourcesIT extends FormResourceITBase {
         for (int i=0; i< numFields; i++) {
             final FormField field = randomField();
             apiDocs.addNote("create field "+i+" of "+numFields);
-            final RestResponse fieldResponse = doPost(FormFieldsResource.ENDPOINT, toJson(field));
+            final RestResponse fieldResponse = doPost(FormApiEndpoints.FIELDS_ENDPOINT, toJson(field));
             assertEquals(HttpStatusCodes.CREATED, fieldResponse.status);
             if (i < numInitialFields) initialFields.put(fieldResponse.location, field);
             else if (i < numInitialFields+numExtraFields) extraFields.put(fieldResponse.location, field);
@@ -157,7 +158,7 @@ public class FormResourcesIT extends FormResourceITBase {
         assertEquals(placement, updated.getPlacement());
 
         apiDocs.addNote("remove all but one of the field memberships from the form");
-        final String spared = lastPathElement(fieldMembershipLocations.remove(0));
+        final String spared = StringUtil.lastPathElement(fieldMembershipLocations.remove(0));
         for (String membershipLocation : fieldMembershipLocations) {
             assertEquals(HttpStatusCodes.OK, doDelete(membershipLocation).status);
         }
@@ -173,16 +174,12 @@ public class FormResourcesIT extends FormResourceITBase {
     }
 
     private String addFormFieldMember(String membersPath, String fieldLocation) throws Exception {
-        final String fieldUuid = lastPathElement(fieldLocation);
+        final String fieldUuid = StringUtil.lastPathElement(fieldLocation);
         final FormFieldMembershipRequest request = new FormFieldMembershipRequest();
         request.setFieldUuid(fieldUuid);
         final RestResponse response = doPost(membersPath, toJson(request));
         assertEquals(HttpStatusCodes.CREATED, response.status);
         return response.location;
-    }
-
-    private String lastPathElement(String url) {
-        return url.substring(url.lastIndexOf("/")+1);
     }
 
     public Form randomForm(String owner) { return randomForm(owner, null); }

@@ -18,18 +18,13 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path(FormsResource.ENDPOINT)
+import static org.cobbzilla.wizard.form.resources.FormApiEndpoints.*;
+
+@Path(FORMS_ENDPOINT)
 @Service
 public class FormsResource extends AbstractResource<Form> {
 
-    public static final String ENDPOINT = "/forms";
-    public static final String MEMBERSHIPS_ENDPOINT = "/" + UUID + FormFieldMembershipsResource.ENDPOINT;
-
-    public static final String MEMBERSHIP_UUID_PARAM = "membershipUuid";
-    public static final String MEMBERSHIP_UUID = "{" + MEMBERSHIP_UUID_PARAM + "}";
-    public static final String AVAILABLE_FIELDS_ENDPOINT = "/availableFields";
-
-    @Override protected String getEndpoint() { return ENDPOINT; }
+    @Override protected String getEndpoint() { return FORMS_ENDPOINT; }
 
     @Autowired private FormDAO formDAO;
     @Autowired private FormFieldDAO formFieldDAO;

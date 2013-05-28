@@ -9,14 +9,13 @@ import org.springframework.stereotype.Service;
 
 import javax.ws.rs.Path;
 
-@Path(FormFieldsResource.ENDPOINT)
+@Path(FormApiEndpoints.FIELDS_ENDPOINT)
 @Service
 public class FormFieldsResource extends AbstractResource<FormField> {
 
     @Autowired private FormFieldDAO formFieldDAO;
     @Override protected AbstractCRUDDAO<FormField> dao() { return formFieldDAO; }
 
-    public static final String ENDPOINT = "/formFields";
-    @Override protected String getEndpoint() { return ENDPOINT; }
+    @Override protected String getEndpoint() { return FormApiEndpoints.FIELDS_ENDPOINT; }
 
 }
