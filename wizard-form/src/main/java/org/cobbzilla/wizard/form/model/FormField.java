@@ -49,7 +49,7 @@ public class FormField extends IdentifiableBase implements Identifiable {
 
     @NotNull(message=ERR_HAS_DESCRIPTION_EMPTY)
     @Column(nullable=false)
-    @Getter @Setter private int hasDescription;
+    @Getter @Setter private boolean hasDescription = false;
 
     @Transient @JsonIgnore
     public FormFieldType getFieldTypeEnum () { return FormFieldType.valueOf(fieldType); }
