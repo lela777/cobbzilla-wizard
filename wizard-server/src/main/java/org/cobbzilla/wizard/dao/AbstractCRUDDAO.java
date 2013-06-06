@@ -20,10 +20,6 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
     }
 
-    public E find(Long id) {
-        return get(id);
-    }
-
     public boolean exists(Long id) {
         return uniqueResult(hibernateTemplate.find("select 1 from " + getEntityClass().getSimpleName() + " e where e.id = ?", id)) != null;
     }
@@ -34,27 +30,23 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
 
     public E create(@Valid E entity) {
         entity.beforeCreate();
-        entity.setId((Long) hibernateTemplate.save(checkNotNull(entity)));
+        entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
         return entity;
     }
 
     public E createOrUpdate(@Valid E entity) {
-        return (entity.getId() == null) ? create(entity) : update(entity);
+        return (entity.getUuid() == null) ? create(entity) : update(entity);
     }
 
     public E update(@Valid E entity) {
         return hibernateTemplate.merge(checkNotNull(entity));
     }
 
-    public void delete(Long id) {
-        E found = get(checkNotNull(id));
+    public void delete(String uuid) {
+        E found = get(checkNotNull(uuid));
         if (found != null) {
             hibernateTemplate.delete(found);
         }
-    }
-
-    public void delete(String uuid) {
-        delete(checkNotNull(findByUuid(uuid).getId()));
     }
 
     public E findByUniqueField(String field, Object value) {

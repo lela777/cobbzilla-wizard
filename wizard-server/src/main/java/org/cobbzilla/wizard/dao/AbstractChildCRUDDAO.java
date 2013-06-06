@@ -24,19 +24,12 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
         this.parentEntityClass = parentEntityClass;
     }
 
-    public C find(Long id) { return get(id); }
-
     public C findByUuid(String uuid) {
         return uniqueResult(Restrictions.eq("uuid", uuid));
     }
 
     public C findByUniqueField(String field, Object value) {
         return uniqueResult(Restrictions.eq(field, value));
-    }
-
-    public List<C> findByParent(Long parentId) {
-        final String queryString = "from " + getEntityClass().getSimpleName() + " x where x." + parentEntityClass.getSimpleName().toLowerCase() + ".id=? order by x.ctime";
-        return hibernateTemplate.find(queryString, parentId);
     }
 
     public List<C> findByParentUuid(String parentUuid) {
@@ -60,7 +53,6 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
         return (P) uniqueResult(criteria(parentEntityClass).add(Restrictions.eq("uuid", parentId)));
     }
 
-    //    @Transactional
     public C create(String parentUuid, @Valid C child) {
         P parent = findParentByUuid(parentUuid);
         child.setParent(checkNotNull(parent));
@@ -69,27 +61,20 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
 
     public C create(@Valid C child) {
         child.beforeCreate();
-        child.setId((Long) hibernateTemplate.save(checkNotNull(child)));
+        child.setUuid((String) hibernateTemplate.save(checkNotNull(child)));
         return child;
     }
 
-//    @Transactional
     public C update(@Valid C child) {
         hibernateTemplate.update(checkNotNull(child));
         return child;
     }
 
-//    @Transactional
-    public void delete(Long id) {
-        C found = get(checkNotNull(id));
+    public void delete(String uuid) {
+        C found = get(checkNotNull(uuid));
         if (found != null) {
             hibernateTemplate.delete(found);
         }
-    }
-
-//    @Transactional
-    public void delete(String uuid) {
-        delete(checkNotNull(findByUuid(uuid).getId()));
     }
 
 }

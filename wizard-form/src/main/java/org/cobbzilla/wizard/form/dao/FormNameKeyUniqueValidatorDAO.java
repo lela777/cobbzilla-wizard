@@ -28,7 +28,7 @@ public abstract class FormNameKeyUniqueValidatorDAO<E extends Identifiable> exte
                 if (thing == null) return true;
 
                 switch (idFieldName) {
-                    case "id": return thing.getId().equals(idValue);
+                    case "uuid": return thing.getUuid().equals(idValue);
                     default: throw new IllegalArgumentException("isUnique: unsupported idFieldName: "+idFieldName);
                 }
 

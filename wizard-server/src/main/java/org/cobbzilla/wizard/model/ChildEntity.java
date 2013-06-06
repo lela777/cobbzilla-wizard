@@ -11,7 +11,6 @@ public abstract class ChildEntity<C, P> extends IdentifiableBase {
     public abstract void setParent (P parent);
 
     public void update(C child) {
-        Long existingId = getId();
         String existingUuid = getUuid();
         P existingParent = getParent();
         try {
@@ -22,7 +21,6 @@ public abstract class ChildEntity<C, P> extends IdentifiableBase {
 
         } finally {
             // Do not allow these to be updated
-            setId(existingId);
             setUuid(existingUuid);
             setParent(existingParent);
         }

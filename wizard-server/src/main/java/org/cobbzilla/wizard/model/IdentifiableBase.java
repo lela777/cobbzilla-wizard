@@ -9,16 +9,10 @@ import org.apache.commons.beanutils.BeanUtils;
 import javax.persistence.*;
 import java.util.UUID;
 
-@MappedSuperclass @EqualsAndHashCode(of={"id"})
+@MappedSuperclass @EqualsAndHashCode(of={"uuid"})
 public class IdentifiableBase implements Identifiable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonIgnore
-    @Column(unique=true, nullable=false, updatable=false)
-    @Getter @Setter protected Long id;
-
-    @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
+    @Id @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
     public void beforeCreate() {
@@ -27,7 +21,6 @@ public class IdentifiableBase implements Identifiable {
     }
 
     public void update(Identifiable thing) {
-        Long existingId = getId();
         String existingUuid = getUuid();
         try {
             BeanUtils.copyProperties(this, thing);
@@ -37,13 +30,13 @@ public class IdentifiableBase implements Identifiable {
 
         } finally {
             // Do not allow these to be updated
-            setId(existingId);
             setUuid(existingUuid);
         }
     }
 
     @Column(updatable=false, nullable=false)
-    @Getter @Setter @JsonIgnore
-    protected long ctime = System.currentTimeMillis();
+    @Getter @JsonIgnore
+    private long ctime = System.currentTimeMillis();
+    public void setCtime (long time) { /*noop*/ }
 
 }

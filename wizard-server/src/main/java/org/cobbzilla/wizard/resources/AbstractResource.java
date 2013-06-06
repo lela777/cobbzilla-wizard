@@ -49,7 +49,6 @@ public abstract class AbstractResource<T extends Identifiable> {
         Response response;
         final T found = dao().findByUuid(uuid);
         if (found != null) {
-            thing.setId(found.getId());
             thing.setUuid(uuid);
             dao().update(thing);
             response = Response.noContent().build();
