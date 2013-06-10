@@ -10,6 +10,13 @@ import org.cobbzilla.wizard.validation.ValidEnum;
 @NoArgsConstructor
 public class ResultPage {
 
+    public static final String PARAM_USE_PAGINATION = "page";
+    public static final String PARAM_PAGE_NUMBER    = "pn";
+    public static final String PARAM_PAGE_SIZE      = "ps";
+    public static final String PARAM_SORT_FIELD     = "sf";
+    public static final String PARAM_SORT_ORDER     = "so";
+    public static final String PARAM_FILTER         = "q";
+
     public static final int MAX_FILTER_LENGTH = 50;
     public static final int MAX_SORTFIELD_LENGTH = 50;
     public static final String DEFAULT_SORT_FIELD = "ctime";
@@ -21,6 +28,14 @@ public class ResultPage {
     public static final ResultPage FIRST_RESULT = new ResultPage(1, 1);
 
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
+
+    public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter) {
+        if (pageNumber != null) this.pageNumber = pageNumber;
+        if (pageSize != null) this.pageSize = pageSize;
+        if (sortField != null) this.sortField = sortField;
+        if (sortOrder != null) this.sortOrder = SortOrder.valueOf(sortOrder).name();
+        if (filter != null) this.filter = filter;
+    }
 
     public ResultPage (int pageNumber, int pageSize) {
         this(pageNumber, pageSize, null, null, null);

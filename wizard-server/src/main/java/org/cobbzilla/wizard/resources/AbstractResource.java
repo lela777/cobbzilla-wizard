@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.resources;
 
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -22,8 +23,17 @@ public abstract class AbstractResource<T extends Identifiable> {
     protected abstract String getEndpoint();
 
     @GET
-    public List<T> index() {
-        return dao().findAll();
+    public List<T> index(@QueryParam(ResultPage.PARAM_USE_PAGINATION) Boolean usePagination,
+                         @QueryParam(ResultPage.PARAM_PAGE_NUMBER) Integer pageNumber,
+                         @QueryParam(ResultPage.PARAM_PAGE_SIZE) Integer pageSize,
+                         @QueryParam(ResultPage.PARAM_SORT_FIELD) String sortField,
+                         @QueryParam(ResultPage.PARAM_SORT_ORDER) String sortOrder,
+                         @QueryParam(ResultPage.PARAM_FILTER) String filter) {
+        if (usePagination == null || !usePagination) {
+            return dao().findAll();
+        } else {
+            return dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter));
+        }
     }
 
     @POST

@@ -1,6 +1,8 @@
 package org.cobbzilla.wizard.dao;
 
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.model.ResultPage;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -140,4 +142,40 @@ public class AbstractDAO<E> {
         }
         return proxy;
     }
+
+    public static final String entityAlias = "x";
+    public static final String FILTER_PARAM = "filter";
+    public static final String[] EMPTY_PARAMS = new String[0];
+    public static final Object[] EMPTY_VALUES = new Object[0];
+    public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
+    public <T> List<T> query(ResultPage resultPage) {
+        String filterClause = "";
+        String[] params;
+        Object[] values;
+        if (resultPage.getHasFilter()) {
+            params = PARAM_FILTER;
+            values = new Object[] { getFilterString(resultPage.getFilter()) };
+            filterClause = getFilterClause(entityAlias, FILTER_PARAM);
+        } else {
+            params = EMPTY_PARAMS;
+            values = EMPTY_VALUES;
+        }
+        if (filterClause.length() > 0) filterClause = "where "+filterClause;
+        final String queryString = new StringBuilder().append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause).append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
+        return hibernateTemplate.executeFind(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
+    }
+
+    public static String caseInsensitiveLike(String entityAlias, String filterParam, final String attribute) {
+        return new StringBuilder().append("lower(").append(entityAlias).append(".").append(attribute).append(") LIKE lower(:").append(filterParam).append(") ").toString();
+    }
+
+    private static final String PCT = "%";
+    private static final String ESC_PCT = "[%]";
+    public static String getFilterString(String value) {
+        // escape any embedded '%' chars, and then add '%' as the first and last chars
+        return PCT + value.toLowerCase().replace(PCT, ESC_PCT) + PCT;
+    }
+
+    protected String getFilterClause(String entityAlias, String filterParam) { return StringUtil.EMPTY; }
+
 }
