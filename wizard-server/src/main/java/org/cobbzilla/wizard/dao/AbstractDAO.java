@@ -14,6 +14,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -143,6 +144,8 @@ public class AbstractDAO<E> {
         return proxy;
     }
 
+    public Class<? extends Map<String, String>> boundsClass() { return null; }
+
     public static final String entityAlias = "x";
     public static final String FILTER_PARAM = "filter";
     public static final String[] EMPTY_PARAMS = new String[0];
@@ -160,10 +163,18 @@ public class AbstractDAO<E> {
             params = EMPTY_PARAMS;
             values = EMPTY_VALUES;
         }
+        if (resultPage.getHasBounds()) {
+            for (String bound : resultPage.getBounds().keySet()) {
+                if (filterClause.length() > 0) filterClause += "and ";
+                filterClause += formatBound(entityAlias, bound, resultPage.getBounds().get(bound));
+            }
+        }
         if (filterClause.length() > 0) filterClause = "where "+filterClause;
         final String queryString = new StringBuilder().append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause).append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
         return hibernateTemplate.executeFind(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
     }
+
+    protected String formatBound(String entityAlias, String bound, String value) { throw new IllegalArgumentException("Invalid bound: "+bound); }
 
     public static String caseInsensitiveLike(String entityAlias, String filterParam, final String attribute) {
         return new StringBuilder().append("lower(").append(entityAlias).append(".").append(attribute).append(") LIKE lower(:").append(filterParam).append(") ").toString();

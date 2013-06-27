@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
+import java.util.Map;
+
 @NoArgsConstructor
 public class ResultPage {
 
@@ -16,6 +18,7 @@ public class ResultPage {
     public static final String PARAM_SORT_FIELD     = "sf";
     public static final String PARAM_SORT_ORDER     = "so";
     public static final String PARAM_FILTER         = "q";
+    public static final String PARAM_BOUNDS         = "b";
 
     public static final int MAX_FILTER_LENGTH = 50;
     public static final int MAX_SORTFIELD_LENGTH = 50;
@@ -29,16 +32,17 @@ public class ResultPage {
 
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
 
-    public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter) {
+    public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, Map<String, String> bounds) {
         if (pageNumber != null) this.pageNumber = pageNumber;
         if (pageSize != null) this.pageSize = pageSize;
         if (sortField != null) this.sortField = sortField;
         if (sortOrder != null) this.sortOrder = SortOrder.valueOf(sortOrder).name();
         if (filter != null) this.filter = filter;
+        this.bounds = bounds;
     }
 
     public ResultPage (int pageNumber, int pageSize) {
-        this(pageNumber, pageSize, null, null, null);
+        this(pageNumber, pageSize, null, normalizeSortOrder(null), null);
     }
 
     public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder) {
@@ -46,11 +50,19 @@ public class ResultPage {
     }
 
     public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder, String filter) {
-        this.pageNumber = pageNumber;
-        this.pageSize = pageSize;
-        this.sortField = sortField;
-        this.sortOrder = (sortOrder == null) ? ResultPage.DEFAULT_SORT : sortOrder.name();
-        this.filter = filter;
+        this(pageNumber, pageSize, sortField, normalizeSortOrder(sortOrder), filter, null);
+    }
+
+    public ResultPage (int pageNumber, int pageSize, String sortField, String sortOrder, String filter) {
+        this(pageNumber, pageSize, sortField, sortOrder, filter, null);
+    }
+
+    public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder, String filter, Map<String, String> bounds) {
+        this(pageNumber, pageSize, sortField, normalizeSortOrder(sortOrder), filter, bounds);
+    }
+
+    private static String normalizeSortOrder(SortOrder sortOrder) {
+        return (sortOrder == null) ? ResultPage.DEFAULT_SORT : sortOrder.name();
     }
 
     public static ResultPage singleResult (String sortField, SortOrder sortOrder) {
@@ -58,7 +70,7 @@ public class ResultPage {
     }
 
     public static ResultPage singleResult (String sortField, SortOrder sortOrder, String filter) {
-        return new ResultPage(1, 1, sortField, sortOrder, filter);
+        return new ResultPage(new Integer(1), new Integer(1), sortField, sortOrder, filter);
     }
 
     @Getter @Setter private int pageNumber = 1;
@@ -67,8 +79,7 @@ public class ResultPage {
 
     @Getter @Setter private int pageSize = 10;
 
-    @Setter
-    private String sortField = DEFAULT_SORT_FIELD;
+    @Setter private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {
         // only return the first several chars, to thwart a hypothetical injection attack.
         final String sort = StringUtil.empty(sortField) ? DEFAULT_SORT_FIELD : sortField;
@@ -87,5 +98,8 @@ public class ResultPage {
         return StringUtil.prefix(filter, MAX_FILTER_LENGTH);
     }
     @JsonIgnore public boolean getHasFilter() { return filter != null && filter.trim().length() > 0; }
+
+    @Getter @Setter private Map<String, String> bounds;
+    @JsonIgnore public boolean getHasBounds() { return bounds != null && !bounds.isEmpty(); }
 
 }

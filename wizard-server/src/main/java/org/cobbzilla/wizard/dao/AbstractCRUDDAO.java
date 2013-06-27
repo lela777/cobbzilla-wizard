@@ -12,9 +12,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         extends AbstractDAO<E>
         implements AbstractCRUDDAOBase<E> {
 
-    public List<E> findAll() {
-        return list(criteria());
-    }
+    public List<E> findAll() { return list(criteria()); }
 
     public E findByUuid(String uuid) {
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));

@@ -12,6 +12,7 @@ public class BasicConstraintConstants {
     public static final String ERR_SORT_ORDER_INVALID = "{err.sortOrder.invalid}";
 
     public static final String ERR_RESET_TOKEN_LENGTH = "{err.resetToken.length}";
+    public static final String ERR_BOUNDS_INVALID = "{err.bounds.invalid}";
 
     public static final int UUID_MAXLEN = 100;
     public static final int HASHEDPASSWORD_MAXLEN = 200;

@@ -9,4 +9,6 @@ public class RestResponse {
     public String json;
     public String location;
 
+    public String getLocationUuid () { return location.substring(location.lastIndexOf("/")+1); }
+
 }

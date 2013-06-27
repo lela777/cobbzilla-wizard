@@ -1,6 +1,10 @@
 package org.cobbzilla.wizard.resources;
 
+import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
+import org.cobbzilla.wizard.model.BasicConstraintConstants;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 
@@ -9,8 +13,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public abstract class AbstractResource<T extends Identifiable> {
@@ -23,17 +28,31 @@ public abstract class AbstractResource<T extends Identifiable> {
     protected abstract String getEndpoint();
 
     @GET
-    public List<T> index(@QueryParam(ResultPage.PARAM_USE_PAGINATION) Boolean usePagination,
-                         @QueryParam(ResultPage.PARAM_PAGE_NUMBER) Integer pageNumber,
-                         @QueryParam(ResultPage.PARAM_PAGE_SIZE) Integer pageSize,
-                         @QueryParam(ResultPage.PARAM_SORT_FIELD) String sortField,
-                         @QueryParam(ResultPage.PARAM_SORT_ORDER) String sortOrder,
-                         @QueryParam(ResultPage.PARAM_FILTER) String filter) {
-        if (usePagination == null || !usePagination) {
-            return dao().findAll();
-        } else {
-            return dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter));
+    public Response index(@QueryParam(ResultPage.PARAM_USE_PAGINATION) Boolean usePagination,
+                          @QueryParam(ResultPage.PARAM_PAGE_NUMBER) Integer pageNumber,
+                          @QueryParam(ResultPage.PARAM_PAGE_SIZE) Integer pageSize,
+                          @QueryParam(ResultPage.PARAM_SORT_FIELD) String sortField,
+                          @QueryParam(ResultPage.PARAM_SORT_ORDER) String sortOrder,
+                          @QueryParam(ResultPage.PARAM_FILTER) String filter,
+                          @QueryParam(ResultPage.PARAM_BOUNDS) String bounds) {
+
+        if (usePagination == null || !usePagination) return findAll();
+
+        Map<String, String> boundsMap = null;
+        if (!StringUtil.empty(bounds)) {
+            Class<? extends Map<String, String>> clazz = dao().boundsClass();
+            try {
+                boundsMap = JsonUtil.fromJson(bounds, clazz);
+            } catch (Exception e) {
+                log.error("index: invalid bounds ("+bounds+") for boundsClass "+clazz+": "+e);
+                return ResourceUtil.invalid(BasicConstraintConstants.ERR_BOUNDS_INVALID);
+            }
         }
+        return Response.ok(dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+    }
+
+    protected Response findAll() {
+        return Response.ok(dao().findAll()).build();
     }
 
     @POST
