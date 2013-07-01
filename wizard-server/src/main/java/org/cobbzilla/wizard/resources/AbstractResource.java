@@ -58,7 +58,6 @@ public abstract class AbstractResource<T extends Identifiable> {
     @POST
     public Response create(@Valid T thing) {
         thing = dao().create(thing);
-//        final URI location = URI.create(getEndpoint() + "/" + thing.getUuid());
         final URI location = URI.create(thing.getUuid());
         return Response.created(location).build();
     }
