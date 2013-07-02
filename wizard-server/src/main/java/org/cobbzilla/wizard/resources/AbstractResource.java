@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
-import org.cobbzilla.wizard.model.BasicConstraintConstants;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 
@@ -38,17 +37,21 @@ public abstract class AbstractResource<T extends Identifiable> {
 
         if (usePagination == null || !usePagination) return findAll();
 
+        final Map<String, String> boundsMap = parseBounds(bounds, dao());
+        return Response.ok(dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+    }
+
+    public static Map<String, String> parseBounds(String bounds, AbstractCRUDDAO dao) {
         Map<String, String> boundsMap = null;
         if (!StringUtil.empty(bounds)) {
-            Class<? extends Map<String, String>> clazz = dao().boundsClass();
+            Class<? extends Map<String, String>> clazz = dao.boundsClass();
             try {
                 boundsMap = JsonUtil.fromJson(bounds, clazz);
             } catch (Exception e) {
-                log.error("index: invalid bounds ("+bounds+") for boundsClass "+clazz+": "+e);
-                return ResourceUtil.invalid(BasicConstraintConstants.ERR_BOUNDS_INVALID);
+                log.warn("index: invalid bounds (" + bounds + ") for boundsClass " + clazz + ": " + e);
             }
         }
-        return Response.ok(dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+        return boundsMap;
     }
 
     protected Response findAll() {
