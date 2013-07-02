@@ -53,7 +53,7 @@ public abstract class MongoDocStore<T extends MongoDocBase> implements DocStore<
         if (found == null) {
             save(thing);
         } else {
-            thing.setUuid(found.getUuid());
+            thing.setId(found.getId());
             getDatastore().merge(thing);
         }
     }
