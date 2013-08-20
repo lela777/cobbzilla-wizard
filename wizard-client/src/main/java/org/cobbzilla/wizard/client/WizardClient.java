@@ -26,14 +26,14 @@ public class WizardClient {
 
     protected HttpClient getHttpClient () { return new DefaultHttpClient(); }
 
-    protected RestResponse doGet(String path) throws Exception {
+    public RestResponse doGet(String path) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
     }
 
-    protected RestResponse doPost(String path, String json) throws Exception {
+    public RestResponse doPost(String path, String json) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
@@ -44,7 +44,7 @@ public class WizardClient {
         return getResponse(client, httpPost);
     }
 
-    protected RestResponse doPut(String path, String json) throws Exception {
+    public RestResponse doPut(String path, String json) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
@@ -55,7 +55,7 @@ public class WizardClient {
         return getResponse(client, httpPut);
     }
 
-    protected RestResponse doDelete(String path) throws Exception {
+    public RestResponse doDelete(String path) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpDelete httpDelete = new HttpDelete(url);
