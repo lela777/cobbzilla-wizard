@@ -36,15 +36,17 @@ public class DummyMqConsumer implements MqConsumer {
         }
     }
 
-    public boolean waitForMessage () throws InterruptedException {
-        return waitForMessage(DEFAULT_TIMEOUT);
-    }
+    public boolean waitForMessage () throws InterruptedException { return waitForMessage(DEFAULT_TIMEOUT); }
+    public boolean waitForMessage (long timeout) throws InterruptedException { return waitForMessages(1, timeout); }
 
-    public boolean waitForMessage (long timeout) throws InterruptedException {
+    public boolean waitForMessages (int count) throws InterruptedException { return waitForMessages(count, DEFAULT_TIMEOUT); }
+
+    public boolean waitForMessages (int count, long timeout) throws InterruptedException {
         long start = System.currentTimeMillis();
-        while (messageCount.get() == 0 && System.currentTimeMillis() < start + timeout) {
+        while (messageCount.get() < count && System.currentTimeMillis() < start + timeout) {
             Thread.sleep(100);
         }
-        return messageCount.get() > 0;
+        return messageCount.get() >= count;
     }
+
 }
