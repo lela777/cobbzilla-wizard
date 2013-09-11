@@ -16,6 +16,10 @@ public class RandomUtil {
         return RandomStringUtils.randomAlphanumeric(length);
     }
 
+    public static String randomDigits(int length) {
+        return RandomStringUtils.randomNumeric(length);
+    }
+
     public static String randomEmail () {
         return randomName(5) + System.currentTimeMillis() + TEST_EMAIL_SUFFIX;
     }

@@ -14,8 +14,11 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cobbzilla.util.http.HttpRequestBean;
+import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.util.RestResponse;
 
+import javax.ws.rs.HttpMethod;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -25,6 +28,28 @@ public class WizardClient {
     @Getter private String baseUri;
 
     protected HttpClient getHttpClient () { return new DefaultHttpClient(); }
+
+    public RestResponse process(HttpRequestBean requestBean) throws Exception {
+        switch (requestBean.getMethod()) {
+            case HttpMethod.GET:
+                return doGet(requestBean.getUri());
+            case HttpMethod.POST:
+                return doPost(requestBean.getUri(), getJson(requestBean));
+            case HttpMethod.PUT:
+                return doPut(requestBean.getUri(), getJson(requestBean));
+            case HttpMethod.DELETE:
+                return doDelete(requestBean.getUri());
+            default:
+                throw new IllegalArgumentException("Unsupported request method: "+requestBean.getMethod());
+        }
+    }
+
+    private String getJson(HttpRequestBean requestBean) throws Exception {
+        Object data = requestBean.getData();
+        if (data == null) return null;
+        if (data instanceof String) return data.toString();
+        return JsonUtil.toJson(data);
+    }
 
     public RestResponse doGet(String path) throws Exception {
         HttpClient client = getHttpClient();

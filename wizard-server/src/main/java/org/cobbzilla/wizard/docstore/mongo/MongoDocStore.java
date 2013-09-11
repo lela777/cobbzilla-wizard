@@ -49,7 +49,11 @@ public abstract class MongoDocStore<T extends MongoDocBase> implements DocStore<
     @Override public void save(T thing) { getDatastore().save(thing); }
 
     public void saveOrUpdate (T thing) {
-        final T found = findByUuid(thing.getUuid());
+
+        final String uuid = thing.getUuid();
+        if (uuid == null) throw new IllegalArgumentException("uuid was null");
+
+        final T found = findByUuid(uuid);
         if (found == null) {
             save(thing);
         } else {

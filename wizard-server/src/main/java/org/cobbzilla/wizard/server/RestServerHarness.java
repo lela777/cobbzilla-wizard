@@ -20,6 +20,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
     @Getter @Setter private Class<S> restServerClass;
     @Getter @Setter private List<ConfigurationSource> configurations = new ArrayList<>();
     @Getter private S server = null;
+    @Getter private C configuration = null;
 
     private AtomicBoolean started = new AtomicBoolean(false);
 
@@ -44,7 +45,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
 
             final Class<C> configurationClass = ReflectionUtil.getTypeParameter(getRestServerClass(), RestServerConfiguration.class);
             final RestServerConfigurationFactory<C> factory = new RestServerConfigurationFactory<>(configurationClass);
-            final C configuration = factory.build(configurations, env);
+            configuration = factory.build(configurations, env);
 
             server.setConfiguration(configuration);
             log.info("starting " + configuration.getServerName() + ": " + server.getClass().getName() + " with config: " + configuration);
