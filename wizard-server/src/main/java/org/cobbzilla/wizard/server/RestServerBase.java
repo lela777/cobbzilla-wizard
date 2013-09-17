@@ -20,6 +20,7 @@ import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
 import org.cobbzilla.wizard.validation.JacksonMessageBodyProvider;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.config.DependencyDescriptor;
@@ -74,7 +75,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         log.info("starting "+configuration.getServerName()+"...");
         httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(configuration.getServerName()+" started.");
-
         return httpServer;
     }
 

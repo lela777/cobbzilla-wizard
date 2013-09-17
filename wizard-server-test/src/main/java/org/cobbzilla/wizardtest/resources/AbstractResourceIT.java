@@ -31,9 +31,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected abstract Class<? extends S> getRestServerClass();
 
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
-    protected static RestServer server = null;
+    protected static volatile RestServer server = null;
 
-    @Override public String getBaseUri() { return server.getClientUri(); }
+    @Override public synchronized String getBaseUri() { return server.getClientUri(); }
 
     public void beforeServerStart () throws Exception {}
     public boolean shouldCacheServer () { return true; }
@@ -41,6 +41,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     @Before
     public synchronized void startServer() throws Exception {
         if (serverHarness == null || !shouldCacheServer()) {
+            if (server != null) server.stopServer();
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
             serverHarness.init(getServerEnvironment());
