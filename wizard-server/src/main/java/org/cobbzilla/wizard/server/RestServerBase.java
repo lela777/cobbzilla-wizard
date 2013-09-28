@@ -118,7 +118,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final Thread mainThread = Thread.currentThread();
 
         // Ignore "server" argument if it is the first arg
-        List<String> argList = Arrays.asList(args);
+        final List<String> argList = Arrays.asList(args);
         if (argList.size() >= 1 && argList.get(0).equals("server")) {
             argList.remove(0);
         }
