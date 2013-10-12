@@ -1,5 +1,10 @@
 package org.cobbzilla.wizard.dao;
 
+/**
+ * Forked from dropwizard https://github.com/dropwizard/
+ * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
+ */
+
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.criterion.Restrictions;
 
@@ -10,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class AbstractCRUDDAO<E extends Identifiable>
         extends AbstractDAO<E>
-        implements AbstractCRUDDAOBase<E> {
+        implements DAO<E> {
 
     public List<E> findAll() { return list(criteria()); }
 
@@ -19,7 +24,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     }
 
     public boolean exists(Long id) {
-        return uniqueResult(hibernateTemplate.find("select 1 from " + getEntityClass().getSimpleName() + " e where e.id = ?", id)) != null;
+        return DAOUtil.uniqueResult(hibernateTemplate.find("select 1 from " + getEntityClass().getSimpleName() + " e where e.id = ?", id)) != null;
     }
 
     public boolean exists(String uuid) {
@@ -51,4 +56,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return uniqueResult(Restrictions.eq(field, value));
     }
 
+    public List<E> findByField(String field, Object value) {
+        return list(criteria().add(Restrictions.eq(field, value)));
+    }
 }

@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.resources;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
-import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
+import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 
@@ -22,7 +22,8 @@ public abstract class AbstractResource<T extends Identifiable> {
     public static final String UUID_PARAM = "uuid";
     public static final String UUID = "{"+UUID_PARAM+"}";
 
-    protected abstract AbstractCRUDDAO<T> dao ();
+//    protected abstract AbstractCRUDDAO<T> dao ();
+    protected abstract DAO<T> dao ();
 
     protected abstract String getEndpoint();
 
@@ -41,7 +42,7 @@ public abstract class AbstractResource<T extends Identifiable> {
         return Response.ok(dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
     }
 
-    public static Map<String, String> parseBounds(String bounds, AbstractCRUDDAO dao) {
+    public static Map<String, String> parseBounds(String bounds, DAO dao) {
         Map<String, String> boundsMap = null;
         if (!StringUtil.empty(bounds)) {
             Class<? extends Map<String, String>> clazz = dao.boundsClass();
@@ -60,10 +61,15 @@ public abstract class AbstractResource<T extends Identifiable> {
 
     @POST
     public Response create(@Valid T thing) {
+        final Object context = preCreate(thing);
         thing = dao().create(thing);
+        thing = postCreate(thing, context);
         final URI location = URI.create(thing.getUuid());
         return Response.created(location).build();
     }
+
+    protected Object preCreate(T thing) { return null; }
+    protected T postCreate(T thing, Object context) { return thing; }
 
     @Path("/"+UUID)
     @GET
@@ -81,7 +87,9 @@ public abstract class AbstractResource<T extends Identifiable> {
         final T found = dao().findByUuid(uuid);
         if (found != null) {
             thing.setUuid(uuid);
+            final Object context = preUpdate(thing);
             dao().update(thing);
+            thing = postUpdate(thing, context);
             response = Response.noContent().build();
         } else {
             response = ResourceUtil.notFound(uuid);
@@ -89,13 +97,21 @@ public abstract class AbstractResource<T extends Identifiable> {
         return response;
     }
 
+    protected Object preUpdate(T thing) { return null; }
+    protected T postUpdate(T thing, Object context) { return thing; }
+
     @Path("/"+UUID)
     @DELETE
     public Response delete(@PathParam(UUID_PARAM) String uuid) {
         final T found = dao().findByUuid(uuid);
         if (found == null) return ResourceUtil.notFound();
+        final Object context = preDelete(found);
         dao().delete(uuid);
+        postDelete(found, context);
         return Response.noContent().build();
     }
+
+    protected Object preDelete(T thing) { return null; }
+    protected void postDelete(T thing, Object context) {}
 
 }

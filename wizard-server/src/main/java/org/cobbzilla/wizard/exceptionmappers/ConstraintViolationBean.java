@@ -26,7 +26,8 @@ public class ConstraintViolationBean {
         this.messageTemplate = violation.getMessageTemplate();
         this.message = violation.getMessage();
         try {
-            this.invalidValue = violation.getInvalidValue().toString();
+            Object val = violation.getInvalidValue();
+            this.invalidValue = (val == null) ? "none-set" : val.toString();
         } catch (Exception e) {
             this.invalidValue = "Error converting invalid value to String: "+e;
         }

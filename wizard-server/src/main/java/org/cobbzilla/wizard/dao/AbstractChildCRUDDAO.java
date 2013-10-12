@@ -13,8 +13,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
-        extends AbstractDAO<C>
-        implements AbstractCRUDDAOBase<C> {
+        extends AbstractDAO<C> {
 
     @Autowired protected SessionFactory sessionFactory;
 

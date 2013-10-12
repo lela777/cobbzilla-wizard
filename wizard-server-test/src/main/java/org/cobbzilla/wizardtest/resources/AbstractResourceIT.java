@@ -3,7 +3,7 @@ package org.cobbzilla.wizardtest.resources;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.wizard.client.WizardClient;
+import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
@@ -22,7 +22,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 
 @Slf4j
-public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends WizardClient {
+public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends ApiClientBase {
 
     public static final String EMPTY_JSON = "{}";
     public static final String EMPTY_JSON_ARRAY = "[]";

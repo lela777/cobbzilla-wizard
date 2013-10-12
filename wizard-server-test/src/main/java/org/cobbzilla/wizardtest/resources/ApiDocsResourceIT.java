@@ -17,7 +17,7 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
     @AfterClass
     public static void finalizeDocCapture () throws Exception { apiDocs.close(); }
 
-    @Override protected HttpClient getHttpClient() {
+    @Override public HttpClient getHttpClient() {
         return new DefaultHttpClient(new RestexClientConnectionManager(apiDocs));
     }
 

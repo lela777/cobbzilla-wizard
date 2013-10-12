@@ -1,5 +1,10 @@
 package org.cobbzilla.wizard.dao;
 
+/**
+ * Forked from dropwizard https://github.com/dropwizard/
+ * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
+ */
+
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -71,17 +76,11 @@ public class AbstractDAO<E> {
      */
     @SuppressWarnings("unchecked")
     protected E uniqueResult(DetachedCriteria criteria) throws HibernateException {
-        return uniqueResult(hibernateTemplate.findByCriteria(criteria));
+        return (E) DAOUtil.uniqueResult(hibernateTemplate.findByCriteria(criteria));
     }
 
     protected E uniqueResult(SimpleExpression expression) {
         return uniqueResult(criteria().add(expression));
-    }
-
-    protected E uniqueResult(List<E> found) {
-        if (found == null || found.size() == 0) return null;
-        if (found.size() > 1) throw new HibernateException("nonunique result: "+found);
-        return found.get(0);
     }
 
     /**
@@ -107,7 +106,7 @@ public class AbstractDAO<E> {
      * @see Session#get(Class, Serializable)
      */
     @SuppressWarnings("unchecked")
-    protected E get(Serializable id) {
+    public E get(Serializable id) {
         return (E) hibernateTemplate.get(entityClass, checkNotNull(id));
     }
 
@@ -123,7 +122,7 @@ public class AbstractDAO<E> {
      * @see Session#saveOrUpdate(Object)
      */
 //    @Transactional
-    protected E persist(E entity) throws HibernateException {
+    public E persist(E entity) throws HibernateException {
         hibernateTemplate.saveOrUpdate(checkNotNull(entity));
         return entity;
     }
