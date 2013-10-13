@@ -20,7 +20,6 @@ import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
 import org.cobbzilla.wizard.validation.JacksonMessageBodyProvider;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.config.DependencyDescriptor;
@@ -31,6 +30,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -40,15 +40,24 @@ import java.util.Set;
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
 
     private HttpServer httpServer;
-
     @Getter @Setter private C configuration;
+
+    private boolean hasPort () {
+        return configuration != null && configuration.getHttp() != null && configuration.getHttp().getPort() != 0;
+    }
+
+    private void verifyPort() { if (!hasPort()) throw new IllegalStateException("no http port specified"); }
 
     public URI getBaseUri() { return buildURI("0.0.0.0"); }
 
     @Override
-    public String getClientUri() { return buildURI("127.0.0.1").toString(); }
+    public String getClientUri() {
+        verifyPort();
+        return buildURI("127.0.0.1").toString();
+    }
 
     protected URI buildURI(String host) {
+        verifyPort();
         HttpConfiguration httpConfiguration = configuration.getHttp();
         return UriBuilder.fromUri("http://" + host + httpConfiguration.getBaseUri()).port(httpConfiguration.getPort()).build();
     }
@@ -70,6 +79,13 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         // tell grizzly where the IoC factory is coming from
         IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, cac);
+
+        // pick a port
+        if (configuration.getHttp().getPort() == 0) {
+            try (ServerSocket s = new ServerSocket(0)) {
+                configuration.getHttp().setPort(s.getLocalPort());
+            }
+        }
 
         // fire it up
         log.info("starting "+configuration.getServerName()+"...");
