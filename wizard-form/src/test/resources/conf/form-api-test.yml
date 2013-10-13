@@ -3,7 +3,7 @@ serverName: shareice-api-test
 springContextPath: "classpath:/conf/spring-test-form-api.xml"
 
 http:
-  port: 9180
+  port: 0 # test will pick port
   baseUri: /
 
 jersey:

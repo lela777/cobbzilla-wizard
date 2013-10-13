@@ -10,6 +10,7 @@ import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
+import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.junit.After;
 import org.junit.Before;
@@ -28,6 +29,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public static final String EMPTY_JSON_ARRAY = "[]";
 
     protected abstract List<ConfigurationSource> getConfigurations();
+    protected List<ConfigurationSource> getConfigurationSources(String... paths) {
+        return StreamConfigurationSource.fromResources(getClass(), paths);
+    }
+
     protected abstract Class<? extends S> getRestServerClass();
 
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;

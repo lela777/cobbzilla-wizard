@@ -2,5 +2,6 @@ package org.cobbzilla.wizard.form.model;
 
 public enum FormFieldType {
 
-    YESNO, TEXT_BOX,
+    YESNO, DATE, TIME, DATETIME, TEXT, LONGTEXT, SINGLE_CHOICE, MULTI_CHOICE
+
 }

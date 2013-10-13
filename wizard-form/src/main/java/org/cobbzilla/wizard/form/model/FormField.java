@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.form.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.IdentifiableBase;
 import org.cobbzilla.wizard.validation.HasValue;
@@ -13,6 +14,8 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.Collections;
+import java.util.List;
 
 import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
@@ -46,6 +49,12 @@ public class FormField extends IdentifiableBase implements Identifiable {
     @Size(max=FIELD_OPTS_TYPE_MAXLEN, message=ERR_FIELD_OPTS_TYPE_LENGTH)
     @Column(length=FIELD_OPTS_TYPE_MAXLEN)
     @Getter @Setter private String fieldOptions;
+
+    public static final String OPTIONS_SEPARATOR = "|";
+    public static final List<String> EMPTY_OPTIONS = Collections.emptyList();
+    @Transient public List<String> getOptions () {
+        return StringUtil.empty(fieldOptions) ? EMPTY_OPTIONS : StringUtil.split(fieldOptions, OPTIONS_SEPARATOR);
+    }
 
     @NotNull(message=ERR_HAS_DESCRIPTION_EMPTY)
     @Column(nullable=false)

@@ -199,7 +199,7 @@ public class FormResourcesIT extends FormResourceITBase {
         final FormField field = new FormField();
         field.setNameKey(randomName(length == null ? FIELD_NAME_MAXLEN : length));
         field.setDefaultName(randomName(length == null ? FIELD_DEFAULT_NAME_MAXLEN : length));
-        field.setFieldType(FormFieldType.TEXT_BOX.name());
+        field.setFieldType(FormFieldType.TEXT.name());
         field.setOwner(randomName(length == null ? FORM_OWNER_MAXLEN : length));
         return field;
     }
