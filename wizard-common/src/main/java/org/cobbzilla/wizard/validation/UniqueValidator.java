@@ -8,9 +8,8 @@ import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import javax.ws.rs.ext.Provider;
 
-@Provider @Service
+@Service
 public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, ApplicationContextAware {
 
     private String uniqueProperty;

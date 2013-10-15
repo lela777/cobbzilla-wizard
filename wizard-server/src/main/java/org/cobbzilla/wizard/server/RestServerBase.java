@@ -17,13 +17,14 @@ import org.cobbzilla.wizard.server.config.HttpConfiguration;
 import org.cobbzilla.wizard.server.config.JerseyConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
-import org.cobbzilla.wizard.validation.JacksonMessageBodyProvider;
+import org.cobbzilla.wizard.server.JacksonMessageBodyProvider;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -41,6 +42,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     private HttpServer httpServer;
     @Getter @Setter private C configuration;
+
+    private ConfigurableApplicationContext applicationContext;
+    public ApplicationContext getApplicationContext () { return applicationContext; }
 
     private boolean hasPort () {
         return configuration != null && configuration.getHttp() != null && configuration.getHttp().getPort() != 0;
@@ -75,10 +79,10 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         BCryptUtil.setBcryptRounds(configuration.getBcryptRounds());
 
-        ConfigurableApplicationContext cac = buildSpringApplicationContext();
+        applicationContext = buildSpringApplicationContext();
 
         // tell grizzly where the IoC factory is coming from
-        IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, cac);
+        IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, applicationContext);
 
         // pick a port
         if (configuration.getHttp().getPort() == 0) {

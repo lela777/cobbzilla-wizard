@@ -1,8 +1,12 @@
-package org.cobbzilla.wizard.validation;
+package org.cobbzilla.wizard.server;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import org.cobbzilla.wizard.validation.InvalidEntityException;
+import org.cobbzilla.wizard.validation.Validated;
+import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 
 import javax.validation.Valid;
 import javax.validation.groups.Default;

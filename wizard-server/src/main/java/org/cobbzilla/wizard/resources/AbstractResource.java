@@ -61,9 +61,12 @@ public abstract class AbstractResource<T extends Identifiable> {
 
     @POST
     public Response create(@Valid T thing) {
-        final Object context = preCreate(thing);
+
+        final Object context;
+        context = preCreate(thing);
         thing = dao().create(thing);
         thing = postCreate(thing, context);
+
         final URI location = URI.create(thing.getUuid());
         return Response.created(location).build();
     }
