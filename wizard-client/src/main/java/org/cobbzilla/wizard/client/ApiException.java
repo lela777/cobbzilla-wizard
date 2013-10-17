@@ -12,6 +12,7 @@ public class ApiException extends RuntimeException {
     @Getter private RestResponse response;
 
     public ApiException (RestResponse response) {
+        super(response.status+": "+response.json);
         this.response = response;
     }
 
