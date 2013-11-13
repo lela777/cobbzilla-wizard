@@ -15,4 +15,6 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
 
+    @Getter @Setter private ThriftConfiguration thrift;
+
 }

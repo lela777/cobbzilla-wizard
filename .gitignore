@@ -7,3 +7,5 @@ build.log
 *-merged.yml
 tmp
 build.log
+*~
+.DS_Store
