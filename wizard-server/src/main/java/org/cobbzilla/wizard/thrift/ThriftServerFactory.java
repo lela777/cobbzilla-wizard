@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.thrift;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TSimpleServer;
@@ -10,26 +9,33 @@ import org.cobbzilla.wizard.server.config.ThriftConfiguration;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.springframework.context.ApplicationContext;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ThriftServerFactory {
 
-    public Map<ThriftConfiguration, TServer> buildServers(ThriftConfiguration[] configurations, ApplicationContext applicationContext) {
+    public List<ThriftServer> buildServers(ThriftConfiguration[] configurations, ApplicationContext applicationContext) {
+        return buildServers(configurations, applicationContext, false);
+    }
 
-        if (configurations == null || configurations.length == 0) return Collections.emptyMap();
+    public List<ThriftServer> buildServers(ThriftConfiguration[] configurations, ApplicationContext applicationContext, boolean start) {
 
-        final Map<ThriftConfiguration, TServer> servers = new HashMap<>();
+        if (configurations == null || configurations.length == 0) return Collections.emptyList();
+
+        final List<ThriftServer> servers = new ArrayList<>();
         for (ThriftConfiguration configuration : configurations) {
-            servers.put(configuration, buildServer(configuration, applicationContext));
+            servers.add(buildServer(configuration, applicationContext));
         }
+
+        if (start) for (ThriftServer server : servers) server.start();
+
         return servers;
     }
 
-    public TServer buildServer(ThriftConfiguration configuration, ApplicationContext applicationContext) {
+    public ThriftServer buildServer(ThriftConfiguration configuration, ApplicationContext applicationContext) {
 
         final Object handler;
-        final TServer server;
+        final ThriftServer server = new ThriftServer();
+        server.setConfiguration(configuration);
         try {
             final Class handlerClass = Class.forName(configuration.getHandler());
             handler = handlerClass.newInstance();
@@ -42,11 +48,14 @@ public class ThriftServerFactory {
             final TProcessor processor = (TProcessor) processorClass.getConstructor(ifaceClass).newInstance(handler);
 
             final TServerTransport serverTransport = new TServerSocket(configuration.getPort());
-            server = new TSimpleServer(new TServer.Args(serverTransport).processor(processor));
+            server.setTServer(new TSimpleServer(new TServer.Args(serverTransport).processor(processor)));
 
         } catch (Exception e) {
-            throw new IllegalStateException("Error creating thrift server ("+configuration+"): "+e, e);
+            throw new IllegalStateException("Error creating thrift tServer ("+configuration+"): "+e, e);
         }
+
+        server.setThread(new Thread(server));
+
         return server;
     }
 
