@@ -13,6 +13,8 @@ import java.util.*;
 
 public class ThriftServerFactory {
 
+    public static final ThriftServerFactory INSTANCE = new ThriftServerFactory();
+
     public List<ThriftServer> buildServers(ThriftConfiguration[] configurations, ApplicationContext applicationContext) {
         return buildServers(configurations, applicationContext, false);
     }
