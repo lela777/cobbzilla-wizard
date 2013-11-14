@@ -70,20 +70,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Thrift -->
-        <dependency>
-            <groupId>org.apache.thrift</groupId>
-            <artifactId>libthrift</artifactId>
-            <version>${thrift.version}</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- Hibernate -->
         <dependency>
             <groupId>org.hibernate</groupId>

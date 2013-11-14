@@ -5,6 +5,7 @@ import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,11 +27,6 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     @Override
     public List<T> findAll() {
         throw new IllegalStateException("not supported");
-    }
-
-    @Override
-    public boolean exists(Long id) {
-        return findOne(MongoDocBase.UUID, id) != null;
     }
 
     @Override
@@ -72,4 +68,9 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
         return found.get(0);
     }
 
+    @Override
+    public List<T> search(ResultPage resultPage) {
+        // todo
+        return Collections.emptyList();
+    }
 }

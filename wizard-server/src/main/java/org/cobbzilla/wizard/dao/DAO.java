@@ -17,7 +17,7 @@ public interface DAO<E> {
 
     public List<E> findAll();
     public E findByUuid(String uuid);
-    public boolean exists(Long id);
+    public List<E> search(ResultPage resultPage);
     public boolean exists(String uuid);
     public E create(@Valid E entity);
     public E createOrUpdate(@Valid E entity);

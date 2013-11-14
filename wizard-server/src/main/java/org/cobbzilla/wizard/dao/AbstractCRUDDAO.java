@@ -6,9 +6,11 @@ package org.cobbzilla.wizard.dao;
  */
 
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.ResultPage;
 import org.hibernate.criterion.Restrictions;
 
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -21,10 +23,6 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
 
     public E findByUuid(String uuid) {
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
-    }
-
-    public boolean exists(Long id) {
-        return DAOUtil.uniqueResult(hibernateTemplate.find("select 1 from " + getEntityClass().getSimpleName() + " e where e.id = ?", id)) != null;
     }
 
     public boolean exists(String uuid) {
@@ -58,5 +56,11 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
 
     public List<E> findByField(String field, Object value) {
         return list(criteria().add(Restrictions.eq(field, value)));
+    }
+
+    @Override
+    public List<E> search(ResultPage resultPage) {
+        // todo
+        return Collections.emptyList();
     }
 }
