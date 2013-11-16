@@ -34,6 +34,9 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
         return findOne(MongoDocBase.UUID, uuid) != null;
     }
 
+    @Override public Object preCreate(@Valid T entity) { return entity; }
+    @Override public T postCreate(T entity, Object context) { return  entity; }
+
     @Override
     public T create(@Valid T entity) {
         entity.beforeCreate();
@@ -47,6 +50,9 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
         saveOrUpdate(entity);
         return entity;
     }
+
+    @Override public Object preUpdate(@Valid T entity) { return entity; }
+    @Override public T postUpdate(@Valid T entity, Object context) { return entity; }
 
     @Override
     public T update(@Valid T entity) {

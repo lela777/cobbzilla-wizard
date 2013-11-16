@@ -29,6 +29,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return findByUuid(uuid) != null;
     }
 
+    @Override public Object preCreate(@Valid E entity) { return entity; }
+    @Override public E postCreate(E entity, Object context) { return  entity; }
+
     public E create(@Valid E entity) {
         entity.beforeCreate();
         entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
@@ -38,6 +41,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     public E createOrUpdate(@Valid E entity) {
         return (entity.getUuid() == null) ? create(entity) : update(entity);
     }
+
+    @Override public Object preUpdate(@Valid E entity) { return entity; }
+    @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
 
     public E update(@Valid E entity) {
         return hibernateTemplate.merge(checkNotNull(entity));
