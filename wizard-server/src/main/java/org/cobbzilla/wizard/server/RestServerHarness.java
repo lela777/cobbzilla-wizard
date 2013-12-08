@@ -31,8 +31,12 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
     public void addConfiguration(ConfigurationSource source) { configurations.add(source); }
 
     public synchronized void startServer() throws Exception {
+        startServer(null);
+    }
+
+    public synchronized void startServer(Map<String, String> env) throws Exception {
         if (!started.getAndSet(true)) {
-            if (server == null) init(null);
+            if (server == null) init(env);
             server.startServer();
         } else {
             log.warn("startServer: server already started");
