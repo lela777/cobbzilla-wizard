@@ -7,6 +7,8 @@ import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,19 +37,23 @@ public abstract class ThriftCRUDHandlerBase<E extends Identifiable, T extends TB
         return toThrift(dao().findByUuid(uuid));
     }
 
-    public T create(T patron) throws TException {
-        return toThrift(dao().create(fromThrift(patron)));
+    public T create(T thriftThing) throws TException, tValidationException {
+        try {
+            return toThrift(dao().create(fromThrift(thriftThing)));
+        } catch (ConstraintViolationException e) {
+            throw toThrift(e);
+        }
     }
 
-    public T update(T patron) throws TException {
-        return toThrift(dao().update(fromThrift(patron)));
+    public T update(T thriftThing) throws TException, tValidationException {
+        return toThrift(dao().update(fromThrift(thriftThing)));
     }
 
     public void remove(String uuid) throws TException {
         dao().delete(uuid);
     }
 
-    private ResultPage fromThrift(tResultPage page) {
+    protected ResultPage fromThrift(tResultPage page) {
         ResultPage r = new ResultPage();
         try {
             BeanUtils.copyProperties(r, page);
@@ -55,6 +61,20 @@ public abstract class ThriftCRUDHandlerBase<E extends Identifiable, T extends TB
             throw new RuntimeException(e);
         }
         return r;
+    }
+
+    protected tValidationException toThrift(ConstraintViolationException e) {
+        tValidationException validationException = new tValidationException();
+        final List<tValidationFailure> errors = new ArrayList<>();
+        for (ConstraintViolation v : e.getConstraintViolations()) {
+            tValidationFailure failure = new tValidationFailure();
+            failure.setMessageTemplate(v.getMessageTemplate());
+            failure.setMessage(v.getMessage());
+            if (v.getInvalidValue() != null) failure.setInvalidValue(v.getInvalidValue().toString());
+            errors.add(failure);
+        }
+        validationException.setErrors(errors);
+        return validationException;
     }
 
 }

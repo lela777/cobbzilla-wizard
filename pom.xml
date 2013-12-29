@@ -15,6 +15,7 @@
 
     <modules>
         <module>wizard-common</module>
+        <module>wizard-thrift</module>
         <module>wizard-server</module>
         <module>wizard-client</module>
         <module>wizard-server-test</module>
