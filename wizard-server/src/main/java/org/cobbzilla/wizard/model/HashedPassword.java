@@ -7,23 +7,20 @@ import lombok.Setter;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.security.bcrypt.BCrypt;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
+import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
-import org.cobbzilla.util.string.StringUtil;
-import org.cobbzilla.wizard.validation.HasValue;
-
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @Embeddable @NoArgsConstructor
 public class HashedPassword {
 
-    public HashedPassword (String password) {
-        resetPassword(password);
-    }
+    public HashedPassword (String password) { setPassword(password); }
 
     @HasValue(message=ERR_HASHED_PASSWORD_EMPTY)
     @Size(max=HASHEDPASSWORD_MAXLEN, message=ERR_HASHED_PASSWORD_LENGTH)
@@ -56,6 +53,13 @@ public class HashedPassword {
         return password != null && BCrypt.checkpw(password, hashedPassword);
     }
 
-    public void resetPassword(String password) { this.hashedPassword = BCryptUtil.hash(password); }
+    public void setPassword(String password) {
+        this.hashedPassword = BCryptUtil.hash(password);
+    }
+
+    public void resetPassword(String password, long tokenDuration) {
+        if (getResetTokenAge() > tokenDuration) throw new IllegalStateException("token expired");
+        setPassword(password);
+    }
 
 }
