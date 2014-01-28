@@ -13,11 +13,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
+import org.cobbzilla.util.system.PortPicker;
 import org.cobbzilla.wizard.server.config.HttpConfiguration;
 import org.cobbzilla.wizard.server.config.JerseyConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
-import org.cobbzilla.wizard.server.JacksonMessageBodyProvider;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.springframework.beans.BeansException;
@@ -31,7 +31,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -86,9 +85,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         // pick a port
         if (configuration.getHttp().getPort() == 0) {
-            try (ServerSocket s = new ServerSocket(0)) {
-                configuration.getHttp().setPort(s.getLocalPort());
-            }
+            configuration.getHttp().setPort(PortPicker.pick());
         }
 
         // fire it up
