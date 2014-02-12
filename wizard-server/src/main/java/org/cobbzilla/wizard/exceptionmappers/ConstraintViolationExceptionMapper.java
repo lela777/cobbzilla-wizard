@@ -19,7 +19,7 @@ public class ConstraintViolationExceptionMapper
     }
 
     protected List<ConstraintViolationBean> exception2json(ConstraintViolationException e) {
-        List<ConstraintViolationBean> violations = new ArrayList<>();
+        final List<ConstraintViolationBean> violations = new ArrayList<>();
         for (ConstraintViolation violation : e.getConstraintViolations()) {
             violations.add(new ConstraintViolationBean(violation));
         }

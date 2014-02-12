@@ -20,7 +20,10 @@ public class StreamConfigurationSource implements ConfigurationSource {
     public static List<ConfigurationSource> fromResources (Class clazz, String... streams) {
         List<ConfigurationSource> list = new ArrayList<>(streams.length);
         for (String stream : streams) {
-            list.add(new StreamConfigurationSource(clazz.getResourceAsStream(stream)));
+            InputStream in = clazz.getResourceAsStream(stream);
+            if (in == null) in = clazz.getClassLoader().getResourceAsStream(stream);
+            if (in == null) throw new IllegalArgumentException("StreamConfigurationSource.fromResources: Couldn't find stream: "+stream);
+            list.add(new StreamConfigurationSource(in));
         }
         return list;
     }

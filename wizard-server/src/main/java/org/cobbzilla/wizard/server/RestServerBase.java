@@ -17,7 +17,9 @@ import org.cobbzilla.util.system.PortPicker;
 import org.cobbzilla.wizard.server.config.HttpConfiguration;
 import org.cobbzilla.wizard.server.config.JerseyConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
+import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
+import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.springframework.beans.BeansException;
@@ -32,14 +34,12 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
 
-    private HttpServer httpServer;
+    @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
     private ConfigurableApplicationContext applicationContext;
@@ -51,12 +51,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     private void verifyPort() { if (!hasPort()) throw new IllegalStateException("no http port specified"); }
 
-    public URI getBaseUri() { return buildURI("0.0.0.0"); }
+    public URI getBaseUri() { return buildURI(getListenAddress()); }
+
+    protected String getListenAddress() { return ALL_ADDRS; }
 
     @Override
     public String getClientUri() {
         verifyPort();
-        return buildURI("127.0.0.1").toString();
+        return buildURI(LOCALHOST).toString();
     }
 
     protected URI buildURI(String host) {
@@ -130,7 +132,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     private static final Object mainThreadLock = new Object();
 
-    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> void main(String[] args, Class<S> mainClass) throws Exception {
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S main(String[] args,
+                                                                                          Class<S> mainClass) throws Exception {
+        return main(args, mainClass, null, getConfigurationSources(args));
+    }
+
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+                                                        main(String[] args, Class<S> mainClass,
+                                                             final RestServerLifecycleListener<S> listener,
+                                                             List<ConfigurationSource> configSources) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
 
@@ -142,13 +152,12 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         final RestServerHarness<C, S> serverHarness = new RestServerHarness<>(mainClass);
 
-        for (String arg : argList) {
-            serverHarness.addConfiguration(new FileConfigurationSource(new File(arg)));
-        }
-
+        serverHarness.addConfigurations(configSources);
         serverHarness.init(System.getenv());
-        final S server = serverHarness.getServer();
+
+        final S server = getServer(serverHarness, listener);
         server.startServer();
+        if (listener != null) listener.onStart(server);
 
         final String serverName = server.getConfiguration().getServerName();
 
@@ -161,6 +170,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                     mainThread.interrupt();
                     mainThreadLock.notify();
                 }
+                if (listener != null) listener.onStop(server);
             }
         }));
 
@@ -170,6 +180,31 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         } catch (InterruptedException e) {
             log.info(serverName+" server thread interrupted, stopping server...");
         }
+
+        return server;
+    }
+
+    private static <S extends RestServerBase<C>, C extends RestServerConfiguration> S getServer(RestServerHarness<C, S> serverHarness,
+                                                                                                RestServerLifecycleListener<S> listener) {
+        S server = serverHarness.getServer();
+        if (listener != null) server = listener.beforeStart(server);
+        return server;
+    }
+
+    protected static List<ConfigurationSource> getConfigurationSources(String[] args) {
+        return getFileConfigurationSources(args);
+    }
+
+    protected static List<ConfigurationSource> getFileConfigurationSources(String[] args) {
+        final List<ConfigurationSource> sources = new ArrayList<>();
+        for (String arg : args) {
+            sources.add(new FileConfigurationSource(new File(arg)));
+        }
+        return sources;
+    }
+
+    protected static List<ConfigurationSource> getStreamConfigurationSources(Class clazz, String[] args) {
+        return StreamConfigurationSource.fromResources(clazz, args);
     }
 
 }

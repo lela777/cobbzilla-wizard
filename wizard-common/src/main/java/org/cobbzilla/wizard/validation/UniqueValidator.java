@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.validation;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -10,6 +11,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 @Service
+@Slf4j
 public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, ApplicationContextAware {
 
     private String uniqueProperty;
@@ -40,7 +42,13 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
         UniqueValidatorDao dao = (UniqueValidatorDao) applicationContext.getBean(daoBean);
 
         Object idValue = (idProperty.equals(IsUnique.CREATE_ONLY) || !ReflectionUtil.hasGetter(object, idProperty)) ? null : ReflectionUtil.get(object, idProperty);
-        Object fieldValue = ReflectionUtil.get(object, uniqueProperty);
+        final Object fieldValue;
+        try {
+            fieldValue = ReflectionUtil.get(object, uniqueProperty);
+        } catch (Exception e) {
+            log.warn("uniqueProperty ("+uniqueProperty+") couldn't be read from target object "+object+": "+e, e);
+            return true;
+        }
 
         if (uniqueField.equals(IsUnique.DEFAULT)) uniqueField = uniqueProperty;
         if (idField.equals(IsUnique.DEFAULT)) idField = idProperty;

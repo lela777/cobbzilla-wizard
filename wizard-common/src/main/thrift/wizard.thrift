@@ -1,5 +1,6 @@
 namespace java org.cobbzilla.wizard.thrift
 namespace rb CobbzillaWizard
+namespace php CobbzillaWizard
 
 enum tSortOrder {
   ASC = 0,

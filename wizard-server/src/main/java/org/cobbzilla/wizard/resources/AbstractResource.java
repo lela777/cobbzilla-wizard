@@ -38,8 +38,9 @@ public abstract class AbstractResource<T extends Identifiable> {
 
         if (usePagination == null || !usePagination) return findAll();
 
-        final Map<String, String> boundsMap = parseBounds(bounds, dao());
-        return Response.ok(dao().query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+        final DAO<T> dao = dao();
+        final Map<String, String> boundsMap = parseBounds(bounds, dao);
+        return Response.ok(dao.query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
     }
 
     public static Map<String, String> parseBounds(String bounds, DAO dao) {
@@ -87,11 +88,12 @@ public abstract class AbstractResource<T extends Identifiable> {
     @PUT
     public Response update(@PathParam(UUID_PARAM) String uuid, @Valid T thing) {
         Response response;
-        final T found = dao().findByUuid(uuid);
+        final DAO<T> dao = dao();
+        final T found = dao.findByUuid(uuid);
         if (found != null) {
             thing.setUuid(uuid);
             final Object context = preUpdate(thing);
-            dao().update(thing);
+            dao.update(thing);
             thing = postUpdate(thing, context);
             response = Response.noContent().build();
         } else {
@@ -106,10 +108,11 @@ public abstract class AbstractResource<T extends Identifiable> {
     @Path("/"+UUID)
     @DELETE
     public Response delete(@PathParam(UUID_PARAM) String uuid) {
-        final T found = dao().findByUuid(uuid);
+        final DAO<T> dao = dao();
+        final T found = dao.findByUuid(uuid);
         if (found == null) return ResourceUtil.notFound();
         final Object context = preDelete(found);
-        dao().delete(uuid);
+        dao.delete(uuid);
         postDelete(found, context);
         return Response.noContent().build();
     }

@@ -8,6 +8,9 @@ import java.io.IOException;
 
 public interface RestServer<C extends RestServerConfiguration> {
 
+    public static final String ALL_ADDRS = "0.0.0.0";
+    public static final String LOCALHOST = "127.0.0.1";
+
     public HttpServer startServer() throws IOException;
 
     public C getConfiguration();
