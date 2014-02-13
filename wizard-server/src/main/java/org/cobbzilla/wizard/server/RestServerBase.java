@@ -1,12 +1,14 @@
 package org.cobbzilla.wizard.server;
 
 import com.google.common.collect.Lists;
+import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.impl.provider.entity.StreamingOutputProvider;
 import com.sun.jersey.core.spi.component.ioc.IoCComponentProviderFactory;
+import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
 import com.sun.jersey.spi.spring.container.SpringComponentProviderFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +23,10 @@ import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.validation.Validator;
+import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.servlet.WebappContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.config.DependencyDescriptor;
@@ -69,6 +74,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public HttpServer startServer() throws IOException {
 
+        final String serverName = configuration.getServerName();
         JerseyConfiguration jerseyConfiguration = configuration.getJersey();
         ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
@@ -90,10 +96,31 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             configuration.getHttp().setPort(PortPicker.pick());
         }
 
+        httpServer = new HttpServer();
+        NetworkListener listener = new NetworkListener("grizzly-"+serverName, getListenAddress(), configuration.getHttp().getPort());
+        httpServer.addListener(listener);
+
+        final HttpHandler processor = ContainerFactory.createContainer(HttpHandler.class, rc, factory);
+        final String restBase = configuration.getRestServerBaseUri();
+        httpServer.getServerConfiguration().addHttpHandler(processor, restBase);
+
+        if (configuration.hasStaticAssets()) {
+            final String staticBase = configuration.getStaticAssetBaseUri();
+            if (staticBase == null || staticBase.trim().length() == 0 || staticBase.trim().equals(restBase)) {
+                throw new IllegalArgumentException("staticAssetBaseUri not defined, or is same as restServerBaseUri");
+            }
+            httpServer.getServerConfiguration().addHttpHandler(new StaticAssetHandler(getClass().getClassLoader(), configuration.getStaticAssetRoots()), staticBase);
+        }
+
         // fire it up
-        log.info("starting "+configuration.getServerName()+"...");
-        httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
-        log.info(configuration.getServerName()+" started.");
+        log.info("starting "+serverName+"...");
+
+
+
+        httpServer.start();
+
+        // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
+        log.info(serverName+" started.");
         return httpServer;
     }
 
