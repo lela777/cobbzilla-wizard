@@ -17,8 +17,10 @@ public class IdentifiableBase implements Identifiable {
 
     public void beforeCreate() {
         if (uuid != null) throw new IllegalStateException("uuid already initialized");
-        uuid = UUID.randomUUID().toString();
+        initUuid();
     }
+
+    public void initUuid() { uuid = UUID.randomUUID().toString(); }
 
     public void update(Identifiable thing) {
         String existingUuid = getUuid();
