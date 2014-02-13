@@ -12,7 +12,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
 
     @Override
     protected boolean handle(String resourcePath, Request request, Response response) throws Exception {
-        if (resourcePath.equals("") || resourcePath.equals("/") || resourcePath.equals("index.php")) {
+        if (resourcePath.equals("") || resourcePath.equals("/") || resourcePath.equals("/index.php")) {
             return super.handle("/index.html", request, response);
         }
         return super.handle(resourcePath, request, response);
