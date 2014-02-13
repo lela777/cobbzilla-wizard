@@ -10,7 +10,7 @@ import java.util.List;
 // forked from dropwizard-- https://github.com/codahale/dropwizard
 
 /**
- * A simple façade for Hibernate Validator.
+ * A simple facade for Hibernate Validator.
  * forked from DropWizard-- https://github.com/codahale/dropwizard
  */
 public class Validator {
