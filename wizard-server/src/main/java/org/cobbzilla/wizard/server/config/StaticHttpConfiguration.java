@@ -5,8 +5,8 @@ import lombok.Setter;
 
 public class StaticHttpConfiguration {
 
+    @Getter @Setter private String filesystemEnvVar;
     @Getter @Setter private String baseUri;
-
     @Getter @Setter private String[] assetRoots;
 
     public boolean hasAssetRoots() {
