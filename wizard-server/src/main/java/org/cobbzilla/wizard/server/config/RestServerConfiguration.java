@@ -15,6 +15,10 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
 
+    @Getter @Setter private String staticAssetBaseUri;
+    @Getter @Setter private String[] staticAssetRoots;
+    public boolean hasStaticAssets () { return staticAssetRoots != null && staticAssetRoots.length > 0; }
+
     @Getter @Setter private ThriftConfiguration[] thrift;
 
 }
