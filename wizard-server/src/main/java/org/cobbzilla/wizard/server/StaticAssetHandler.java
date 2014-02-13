@@ -34,8 +34,10 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         }
 
         if (resourcePath.equals("/js/request_headers.js")) {
+            response.setContentType("text/javascript");
             Map<String, Object> headers = new HashMap<>();
             for (String name : request.getHeaderNames()) {
+                name = name.toLowerCase();
                 List<String> values = IteratorUtils.toList(request.getHeaders(name).iterator());
                 if (values.size() == 1) {
                     headers.put(name, values.get(0));
