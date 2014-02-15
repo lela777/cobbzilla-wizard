@@ -14,6 +14,7 @@ public class StaticHttpConfiguration {
     @Getter @Setter private String baseUri;
     @Getter @Setter private String assetRoot;
     @Getter @Setter private boolean mustacheCacheEnabled = true;
+    @Getter @Setter private String mustacheResourceRoot;
 
     public boolean hasAssetRoot() { return !StringUtil.empty(assetRoot); }
     public boolean hasFilesystemEnvVar() { return !StringUtil.empty(filesystemEnvVar); }

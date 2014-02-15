@@ -36,10 +36,14 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         this.configuration = configuration;
         if (configuration.hasFilesystemEnvVar()) {
             assetDir = System.getenv().get(configuration.getFilesystemEnvVar());
-            if (assetDir != null) assetDirFile = new File(assetDir);
-            if (assetDirFile.exists() && assetDirFile.canRead()) {
-                templateFileRoot = assetDirFile;
-                LocaleAwareMustacheFactory.setSkipClasspath(true);
+            if (assetDir != null) {
+                assetDirFile = new File(assetDir);
+                if (assetDirFile.exists() && assetDirFile.canRead()) {
+                    templateFileRoot = assetDirFile;
+                    LocaleAwareMustacheFactory.setSkipClasspath(true);
+                } else {
+                    throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist");
+                }
             }
         }
 
@@ -88,21 +92,19 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
             final Writer writer = response.getWriter();
             final Map<String, Object> scope = new HashMap<>();
 
-            return factory.render(path, scope, writer);
+            if (!factory.render(path, scope, writer)) {
+                return factory.render(configuration.getMustacheResourceRoot()+path, scope, writer);
+            }
         }
 
         // ENV takes precedence
         if (assetDir != null) {
-            if (assetDirFile.exists()) {
-                final File file = new File(assetDirFile.getAbsolutePath() + File.separator + resourcePath);
-                if (file.exists()) {
-                    StaticAssetHandler.sendFile(response, file);
-                    return true;
-                } else {
-                    throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") exists but file ("+file.getAbsolutePath()+") does not");
-                }
+            final File file = new File(assetDirFile.getAbsolutePath() + File.separator + resourcePath);
+            if (file.exists()) {
+                StaticAssetHandler.sendFile(response, file);
+                return true;
             } else {
-                throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist");
+                log.warn("asset dir ("+assetDirFile.getAbsolutePath()+") exists but file ("+file.getAbsolutePath()+") does not");
             }
         }
 
