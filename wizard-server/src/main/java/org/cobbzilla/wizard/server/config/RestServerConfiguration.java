@@ -14,7 +14,7 @@ public class RestServerConfiguration {
     @Getter @Setter private JerseyConfiguration jersey;
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
-    public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoots(); }
+    public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 

@@ -111,9 +111,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             if (staticBase == null || staticBase.trim().length() == 0 || staticBase.trim().equals(restBase)) {
                 throw new IllegalArgumentException("staticAssetBaseUri not defined, or is same as restServerBaseUri");
             }
-            final StaticAssetHandler staticHandler = new StaticAssetHandler(staticAssets.getFilesystemEnvVar(),
-                                                                            getClass().getClassLoader(),
-                                                                            staticAssets.getAssetRoots());
+            final StaticAssetHandler staticHandler = new StaticAssetHandler(staticAssets, getClass().getClassLoader());
             httpServer.getServerConfiguration().addHttpHandler(staticHandler, staticBase);
         }
 
