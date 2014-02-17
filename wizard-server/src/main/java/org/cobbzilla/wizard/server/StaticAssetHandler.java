@@ -92,9 +92,8 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
             final Writer writer = response.getWriter();
             final Map<String, Object> scope = new HashMap<>();
 
-            if (!factory.render(path, scope, writer)) {
-                return factory.render(configuration.getMustacheResourceRoot()+path, scope, writer);
-            }
+            if (factory.render(path, scope, writer)) return true;
+            return factory.render(configuration.getMustacheResourceRoot()+path, scope, writer);
         }
 
         // ENV takes precedence
