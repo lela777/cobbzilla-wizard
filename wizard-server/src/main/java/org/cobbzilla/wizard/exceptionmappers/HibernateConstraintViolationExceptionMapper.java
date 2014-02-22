@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 import org.hibernate.exception.ConstraintViolationException;
 

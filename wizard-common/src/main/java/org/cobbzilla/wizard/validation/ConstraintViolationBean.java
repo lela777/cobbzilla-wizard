@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.exceptionmappers;
+package org.cobbzilla.wizard.validation;
 
 import lombok.Getter;
 import lombok.Setter;

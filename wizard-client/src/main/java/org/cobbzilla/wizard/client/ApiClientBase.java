@@ -63,11 +63,31 @@ public class ApiClientBase {
         return JsonUtil.toJson(data);
     }
 
+    private ApiException specializeApiException(ApiException e) {
+        switch (e.getResponse().status) {
+            case HttpStatusCodes.NOT_FOUND:
+                return new NotFoundException(e.getResponse());
+            case HttpStatusCodes.FORBIDDEN:
+                return new ForbiddenException(e.getResponse());
+            case HttpStatusCodes.UNPROCESSABLE_ENTITY:
+                return new ValidationException(e.getResponse());
+            default: return e;
+        }
+    }
+
     public RestResponse doGet(String path) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
+    }
+
+    public RestResponse get(String path) throws Exception {
+        try {
+            return doGet(path);
+        } catch (ApiException e) {
+            throw specializeApiException(e);
+        }
     }
 
     public RestResponse doPost(String path, String json) throws Exception {
@@ -81,6 +101,14 @@ public class ApiClientBase {
         return getResponse(client, httpPost);
     }
 
+    public RestResponse post(String path, String json) throws Exception {
+        try {
+            return doPost(path, json);
+        } catch (ApiException e) {
+            throw specializeApiException(e);
+        }
+    }
+
     public RestResponse doPut(String path, String json) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
@@ -92,11 +120,27 @@ public class ApiClientBase {
         return getResponse(client, httpPut);
     }
 
+    public RestResponse put(String path, String json) throws Exception {
+        try {
+            return doPut(path, json);
+        } catch (ApiException e) {
+            throw specializeApiException(e);
+        }
+    }
+
     public RestResponse doDelete(String path) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpDelete httpDelete = new HttpDelete(url);
         return getResponse(client, httpDelete);
+    }
+
+    public RestResponse delete(String path) throws Exception {
+        try {
+            return doDelete(path);
+        } catch (ApiException e) {
+            throw specializeApiException(e);
+        }
     }
 
     private String getUrl(String path, String clientUri) {

@@ -1,7 +1,7 @@
 package org.cobbzilla.wizard.resources;
 
 import org.cobbzilla.util.http.HttpStatusCodes;
-import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
 import javax.ws.rs.core.Response;

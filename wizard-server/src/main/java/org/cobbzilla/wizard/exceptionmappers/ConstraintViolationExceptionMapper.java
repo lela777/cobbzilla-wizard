@@ -1,5 +1,7 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.Response;

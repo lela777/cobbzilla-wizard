@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
-import org.cobbzilla.wizard.exceptionmappers.ConstraintViolationBean;
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;

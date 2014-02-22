@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.InvalidEntityException;
 
 import javax.validation.ConstraintViolation;

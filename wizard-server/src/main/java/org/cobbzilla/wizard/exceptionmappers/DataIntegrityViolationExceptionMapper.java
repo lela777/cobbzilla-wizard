@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import javax.ws.rs.core.Response;
