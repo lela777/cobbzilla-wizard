@@ -16,6 +16,10 @@ public class ConstraintViolationBean {
 
     public ConstraintViolationBean() {}
 
+    public ConstraintViolationBean(String messageTemplate) {
+        this(messageTemplate, messageTemplate, null);
+    }
+
     public ConstraintViolationBean(String messageTemplate, String message, String invalidValue) {
         this.messageTemplate = messageTemplate;
         this.message = message;
