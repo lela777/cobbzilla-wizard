@@ -18,6 +18,7 @@ import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.IOException;
@@ -27,9 +28,20 @@ import java.io.InputStream;
 public class ApiClientBase {
 
     @Getter private ApiConnectionInfo connectionInfo;
+    @Getter @Setter private String token;
 
     public ApiClientBase (ApiConnectionInfo connectionInfo) { this.connectionInfo = connectionInfo; }
     public ApiClientBase (String baseUri) { connectionInfo = new ApiConnectionInfo(baseUri); }
+
+    public ApiClientBase (ApiConnectionInfo connectionInfo, HttpClient httpClient) {
+        this(connectionInfo);
+        setHttpClient(httpClient);
+    }
+
+    public ApiClientBase (String baseUri, HttpClient httpClient) {
+        this(baseUri);
+        setHttpClient(httpClient);
+    }
 
     public String getBaseUri () { return connectionInfo.getBaseUri(); }
 
@@ -154,6 +166,7 @@ public class ApiClientBase {
     }
 
     protected RestResponse getResponse(HttpClient client, HttpRequestBase request) throws IOException {
+        request = beforeSend(request);
         final HttpResponse response = client.execute(request);
         final int statusCode = response.getStatusLine().getStatusCode();
         final String responseJson;
@@ -168,6 +181,17 @@ public class ApiClientBase {
         }
         return new RestResponse(statusCode, responseJson, getLocationHeader(response));
     }
+
+    protected HttpRequestBase beforeSend(HttpRequestBase request) {
+        if (!StringUtil.empty(token)) {
+            final String tokenHeader = getTokenHeader();
+            if (StringUtil.empty(tokenHeader)) throw new IllegalArgumentException("token set but getTokenHeader returned null");
+            request.setHeader(tokenHeader, token);
+        }
+        return request;
+    }
+
+    protected String getTokenHeader() { return null; }
 
     public static final String LOCATION_HEADER = "Location";
     private String getLocationHeader(HttpResponse response) {
