@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.beanutils.BeanUtils;
+import org.cobbzilla.util.string.StringUtil;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -14,6 +15,8 @@ public class IdentifiableBase implements Identifiable {
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
+
+    public boolean hasUuid () { return !StringUtil.empty(uuid); }
 
     public void beforeCreate() {
         if (uuid != null) throw new IllegalStateException("uuid already initialized");

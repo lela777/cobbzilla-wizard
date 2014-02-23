@@ -20,4 +20,8 @@ public class BasicConstraintConstants {
 
     public static final int URL_MAXLEN = 1024;
 
+    public static final String SV_MAJOR_LENGTH = "{err.semanticVersion.major.length}";
+    public static final String SV_MINOR_LENGTH = "{err.semanticVersion.minor.length}";
+    public static final String SV_PATCH_LENGTH = "{err.semanticVersion.patch.length}";
+    public static final int SV_VERSION_MAXLEN = 30;
 }
