@@ -23,6 +23,7 @@ import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Stack;
 
 @Slf4j @NoArgsConstructor
 public class ApiClientBase {
@@ -191,6 +192,28 @@ public class ApiClientBase {
     }
 
     protected String getTokenHeader() { return null; }
+
+    protected Stack<String> tokenStack = new Stack<>();
+    public void pushToken(String token) {
+        synchronized (tokenStack) {
+            if (tokenStack.isEmpty()) tokenStack.push(getToken());
+            tokenStack.push(token);
+            setToken(token);
+        }
+    }
+
+    /**
+     * Pops the current token off the stack.
+     * Now the top of the stack is the previous token, so it becomes the active one.
+     * @return The current token popped off (NOT the current active token, call getToken() to get that)
+     */
+    public String popToken() {
+        synchronized (tokenStack) {
+            tokenStack.pop();
+            setToken(tokenStack.peek());
+            return getToken();
+        }
+    }
 
     public static final String LOCATION_HEADER = "Location";
     private String getLocationHeader(HttpResponse response) {
