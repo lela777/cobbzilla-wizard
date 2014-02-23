@@ -18,4 +18,6 @@ public class BasicConstraintConstants {
     public static final int HASHEDPASSWORD_MAXLEN = 200;
     public static final int RESETTOKEN_MAXLEN = 30;
 
+    public static final int URL_MAXLEN = 1024;
+
 }
