@@ -75,15 +75,22 @@ public class ApiClientBase {
         return JsonUtil.toJson(data);
     }
 
-    private ApiException specializeApiException(ApiException e) {
-        switch (e.getResponse().status) {
+    protected ApiException specializeApiException(ApiException e) {
+        return specializeApiException(e.getResponse());
+    }
+
+    protected ApiException specializeApiException(RestResponse response) {
+        if (response.isSuccess()) {
+            throw new IllegalArgumentException("specializeApiException: cannot specialize exception for a successful response: "+response);
+        }
+        switch (response.status) {
             case HttpStatusCodes.NOT_FOUND:
-                return new NotFoundException(e.getResponse());
+                return new NotFoundException(response);
             case HttpStatusCodes.FORBIDDEN:
-                return new ForbiddenException(e.getResponse());
+                return new ForbiddenException(response);
             case HttpStatusCodes.UNPROCESSABLE_ENTITY:
-                return new ValidationException(e.getResponse());
-            default: return e;
+                return new ValidationException(response);
+            default: return new ApiException(response);
         }
     }
 
@@ -95,11 +102,9 @@ public class ApiClientBase {
     }
 
     public RestResponse get(String path) throws Exception {
-        try {
-            return doGet(path);
-        } catch (ApiException e) {
-            throw specializeApiException(e);
-        }
+        final RestResponse restResponse = doGet(path);
+        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        return restResponse;
     }
 
     public RestResponse doPost(String path, String json) throws Exception {
@@ -114,11 +119,9 @@ public class ApiClientBase {
     }
 
     public RestResponse post(String path, String json) throws Exception {
-        try {
-            return doPost(path, json);
-        } catch (ApiException e) {
-            throw specializeApiException(e);
-        }
+        final RestResponse restResponse = doPost(path, json);
+        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        return restResponse;
     }
 
     public RestResponse doPut(String path, String json) throws Exception {
@@ -133,11 +136,9 @@ public class ApiClientBase {
     }
 
     public RestResponse put(String path, String json) throws Exception {
-        try {
-            return doPut(path, json);
-        } catch (ApiException e) {
-            throw specializeApiException(e);
-        }
+        final RestResponse restResponse = doPut(path, json);
+        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        return restResponse;
     }
 
     public RestResponse doDelete(String path) throws Exception {
@@ -148,11 +149,9 @@ public class ApiClientBase {
     }
 
     public RestResponse delete(String path) throws Exception {
-        try {
-            return doDelete(path);
-        } catch (ApiException e) {
-            throw specializeApiException(e);
-        }
+        final RestResponse restResponse = doDelete(path);
+        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        return restResponse;
     }
 
     private String getUrl(String path, String clientUri) {
