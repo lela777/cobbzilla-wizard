@@ -6,6 +6,7 @@ import lombok.Setter;
 public class JerseyConfiguration {
 
     @Getter @Setter private String[] resourcePackages;
+    @Getter @Setter private String[] requestFilters;
     @Getter @Setter private String[] responseFilters;
 
 }

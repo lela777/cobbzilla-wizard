@@ -81,6 +81,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters", Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
+        rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters", Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
 
         rc.getSingletons().add(new JacksonMessageBodyProvider(JsonUtil.NOTNULL_MAPPER, new Validator()));
         rc.getSingletons().add(new StreamingOutputProvider());
