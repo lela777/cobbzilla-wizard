@@ -80,8 +80,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
         rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters", Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
-        rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters", Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
+
+        if (jerseyConfiguration.hasRequestFilters()) {
+            rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
+                                    Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
+        }
+        if (jerseyConfiguration.hasResponseFilters()) {
+            rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters",
+                                    Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
+        }
 
         rc.getSingletons().add(new JacksonMessageBodyProvider(JsonUtil.NOTNULL_MAPPER, new Validator()));
         rc.getSingletons().add(new StreamingOutputProvider());
