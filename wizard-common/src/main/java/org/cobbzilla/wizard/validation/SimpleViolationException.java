@@ -10,6 +10,10 @@ public class SimpleViolationException extends RuntimeException {
     @Getter private final String message;
     @Getter private final String invalidValue;
 
+    public SimpleViolationException (String messageTemplate) {
+        this(messageTemplate, messageTemplate, null);
+    }
+
     public SimpleViolationException (String messageTemplate, String message) {
         this(messageTemplate, message, null);
     }
