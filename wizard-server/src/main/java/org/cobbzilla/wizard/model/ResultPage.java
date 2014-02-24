@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @NoArgsConstructor
@@ -101,5 +102,10 @@ public class ResultPage {
 
     @Getter @Setter private Map<String, String> bounds;
     @JsonIgnore public boolean getHasBounds() { return bounds != null && !bounds.isEmpty(); }
+
+    public void addBound(String name, String value) {
+        if (bounds == null) bounds = new LinkedHashMap<>();
+        bounds.put(name, value);
+    }
 
 }
