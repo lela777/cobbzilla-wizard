@@ -17,4 +17,8 @@ public class SimpleViolationException extends RuntimeException {
     public SimpleViolationException (String messageTemplate, String message) {
         this(messageTemplate, message, null);
     }
+
+    public ConstraintViolationBean getBean () {
+        return new ConstraintViolationBean(messageTemplate, message, invalidValue);
+    }
 }

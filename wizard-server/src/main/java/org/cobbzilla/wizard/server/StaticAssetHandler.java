@@ -22,11 +22,8 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
 
     public static final String[] DEFAULT_INDEX_ALIASES = {"/index.php"};
 
-    private static final String ENV_ASSET_DIR = "STATIC_ASSETS_DIR";
-
     private StaticHttpConfiguration configuration;
     private Set<String> indexAliases = new HashSet<>();
-    private String assetDir;
     private File assetDirFile;
 
     private File templateFileRoot;
@@ -34,16 +31,13 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
     public StaticAssetHandler(StaticHttpConfiguration configuration, ClassLoader classLoader) {
         super(classLoader, configuration.getAssetRoot());
         this.configuration = configuration;
-        if (configuration.hasFilesystemEnvVar()) {
-            assetDir = System.getenv().get(configuration.getFilesystemEnvVar());
-            if (assetDir != null) {
-                assetDirFile = new File(assetDir);
-                if (assetDirFile.exists() && assetDirFile.canRead()) {
-                    templateFileRoot = assetDirFile;
-                    LocaleAwareMustacheFactory.setSkipClasspath(true);
-                } else {
-                    throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist");
-                }
+        if (configuration.hasLocalOverride()) {
+            assetDirFile = configuration.getLocalOverride();
+            if (assetDirFile.exists() && assetDirFile.canRead()) {
+                templateFileRoot = assetDirFile;
+                LocaleAwareMustacheFactory.setSkipClasspath(true);
+            } else {
+                throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist");
             }
         }
 
@@ -97,8 +91,8 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         }
 
         // ENV takes precedence
-        if (assetDir != null) {
-            final File file = new File(assetDirFile.getAbsolutePath() + File.separator + resourcePath);
+        if (assetDirFile != null) {
+            final File file = new File(assetDirFile, resourcePath);
             if (file.exists()) {
                 StaticAssetHandler.sendFile(response, file);
                 return true;
