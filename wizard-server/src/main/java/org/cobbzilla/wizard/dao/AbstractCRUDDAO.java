@@ -42,6 +42,11 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return (entity.getUuid() == null) ? create(entity) : update(entity);
     }
 
+    public E upsert(@Valid E entity) {
+        if (entity.getUuid() == null) throw new IllegalArgumentException("upsert: uuid must not be null");
+        return exists(entity.getUuid()) ? update(entity) : create(entity);
+    }
+
     @Override public Object preUpdate(@Valid E entity) { return entity; }
     @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
 
