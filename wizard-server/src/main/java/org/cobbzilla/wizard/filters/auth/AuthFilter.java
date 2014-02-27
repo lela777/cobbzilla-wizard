@@ -11,12 +11,18 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
 
     @Getter @Setter private String authTokenHeader;
     @Getter @Setter private Set<String> skipAuthPaths;
+    @Getter @Setter private Set<String> skipAuthPrefixes;
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
 
         final String uri = request.getRequestUri().getPath();
+
         if (skipAuthPaths.contains(uri)) return request;
+
+        for (String path : skipAuthPrefixes) {
+            if (uri.startsWith(path)) return request;
+        }
 
         final String token = request.getHeaderValue(authTokenHeader);
         if (token == null) throw new AuthException();
