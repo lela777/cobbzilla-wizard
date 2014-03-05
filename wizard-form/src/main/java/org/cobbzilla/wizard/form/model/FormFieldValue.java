@@ -30,6 +30,11 @@ public class FormFieldValue extends IdentifiableBase implements Identifiable {
     public String getValue () { return data == null ? null : data.getValue(); }
     public void setValue (String value) { data.setValue(value); }
 
+    @Transient @JsonIgnore
+    public String[] getValues () {
+        return getValue() == null ? null : getValue().split("["+FormField.OPTIONS_SEPARATOR+"]");
+    }
+
     @Transient
     public String getDescription () { return data == null ? null : data.getDescription(); }
     public void setDescription (String description) { data.setDescription(description); }

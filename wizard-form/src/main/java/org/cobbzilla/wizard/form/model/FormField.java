@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.form.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang.StringUtils;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.IdentifiableBase;
@@ -52,9 +53,20 @@ public class FormField extends IdentifiableBase implements Identifiable {
 
     public static final String OPTIONS_SEPARATOR = "|";
     public static final List<String> EMPTY_OPTIONS = Collections.emptyList();
+
     @Transient public List<String> getOptions () {
         return StringUtil.empty(fieldOptions) ? EMPTY_OPTIONS : StringUtil.split(fieldOptions, OPTIONS_SEPARATOR);
     }
+
+    public void setOptions(List<String> options) {
+        fieldOptions = (options == null) ? null : StringUtils.join(options, OPTIONS_SEPARATOR);
+    }
+    public void setOptionsArray(String[] options) {
+        fieldOptions = (options == null) ? null : StringUtils.join(options, OPTIONS_SEPARATOR);
+    }
+
+    public boolean hasOptions () { return !StringUtil.empty(fieldOptions); }
+
 
     @NotNull(message=ERR_HAS_DESCRIPTION_EMPTY)
     @Column(nullable=false)
