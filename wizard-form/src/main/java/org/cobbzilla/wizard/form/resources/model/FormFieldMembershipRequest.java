@@ -1,9 +1,10 @@
 package org.cobbzilla.wizard.form.resources.model;
 
-import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
 public class FormFieldMembershipRequest {
