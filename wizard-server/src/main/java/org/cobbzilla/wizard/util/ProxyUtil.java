@@ -30,7 +30,10 @@ import java.util.Map;
 @Slf4j
 public class ProxyUtil {
 
-    public static Response proxyResponse (HttpRequestBean<String> requestBean, HttpContext context, boolean bufferResponse) throws IOException {
+    public static Response proxyResponse (HttpRequestBean<String> requestBean,
+                                          HttpContext context,
+                                          boolean bufferResponse,
+                                          String baseUri) throws IOException {
 
         @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
         final HttpRequest request = initHttpRequest(requestBean);
@@ -64,11 +67,24 @@ public class ProxyUtil {
         Integer contentLength = null;
         final Map<String, String> responseHeaders = new HashMap<>();
         for (final Header header : response.getAllHeaders()) {
-            builder.header(header.getName(), header.getValue());
-            if (header.getName().equals(HttpHeaders.CONTENT_LENGTH)) {
+
+            final String headerName = header.getName();
+            String headerValue = header.getValue();
+
+            if (headerName.equals(HttpHeaders.CONTENT_LENGTH)) {
                 contentLength = Integer.valueOf(header.getValue());
+
+            } else if (headerName.equals(HttpHeaders.LOCATION)
+                    && baseUri != null
+                    && !headerValue.startsWith("/")
+                    && !headerValue.startsWith("http://")
+                    && !headerValue.startsWith("https://")) {
+                // rewrite relative redirects to be absolute, so they resolve
+                headerValue = baseUri + headerValue;
             }
-            responseHeaders.put(header.getName(), header.getValue());
+
+            builder.header(headerName, headerValue);
+            responseHeaders.put(headerName, headerValue);
         }
 
         // buffer the entire response?
