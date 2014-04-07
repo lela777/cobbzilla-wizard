@@ -38,18 +38,6 @@
             <version>1.1</version>
         </dependency>
 
-        <!-- integration testing -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>${httpclient.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${httpclient.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.cobbzilla</groupId>
             <artifactId>restex</artifactId>

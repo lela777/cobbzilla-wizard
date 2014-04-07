@@ -1,0 +1,117 @@
+package org.cobbzilla.wizard.util;
+
+import com.sun.jersey.api.core.HttpContext;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import lombok.Cleanup;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.cobbzilla.util.http.HttpMethods;
+import org.cobbzilla.util.http.HttpRequestBean;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+public class ProxyUtil {
+
+    public static Response proxyResponse (HttpRequestBean<String> requestBean, HttpContext context, boolean bufferResponse) throws IOException {
+
+        @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final HttpRequest request = initHttpRequest(requestBean);
+
+        // copy context headers into map, then overwrite with request bean headers (they take precedence)
+        final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(context.getRequest().getRequestHeaders());
+        for (Map.Entry<String, String> entry : requestBean.getHeaders().entrySet()) {
+            requestHeaders.add(entry.getKey(), entry.getValue());
+        }
+
+        // copy finalized headers into the request
+        for ( Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
+            for (String value : entry.getValue()) {
+                request.setHeader(entry.getKey(), value);
+            }
+        }
+
+        final HttpHost httpHost = new HttpHost(requestBean.getHost(), requestBean.getPort());
+        final HttpResponse response;
+        try {
+            response = httpClient.execute(httpHost, request);
+        } catch (IOException e) {
+            log.error("Error proxying response: "+request+": "+e, e);
+            return Response.serverError().build();
+        }
+
+        // copy status
+        Response.ResponseBuilder builder = Response.status(response.getStatusLine().getStatusCode());
+
+        // copy headers
+        Integer contentLength = null;
+        final Map<String, String> responseHeaders = new HashMap<>();
+        for (final Header header : response.getAllHeaders()) {
+            builder.header(header.getName(), header.getValue());
+            if (header.getName().equals(HttpHeaders.CONTENT_LENGTH)) {
+                contentLength = Integer.valueOf(header.getValue());
+            }
+            responseHeaders.put(header.getName(), header.getValue());
+        }
+
+        // buffer the entire response?
+        if (bufferResponse) {
+            return new BufferedResponseBuilder(builder, contentLength, response, responseHeaders).build();
+        }
+
+        if (contentLength != null) {
+            return builder.entity(new StreamStreamingOutput(response.getEntity().getContent())).build();
+        }
+
+        return builder.build();
+    }
+
+    private static HttpRequest initHttpRequest(HttpRequestBean<String> requestBean) {
+        try {
+            final HttpRequest request;
+            switch (requestBean.getMethod()) {
+                case HttpMethods.GET:
+                    request = new HttpGet(requestBean.getPath());
+                    break;
+
+                case HttpMethods.POST:
+                    request = new HttpPost(requestBean.getPath());
+                    if (requestBean.hasData()) ((HttpPost) request).setEntity(new StringEntity(requestBean.getData()));
+                    break;
+
+                case HttpMethods.PUT:
+                    request = new HttpPut(requestBean.getPath());
+                    if (requestBean.hasData()) ((HttpPut) request).setEntity(new StringEntity(requestBean.getData()));
+                    break;
+
+                case HttpMethods.DELETE:
+                    request = new HttpDelete(requestBean.getPath());
+                    break;
+
+                default:
+                    throw new IllegalStateException("Invalid request method: "+requestBean.getMethod());
+            }
+            return request;
+
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("initHttpRequest: " + e, e);
+        }
+    }
+}
