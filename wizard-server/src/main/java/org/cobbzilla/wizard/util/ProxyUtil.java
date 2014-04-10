@@ -5,13 +5,8 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -36,7 +31,7 @@ public class ProxyUtil {
                                           String baseUri) throws IOException {
 
         @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
-        final HttpRequest request = initHttpRequest(requestBean);
+        final HttpUriRequest request = initHttpRequest(requestBean);
 
         // copy context headers into map, then overwrite with request bean headers (they take precedence)
         final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(context.getRequest().getRequestHeaders());
@@ -51,10 +46,9 @@ public class ProxyUtil {
             }
         }
 
-        final HttpHost httpHost = new HttpHost(requestBean.getHost(), requestBean.getPort());
         final HttpResponse response;
         try {
-            response = httpClient.execute(httpHost, request);
+            response = httpClient.execute(request);
         } catch (IOException e) {
             log.error("Error proxying response: "+request+": "+e, e);
             return Response.serverError().build();
@@ -74,13 +68,14 @@ public class ProxyUtil {
             if (headerName.equals(HttpHeaders.CONTENT_LENGTH)) {
                 contentLength = Integer.valueOf(header.getValue());
 
-            } else if (headerName.equals(HttpHeaders.LOCATION)
-                    && baseUri != null
-                    && !headerValue.startsWith("/")
-                    && !headerValue.startsWith("http://")
-                    && !headerValue.startsWith("https://")) {
-                // rewrite relative redirects to be absolute, so they resolve
-                headerValue = baseUri + headerValue;
+            } else if (headerName.equals(HttpHeaders.LOCATION)) {
+                if (baseUri != null
+                        && !headerValue.startsWith("/")
+                        && !headerValue.startsWith("http://")
+                        && !headerValue.startsWith("https://")) {
+                    // rewrite relative redirects to be absolute, so they resolve
+                    headerValue = baseUri + headerValue;
+                }
             }
 
             builder.header(headerName, headerValue);
@@ -99,26 +94,27 @@ public class ProxyUtil {
         return builder.build();
     }
 
-    private static HttpRequest initHttpRequest(HttpRequestBean<String> requestBean) {
+    private static HttpUriRequest initHttpRequest(HttpRequestBean<String> requestBean) {
+        log.info("initHttpRequest: requestBean.uri="+requestBean.getUri());
         try {
-            final HttpRequest request;
+            final HttpUriRequest request;
             switch (requestBean.getMethod()) {
                 case HttpMethods.GET:
-                    request = new HttpGet(requestBean.getPath());
+                    request = new HttpGet(requestBean.getUri());
                     break;
 
                 case HttpMethods.POST:
-                    request = new HttpPost(requestBean.getPath());
+                    request = new HttpPost(requestBean.getUri());
                     if (requestBean.hasData()) ((HttpPost) request).setEntity(new StringEntity(requestBean.getData()));
                     break;
 
                 case HttpMethods.PUT:
-                    request = new HttpPut(requestBean.getPath());
+                    request = new HttpPut(requestBean.getUri());
                     if (requestBean.hasData()) ((HttpPut) request).setEntity(new StringEntity(requestBean.getData()));
                     break;
 
                 case HttpMethods.DELETE:
-                    request = new HttpDelete(requestBean.getPath());
+                    request = new HttpDelete(requestBean.getUri());
                     break;
 
                 default:
