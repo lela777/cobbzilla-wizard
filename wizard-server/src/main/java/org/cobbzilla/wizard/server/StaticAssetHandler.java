@@ -86,6 +86,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
             final Writer writer = response.getWriter();
             final Map<String, Object> scope = new HashMap<>();
 
+            pickupContentType(response, path);
             if (factory.render(path, scope, writer)) return true;
             return factory.render(configuration.getMustacheResourceRoot()+path, scope, writer);
         }
