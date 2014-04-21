@@ -12,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
+import org.cobbzilla.util.http.HttpStatusCodes;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -29,10 +30,8 @@ public class ProxyUtil {
                                           HttpContext context,
                                           boolean bufferResponse,
                                           String baseUri) throws IOException {
-
         @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
         final HttpUriRequest request = initHttpRequest(requestBean);
-
         // copy context headers into map, then overwrite with request bean headers (they take precedence)
         final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(context.getRequest().getRequestHeaders());
         for (Map.Entry<String, String> entry : requestBean.getHeaders().entrySet()) {
@@ -54,11 +53,22 @@ public class ProxyUtil {
             return Response.serverError().build();
         }
 
-        // copy status
-        Response.ResponseBuilder builder = Response.status(response.getStatusLine().getStatusCode());
+        // copy status - if the request was successful, and the request bean indicated that the request should
+        // be treated as redirected, set the status accordingly ... this is
+        // a workaround for situations where the request we're proxying is initiated by a server-side
+        // API call whose base url doesn't match the one the client submitted. e.g., client submits a
+        // request to example.com/api/email?blahblah which the API server turns into a request to
+        // example.com/roundcube/somestuff. if we don't set the redirect, the relative links in
+        // the response will all point to /api/ instead of /roundcube/, potentially breaking things.
+        final int responseStatus = response.getStatusLine().getStatusCode();
+        final int proxyStatus = responseStatus == HttpStatusCodes.OK && requestBean.isRedirect() ? 
+                HttpStatusCodes.FOUND : responseStatus;
+        Response.ResponseBuilder builder = Response.status(proxyStatus);
+        builder.location(request.getURI());
 
-        // copy headers
+        // copy headers, adding a location header if there isn't one already
         Integer contentLength = null;
+        boolean foundLocationHeader = false;
         final Map<String, String> responseHeaders = new HashMap<>();
         for (final Header header : response.getAllHeaders()) {
 
@@ -69,6 +79,7 @@ public class ProxyUtil {
                 contentLength = Integer.valueOf(header.getValue());
 
             } else if (headerName.equals(HttpHeaders.LOCATION)) {
+                foundLocationHeader = true;
                 if (baseUri != null
                         && !headerValue.startsWith("/")
                         && !headerValue.startsWith("http://")
@@ -80,6 +91,10 @@ public class ProxyUtil {
 
             builder.header(headerName, headerValue);
             responseHeaders.put(headerName, headerValue);
+        }
+
+        if (!foundLocationHeader) {
+            responseHeaders.put(HttpHeaders.LOCATION, request.getURI().toString());
         }
 
         // buffer the entire response?
