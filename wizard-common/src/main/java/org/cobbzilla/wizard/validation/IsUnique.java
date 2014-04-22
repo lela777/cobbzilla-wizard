@@ -18,7 +18,7 @@ public @interface IsUnique {
 
     String CREATE_ONLY = "-create-only-";
     String DEFAULT = "-default-";
-    String DEFAULT_ID_PROPERTY = "id";
+    String DEFAULT_ID_PROPERTY = "uuid";
 
     String idField () default DEFAULT;
     String id() default DEFAULT_ID_PROPERTY;
