@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+// todo: implement retries, where we tear down the client completely and rebuild it
+// this is necessary if the memcached server is restarted while we're running
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     private static final String PADDING_SUFFIX = "__PADDING__";
@@ -36,10 +38,9 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     public String create (T thing) {
-        final String uuid = UUID.randomUUID().toString();
-        thing.setUuid(uuid);
-        set(uuid, thing);
-        return uuid;
+        final String sessionId = UUID.randomUUID().toString();
+        set(sessionId, thing);
+        return sessionId;
     }
 
     private void set(String uuid, T thing) {
