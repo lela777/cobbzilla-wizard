@@ -28,6 +28,8 @@ import java.util.Stack;
 @Slf4j @NoArgsConstructor
 public class ApiClientBase {
 
+    public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
+
     @Getter private ApiConnectionInfo connectionInfo;
     @Getter @Setter private String token;
 
@@ -109,29 +111,41 @@ public class ApiClientBase {
     }
 
     public RestResponse doPost(String path, String json) throws Exception {
+        return doPost(path, json, CONTENT_TYPE_JSON);
+    }
+
+    public RestResponse doPost(String path, String data, ContentType contentType) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
-        if (json != null) {
-            httpPost.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
-            log.info("doPost("+url+") sending JSON=" + json);
+        if (data != null) {
+            httpPost.setEntity(new StringEntity(data, contentType));
+            log.info("doPost("+url+") sending JSON=" + data);
         }
         return getResponse(client, httpPost);
     }
 
     public RestResponse post(String path, String json) throws Exception {
-        final RestResponse restResponse = doPost(path, json);
+        return post(path, json, CONTENT_TYPE_JSON);
+    }
+
+    public RestResponse post(String path, String data, ContentType contentType) throws Exception {
+        final RestResponse restResponse = doPost(path, data, contentType);
         if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
         return restResponse;
     }
 
     public RestResponse doPut(String path, String json) throws Exception {
+        return doPut(path, json, CONTENT_TYPE_JSON);
+    }
+
+    public RestResponse doPut(String path, String data, ContentType contentType) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
-        if (json != null) {
-            httpPut.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
-            log.info("doPut sending JSON="+json);
+        if (data != null) {
+            httpPut.setEntity(new StringEntity(data, contentType));
+            log.info("doPut sending JSON="+data);
         }
         return getResponse(client, httpPut);
     }
