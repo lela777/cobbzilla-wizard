@@ -192,6 +192,13 @@
             <version>${httpclient43.version}</version>
         </dependency>
 
+        <!-- for SessionDAO -->
+        <dependency>
+            <groupId>com.googlecode.xmemcached</groupId>
+            <artifactId>xmemcached</artifactId>
+            <version>${xmemcached.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>
