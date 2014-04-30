@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import lombok.extern.slf4j.Slf4j;
 import net.rubyeye.xmemcached.MemcachedClient;
 import net.rubyeye.xmemcached.XMemcachedClient;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 // todo: implement retries, where we tear down the client completely and rebuild it
 // this is necessary if the memcached server is restarted while we're running
+@Slf4j
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     private static final String PADDING_SUFFIX = "__PADDING__";
@@ -84,7 +86,8 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
             return JsonUtil.fromJson(unpad(json), getEntityClass());
 
         } catch (Exception e) {
-            throw new IllegalStateException("Error reading from memcached: "+e, e);
+            log.error("Error reading from memcached: " + e, e);
+            return null;
         }
     }
 
