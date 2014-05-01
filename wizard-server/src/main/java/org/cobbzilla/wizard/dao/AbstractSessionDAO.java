@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.string.StringUtil.UTF8cs;
+
 // todo: implement retries, where we tear down the client completely and rebuild it
 // this is necessary if the memcached server is restarted while we're running
 @Slf4j
@@ -45,24 +47,44 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
         return sessionId;
     }
 
+    public T find(String uuid) {
+        try {
+            final byte[] rawData = memcached.get(uuid);
+            if (rawData == null) return null;
+            return deserialize(CryptoUtil.decrypt(rawData, getPassphrase()));
+
+        } catch (Exception e) {
+            log.error("Error reading from memcached: " + e, e);
+            return null;
+        }
+    }
+
     private void set(String uuid, T thing) {
         try {
-            final byte[] data = CryptoUtil.encrypt(pad(thing), getPassphrase());
+            final byte[] data = CryptoUtil.encrypt(serialize(thing), getPassphrase());
             memcached.set(uuid, (int) TimeUnit.DAYS.toSeconds(30), data);
         } catch (Exception e) {
             throw new IllegalStateException("Error writing to memcached: "+e, e);
         }
     }
 
-    private byte[] pad(T thing) throws Exception {
-        return (JsonUtil.toJson(thing) + PADDING_SUFFIX + RandomStringUtils.random(1024)).getBytes();
+    // override these for full control -- toJson/fromJson will not be called at all
+    protected byte[] serialize(T thing) throws Exception { return pad(toJson(thing)); }
+    protected T deserialize(byte[] data) throws Exception { return fromJson(unpad(new String(data))); }
+
+    // override these to keep the padding but do your own json I/O
+    protected String toJson(T thing) throws Exception { return JsonUtil.toJson(thing); }
+    protected T fromJson(String json) throws Exception { return JsonUtil.fromJson(json, getEntityClass()); }
+
+    private byte[] pad(String data) throws Exception {
+        return (data + PADDING_SUFFIX + RandomStringUtils.random(1024)).getBytes(UTF8cs);
     }
 
-    private String unpad(String json) {
-        if (json == null) return null;
-        int paddingPos = json.indexOf(PADDING_SUFFIX);
+    private String unpad(String data) {
+        if (data == null) return null;
+        int paddingPos = data.indexOf(PADDING_SUFFIX);
         if (paddingPos == -1) return null;
-        return json.substring(0, paddingPos);
+        return data.substring(0, paddingPos);
     }
 
     public void update(String uuid, T thing) {
@@ -74,20 +96,6 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
             memcached.delete(uuid);
         } catch (Exception e) {
             throw new IllegalStateException("Error deleting from memcached: "+e, e);
-        }
-    }
-
-    public T find(String uuid) {
-        try {
-            final byte[] data = memcached.get(uuid);
-            if (data == null) return null;
-
-            final String json = new String(CryptoUtil.decrypt(data, getPassphrase()));
-            return JsonUtil.fromJson(unpad(json), getEntityClass());
-
-        } catch (Exception e) {
-            log.error("Error reading from memcached: " + e, e);
-            return null;
         }
     }
 
