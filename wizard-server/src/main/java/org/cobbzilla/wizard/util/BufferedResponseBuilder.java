@@ -33,7 +33,9 @@ public class BufferedResponseBuilder {
         buffered.setDocument(document);
         builder.entity(document);
 
-        if (document.length() > 0 && length == null) setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(document.length()));
+        if (document.length() > 0 && length == null) {
+            setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(document.length()));
+        }
     }
 
     public BufferedResponse build () {

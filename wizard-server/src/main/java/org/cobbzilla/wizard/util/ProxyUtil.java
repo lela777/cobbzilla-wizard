@@ -15,15 +15,18 @@ import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
+import static javax.ws.rs.core.HttpHeaders.*;
+
 @Slf4j
 public class ProxyUtil {
+
+    private static final String TRANSFER_ENCODING = "transfer-encoding";
 
     public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
                                                   HttpContext callerContext,
@@ -67,13 +70,13 @@ public class ProxyUtil {
             final String headerName = header.getName();
             String headerValue = header.getValue();
 
-            if (headerName.equals(HttpHeaders.CONTENT_LENGTH)) {
-                contentLength = Integer.valueOf(header.getValue());
+            if (headerName.equalsIgnoreCase(CONTENT_LENGTH)
+                    || headerName.equalsIgnoreCase(TRANSFER_ENCODING)
+                    || headerName.equalsIgnoreCase(CONTENT_ENCODING)) {
+                log.info("skipping "+headerName+" (setDocument will handle this)");
+                continue;
 
-            } else if (headerName.equals(HttpHeaders.SET_COOKIE)) {
-                log.info("found cookie=" + headerValue);
-
-            } else if (headerName.equals(HttpHeaders.LOCATION)) {
+            } else if (headerName.equalsIgnoreCase(LOCATION)) {
                 if (baseUri != null
                         && !headerValue.startsWith("/")
                         && !headerValue.startsWith("http://")
