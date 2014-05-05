@@ -1,22 +1,36 @@
 package org.cobbzilla.wizard.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import lombok.Delegate;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.ws.rs.core.Response;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Iterator;
 
 public class BufferedResponse extends Response {
 
-    private final BufferedResponseBuilder builder;
+    @Delegate @Getter @Setter private Response response;
 
-    public Map<String, String> getHeaders () { return builder.getHeaders(); }
-    public String getHeader (String name) { return builder.getHeader(name); }
-    public String getDocument () { return builder.getDocument(); }
+    public BufferedResponse(int status) { this.statusCode = status; }
 
-    @Delegate private final Response response;
+    @Getter @Setter private int statusCode;
 
-    public BufferedResponse(BufferedResponseBuilder bufferedResponseBuilder, Response delegate) {
-        this.builder = bufferedResponseBuilder;
-        this.response = delegate;
+    @Getter private Multimap<String, String> headers = ArrayListMultimap.create();
+    public void setHeader (String name, String value) { headers.put(name, value); }
+
+    public Collection<String> getHeaderValues(String name) { return headers.get(name); }
+
+    public String getFirstHeaderValue(String name) {
+        final Collection<String> values = headers.get(name);
+        if (values == null) return null;
+        final Iterator<String> iterator = values.iterator();
+        return iterator.hasNext() ? iterator.next() : null;
     }
+
+    @Getter @Setter private String document;
+    public boolean hasDocument () { return document != null; }
+
 }

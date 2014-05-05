@@ -1,55 +1,44 @@
 package org.cobbzilla.wizard.util;
 
-import lombok.Delegate;
-import lombok.Getter;
-import org.apache.http.HttpResponse;
 import org.cobbzilla.util.io.StreamUtil;
+import org.cobbzilla.util.string.StringUtil;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStream;
 
-public class BufferedResponseBuilder extends Response.ResponseBuilder {
+public class BufferedResponseBuilder {
 
-    @Getter private final String document;
-    @Getter private final Map<String, String> headers = new HashMap<>();
+    private Response.ResponseBuilder builder;
+    private BufferedResponse buffered;
 
-    public String getHeader (String name) { return headers.get(name); }
-
-    private interface Excluded {
-        public Response build();
-    }
-    @Delegate(types=Response.ResponseBuilder.class, excludes=Excluded.class)
-    @Getter private final Response.ResponseBuilder builder;
-
-    public Response.ResponseBuilder clone() { return new BufferedResponseBuilder(this); }
-
-    public Response build() {
-        final Response delegate = builder.build();
-        return new BufferedResponse(this, delegate);
+    public BufferedResponseBuilder (int status) {
+        builder = Response.status(status);
+        buffered = new BufferedResponse(status);
     }
 
-    public BufferedResponseBuilder (BufferedResponseBuilder other) {
-        this.document = other.document;
-        this.headers.putAll(other.headers);
-        this.builder = other.builder.clone();
+    public void setHeader(String headerName, String headerValue) {
+        builder = builder.header(headerName, headerValue);
+        buffered.setHeader(headerName, headerValue);
     }
 
-    public BufferedResponseBuilder(Response.ResponseBuilder builder,
-                                   Integer length,
-                                   HttpResponse response,
-                                   Map<String, String> headers) throws IOException {
+    public void setDocument (InputStream in, Integer length) throws IOException {
+        int initialSize = (length != null) ? length : 32 * 1024;
+        final ByteArrayOutputStream out = new ByteArrayOutputStream(initialSize);
+        StreamUtil.copyLarge(in, out);
 
-        if (length == null) length = new Integer(32 * 1024);
-        final ByteArrayOutputStream out = new ByteArrayOutputStream(length);
+        final String document = out.toString(StringUtil.UTF8);
+        buffered.setDocument(document);
+        builder.entity(document);
 
-        StreamUtil.copyLarge(response.getEntity().getContent(), out);
+        if (document.length() > 0 && length == null) setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(document.length()));
+    }
 
-        document = out.toString();
-        this.builder = builder.entity(document);
-        this.headers.putAll(headers);
+    public BufferedResponse build () {
+        buffered.setResponse(builder.build());
+        return buffered;
     }
 
 }
