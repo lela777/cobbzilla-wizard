@@ -15,6 +15,7 @@ import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -39,8 +40,11 @@ public class ProxyUtil {
         final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(callerContext.getRequest().getRequestHeaders());
         final Multimap<String, String> headers = requestBean.getHeaders();
         for (String key : headers.keySet()) {
-            for (String value : headers.get(key)) {
-                requestHeaders.add(key, value);
+            // skip Host header, we will write this at the end to match the URL
+            if (!key.equals(HttpHeaders.HOST)) {
+                for (String value : headers.get(key)) {
+                    requestHeaders.add(key, value);
+                }
             }
         }
 
@@ -50,6 +54,9 @@ public class ProxyUtil {
                 request.setHeader(entry.getKey(), value);
             }
         }
+
+        // force Host header to match URL we are requesting
+        request.setHeader(HttpHeaders.HOST, requestBean.getHost());
 
         final HttpResponse response;
         try {
