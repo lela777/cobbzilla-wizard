@@ -11,9 +11,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.cobbzilla.util.http.HttpMethods;
-import org.cobbzilla.util.http.HttpRequestBean;
-import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.http.*;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -31,10 +29,11 @@ public class ProxyUtil {
 
     public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
                                                   HttpContext callerContext,
-                                                  String baseUri) throws IOException {
+                                                  String baseUri,
+                                                  String cookieDomain) throws IOException {
 
         @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
-        final HttpUriRequest request = initHttpRequest(requestBean);
+        final HttpUriRequest request = HttpUtil.initHttpRequest(requestBean);
 
         // copy callerContext headers into map, then overwrite with request bean headers (they take precedence)
         final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(callerContext.getRequest().getRequestHeaders());
@@ -80,8 +79,15 @@ public class ProxyUtil {
             if (headerName.equalsIgnoreCase(CONTENT_LENGTH)
                     || headerName.equalsIgnoreCase(TRANSFER_ENCODING)
                     || headerName.equalsIgnoreCase(CONTENT_ENCODING)) {
-                log.info("skipping "+headerName+" (setDocument will handle this)");
+                log.info("skipping " + headerName + " (setDocument will handle this)");
                 continue;
+
+            } else if (headerName.equals(SET_COOKIE)) {
+                // ensure that cookies are for the top-level domain, since they will be sent to cloudos
+                final HttpCookieBean cookie = HttpCookieBean.parse(headerValue);
+                cookie.setDomain(cookieDomain);
+                log.info("rewriting cookie: "+headerValue+" with domain="+cookie.getDomain());
+                headerValue = cookie.toHeaderValue();
 
             } else if (headerName.equalsIgnoreCase(LOCATION)) {
                 if (baseUri != null
@@ -101,38 +107,5 @@ public class ProxyUtil {
         }
 
         return buffered.build();
-    }
-
-    private static HttpUriRequest initHttpRequest(HttpRequestBean<String> requestBean) {
-        log.info("initHttpRequest: requestBean.uri="+requestBean.getUri());
-        try {
-            final HttpUriRequest request;
-            switch (requestBean.getMethod()) {
-                case HttpMethods.GET:
-                    request = new HttpGet(requestBean.getUri());
-                    break;
-
-                case HttpMethods.POST:
-                    request = new HttpPost(requestBean.getUri());
-                    if (requestBean.hasData()) ((HttpPost) request).setEntity(new StringEntity(requestBean.getData()));
-                    break;
-
-                case HttpMethods.PUT:
-                    request = new HttpPut(requestBean.getUri());
-                    if (requestBean.hasData()) ((HttpPut) request).setEntity(new StringEntity(requestBean.getData()));
-                    break;
-
-                case HttpMethods.DELETE:
-                    request = new HttpDelete(requestBean.getUri());
-                    break;
-
-                default:
-                    throw new IllegalStateException("Invalid request method: "+requestBean.getMethod());
-            }
-            return request;
-
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("initHttpRequest: " + e, e);
-        }
     }
 }
