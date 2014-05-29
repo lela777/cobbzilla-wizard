@@ -37,7 +37,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                 templateFileRoot = assetDirFile;
                 LocaleAwareMustacheFactory.setSkipClasspath(true);
             } else {
-                throw new IllegalStateException("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist");
+                log.warn("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist, all resources will be served from classpath");
             }
         }
 
@@ -98,7 +98,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                 StaticAssetHandler.sendFile(response, file);
                 return true;
             } else {
-                log.warn("asset dir ("+assetDirFile.getAbsolutePath()+") exists but file ("+file.getAbsolutePath()+") does not");
+                log.info("resource "+resourcePath+" not found in override dir ("+assetDirFile.getAbsolutePath()+"), using default from classpath");
             }
         }
 
