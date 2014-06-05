@@ -7,16 +7,17 @@ import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.*;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.cobbzilla.util.http.*;
+import org.cobbzilla.util.http.HttpCookieBean;
+import org.cobbzilla.util.http.HttpRequestBean;
+import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.http.HttpUtil;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
@@ -82,11 +83,11 @@ public class ProxyUtil {
                 log.info("skipping " + headerName + " (setDocument will handle this)");
                 continue;
 
-            } else if (headerName.equals(SET_COOKIE)) {
+            } else if (cookieDomain != null && headerName.equals(SET_COOKIE)) {
                 // ensure that cookies are for the top-level domain, since they will be sent to cloudos
                 final HttpCookieBean cookie = HttpCookieBean.parse(headerValue);
                 cookie.setDomain(cookieDomain);
-                log.info("rewriting cookie: "+headerValue+" with domain="+cookie.getDomain());
+                log.info("rewriting cookie: " + headerValue + " with domain=" + cookie.getDomain());
                 headerValue = cookie.toHeaderValue();
 
             } else if (headerName.equalsIgnoreCase(LOCATION)) {
