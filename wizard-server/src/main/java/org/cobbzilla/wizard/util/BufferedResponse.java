@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.Delegate;
@@ -17,6 +18,12 @@ public class BufferedResponse extends Response {
     public BufferedResponse(int status) { this.statusCode = status; }
 
     @Getter @Setter private int statusCode;
+
+    @JsonIgnore
+    public boolean isSuccess() {
+        final int statusClass = statusCode / 100;
+        return statusClass >= 1 && statusClass <= 3;
+    }
 
     @Getter private Multimap<String, String> headers = ArrayListMultimap.create();
     public void setHeader (String name, String value) { headers.put(name, value); }
