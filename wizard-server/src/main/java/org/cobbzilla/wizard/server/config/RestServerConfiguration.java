@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.server.config;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.context.ApplicationContext;
 
 public class RestServerConfiguration {
 
@@ -12,6 +13,7 @@ public class RestServerConfiguration {
 
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
+    @Getter @Setter private ApplicationContext applicationContext;
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
     public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }

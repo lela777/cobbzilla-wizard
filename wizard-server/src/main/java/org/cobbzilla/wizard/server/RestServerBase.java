@@ -76,8 +76,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public HttpServer startServer() throws IOException {
 
         final String serverName = configuration.getServerName();
-        JerseyConfiguration jerseyConfiguration = configuration.getJersey();
-        ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
+        final JerseyConfiguration jerseyConfiguration = configuration.getJersey();
+        final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
         rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
@@ -96,9 +96,10 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         BCryptUtil.setBcryptRounds(configuration.getBcryptRounds());
 
         applicationContext = buildSpringApplicationContext();
+        configuration.setApplicationContext(applicationContext);
 
         // tell grizzly where the IoC factory is coming from
-        IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, applicationContext);
+        final IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, applicationContext);
 
         // pick a port
         if (configuration.getHttp().getPort() == 0) {
