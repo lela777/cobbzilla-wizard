@@ -4,14 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
-import org.cobbzilla.wizard.validation.ConstraintViolationBean;
-import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.util.RestResponse;
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
 import org.junit.Before;
 
@@ -82,10 +81,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         for (String message : violationMessages) {
             assertNotNull(violations.get(message));
         }
-    }
-
-    protected <R extends Identifiable> R getEntity(Class<R> clazz, String endpoint, String uuid) throws Exception {
-        return JsonUtil.fromJson(doGet(endpoint+"/"+uuid).json, clazz);
     }
 
 }
