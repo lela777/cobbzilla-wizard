@@ -18,7 +18,6 @@ public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends Id
     public boolean hasName () { return !StringUtil.empty(name); }
 
     public String getName () { return hasName() ? (forceLowercase() ? name.toLowerCase() : name) : name; }
-    public void setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); }
-    public T withName (String n) { setName(n); return (T) this; }
+    public T setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); return (T) this; }
 
 }
