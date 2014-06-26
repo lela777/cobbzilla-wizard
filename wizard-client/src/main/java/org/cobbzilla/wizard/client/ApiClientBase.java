@@ -207,7 +207,7 @@ public class ApiClientBase {
 
     protected String getTokenHeader() { return null; }
 
-    protected Stack<String> tokenStack = new Stack<>();
+    protected final Stack<String> tokenStack = new Stack<>();
     public void pushToken(String token) {
         synchronized (tokenStack) {
             if (tokenStack.isEmpty()) tokenStack.push(getToken());
