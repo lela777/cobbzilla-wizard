@@ -19,6 +19,8 @@ public class BufferedResponseBuilder {
         buffered = new BufferedResponse(status);
     }
 
+    public void setRequestUri (String uri) { buffered.setRequestUri(uri); }
+
     public void setHeader(String headerName, String headerValue) {
         builder = builder.header(headerName, headerValue);
         buffered.setHeader(headerName, headerValue);

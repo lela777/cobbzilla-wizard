@@ -19,11 +19,19 @@ public class BufferedResponse extends Response {
 
     @Getter @Setter private int statusCode;
 
+    @JsonIgnore public boolean is1xx () { return statusCode / 100 == 1; }
+    @JsonIgnore public boolean is2xx () { return statusCode / 100 == 2; }
+    @JsonIgnore public boolean is3xx () { return statusCode / 100 == 3; }
+    @JsonIgnore public boolean is4xx () { return statusCode / 100 == 4; }
+    @JsonIgnore public boolean is5xx () { return statusCode / 100 == 5; }
+
     @JsonIgnore
     public boolean isSuccess() {
         final int statusClass = statusCode / 100;
         return statusClass >= 1 && statusClass <= 3;
     }
+
+    @Getter @Setter private String requestUri;
 
     @Getter private Multimap<String, String> headers = ArrayListMultimap.create();
     public void setHeader (String name, String value) { headers.put(name, value); }

@@ -2,7 +2,7 @@ package org.cobbzilla.wizard.util;
 
 import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.sun.jersey.core.util.StringKeyStringValueIgnoreCaseMultivaluedMap;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
@@ -10,10 +10,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.cobbzilla.util.http.HttpCookieBean;
-import org.cobbzilla.util.http.HttpRequestBean;
-import org.cobbzilla.util.http.HttpStatusCodes;
-import org.cobbzilla.util.http.HttpUtil;
+import org.cobbzilla.util.http.*;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -33,11 +30,33 @@ public class ProxyUtil {
                                                   String baseUri,
                                                   String cookieDomain) throws IOException {
 
+        return proxyResponse(requestBean, callerContext, baseUri, cookieDomain, null);
+    }
+
+    public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
+                                                  HttpContext callerContext,
+                                                  String baseUri,
+                                                  String cookieDomain,
+                                                  CookieJar cookieJar) throws IOException {
+        if (cookieJar == null) cookieJar = new CookieJar();
+
         @Cleanup final CloseableHttpClient httpClient = HttpClients.createDefault();
         final HttpUriRequest request = HttpUtil.initHttpRequest(requestBean);
 
-        // copy callerContext headers into map, then overwrite with request bean headers (they take precedence)
-        final MultivaluedMap<String, String> requestHeaders = new MultivaluedMapImpl(callerContext.getRequest().getRequestHeaders());
+        // wow i hate java sometimes. who names shit like this? sorry paul.
+        final StringKeyStringValueIgnoreCaseMultivaluedMap requestHeaders = new StringKeyStringValueIgnoreCaseMultivaluedMap();
+
+        // copy callerContext headers into map, these are the 'defaults'
+        final MultivaluedMap<String, String> contextHeaders = callerContext.getRequest().getRequestHeaders();
+        for (String key : contextHeaders.keySet()) {
+            if (!key.equalsIgnoreCase(HttpHeaders.COOKIE)) { // skip cookies, use cookiejar
+                for (String value : contextHeaders.get(key)) {
+                    requestHeaders.add(key, value);
+                }
+            }
+        }
+
+        // then overwrite with request bean headers, which take precedence
         final Multimap<String, String> headers = requestBean.getHeaders();
         for (String key : headers.keySet()) {
             // skip Host header, we will write this at the end to match the URL
@@ -48,12 +67,15 @@ public class ProxyUtil {
             }
         }
 
-        // copy finalized headers into the request
-        for ( Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
+        // copy finalized headers into the request, track request cookies
+        for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
             for (String value : entry.getValue()) {
                 request.setHeader(entry.getKey(), value);
             }
         }
+
+        // set cookies if any
+        if (!cookieJar.isEmpty()) request.setHeader(HttpHeaders.COOKIE, cookieJar.getRequestValue());
 
         // force Host header to match URL we are requesting
         request.setHeader(HttpHeaders.HOST, requestBean.getHost());
@@ -68,6 +90,7 @@ public class ProxyUtil {
 
         final int responseStatus = response.getStatusLine().getStatusCode();
         BufferedResponseBuilder buffered = new BufferedResponseBuilder(responseStatus);
+        buffered.setRequestUri(request.getURI().toString());
 
         // copy headers, adding a location header if there isn't one already
         Integer contentLength = null;
@@ -83,12 +106,16 @@ public class ProxyUtil {
                 log.info("skipping " + headerName + " (setDocument will handle this)");
                 continue;
 
-            } else if (cookieDomain != null && headerName.equals(SET_COOKIE)) {
+            } else if (headerName.equals(SET_COOKIE)) {
                 // ensure that cookies are for the top-level domain, since they will be sent to cloudos
                 final HttpCookieBean cookie = HttpCookieBean.parse(headerValue);
-                cookie.setDomain(cookieDomain);
-                log.info("rewriting cookie: " + headerValue + " with domain=" + cookie.getDomain());
-                headerValue = cookie.toHeaderValue();
+                if (cookieDomain != null) {
+                    cookie.setDomain(cookieDomain);
+                    log.info("rewriting cookie: " + headerValue + " with domain=" + cookie.getDomain());
+                }
+
+                cookieJar.add(cookie);
+                continue; // we'll set all the cookies at the end
 
             } else if (headerName.equalsIgnoreCase(LOCATION)) {
                 if (baseUri != null
@@ -102,6 +129,11 @@ public class ProxyUtil {
 
             buffered.setHeader(headerName, headerValue);
         }
+
+        // always set all cookies in the jar, in case this is the last response and will be
+        // sent back to the end user, they'll need the entire cookie state. so we send (or resend)
+        // all cookies on every call to this proxy.
+        for (HttpCookieBean cookie : cookieJar.values()) buffered.setHeader(SET_COOKIE, cookie.toHeaderValue());
 
         if (response.getEntity() != null && response.getEntity().getContent() != null) {
             buffered.setDocument(response.getEntity().getContent(), contentLength);
