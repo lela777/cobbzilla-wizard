@@ -31,9 +31,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
     public void addConfiguration(ConfigurationSource source) { configurations.add(source); }
     public void addConfigurations(List<ConfigurationSource> sources) { configurations.addAll(sources); }
 
-    public synchronized void startServer() throws Exception {
-        startServer(null);
-    }
+    public synchronized void startServer() throws Exception { startServer(null); }
 
     public synchronized void startServer(Map<String, String> env) throws Exception {
         if (!started.getAndSet(true)) {
