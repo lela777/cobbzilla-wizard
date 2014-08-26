@@ -60,14 +60,12 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>${httpclient43.version}</version>
-            <scope>compile</scope>
+            <version>${httpcore.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>${httpclient43.version}</version>
-            <scope>compile</scope>
+            <version>${httpcomponents.version}</version>
         </dependency>
 
     </dependencies>
