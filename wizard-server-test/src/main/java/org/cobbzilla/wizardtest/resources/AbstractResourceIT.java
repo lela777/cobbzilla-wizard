@@ -37,6 +37,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
     protected static volatile RestServer server = null;
 
+    protected static <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
+
     @Override public synchronized String getBaseUri() { return server.getClientUri(); }
 
     public void beforeServerStart () throws Exception {}
