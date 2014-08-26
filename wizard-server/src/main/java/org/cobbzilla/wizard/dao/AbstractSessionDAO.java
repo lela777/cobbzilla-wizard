@@ -1,27 +1,24 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.extern.slf4j.Slf4j;
-import net.rubyeye.xmemcached.MemcachedClient;
-import net.rubyeye.xmemcached.XMemcachedClient;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.security.CryptoUtil;
+import org.cobbzilla.util.string.Base64;
 import org.cobbzilla.wizard.model.Identifiable;
+import redis.clients.jedis.Jedis;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.cobbzilla.util.string.StringUtil.UTF8cs;
-
 // todo: implement retries, where we tear down the client completely and rebuild it
-// this is necessary if the memcached server is restarted while we're running
+// this is necessary if the redis server is restarted while we're running
 @Slf4j
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     private static final String PADDING_SUFFIX = "__PADDING__";
 
-    private final MemcachedClient memcached;
+    private final Jedis redis;
 
     // what are we storing?
     protected abstract Class<T> getEntityClass();
@@ -30,54 +27,58 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     protected abstract String getPassphrase();
 
     // override these if necessary
-    protected int getMemcachedPort() { return 11211; }
-    protected String getMemcachedHost() { return "127.0.0.1"; }
+    protected int getRedisPort() { return 6379; }
+    protected String getRedisHost () { return "127.0.0.1"; }
 
     public AbstractSessionDAO() {
-        try {
-            memcached = new XMemcachedClient(getMemcachedHost(), getMemcachedPort());
-        } catch (IOException e) {
-            throw new IllegalStateException("Error connecting to memcached: "+e, e);
-        }
+        redis = new Jedis(getRedisHost(), getRedisPort());
     }
 
     public String create (T thing) {
         final String sessionId = UUID.randomUUID().toString();
-        set(sessionId, thing);
+        set(sessionId, thing, false);
         return sessionId;
     }
 
     public T find(String uuid) {
         try {
-            final byte[] rawData = memcached.get(uuid);
-            if (rawData == null) return null;
-            return deserialize(CryptoUtil.decrypt(rawData, getPassphrase()));
+            final String found = redis.get(uuid);
+            if (found == null) return null;
+            return deserialize(found);
 
         } catch (Exception e) {
-            log.error("Error reading from memcached: " + e, e);
+            log.error("Error reading from redis: " + e, e);
             return null;
         }
     }
 
-    private void set(String uuid, T thing) {
-        try {
-            final byte[] data = CryptoUtil.encrypt(serialize(thing), getPassphrase());
-            memcached.set(uuid, (int) TimeUnit.DAYS.toSeconds(30), data);
-        } catch (Exception e) {
-            throw new IllegalStateException("Error writing to memcached: "+e, e);
+    public void invalidateAllSessions(String uuid) {
+        String sessionId;
+        while ((sessionId = redis.lpop(uuid)) != null) {
+            invalidate(sessionId);
         }
+        invalidate(uuid);
+    }
+
+    private void set(String uuid, T thing, boolean shouldExist) {
+        redis.set(uuid, serialize(thing), shouldExist ? "XX" : "NX", "EX", (int) TimeUnit.DAYS.toSeconds(30));
+        redis.lpush(thing.getUuid(), uuid);
     }
 
     // override these for full control -- toJson/fromJson will not be called at all
-    protected byte[] serialize(T thing) throws Exception { return pad(toJson(thing)); }
-    protected T deserialize(byte[] data) throws Exception { return fromJson(unpad(new String(data))); }
+    protected String serialize(T thing) {
+        try { return Base64.encodeBytes(CryptoUtil.encryptOrDie(pad(toJson(thing)).getBytes(), getPassphrase())); } catch (Exception e) {
+            throw new IllegalStateException("Error serializing: "+thing, e);
+        }
+    }
+    protected T deserialize(String data) throws Exception { return fromJson(unpad(new String(CryptoUtil.decrypt(Base64.decode(data), getPassphrase())))); }
 
     // override these to keep the padding but do your own json I/O
     protected String toJson(T thing) throws Exception { return JsonUtil.toJson(thing); }
     protected T fromJson(String json) throws Exception { return JsonUtil.fromJson(json, getEntityClass()); }
 
-    private byte[] pad(String data) throws Exception {
-        return (data + PADDING_SUFFIX + RandomStringUtils.random(1024)).getBytes(UTF8cs);
+    private String pad(String data) throws Exception {
+        return data + PADDING_SUFFIX + RandomStringUtils.random(1024);
     }
 
     private String unpad(String data) {
@@ -88,23 +89,15 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     public void update(String uuid, T thing) {
-        set(uuid, thing);
+        set(uuid, thing, true);
     }
 
     public void invalidate(String uuid) {
-        try {
-            memcached.delete(uuid);
-        } catch (Exception e) {
-            throw new IllegalStateException("Error deleting from memcached: "+e, e);
-        }
+        redis.del(uuid);
     }
 
     public boolean isValid (String uuid) {
-        try {
-            return find(uuid) != null;
-        } catch (Exception ignored) {
-            return false;
-        }
+        return find(uuid) != null;
     }
 
 }

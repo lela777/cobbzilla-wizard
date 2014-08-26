@@ -194,9 +194,9 @@
 
         <!-- for SessionDAO -->
         <dependency>
-            <groupId>com.googlecode.xmemcached</groupId>
-            <artifactId>xmemcached</artifactId>
-            <version>${xmemcached.version}</version>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
         </dependency>
 
     </dependencies>
