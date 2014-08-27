@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
@@ -11,7 +12,7 @@ import org.cobbzilla.wizard.validation.ValidEnum;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@NoArgsConstructor @Accessors(chain=true)
+@NoArgsConstructor @Accessors(chain=true) @ToString
 public class ResultPage {
 
     public static final String PARAM_USE_PAGINATION = "page";
@@ -31,6 +32,7 @@ public class ResultPage {
 
     public static final ResultPage DEFAULT_PAGE = new ResultPage();
     public static final ResultPage FIRST_RESULT = new ResultPage(1, 1);
+    public static final ResultPage INFINITE_PAGE = new ResultPage(1, Integer.MAX_VALUE);
 
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
 
@@ -107,9 +109,11 @@ public class ResultPage {
     @Getter @Setter private Map<String, String> bounds;
     @JsonIgnore public boolean getHasBounds() { return bounds != null && !bounds.isEmpty(); }
 
-    public void addBound(String name, String value) {
+    public void setBound(String name, String value) {
         if (bounds == null) bounds = new LinkedHashMap<>();
         bounds.put(name, value);
     }
+
+    public void unsetBound(String name) { bounds.remove(name); }
 
 }

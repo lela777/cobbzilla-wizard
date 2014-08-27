@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface DAO<E> {
 
-    public List<E> search(ResultPage resultPage);
+    public SearchResults<E> search(ResultPage resultPage);
 
     public Class<? extends Map<String, String>> boundsClass();
 

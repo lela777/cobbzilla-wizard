@@ -151,7 +151,7 @@ public class AbstractDAO<E> {
     public static final Object[] EMPTY_VALUES = new Object[0];
     public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
 
-    public List<E> search(ResultPage resultPage) {
+    public SearchResults<E> search(ResultPage resultPage) {
         String filterClause = "";
         String[] params;
         Object[] values;
@@ -170,7 +170,19 @@ public class AbstractDAO<E> {
             }
         }
         if (filterClause.length() > 0) filterClause = "where "+filterClause;
-        final String queryString = new StringBuilder().append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause).append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
+
+        final StringBuilder qBuilder = new StringBuilder().append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause);
+
+        final String countQuery = "select count(*) " + qBuilder.toString();
+        final String query = qBuilder.append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
+
+        final List results = query(query, resultPage, params, values);
+        final List countResults = query(countQuery, ResultPage.INFINITE_PAGE, params, values);
+        final int totalCount = Integer.valueOf("" + countResults.get(0));
+        return new SearchResults<E>(results, totalCount);
+    }
+
+    public List query(String queryString, ResultPage resultPage, String[] params, Object[] values) {
         return hibernateTemplate.executeFind(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
     }
 

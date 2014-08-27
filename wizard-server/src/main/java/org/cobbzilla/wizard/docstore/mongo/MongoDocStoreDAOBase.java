@@ -1,11 +1,11 @@
 package org.cobbzilla.wizard.docstore.mongo;
 
 import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.dao.SearchResults;
 import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -70,8 +70,8 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     }
 
     @Override
-    public List<T> search(ResultPage resultPage) {
+    public SearchResults<T> search(ResultPage resultPage) {
         // todo
-        return Collections.emptyList();
+        return new SearchResults<>();
     }
 }

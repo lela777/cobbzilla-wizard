@@ -29,9 +29,10 @@ public abstract class ThriftCRUDHandlerBase<E extends Identifiable, T extends TB
     protected abstract T toThrift(E entity);
     protected abstract E fromThrift(T thrift);
 
-    public List<T> findPage(tResultPage page) throws TException {
-        return toThrift(dao().search(fromThrift(page)));
-    }
+//    public SearchResults<T> findPage(tResultPage page) throws TException {
+//        final SearchResults<E> results = dao().search(fromThrift(page));
+//        return toThrift(results);
+//    }
 
     public T findByUuid(String uuid) throws TException {
         return toThrift(dao().findByUuid(uuid));
