@@ -57,7 +57,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    protected Map<String, String> getServerEnvironment() { return null; }
+    protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
     @After
     public void stopServer () throws Exception {
