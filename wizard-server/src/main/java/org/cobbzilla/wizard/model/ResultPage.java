@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@NoArgsConstructor
+@NoArgsConstructor @Accessors(chain=true)
 public class ResultPage {
 
     public static final String PARAM_USE_PAGINATION = "page";
@@ -88,8 +89,11 @@ public class ResultPage {
     }
     @JsonIgnore public boolean getHasSortField () { return sortField != null; }
 
-    @ValidEnum(type=SortOrder.class, emptyOk=true, message= BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
+    @ValidEnum(type=SortOrder.class, emptyOk=true, message=BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
     @Getter @Setter private String sortOrder = ResultPage.DEFAULT_SORT;
+
+    public ResultPage setSortOrder(SortOrder order) { sortOrder = order.name(); return this; }
+
 
     @JsonIgnore public SortOrder getSortType () { return sortOrder == null ? null : SortOrder.valueOf(sortOrder); }
 

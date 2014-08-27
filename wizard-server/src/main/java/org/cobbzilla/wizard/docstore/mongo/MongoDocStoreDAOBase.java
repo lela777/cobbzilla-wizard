@@ -12,11 +12,6 @@ import java.util.Map;
 /** a mongo docstore that also conforms to the DAO interface */
 public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends MongoDocStore<T> implements DAO<T> {
 
-    @Override
-    public <T1> List<T1> query(ResultPage resultPage) {
-        throw new IllegalStateException("not supported");
-    }
-
     @Override public Class<? extends Map<String, String>> boundsClass() { return null; }
 
     @Override

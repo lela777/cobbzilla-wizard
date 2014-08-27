@@ -6,11 +6,9 @@ package org.cobbzilla.wizard.dao;
  */
 
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.ResultPage;
 import org.hibernate.criterion.Restrictions;
 
 import javax.validation.Valid;
-import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -69,9 +67,4 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return list(criteria().add(Restrictions.eq(field, value)));
     }
 
-    @Override
-    public List<E> search(ResultPage resultPage) {
-        // todo
-        return Collections.emptyList();
-    }
 }

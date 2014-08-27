@@ -40,7 +40,7 @@ public abstract class AbstractResource<T extends Identifiable> {
 
         final DAO<T> dao = dao();
         final Map<String, String> boundsMap = parseBounds(bounds, dao);
-        return Response.ok(dao.query(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+        return Response.ok(dao.search(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
     }
 
     public static Map<String, String> parseBounds(String bounds, DAO dao) {

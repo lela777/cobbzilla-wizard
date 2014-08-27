@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface DAO<E> {
 
-    public <T> List<T> query(ResultPage resultPage);
+    public List<E> search(ResultPage resultPage);
 
     public Class<? extends Map<String, String>> boundsClass();
 
@@ -19,7 +19,6 @@ public interface DAO<E> {
     public E findByUuid(String uuid);
     public E findByUniqueField(String field, Object value);
 
-    public List<E> search(ResultPage resultPage);
     public boolean exists(String uuid);
 
     public Object preCreate(@Valid E entity);

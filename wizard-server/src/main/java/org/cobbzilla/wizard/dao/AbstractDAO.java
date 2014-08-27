@@ -150,7 +150,8 @@ public class AbstractDAO<E> {
     public static final String[] EMPTY_PARAMS = new String[0];
     public static final Object[] EMPTY_VALUES = new Object[0];
     public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
-    public <T> List<T> query(ResultPage resultPage) {
+
+    public List<E> search(ResultPage resultPage) {
         String filterClause = "";
         String[] params;
         Object[] values;
