@@ -14,7 +14,7 @@ public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends Id
     protected boolean forceLowercase () { return true; }
 
     @HasValue(message="err.name.empty")
-    @Column(length=100, unique=true, nullable=false)
+    @Column(length=100, unique=true, nullable=false, updatable=false)
     @Size(max=100)
     protected String name;
     public boolean hasName () { return !StringUtil.empty(name); }
@@ -22,7 +22,6 @@ public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends Id
     public String getName () { return hasName() ? (forceLowercase() ? name.toLowerCase() : name) : name; }
     public T setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); return (T) this; }
 
-    public boolean isSameName(UniquelyNamedEntity<T> other) {
-        return getName().equals(other.getName());
-    }
+    public boolean isSameName(UniquelyNamedEntity<T> other) { return getName().equals(other.getName()); }
+
 }
