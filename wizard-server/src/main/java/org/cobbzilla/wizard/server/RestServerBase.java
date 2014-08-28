@@ -42,6 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
+
 @Slf4j
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
 
@@ -170,6 +172,26 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S main(String[] args,
                                                                                           Class<S> mainClass) throws Exception {
         return main(args, mainClass, null, getConfigurationSources(args));
+    }
+
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+                                                        main(Class<S> mainClass,
+                                                             List<ConfigurationSource> configSources) throws Exception {
+        return main(EMPTY_ARRAY, mainClass, null, configSources);
+    }
+
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+                                                        main(String[] args,
+                                                             Class<S> mainClass,
+                                                             List<ConfigurationSource> configSources) throws Exception {
+        return main(args, mainClass, null, configSources);
+    }
+
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+                                                        main(Class<S> mainClass,
+                                                             final RestServerLifecycleListener<S> listener,
+                                                             List<ConfigurationSource> configSources) throws Exception {
+        return main(EMPTY_ARRAY, mainClass, listener, configSources);
     }
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
