@@ -9,7 +9,7 @@ import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.Size;
 
 @MappedSuperclass @EqualsAndHashCode(of={"name"}, callSuper=false)
-public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends IdentifiableBase {
+public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends IdentifiableBase implements NamedEntity {
 
     protected boolean forceLowercase () { return true; }
 

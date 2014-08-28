@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.json.JsonUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
@@ -34,4 +35,11 @@ public class SearchResults<E> {
     public E getResult(int i) {
         return (i < 0 || i > results.size()-1) ? null : results.get(i);
     }
+
+    public SearchResults<E> addResult (E result) {
+        if (results == null) results = new ArrayList<>();
+        results.add(result);
+        return this;
+    }
+
 }

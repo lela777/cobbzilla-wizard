@@ -176,10 +176,15 @@ public class AbstractDAO<E> {
         final String countQuery = "select count(*) " + qBuilder.toString();
         final String query = qBuilder.append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
 
-        final List results = query(query, resultPage, params, values);
-        final List countResults = query(countQuery, ResultPage.INFINITE_PAGE, params, values);
-        final int totalCount = Integer.valueOf("" + countResults.get(0));
-        return new SearchResults<E>(results, totalCount);
+        List<E> results = query(query, resultPage, params, values);
+        final int totalCount = Integer.valueOf(""+query(countQuery, ResultPage.INFINITE_PAGE, params, values).get(0));
+
+        // the caller may want the results filtered (remove sensitive fields)
+        if (resultPage.hasScrubber() && !results.isEmpty()) {
+            results = resultPage.getScrubber().scrub(results);
+        }
+
+        return new SearchResults<>(results, totalCount);
     }
 
     public List query(String queryString, ResultPage resultPage, String[] params, Object[] values) {
