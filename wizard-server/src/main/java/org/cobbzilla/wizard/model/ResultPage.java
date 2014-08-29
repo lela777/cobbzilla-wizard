@@ -1,11 +1,10 @@
 package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
+import org.cobbzilla.util.collection.MapUtil;
+import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
@@ -35,6 +34,11 @@ public class ResultPage {
     public static final ResultPage INFINITE_PAGE = new ResultPage(1, Integer.MAX_VALUE);
 
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
+
+    // for using ResultPage as a query-parameter
+    public static ResultPage valueOf (String json) throws Exception {
+        return JsonUtil.fromJson(json, ResultPage.class);
+    }
 
     public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, Map<String, String> bounds) {
         if (pageNumber != null) this.pageNumber = pageNumber;
@@ -118,4 +122,32 @@ public class ResultPage {
 
     @JsonIgnore @Getter @Setter private SearchScrubber scrubber;
     public boolean hasScrubber () { return scrubber != null; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ResultPage that = (ResultPage) o;
+
+        if (pageNumber != that.pageNumber) return false;
+        if (pageSize != that.pageSize) return false;
+        if (!MapUtil.deepEquals(bounds, that.bounds)) return false;
+        if (filter != null ? !filter.equals(that.filter) : that.filter != null) return false;
+        if (sortField != null ? !sortField.equals(that.sortField) : that.sortField != null) return false;
+        if (sortOrder != null ? !sortOrder.equals(that.sortOrder) : that.sortOrder != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = pageNumber;
+        result = 31 * result + pageSize;
+        result = 31 * result + (sortField != null ? sortField.hashCode() : 0);
+        result = 31 * result + (sortOrder != null ? sortOrder.hashCode() : 0);
+        result = 31 * result + (filter != null ? filter.hashCode() : 0);
+        result = 31 * result + (bounds != null ? MapUtil.deepHash(bounds) : 0);
+        return result;
+    }
 }
