@@ -15,4 +15,9 @@ public class ApiConnectionInfo {
     public ApiConnectionInfo (String baseUri) {
         this.baseUri = baseUri;
     }
+
+    // alias for when this is used in json with snake_case naming conventions
+    public String getBase_uri () { return getBaseUri(); }
+    public void setBase_uri (String uri) { setBaseUri(uri); }
+
 }
