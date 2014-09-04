@@ -14,6 +14,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cobbzilla.util.http.ApiConnectionInfo;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
