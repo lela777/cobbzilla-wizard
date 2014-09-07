@@ -78,6 +78,17 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public HttpServer startServer() throws IOException {
 
         final String serverName = configuration.getServerName();
+        buildServer(serverName);
+
+        // fire it up
+        log.info("starting "+serverName+"...");
+        httpServer.start();
+        // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
+        log.info(serverName+" started.");
+        return httpServer;
+    }
+
+    public HttpServer buildServer(String serverName) throws IOException {
         final JerseyConfiguration jerseyConfiguration = configuration.getJersey();
         final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
@@ -126,11 +137,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             httpServer.getServerConfiguration().addHttpHandler(staticHandler, staticBase);
         }
 
-        // fire it up
-        log.info("starting "+serverName+"...");
-        httpServer.start();
-        // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
-        log.info(serverName+" started.");
         return httpServer;
     }
 
