@@ -31,8 +31,8 @@ public class ApiClientBase {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
 
-    @Getter private ApiConnectionInfo connectionInfo;
-    @Getter @Setter private String token;
+    @Getter protected ApiConnectionInfo connectionInfo;
+    @Getter @Setter protected String token;
 
     public ApiClientBase (ApiConnectionInfo connectionInfo) { this.connectionInfo = connectionInfo; }
     public ApiClientBase (String baseUri) { connectionInfo = new ApiConnectionInfo(baseUri); }
