@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.apache.commons.beanutils.BeanUtils;
 import org.cobbzilla.util.string.StringUtil;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@MappedSuperclass @EqualsAndHashCode(of={"uuid"})
+@MappedSuperclass @EqualsAndHashCode(of={"uuid"}) @ToString
 public class IdentifiableBase implements Identifiable {
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
