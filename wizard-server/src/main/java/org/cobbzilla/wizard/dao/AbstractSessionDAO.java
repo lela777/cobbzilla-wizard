@@ -8,8 +8,10 @@ import org.cobbzilla.util.string.Base64;
 import org.cobbzilla.wizard.model.Identifiable;
 import redis.clients.jedis.Jedis;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.UUID.randomUUID;
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 // todo: implement retries, where we tear down the client completely and rebuild it
 // this is necessary if the redis server is restarted while we're running
@@ -35,12 +37,13 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     public String create (T thing) {
-        final String sessionId = UUID.randomUUID().toString();
+        final String sessionId = randomUUID().toString();
         set(sessionId, thing, false);
         return sessionId;
     }
 
     public T find(String uuid) {
+        if (empty(uuid)) return null;
         try {
             final String found = redis.get(uuid);
             if (found == null) return null;
