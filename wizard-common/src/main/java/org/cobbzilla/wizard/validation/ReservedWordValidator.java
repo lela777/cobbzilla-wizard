@@ -19,7 +19,7 @@ public class ReservedWordValidator implements ConstraintValidator<NotReservedWor
         if (value == null) return true;
         final String[] words = getReservedWords();
         for (String word : words) {
-            if (value.equals(word)) return false;
+            if (value.toString().equalsIgnoreCase(word)) return false;
         }
         return true;
     }
