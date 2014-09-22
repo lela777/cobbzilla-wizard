@@ -72,7 +72,7 @@ public class JacksonMessageBodyProvider extends JacksonJaxbJsonProvider {
         if (classes != null) {
             final ValidationResult errors = validator.validate(value, classes);
             if (!errors.isEmpty()) {
-                throw new InvalidEntityException("The request entity had the following errors:",
+                throw new InvalidEntityException("The request entity had the following errors: "+errors,
                         errors);
             }
         }
