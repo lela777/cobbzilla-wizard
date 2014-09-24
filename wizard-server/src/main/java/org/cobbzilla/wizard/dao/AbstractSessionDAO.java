@@ -32,9 +32,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     protected int getRedisPort() { return 6379; }
     protected String getRedisHost () { return "127.0.0.1"; }
 
-    public AbstractSessionDAO() {
-        redis = new Jedis(getRedisHost(), getRedisPort());
-    }
+    public AbstractSessionDAO() { redis = new Jedis(getRedisHost(), getRedisPort()); }
 
     public String create (T thing) {
         final String sessionId = randomUUID().toString();
