@@ -27,16 +27,14 @@ public class ProxyUtil {
 
     public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
                                                   HttpContext callerContext,
-                                                  String baseUri,
-                                                  String cookieDomain) throws IOException {
+                                                  String baseUri) throws IOException {
 
-        return proxyResponse(requestBean, callerContext, baseUri, cookieDomain, null);
+        return proxyResponse(requestBean, callerContext, baseUri, null);
     }
 
     public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
                                                   HttpContext callerContext,
                                                   String baseUri,
-                                                  String cookieDomain,
                                                   CookieJar cookieJar) throws IOException {
         if (cookieJar == null) cookieJar = new CookieJar();
 
@@ -109,11 +107,8 @@ public class ProxyUtil {
             } else if (headerName.equals(SET_COOKIE)) {
                 // ensure that cookies are for the top-level domain, since they will be sent to cloudos
                 final HttpCookieBean cookie = HttpCookieBean.parse(headerValue);
-                if (cookieDomain != null) {
-                    cookie.setDomain(cookieDomain);
-                    log.info("rewriting cookie: " + headerValue + " with domain=" + cookie.getDomain());
-                }
-
+                final boolean secure = baseUri != null && baseUri.startsWith("https:");
+                cookie.setSecure(secure);
                 cookieJar.add(cookie);
                 continue; // we'll set all the cookies at the end
 

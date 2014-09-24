@@ -6,11 +6,17 @@ import com.google.common.collect.Multimap;
 import lombok.Delegate;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.xml.XPathUtil;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
+@Slf4j
 public class BufferedResponse extends Response {
 
     @Delegate @Getter @Setter private Response response;
@@ -48,4 +54,24 @@ public class BufferedResponse extends Response {
     @Getter @Setter private String document;
     public boolean hasDocument () { return document != null; }
 
+    public String getMetaRedirect() {
+        if (document == null || !document.contains("http-equiv=\"refresh\"")) return null;
+        try {
+            final XPathUtil xpath = new XPathUtil("substring-after(/html/head/meta[@http-equiv='refresh']/@content, 'URL=')", true);
+            final List<String> values = xpath.getStrings(new ByteArrayInputStream(document.getBytes()));
+            if (values.isEmpty()) return null;
+            if (values.size() > 1) log.warn("getMetaRedirect: multiple matches found, returning first: "+values);
+            return values.get(0);
+
+        } catch (Exception e) {
+            log.error("getMetaRedirect: xpath error: "+e);
+            return null;
+        }
+    }
+
+    public String getRedirectUri() {
+        if (is3xx()) return getFirstHeaderValue(HttpHeaders.LOCATION);
+        if (is2xx()) return getMetaRedirect();
+        return null;
+    }
 }
