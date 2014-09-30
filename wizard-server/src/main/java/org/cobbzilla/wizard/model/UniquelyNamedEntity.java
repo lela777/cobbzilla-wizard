@@ -10,7 +10,7 @@ import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.Size;
 
 @MappedSuperclass @EqualsAndHashCode(of={"name"}, callSuper=false) @ToString(callSuper=true)
-public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends IdentifiableBase implements NamedEntity {
+public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
     protected boolean forceLowercase () { return true; }
 
@@ -21,8 +21,8 @@ public abstract class UniquelyNamedEntity<T extends IdentifiableBase> extends Id
     public boolean hasName () { return !StringUtil.empty(name); }
 
     public String getName () { return hasName() ? (forceLowercase() ? name.toLowerCase() : name) : name; }
-    public T setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); return (T) this; }
+    public UniquelyNamedEntity setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); return this; }
 
-    public boolean isSameName(UniquelyNamedEntity<T> other) { return getName().equals(other.getName()); }
+    public boolean isSameName(UniquelyNamedEntity other) { return getName().equals(other.getName()); }
 
 }
