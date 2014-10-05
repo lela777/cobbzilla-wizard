@@ -12,13 +12,13 @@ public abstract class AbstractUniqueCRUDDAO<T extends Identifiable> extends Abst
 
     protected abstract Map<String, UniqueValidatorDaoHelper.Finder<T>> getUniqueHelpers();
 
-    @Override
-    public boolean isUnique(String uniqueFieldName, Object uniqueValue) {
+    protected abstract T findByName(String name);
+
+    @Override public boolean isUnique(String uniqueFieldName, Object uniqueValue) {
         return uniqueHelper.isUnique(uniqueFieldName, uniqueValue);
     }
 
-    @Override
-    public boolean isUnique(String uniqueFieldName, Object uniqueValue, String idFieldName, Object idValue) {
+    @Override public boolean isUnique(String uniqueFieldName, Object uniqueValue, String idFieldName, Object idValue) {
         return uniqueHelper.isUnique(uniqueFieldName, uniqueValue, idFieldName, idValue);
     }
 
