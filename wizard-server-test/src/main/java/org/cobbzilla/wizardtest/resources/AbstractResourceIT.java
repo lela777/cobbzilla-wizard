@@ -24,8 +24,7 @@ import static junit.framework.Assert.assertNotNull;
 
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
-        extends ApiClientBase
-        implements RestServerLifecycleListener<S, C> {
+        extends ApiClientBase implements RestServerLifecycleListener {
 
     public static final String EMPTY_JSON = "{}";
     public static final String EMPTY_JSON_ARRAY = "[]";
@@ -37,13 +36,13 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected abstract Class<? extends S> getRestServerClass();
 
-    @Override public void beforeStart(RestServer server) {}
-    @Override public void onStart(RestServer server) {
+    @Override public void beforeStart() {}
+    @Override public void onStart() {
         final RestServerConfiguration config = serverHarness.getConfiguration();
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
     }
-    @Override public void beforeStop(RestServer server) {}
-    @Override public void onStop(RestServer server) {}
+    @Override public void beforeStop() {}
+    @Override public void onStop() {}
 
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
     protected static volatile RestServer server = null;

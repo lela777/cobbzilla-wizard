@@ -50,9 +50,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
-    @Getter @Setter private List<RestServerLifecycleListener<RestServer<C>, C>> listeners = new ArrayList<>();
-    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<RestServer<C>, C> listener) { listeners.add(listener); }
-    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<RestServer<C>, C> listener) { listeners.remove(listener); }
+    @Getter @Setter private List<RestServerLifecycleListener> listeners = new ArrayList<>();
+    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener listener) { listeners.add(listener); }
+    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener listener) { listeners.remove(listener); }
 
     private ConfigurableApplicationContext applicationContext;
     public ApplicationContext getApplicationContext () { return applicationContext; }
@@ -81,9 +81,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public synchronized HttpServer startServer() throws IOException {
 
-        for (RestServerLifecycleListener listener : listeners) {
-            listener.beforeStart(this);
-        }
+        for (RestServerLifecycleListener listener : listeners) listener.beforeStart();
 
         final String serverName = configuration.getServerName();
         buildServer(serverName);
@@ -93,9 +91,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         httpServer.start();
         // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(serverName+" started.");
-        for (RestServerLifecycleListener listener : listeners) {
-            listener.onStart(this);
-        }
+        for (RestServerLifecycleListener listener : listeners) listener.onStart();
         return httpServer;
     }
 
@@ -107,11 +103,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         if (jerseyConfiguration.hasRequestFilters()) {
             rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
-                                    Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
+                    Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
         }
         if (jerseyConfiguration.hasResponseFilters()) {
             rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters",
-                                    Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
+                    Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
         }
 
         rc.getSingletons().add(new JacksonMessageBodyProvider(JsonUtil.NOTNULL_MAPPER, new Validator()));
@@ -180,12 +176,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public synchronized void stopServer() {
         log.info("stopping "+configuration.getServerName()+"...");
-        for (RestServerLifecycleListener listener : listeners) {
-            listener.beforeStop(this);
-        }
-        httpServer.stop();
-        for (RestServerLifecycleListener listener : listeners) {
-            listener.onStop(this);
+        for (RestServerLifecycleListener listener : listeners) listener.beforeStop();
+        try {
+            httpServer.stop();
+        } finally {
+            for (RestServerLifecycleListener listener : listeners) listener.onStop();
         }
         log.info(configuration.getServerName()+" stopped.");
     }
@@ -198,29 +193,29 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     }
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
-                                                        main(Class<S> mainClass,
-                                                             List<ConfigurationSource> configSources) throws Exception {
+    main(Class<S> mainClass,
+         List<ConfigurationSource> configSources) throws Exception {
         return main(EMPTY_ARRAY, mainClass, null, configSources);
     }
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
-                                                        main(String[] args,
-                                                             Class<S> mainClass,
-                                                             List<ConfigurationSource> configSources) throws Exception {
+    main(String[] args,
+         Class<S> mainClass,
+         List<ConfigurationSource> configSources) throws Exception {
         return main(args, mainClass, null, configSources);
     }
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
-                                                        main(Class<S> mainClass,
-                                                             final RestServerLifecycleListener<RestServer<C>, C> listener,
-                                                             List<ConfigurationSource> configSources) throws Exception {
+    main(Class<S> mainClass,
+         final RestServerLifecycleListener listener,
+         List<ConfigurationSource> configSources) throws Exception {
         return main(EMPTY_ARRAY, mainClass, listener, configSources);
     }
 
     public static <S extends RestServer<C>, C extends RestServerConfiguration> S
-                                                        main(String[] args, Class<S> mainClass,
-                                                             final RestServerLifecycleListener<RestServer<C>, C> listener,
-                                                             List<ConfigurationSource> configSources) throws Exception {
+    main(String[] args, Class<S> mainClass,
+         final RestServerLifecycleListener listener,
+         List<ConfigurationSource> configSources) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
 
@@ -250,7 +245,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                     mainThread.interrupt();
                     mainThreadLock.notify();
                 }
-                if (listener != null) listener.onStop(server);
             }
         }));
 
