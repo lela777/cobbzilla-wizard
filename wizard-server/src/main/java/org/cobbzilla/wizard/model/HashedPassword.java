@@ -34,7 +34,7 @@ public class HashedPassword {
     public String getResetToken() { return resetToken; }
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
-        this.resetTokenCtime = System.currentTimeMillis();
+        this.resetTokenCtime = (resetToken == null) ? null : System.currentTimeMillis();
     }
 
     public String initResetToken() {
@@ -53,9 +53,7 @@ public class HashedPassword {
         return password != null && BCrypt.checkpw(password, hashedPassword);
     }
 
-    public void setPassword(String password) {
-        this.hashedPassword = BCryptUtil.hash(password);
-    }
+    public void setPassword(String password) { this.hashedPassword = BCryptUtil.hash(password); }
 
     public void resetPassword(String password, long tokenDuration) {
         if (getResetTokenAge() > tokenDuration) throw new IllegalStateException("token expired");
