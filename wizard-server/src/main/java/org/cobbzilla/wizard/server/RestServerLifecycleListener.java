@@ -1,6 +1,8 @@
 package org.cobbzilla.wizard.server;
 
-public interface RestServerLifecycleListener<S extends RestServer> {
+import org.cobbzilla.wizard.server.config.RestServerConfiguration;
+
+public interface RestServerLifecycleListener<S extends RestServer<C>, C extends RestServerConfiguration> {
 
     public void beforeStart(S server);
     public void onStart(S server);

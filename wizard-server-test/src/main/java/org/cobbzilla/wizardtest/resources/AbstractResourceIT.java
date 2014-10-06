@@ -23,7 +23,9 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 
 @Slf4j
-public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends ApiClientBase implements RestServerLifecycleListener<RestServer> {
+public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
+        extends ApiClientBase
+        implements RestServerLifecycleListener<S, C> {
 
     public static final String EMPTY_JSON = "{}";
     public static final String EMPTY_JSON_ARRAY = "[]";

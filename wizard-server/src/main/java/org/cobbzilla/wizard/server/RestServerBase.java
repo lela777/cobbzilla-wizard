@@ -50,9 +50,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
-    @Getter @Setter private List<RestServerLifecycleListener<RestServer<C>>> listeners = new ArrayList<>();
-    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<RestServer<C>> listener) { listeners.add(listener); }
-    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<RestServer<C>> listener) { listeners.remove(listener); }
+    @Getter @Setter private List<RestServerLifecycleListener<RestServer<C>, C>> listeners = new ArrayList<>();
+    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<RestServer<C>, C> listener) { listeners.add(listener); }
+    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<RestServer<C>, C> listener) { listeners.remove(listener); }
 
     private ConfigurableApplicationContext applicationContext;
     public ApplicationContext getApplicationContext () { return applicationContext; }
@@ -212,14 +212,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
                                                         main(Class<S> mainClass,
-                                                             final RestServerLifecycleListener<RestServer<C>> listener,
+                                                             final RestServerLifecycleListener<RestServer<C>, C> listener,
                                                              List<ConfigurationSource> configSources) throws Exception {
         return main(EMPTY_ARRAY, mainClass, listener, configSources);
     }
 
     public static <S extends RestServer<C>, C extends RestServerConfiguration> S
                                                         main(String[] args, Class<S> mainClass,
-                                                             final RestServerLifecycleListener<RestServer<C>> listener,
+                                                             final RestServerLifecycleListener<RestServer<C>, C> listener,
                                                              List<ConfigurationSource> configSources) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
