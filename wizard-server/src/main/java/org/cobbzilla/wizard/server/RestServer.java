@@ -5,6 +5,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
+import java.net.URI;
 
 public interface RestServer<C extends RestServerConfiguration> {
 
@@ -16,10 +17,14 @@ public interface RestServer<C extends RestServerConfiguration> {
     public C getConfiguration();
     public void setConfiguration(C configuration);
 
+    public void addLifecycleListener (RestServerLifecycleListener<RestServer<C>> listener);
+    public void removeLifecycleListener (RestServerLifecycleListener<RestServer<C>> listener);
+
     public void stopServer();
 
     public String getClientUri();
 
     public ApplicationContext getApplicationContext();
 
+    public URI getBaseUri();
 }

@@ -6,6 +6,7 @@ import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
+import org.cobbzilla.wizard.server.RestServerLifecycleListener;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
@@ -22,7 +23,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 
 @Slf4j
-public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends ApiClientBase {
+public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends ApiClientBase implements RestServerLifecycleListener<RestServer> {
 
     public static final String EMPTY_JSON = "{}";
     public static final String EMPTY_JSON_ARRAY = "[]";
@@ -34,6 +35,14 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected abstract Class<? extends S> getRestServerClass();
 
+    @Override public void beforeStart(RestServer server) {}
+    @Override public void onStart(RestServer server) {
+        final RestServerConfiguration config = serverHarness.getConfiguration();
+        config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
+    }
+    @Override public void beforeStop(RestServer server) {}
+    @Override public void onStop(RestServer server) {}
+
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
     protected static volatile RestServer server = null;
 
@@ -41,7 +50,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Override public synchronized String getBaseUri() { return server.getClientUri(); }
 
-    public void beforeServerStart () throws Exception {}
     public boolean shouldCacheServer () { return true; }
 
     @Before
@@ -52,7 +60,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             serverHarness.setConfigurations(getConfigurations());
             serverHarness.init(getServerEnvironment());
             server = serverHarness.getServer();
-            beforeServerStart();
+            server.addLifecycleListener(this);
             serverHarness.startServer();
         }
     }

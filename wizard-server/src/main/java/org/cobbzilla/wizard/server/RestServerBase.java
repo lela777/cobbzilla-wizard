@@ -50,6 +50,10 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
+    @Getter @Setter private List<RestServerLifecycleListener<RestServer<C>>> listeners = new ArrayList<>();
+    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<RestServer<C>> listener) { listeners.add(listener); }
+    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<RestServer<C>> listener) { listeners.remove(listener); }
+
     private ConfigurableApplicationContext applicationContext;
     public ApplicationContext getApplicationContext () { return applicationContext; }
 
@@ -75,7 +79,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return UriBuilder.fromUri("http://" + host + httpConfiguration.getBaseUri()).port(httpConfiguration.getPort()).build();
     }
 
-    public HttpServer startServer() throws IOException {
+    public synchronized HttpServer startServer() throws IOException {
+
+        for (RestServerLifecycleListener listener : listeners) {
+            listener.beforeStart(this);
+        }
 
         final String serverName = configuration.getServerName();
         buildServer(serverName);
@@ -85,6 +93,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         httpServer.start();
         // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(serverName+" started.");
+        for (RestServerLifecycleListener listener : listeners) {
+            listener.onStart(this);
+        }
         return httpServer;
     }
 
@@ -167,9 +178,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return applicationContext;
     }
 
-    public void stopServer() {
+    public synchronized void stopServer() {
         log.info("stopping "+configuration.getServerName()+"...");
+        for (RestServerLifecycleListener listener : listeners) {
+            listener.beforeStop(this);
+        }
         httpServer.stop();
+        for (RestServerLifecycleListener listener : listeners) {
+            listener.onStop(this);
+        }
         log.info(configuration.getServerName()+" stopped.");
     }
 
@@ -195,14 +212,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
                                                         main(Class<S> mainClass,
-                                                             final RestServerLifecycleListener<S> listener,
+                                                             final RestServerLifecycleListener<RestServer<C>> listener,
                                                              List<ConfigurationSource> configSources) throws Exception {
         return main(EMPTY_ARRAY, mainClass, listener, configSources);
     }
 
-    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+    public static <S extends RestServer<C>, C extends RestServerConfiguration> S
                                                         main(String[] args, Class<S> mainClass,
-                                                             final RestServerLifecycleListener<S> listener,
+                                                             final RestServerLifecycleListener<RestServer<C>> listener,
                                                              List<ConfigurationSource> configSources) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
@@ -218,9 +235,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         serverHarness.addConfigurations(configSources);
         serverHarness.init(System.getenv());
 
-        final S server = getServer(serverHarness, listener);
+        final S server = serverHarness.getServer();
+        if (listener != null) server.addLifecycleListener(listener);
         server.startServer();
-        if (listener != null) listener.onStart(server);
 
         final String serverName = server.getConfiguration().getServerName();
 
@@ -244,13 +261,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             log.info(serverName+" server thread interrupted, stopping server...");
         }
 
-        return server;
-    }
-
-    private static <S extends RestServerBase<C>, C extends RestServerConfiguration> S getServer(RestServerHarness<C, S> serverHarness,
-                                                                                                RestServerLifecycleListener<S> listener) {
-        S server = serverHarness.getServer();
-        if (listener != null) server = listener.beforeStart(server);
         return server;
     }
 

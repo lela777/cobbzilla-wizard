@@ -15,9 +15,8 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
 
     @Getter protected HttpClient httpClient = new RestexClientConnectionManager(apiDocs).getHttpClient();
 
-    @After
-    public void commitDocCapture () throws Exception { apiDocs.commit(); }
-    @AfterClass
-    public static void finalizeDocCapture () throws Exception { apiDocs.close(); }
+    @After public void commitDocCapture () throws Exception { apiDocs.commit(); }
+
+    @AfterClass public static void finalizeDocCapture () throws Exception { apiDocs.close(); }
 
 }
