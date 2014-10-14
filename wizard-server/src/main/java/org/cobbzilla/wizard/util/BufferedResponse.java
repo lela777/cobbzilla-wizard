@@ -7,17 +7,18 @@ import lombok.Delegate;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.xml.XPathUtil;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class BufferedResponse extends Response {
+
+    public static final Pattern META_URL_PATTERN = Pattern.compile("URL=([^\"]+)\"");
 
     @Delegate @Getter @Setter private Response response;
 
@@ -57,11 +58,14 @@ public class BufferedResponse extends Response {
     public String getMetaRedirect() {
         if (document == null || !document.contains("http-equiv=\"refresh\"")) return null;
         try {
-            final XPathUtil xpath = new XPathUtil("substring-after(/html/head/meta[@http-equiv='refresh']/@content, 'URL=')", true);
-            final List<String> values = xpath.getStrings(new ByteArrayInputStream(document.getBytes()));
-            if (values.isEmpty()) return null;
-            if (values.size() > 1) log.warn("getMetaRedirect: multiple matches found, returning first: "+values);
-            return values.get(0);
+            final int metaPos = document.replace("\n", "").indexOf("<meta http-equiv=\"refresh\"");
+            if (metaPos != -1) {
+                final int metaEnd = document.indexOf(">", metaPos);
+                final String metaTag = document.substring(metaPos, metaEnd);
+                final Matcher matcher = META_URL_PATTERN.matcher(metaTag);
+                if (matcher.find()) return matcher.group(1);
+            }
+            return null;
 
         } catch (Exception e) {
             log.error("getMetaRedirect: xpath error: "+e);
