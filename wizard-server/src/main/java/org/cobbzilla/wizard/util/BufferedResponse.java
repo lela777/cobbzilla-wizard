@@ -58,7 +58,7 @@ public class BufferedResponse extends Response {
     public String getMetaRedirect() {
         if (document == null || !document.contains("http-equiv=\"refresh\"")) return null;
         try {
-            final int metaPos = document.replace("\n", "").indexOf("<meta http-equiv=\"refresh\"");
+            final int metaPos = document.indexOf("<meta http-equiv=\"refresh\"");
             if (metaPos != -1) {
                 final int metaEnd = document.indexOf(">", metaPos);
                 final String metaTag = document.substring(metaPos, metaEnd);
@@ -68,7 +68,7 @@ public class BufferedResponse extends Response {
             return null;
 
         } catch (Exception e) {
-            log.error("getMetaRedirect: xpath error: "+e);
+            log.error("getMetaRedirect: "+e);
             return null;
         }
     }
