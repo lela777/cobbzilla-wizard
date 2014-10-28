@@ -20,9 +20,7 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
 
         if (skipAuthPaths.contains(uri)) return request;
 
-        for (String path : skipAuthPrefixes) {
-            if (uri.startsWith(path)) return request;
-        }
+        if (startsWith(uri, skipAuthPrefixes)) return request;
 
         final String token = request.getHeaderValue(authTokenHeader);
         if (token == null) throw new AuthException();
@@ -37,6 +35,13 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
         request.setSecurityContext(new SimpleSecurityContext(principal));
 
         return request;
+    }
+
+    protected boolean startsWith(String uri, Set<String> prefixes) {
+        for (String path : prefixes) {
+            if (uri.startsWith(path)) return true;
+        }
+        return false;
     }
 
     protected abstract boolean isPermitted(T principal, ContainerRequest request);

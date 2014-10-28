@@ -82,10 +82,10 @@ public class ResultPage {
     }
 
     @Getter @Setter private int pageNumber = 1;
+    @Getter @Setter private int pageSize = 10;
 
     @JsonIgnore public int getPageOffset () { return (pageNumber-1) * pageSize; }
-
-    @Getter @Setter private int pageSize = 10;
+    public boolean containsResult(int i) { return (i >= getPageOffset() && i <= getPageOffset()+getPageSize()); }
 
     @Setter private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {

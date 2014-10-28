@@ -55,12 +55,6 @@ This code is available under the Apache License, version 2: http://www.apache.or
         </dependency>
 
         <dependency>
-            <groupId>org.cobbzilla</groupId>
-            <artifactId>cobbzilla-utils</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
             <version>${httpcore.version}</version>

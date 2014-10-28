@@ -21,6 +21,12 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
     @Size(max=SV_VERSION_MAXLEN, message=SV_PATCH_LENGTH)
     @Getter @Setter private String patch = "0";
 
+    public SemanticVersion (int major, int minor, int patch) {
+        this.major = String.valueOf(major);
+        this.minor = String.valueOf(minor);
+        this.patch = String.valueOf(patch);
+    }
+
     @Override
     public String toString () {
         return (StringUtil.empty(major) ? "1" : major) + "."
