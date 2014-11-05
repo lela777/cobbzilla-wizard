@@ -61,7 +61,13 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return configuration != null && configuration.getHttp() != null && configuration.getHttp().getPort() != 0;
     }
 
-    private void verifyPort() { if (!hasPort()) throw new IllegalStateException("no http port specified"); }
+    private void verifyPort() {
+        if (!hasPort()) {
+            int port = PortPicker.pickOrDie();
+            log.info("No port defined, picked: "+port);
+            configuration.getHttp().setPort(port);
+        }
+    }
 
     public URI getBaseUri() { return buildURI(getListenAddress()); }
 
