@@ -14,6 +14,9 @@ import java.util.Map;
 @NoArgsConstructor @Accessors(chain=true) @ToString
 public class ResultPage {
 
+    public static final String ASC = SortOrder.ASC.toString();
+    public static final String DESC = SortOrder.DESC.toString();
+
     public static final String PARAM_USE_PAGINATION = "page";
     public static final String PARAM_PAGE_NUMBER    = "pn";
     public static final String PARAM_PAGE_SIZE      = "ps";
@@ -97,9 +100,6 @@ public class ResultPage {
 
     @ValidEnum(type=SortOrder.class, emptyOk=true, message=BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
     @Getter @Setter private String sortOrder = ResultPage.DEFAULT_SORT;
-
-    public ResultPage setSortOrder(SortOrder order) { sortOrder = order.name(); return this; }
-
 
     @JsonIgnore public SortOrder getSortType () { return sortOrder == null ? null : SortOrder.valueOf(sortOrder); }
 

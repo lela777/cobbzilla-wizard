@@ -1,0 +1,59 @@
+package org.cobbzilla.wizard.cache.redis;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.cobbzilla.util.security.CryptoUtil;
+import org.cobbzilla.util.string.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+
+@Service @Slf4j
+public class RedisService {
+
+    @Autowired private HasRedisConfiguration configuration;
+    private String getKey() { return configuration.getRedis().getKey(); }
+
+    @Getter(lazy=true) private final Jedis redis = initJedis();
+
+    private Jedis initJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
+
+    public String get(String key) { return decrypt(getRedis().get(key)); }
+
+    public String lpop(String data) { return decrypt(getRedis().lpop(data)); }
+
+    public void set(String key, String value, String exxx, String nxex, long time) {
+        getRedis().set(key, encrypt(value), exxx, nxex, time);
+    }
+
+    public void lpush(String key, String value) { getRedis().lpush(key, encrypt(value)); }
+
+    public void del(String key) { getRedis().del(key); }
+
+    // override these for full control -- toJson/fromJson will not be called at all
+    protected String encrypt(String data) {
+        try { return Base64.encodeBytes(CryptoUtil.encryptOrDie(pad(data).getBytes(), getKey())); } catch (Exception e) {
+            throw new IllegalStateException("Error encrypting: "+e, e);
+        }
+    }
+
+    protected String decrypt(String data) {
+        if (data == null) return null;
+        try { return unpad(new String(CryptoUtil.decrypt(Base64.decode(data), getKey()))); } catch (Exception e) {
+            throw new IllegalStateException("Error decrypting: "+e, e);
+        }
+    }
+
+    private static final String PADDING_SUFFIX = "__PADDING__";
+
+    private String pad(String data) throws Exception { return data + PADDING_SUFFIX + RandomStringUtils.random(128); }
+
+    private String unpad(String data) {
+        if (data == null) return null;
+        int paddingPos = data.indexOf(PADDING_SUFFIX);
+        if (paddingPos == -1) return null;
+        return data.substring(0, paddingPos);
+    }
+
+}

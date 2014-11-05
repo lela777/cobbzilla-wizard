@@ -26,6 +26,8 @@ public class BufferedResponseBuilder {
         buffered.setHeader(headerName, headerValue);
     }
 
+    public void setDocument (InputStream in) throws IOException { setDocument(in, null); }
+
     public void setDocument (InputStream in, Integer length) throws IOException {
         int initialSize = (length != null) ? length : 32 * 1024;
         final ByteArrayOutputStream out = new ByteArrayOutputStream(initialSize);

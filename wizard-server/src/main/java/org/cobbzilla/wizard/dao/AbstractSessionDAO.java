@@ -1,12 +1,10 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.security.CryptoUtil;
-import org.cobbzilla.util.string.Base64;
+import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.model.Identifiable;
-import redis.clients.jedis.Jedis;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,21 +16,13 @@ import static org.cobbzilla.util.string.StringUtil.empty;
 @Slf4j
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 
-    private static final String PADDING_SUFFIX = "__PADDING__";
-
-    private final Jedis redis;
+    @Autowired private RedisService redis;
 
     // what are we storing?
     protected abstract Class<T> getEntityClass();
 
     // what's the cipher key?
     protected abstract String getPassphrase();
-
-    // override these if necessary
-    protected int getRedisPort() { return 6379; }
-    protected String getRedisHost () { return "127.0.0.1"; }
-
-    public AbstractSessionDAO() { redis = new Jedis(getRedisHost(), getRedisPort()); }
 
     public String create (T thing) {
         final String sessionId = randomUUID().toString();
@@ -45,7 +35,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
         try {
             final String found = redis.get(uuid);
             if (found == null) return null;
-            return deserialize(found);
+            return fromJson(found);
 
         } catch (Exception e) {
             log.error("Error reading from redis: " + e, e);
@@ -62,43 +52,18 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     private void set(String uuid, T thing, boolean shouldExist) {
-        redis.set(uuid, serialize(thing), shouldExist ? "XX" : "NX", "EX", (int) TimeUnit.DAYS.toSeconds(30));
+        redis.set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", TimeUnit.DAYS.toSeconds(30));
         redis.lpush(thing.getUuid(), uuid);
     }
 
-    // override these for full control -- toJson/fromJson will not be called at all
-    protected String serialize(T thing) {
-        try { return Base64.encodeBytes(CryptoUtil.encryptOrDie(pad(toJson(thing)).getBytes(), getPassphrase())); } catch (Exception e) {
-            throw new IllegalStateException("Error serializing: "+thing, e);
-        }
-    }
-    protected T deserialize(String data) throws Exception { return fromJson(unpad(new String(CryptoUtil.decrypt(Base64.decode(data), getPassphrase())))); }
-
     // override these to keep the padding but do your own json I/O
-    protected String toJson(T thing) throws Exception { return JsonUtil.toJson(thing); }
-    protected T fromJson(String json) throws Exception { return JsonUtil.fromJson(json, getEntityClass()); }
+    protected String toJson(T thing) { return JsonUtil.toJsonOrDie(thing); }
+    protected T fromJson(String json) { return JsonUtil.fromJsonOrDie(json, getEntityClass()); }
 
-    private String pad(String data) throws Exception {
-        return data + PADDING_SUFFIX + RandomStringUtils.random(1024);
-    }
+    public void update(String uuid, T thing) { set(uuid, thing, true); }
 
-    private String unpad(String data) {
-        if (data == null) return null;
-        int paddingPos = data.indexOf(PADDING_SUFFIX);
-        if (paddingPos == -1) return null;
-        return data.substring(0, paddingPos);
-    }
+    public void invalidate(String uuid) { redis.del(uuid); }
 
-    public void update(String uuid, T thing) {
-        set(uuid, thing, true);
-    }
-
-    public void invalidate(String uuid) {
-        redis.del(uuid);
-    }
-
-    public boolean isValid (String uuid) {
-        return find(uuid) != null;
-    }
+    public boolean isValid (String uuid) { return find(uuid) != null; }
 
 }
