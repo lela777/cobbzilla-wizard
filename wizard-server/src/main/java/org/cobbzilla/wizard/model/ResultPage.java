@@ -99,7 +99,17 @@ public class ResultPage {
     @JsonIgnore public boolean getHasSortField () { return sortField != null; }
 
     @ValidEnum(type=SortOrder.class, emptyOk=true, message=BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
-    @Getter @Setter private String sortOrder = ResultPage.DEFAULT_SORT;
+    @Getter private String sortOrder = ResultPage.DEFAULT_SORT;
+    public ResultPage setSortOrder(Object thing) {
+        if (thing == null) {
+            sortOrder = null;
+        } else if (thing instanceof SortOrder) {
+            sortOrder = ((SortOrder) thing).name();
+        } else {
+            sortOrder = thing.toString();
+        }
+        return this;
+    }
 
     @JsonIgnore public SortOrder getSortType () { return sortOrder == null ? null : SortOrder.valueOf(sortOrder); }
 
