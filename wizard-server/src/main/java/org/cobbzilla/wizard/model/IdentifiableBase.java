@@ -14,7 +14,9 @@ import java.util.UUID;
 @MappedSuperclass @EqualsAndHashCode(of={"uuid"}) @ToString
 public class IdentifiableBase implements Identifiable {
 
-    @Id @Column(unique=true, updatable=false, nullable=false, length=BasicConstraintConstants.UUID_MAXLEN)
+    public static final int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
+
+    @Id @Column(unique=true, updatable=false, nullable=false, length= UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
     public boolean hasUuid () { return !StringUtil.empty(uuid); }

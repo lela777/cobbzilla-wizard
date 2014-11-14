@@ -12,4 +12,6 @@ public class RedisConfiguration {
     @Getter @Setter private int port = 6379;
     @Getter @Setter private String key;
 
+    public RedisConfiguration (String key) { this.key = key; }
+
 }
