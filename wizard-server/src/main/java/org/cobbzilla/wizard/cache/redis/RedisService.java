@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service @Slf4j
@@ -23,6 +24,7 @@ public class RedisService {
     private Jedis initJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
 
     public String get(String key) { return decrypt(getRedis().get(key)); }
+    public String get_plaintext(String key) { return getRedis().get(key); }
 
     public String lpop(String data) { return decrypt(getRedis().lpop(data)); }
 
@@ -53,7 +55,12 @@ public class RedisService {
     public List<String> list(String key) {
         final Long llen = getRedis().llen(key);
         if (llen == null) return null;
-        return getRedis().lrange(key, 0, llen);
+
+        final List<String> range = getRedis().lrange(key, 0, llen);
+        final List<String> list = new ArrayList<>(range.size());
+        for (String item : range) list.add(decrypt(item));
+
+        return list;
     }
 
     // override these for full control -- toJson/fromJson will not be called at all

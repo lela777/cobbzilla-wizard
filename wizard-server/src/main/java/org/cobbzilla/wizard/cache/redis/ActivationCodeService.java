@@ -15,7 +15,7 @@ public class ActivationCodeService {
 
     @Autowired @Getter @Setter private RedisService redis;
 
-    public String peek(String key) { return redis.get(key); }
+    public String peek(String key) { return redis.get_plaintext(key); }
 
     public boolean attempt(String key, String claimant) {
         try {
@@ -31,7 +31,7 @@ public class ActivationCodeService {
     }
 
     public void define (String key, int quantity, long expirationSeconds) {
-        redis.set_plaintext(key, String.valueOf(quantity), "XX", "EX", expirationSeconds);
+        redis.set_plaintext(key, String.valueOf(quantity), "NX", "EX", expirationSeconds);
     }
 
     public List<String> getClaimants (String key) { return redis.list(getClaimantsKey(key)); }
@@ -39,24 +39,21 @@ public class ActivationCodeService {
     private String getClaimantsKey(String key) { return key+"_claimed"; }
 
     /**
-     * @param args [0] = redis key; [1] = key; [2] = quantity; [3] = expiration (# days)
+     * @param args [0] = key; [1] = quantity; [2] = expiration (# days)
      */
     public static void main (String[] args) {
 
-        final String redisKey = args[0];
         final RedisService redis = new RedisService();
-        redis.setConfiguration(new HasRedisConfiguration() {
-            @Override public RedisConfiguration getRedis() { return new RedisConfiguration(redisKey); }
-        });
+        redis.setConfiguration(new HasRedisConfiguration() {@Override public RedisConfiguration getRedis() { return new RedisConfiguration(); }});
 
         final ActivationCodeService acService = new ActivationCodeService();
         acService.setRedis(redis);
 
-        final String key = args[1];
+        final String key = args[0];
 
-        if (args.length > 2) {
-            final int quantity = Integer.parseInt(args[2]);
-            final long expirationSeconds = Integer.parseInt(args[3]) * TimeUnit.DAYS.toSeconds(1);
+        if (args.length > 1) {
+            final int quantity = Integer.parseInt(args[1]);
+            final long expirationSeconds = Integer.parseInt(args[2]) * TimeUnit.DAYS.toSeconds(1);
 
             acService.define(key, quantity, expirationSeconds);
             System.out.println("successfully defined key: " + key);
