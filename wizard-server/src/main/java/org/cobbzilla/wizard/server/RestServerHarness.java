@@ -22,7 +22,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
     @Getter private S server = null;
     @Getter private C configuration = null;
 
-    private AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     public RestServerHarness(Class<S> restServerClass) {
         this.restServerClass = restServerClass;

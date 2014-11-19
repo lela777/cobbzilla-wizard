@@ -90,7 +90,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         for (RestServerLifecycleListener listener : listeners) listener.beforeStart();
 
         final String serverName = configuration.getServerName();
-        buildServer(serverName);
+        httpServer = buildServer(serverName);
 
         // fire it up
         log.info("starting "+serverName+"...");
@@ -132,7 +132,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             configuration.getHttp().setPort(PortPicker.pick());
         }
 
-        httpServer = new HttpServer();
+        final HttpServer httpServer = new HttpServer();
         final NetworkListener listener = new NetworkListener("grizzly-"+serverName, getListenAddress(), configuration.getHttp().getPort());
         httpServer.addListener(listener);
 
@@ -181,14 +181,18 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     }
 
     public synchronized void stopServer() {
-        log.info("stopping "+configuration.getServerName()+"...");
-        for (RestServerLifecycleListener listener : listeners) listener.beforeStop();
-        try {
-            httpServer.stop();
-        } finally {
-            for (RestServerLifecycleListener listener : listeners) listener.onStop();
+        if (httpServer.isStarted()) {
+            log.info("stopServer: stopping " + configuration.getServerName() + "...");
+            for (RestServerLifecycleListener listener : listeners) listener.beforeStop();
+            try {
+                httpServer.shutdownNow();
+            } finally {
+                for (RestServerLifecycleListener listener : listeners) listener.onStop();
+            }
+            log.info("stopServer: " + configuration.getServerName() + " stopped.");
+        } else {
+            log.info("stopServer: httpServer not running");
         }
-        log.info(configuration.getServerName()+" stopped.");
     }
 
     private static final Object mainThreadLock = new Object();
