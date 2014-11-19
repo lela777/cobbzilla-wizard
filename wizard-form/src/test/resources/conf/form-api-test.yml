@@ -12,9 +12,9 @@ jersey:
 
 database:
   driver: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:5432/form-test
-  user: wizard
-  password: ""
+  url: jdbc:postgresql://localhost:5432/wizard_form_test
+  user: wizard_form
+  password: wizard_form
 
   hibernate:
     entityPackages: ["org.cobbzilla.wizard.form.model"]
