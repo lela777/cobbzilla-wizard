@@ -24,7 +24,7 @@ public abstract class AbstractSessionsResource<T extends Identifiable> {
      */
     @GET
     @Path("/{uuid}")
-    @ReturnType("org.cobbzilla.wizard.model.Identifiable")
+    @ReturnType("T")
     public Response find (@PathParam("uuid") String uuid) {
 
         final T entity = getSessionDAO().find(uuid);
@@ -39,7 +39,7 @@ public abstract class AbstractSessionsResource<T extends Identifiable> {
      * @return The object that was stored
      */
     @PUT
-    @ReturnType("org.cobbzilla.wizard.model.Identifiable")
+    @ReturnType("T")
     public Response create (T entity) {
         getSessionDAO().create(entity);
         return Response.ok(entity).build();
@@ -52,7 +52,7 @@ public abstract class AbstractSessionsResource<T extends Identifiable> {
      */
     @POST
     @Path("/{uuid}")
-    @ReturnType("org.cobbzilla.wizard.model.Identifiable")
+    @ReturnType("T")
     public Response update (@PathParam("uuid") String uuid, T entity) {
         entity.setUuid(uuid);
         getSessionDAO().update(uuid, entity);
