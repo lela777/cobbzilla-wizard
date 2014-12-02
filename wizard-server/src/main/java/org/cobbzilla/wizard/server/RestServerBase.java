@@ -50,9 +50,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
-    @Getter @Setter private List<RestServerLifecycleListener> listeners = new ArrayList<>();
-    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener listener) { listeners.add(listener); }
-    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener listener) { listeners.remove(listener); }
+    @Getter @Setter private List<RestServerLifecycleListener<C>> listeners = new ArrayList<>();
+    @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<C> listener) { listeners.add(listener); }
+    @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<C> listener) { listeners.remove(listener); }
 
     private ConfigurableApplicationContext applicationContext;
     public ApplicationContext getApplicationContext () { return applicationContext; }
@@ -87,7 +87,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public synchronized HttpServer startServer() throws IOException {
 
-        for (RestServerLifecycleListener listener : listeners) listener.beforeStart();
+        for (RestServerLifecycleListener<C> listener : listeners) listener.beforeStart(this);
 
         final String serverName = configuration.getServerName();
         httpServer = buildServer(serverName);
@@ -97,7 +97,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         httpServer.start();
         // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(serverName+" started.");
-        for (RestServerLifecycleListener listener : listeners) listener.onStart();
+        for (RestServerLifecycleListener<C> listener : listeners) listener.onStart(this);
         return httpServer;
     }
 
@@ -183,11 +183,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public synchronized void stopServer() {
         if (httpServer.isStarted()) {
             log.info("stopServer: stopping " + configuration.getServerName() + "...");
-            for (RestServerLifecycleListener listener : listeners) listener.beforeStop();
+            for (RestServerLifecycleListener<C> listener : listeners) listener.beforeStop(this);
             try {
                 httpServer.shutdownNow();
             } finally {
-                for (RestServerLifecycleListener listener : listeners) listener.onStop();
+                for (RestServerLifecycleListener<C> listener : listeners) listener.onStop(this);
             }
             log.info("stopServer: " + configuration.getServerName() + " stopped.");
         } else {

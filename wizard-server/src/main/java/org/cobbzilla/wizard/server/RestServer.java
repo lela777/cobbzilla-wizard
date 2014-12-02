@@ -17,8 +17,8 @@ public interface RestServer<C extends RestServerConfiguration> {
     public C getConfiguration();
     public void setConfiguration(C configuration);
 
-    public void addLifecycleListener (RestServerLifecycleListener listener);
-    public void removeLifecycleListener (RestServerLifecycleListener listener);
+    public void addLifecycleListener (RestServerLifecycleListener<C> listener);
+    public void removeLifecycleListener (RestServerLifecycleListener<C> listener);
 
     public void stopServer();
 
