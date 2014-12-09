@@ -43,6 +43,15 @@ public class ResultPage {
         return JsonUtil.fromJson(json, ResultPage.class);
     }
 
+    public ResultPage(ResultPage other) {
+        this.setPageNumber(other.getPageNumber());
+        this.setPageSize(other.getPageSize());
+        this.setFilter(other.getFilter());
+        this.setSortField(other.getSortField());
+        this.setSortOrder(other.getSortOrder());
+        this.setBounds(other.getBounds());
+    }
+
     public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, Map<String, String> bounds) {
         if (pageNumber != null) this.pageNumber = pageNumber;
         if (pageSize != null) this.pageSize = pageSize;
