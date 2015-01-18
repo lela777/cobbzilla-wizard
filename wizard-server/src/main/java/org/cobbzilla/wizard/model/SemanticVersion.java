@@ -1,10 +1,11 @@
 package org.cobbzilla.wizard.model;
 
 import lombok.*;
-import org.cobbzilla.util.string.StringUtil;
 
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Size;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
@@ -12,53 +13,32 @@ import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 @NoArgsConstructor @AllArgsConstructor
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
+    public static final Pattern VERSION_PATTERN = Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)$");
+
     @Size(max=SV_VERSION_MAXLEN, message=SV_MAJOR_LENGTH)
-    @Getter @Setter private String major = "1";
+    @Getter @Setter private int major = 1;
 
     @Size(max=SV_VERSION_MAXLEN, message=SV_MINOR_LENGTH)
-    @Getter @Setter private String minor = "0";
+    @Getter @Setter private int minor = 0;
 
     @Size(max=SV_VERSION_MAXLEN, message=SV_PATCH_LENGTH)
-    @Getter @Setter private String patch = "0";
+    @Getter @Setter private int patch = 0;
 
-    public SemanticVersion (int major, int minor, int patch) {
-        this.major = String.valueOf(major);
-        this.minor = String.valueOf(minor);
-        this.patch = String.valueOf(patch);
+    public static SemanticVersion fromString (String version) {
+        final Matcher matcher = VERSION_PATTERN.matcher(version);
+        if (!matcher.find()) throw new IllegalArgumentException("Invalid version: "+version);
+        return new SemanticVersion(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(3)));
     }
 
-    @Override
-    public String toString () {
-        return (StringUtil.empty(major) ? "1" : major) + "."
-                + (StringUtil.empty(minor) ? "0" : minor) + "."
-                + (StringUtil.empty(patch) ? "0" : patch);
-    }
+    @Override public String toString () { return major + "." + minor + "." + patch; }
 
-    @Override
-    public int compareTo(SemanticVersion other) {
+    @Override public int compareTo(SemanticVersion other) {
+        if (other == null) throw new IllegalArgumentException("compareTo: argument was null");
         int diff;
-        diff = comparePart(major, other.major); if (diff != 0) return diff;
-        diff = comparePart(minor, other.minor); if (diff != 0) return diff;
-        diff = comparePart(patch, other.patch); if (diff != 0) return diff;
+        diff = major - other.major; if (diff != 0) return diff;
+        diff = minor - other.minor; if (diff != 0) return diff;
+        diff = patch - other.patch; if (diff != 0) return diff;
         return 0;
     }
 
-    private int comparePart(String part1, String part2) {
-        return getInt(part1).compareTo(getInt(part2));
-    }
-
-    private Integer getInt(String s) {
-        StringBuilder builder = new StringBuilder();
-        boolean inserting = false;
-        for (int index=s.length()-1; index >= 0; index--) {
-            char ch = s.charAt(index);
-            if (Character.isDigit(ch)) {
-                inserting = true;
-                builder.insert(0, ch);
-            } else if (inserting) {
-                break;
-            }
-        }
-        return Integer.valueOf(builder.toString());
-    }
 }
