@@ -13,7 +13,8 @@ import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 @NoArgsConstructor @AllArgsConstructor
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
-    public static final Pattern VERSION_PATTERN = Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)$");
+    public static final String VERSION_REGEXP = "^(\\d+)\\.(\\d+)\\.(\\d+)$";
+    public static final Pattern VERSION_PATTERN = Pattern.compile(VERSION_REGEXP);
 
     @Size(max=SV_VERSION_MAXLEN, message=SV_MAJOR_LENGTH)
     @Getter @Setter private int major = 1;
