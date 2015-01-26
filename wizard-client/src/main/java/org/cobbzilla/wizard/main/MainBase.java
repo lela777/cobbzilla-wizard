@@ -56,9 +56,12 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
     }
 
     protected void showHelpAndExit(Exception e) {
-        System.err.println(e.getMessage());
         parser.printUsage(System.err);
-        System.exit(1);
+        die(e.getMessage());
     }
 
+    protected void die (String message) {
+        System.err.println(message);
+        System.exit(1);
+    }
 }
