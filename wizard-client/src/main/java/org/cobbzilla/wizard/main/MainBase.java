@@ -22,16 +22,16 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
         try {
             parser.parseArgument(args);
             if (options.isHelp()) {
-                parser.printUsage(System.out);
-                System.exit(0);
+                showHelpAndExit();
             }
 
         } catch (Exception e) {
-            System.err.println(e.getMessage());
-            parser.printUsage(System.err);
-            System.exit(1);
+            showHelpAndExit(e);
         }
     }
+
+    protected void preRun() {}
+    protected void postRun() {}
 
     protected static void main(Class<? extends MainBase> clazz, String[] args) {
         try {
@@ -46,7 +46,19 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
         }
     }
 
-    protected void preRun() {}
-    protected void postRun() {}
+    protected void showHelpAndExit() {
+        parser.printUsage(System.out);
+        System.exit(0);
+    }
+
+    protected void showHelpAndExit(String error) {
+        showHelpAndExit(new IllegalArgumentException(error));
+    }
+
+    protected void showHelpAndExit(Exception e) {
+        System.err.println(e.getMessage());
+        parser.printUsage(System.err);
+        System.exit(1);
+    }
 
 }
