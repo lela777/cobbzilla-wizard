@@ -61,7 +61,14 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
     }
 
     protected void die (String message) {
+        log.error(message);
         System.err.println(message);
+        System.exit(1);
+    }
+
+    protected void die (String message, Exception e) {
+        log.error(message, e);
+        System.err.println(message+": "+e);
         System.exit(1);
     }
 }
