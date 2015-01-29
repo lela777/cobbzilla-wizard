@@ -4,6 +4,8 @@ import lombok.*;
 
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Size;
+import java.io.File;
+import java.io.FileFilter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +17,12 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
 
     public static final String VERSION_REGEXP = "^(\\d+)\\.(\\d+)\\.(\\d+)$";
     public static final Pattern VERSION_PATTERN = Pattern.compile(VERSION_REGEXP);
+
+    public static final FileFilter DIR_FILTER = new FileFilter() {
+        @Override public boolean accept(File pathname) {
+            return pathname.isDirectory() && SemanticVersion.isValid(pathname.getName());
+        }
+    };
 
     @Size(max=SV_VERSION_MAXLEN, message=SV_MAJOR_LENGTH)
     @Getter @Setter private int major = 1;
@@ -29,6 +37,11 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         final Matcher matcher = VERSION_PATTERN.matcher(version);
         if (!matcher.find()) throw new IllegalArgumentException("Invalid version: "+version);
         return new SemanticVersion(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)), Integer.parseInt(matcher.group(3)));
+    }
+
+    public static boolean isValid (String version) {
+        final Matcher matcher = VERSION_PATTERN.matcher(version);
+        return matcher.find();
     }
 
     @Override public String toString () { return major + "." + minor + "." + patch; }
