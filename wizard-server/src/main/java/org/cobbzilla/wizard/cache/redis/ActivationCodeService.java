@@ -39,12 +39,12 @@ public class ActivationCodeService {
     private String getClaimantsKey(String key) { return key+"_claimed"; }
 
     /**
-     * @param args [0] = key; [1] = quantity; [2] = expiration (# days); [3] = redis key
+     * @param args [0] = key; [1] = quantity; [2] = expiration (# days); [3] = redis key (optional)
      */
     public static void main (final String[] args) {
 
         final RedisService redis = new RedisService();
-        final String redisKey = args[3];
+        final String redisKey = (args.length == 4) ? args[3] : null;
 
         redis.setConfiguration(new HasRedisConfiguration() {
             @Override public RedisConfiguration getRedis() { return new RedisConfiguration(redisKey); }

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.cobbzilla.util.string.StringUtil.empty;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
 @Service @Slf4j
@@ -23,6 +24,7 @@ public class RedisService {
 
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
     private String getKey() { return configuration.getRedis().getKey(); }
+    protected boolean hasKey () { return !empty(getKey()); }
 
     private final AtomicReference<Jedis> redis = new AtomicReference<>();
     private Jedis newJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
@@ -84,12 +86,14 @@ public class RedisService {
 
     // override these for full control -- toJson/fromJson will not be called at all
     protected String encrypt(String data) {
+        if (!hasKey()) return data;
         try { return Base64.encodeBytes(CryptoUtil.encryptOrDie(pad(data).getBytes(), getKey())); } catch (Exception e) {
             throw new IllegalStateException("Error encrypting: "+e, e);
         }
     }
 
     protected String decrypt(String data) {
+        if (!hasKey()) return data;
         if (data == null) return null;
         try { return unpad(new String(CryptoUtil.decrypt(Base64.decode(data), getKey()))); } catch (Exception e) {
             throw new IllegalStateException("Error decrypting: "+e, e);
