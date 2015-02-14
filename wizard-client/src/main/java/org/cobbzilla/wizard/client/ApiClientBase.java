@@ -20,6 +20,10 @@ import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.api.ApiException;
+import org.cobbzilla.wizard.api.ForbiddenException;
+import org.cobbzilla.wizard.api.NotFoundException;
+import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.IOException;

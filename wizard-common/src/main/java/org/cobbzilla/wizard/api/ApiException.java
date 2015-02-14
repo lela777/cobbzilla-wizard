@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.client;
+package org.cobbzilla.wizard.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,10 @@
 package org.cobbzilla.wizard.resources;
 
 import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.wizard.api.ApiException;
+import org.cobbzilla.wizard.api.ForbiddenException;
+import org.cobbzilla.wizard.api.NotFoundException;
+import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
@@ -40,5 +44,16 @@ public class ResourceUtil {
         List<ConstraintViolationBean> violations = new ArrayList<>();
         violations.add(new ConstraintViolationBean(messageTemplate, ValidationMessages.translateMessage(messageTemplate), null));
         return invalid(violations);
+    }
+
+    public static Response toResponse (ApiException e) {
+        if (e instanceof NotFoundException) {
+            return notFound(e.getResponse().json);
+        } else if (e instanceof ForbiddenException) {
+            return forbidden();
+        } else if (e instanceof ValidationException) {
+            return invalid(new ArrayList<>(((ValidationException) e).getViolations().values()));
+        }
+        return Response.serverError().build();
     }
 }

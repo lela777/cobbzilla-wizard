@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.client;
+package org.cobbzilla.wizard.api;
 
 import lombok.Getter;
 import org.cobbzilla.util.json.JsonUtil;
