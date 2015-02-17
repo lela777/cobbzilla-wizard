@@ -1,15 +1,12 @@
 package org.cobbzilla.wizard.validation;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.ConstraintViolation;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement @AllArgsConstructor @NoArgsConstructor
+@XmlRootElement @AllArgsConstructor @NoArgsConstructor @ToString
 public class ConstraintViolationBean {
 
     @XmlElement @Getter @Setter private String messageTemplate;
