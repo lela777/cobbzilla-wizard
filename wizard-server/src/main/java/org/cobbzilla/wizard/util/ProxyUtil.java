@@ -110,7 +110,7 @@ public class ProxyUtil {
         return builder;
     }
 
-    private static HttpUriRequest buildRequest(HttpRequestBean requestBean, HttpContext callerContext, CookieJar cookieJar) {
+    public static HttpUriRequest buildRequest(HttpRequestBean requestBean, HttpContext callerContext, CookieJar cookieJar) {
 
         final HttpUriRequest request = HttpUtil.initHttpRequest(requestBean);
 

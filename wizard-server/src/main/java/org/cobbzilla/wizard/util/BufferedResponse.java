@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -55,6 +57,8 @@ public class BufferedResponse extends Response {
     @Getter @Setter private String document;
     public boolean hasDocument () { return document != null; }
 
+    @JsonIgnore public InputStream getDocumentStream() { return new ByteArrayInputStream(getDocument().getBytes()); }
+
     public String getMetaRedirect() {
         if (document == null || !document.contains("http-equiv=\"refresh\"")) return null;
         try {
@@ -78,4 +82,21 @@ public class BufferedResponse extends Response {
         if (is2xx()) return getMetaRedirect();
         return null;
     }
+
+    public Response withNewDocument(String document) {
+        final Response orig = getResponse();
+        final ResponseBuilder updated = Response.status(orig.getStatus()).entity(document);
+        final Multimap<String, String> origHeaders = getHeaders();
+        for (String headerName : origHeaders.keySet()) {
+            if (headerName.equals(HttpHeaders.CONTENT_LENGTH)) {
+                updated.header(HttpHeaders.CONTENT_LENGTH, document.length());
+            } else {
+                for (String headerValue : origHeaders.get(headerName)) {
+                    updated.header(headerName, headerValue);
+                }
+            }
+        }
+        return updated.build();
+    }
+
 }
