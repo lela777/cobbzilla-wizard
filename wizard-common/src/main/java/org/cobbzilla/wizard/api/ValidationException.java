@@ -19,8 +19,8 @@ public class ValidationException extends ApiException {
     }
 
     protected Map<String, ConstraintViolationBean> mapViolations(String json) {
-        Map<String, ConstraintViolationBean> map = new HashMap<>();
-        ConstraintViolationBean[] violations = new ConstraintViolationBean[0];
+        final Map<String, ConstraintViolationBean> map = new HashMap<>();
+        final ConstraintViolationBean[] violations;
         try {
             violations = JsonUtil.FULL_MAPPER.readValue(json, ConstraintViolationBean[].class);
         } catch (IOException e) {

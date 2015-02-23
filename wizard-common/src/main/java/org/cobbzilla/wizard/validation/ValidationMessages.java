@@ -9,8 +9,8 @@ public class ValidationMessages {
     public static String translateMessage(String messageTemplate) {
 
         // strip leading/trailing curlies if they are there
-        if (messageTemplate.startsWith("{")) messageTemplate = messageTemplate.substring(1);
-        if (messageTemplate.endsWith("}")) messageTemplate = messageTemplate.substring(0, messageTemplate.length()-1);
+        while (messageTemplate.startsWith("{")) messageTemplate = messageTemplate.substring(1);
+        while (messageTemplate.endsWith("}")) messageTemplate = messageTemplate.substring(0, messageTemplate.length()-1);
 
         return ResourceBundle.getBundle(VALIDATION_MESSAGES).getString(messageTemplate);
     }
