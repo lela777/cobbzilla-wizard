@@ -22,7 +22,7 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
 
     @HasValue(message="err.name.empty")
     @Column(length=100, unique=true, nullable=false, updatable=false)
-    @Size(max=100)
+    @Size(min=2, max=100, message="err.name.length")
     protected String name;
     public boolean hasName () { return !StringUtil.empty(name); }
 

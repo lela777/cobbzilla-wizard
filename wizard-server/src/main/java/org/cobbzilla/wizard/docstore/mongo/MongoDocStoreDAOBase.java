@@ -30,13 +30,14 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     }
 
     @Override public Object preCreate(@Valid T entity) { return entity; }
-    @Override public T postCreate(T entity, Object context) { return  entity; }
+    @Override public T postCreate(T entity, Object context) { return entity; }
 
     @Override
     public T create(@Valid T entity) {
         entity.beforeCreate();
+        final Object context = preCreate(entity);
         save(entity);
-        return entity;
+        return postCreate(entity, context);
     }
 
     @Override

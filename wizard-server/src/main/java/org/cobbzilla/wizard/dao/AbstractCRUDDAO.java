@@ -32,8 +32,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
 
     public E create(@Valid E entity) {
         entity.beforeCreate();
+        final Object ctx = preCreate(entity);
         entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
-        return entity;
+        return postCreate(entity, ctx);
     }
 
     public E createOrUpdate(@Valid E entity) {
@@ -49,7 +50,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
 
     public E update(@Valid E entity) {
-        return hibernateTemplate.merge(checkNotNull(entity));
+        final Object ctx = preUpdate(entity);
+        entity = hibernateTemplate.merge(checkNotNull(entity));
+        return  postUpdate(entity, ctx);
     }
 
     public void delete(String uuid) {
