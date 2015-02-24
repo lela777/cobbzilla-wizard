@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model;
 
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.HasValue;
@@ -9,8 +10,13 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.Size;
 
-@MappedSuperclass @EqualsAndHashCode(of={"name"}, callSuper=false) @ToString(callSuper=true)
+@MappedSuperclass
+@NoArgsConstructor
+@EqualsAndHashCode(of={"name"}, callSuper=false)
+@ToString(callSuper=true)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
+
+    public UniquelyNamedEntity (String name) { setName(name); }
 
     protected boolean forceLowercase () { return true; }
 
