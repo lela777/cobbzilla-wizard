@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.server;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,6 +17,8 @@ public interface RestServer<C extends RestServerConfiguration> {
 
     public C getConfiguration();
     public void setConfiguration(C configuration);
+
+    public ConfigurableApplicationContext buildSpringApplicationContext();
 
     public void addLifecycleListener (RestServerLifecycleListener<C> listener);
     public void removeLifecycleListener (RestServerLifecycleListener<C> listener);

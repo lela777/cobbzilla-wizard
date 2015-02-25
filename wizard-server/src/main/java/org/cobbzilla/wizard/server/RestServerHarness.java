@@ -8,6 +8,7 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.RestServerConfigurationFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,5 +61,12 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
             server.stopServer();
             server = null;
         }
+    }
+
+    public ConfigurableApplicationContext springServer(List<ConfigurationSource> configurationSources,
+                                                       Map<String, String> env) throws Exception {
+        addConfigurations(configurationSources);
+        init(env == null || env.isEmpty() ? System.getenv() : env);
+        return server.buildSpringApplicationContext();
     }
 }
