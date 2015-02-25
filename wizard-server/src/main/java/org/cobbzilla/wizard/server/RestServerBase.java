@@ -153,7 +153,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return httpServer;
     }
 
-    protected ConfigurableApplicationContext buildSpringApplicationContext() {
+    public ConfigurableApplicationContext buildSpringApplicationContext() {
 
         // Create a special factory that will always correctly resolve this specific configuration
         final DefaultListableBeanFactory factory = new DefaultListableBeanFactory() {
