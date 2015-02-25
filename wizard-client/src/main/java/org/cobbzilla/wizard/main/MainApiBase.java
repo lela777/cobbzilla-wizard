@@ -11,6 +11,8 @@ import static org.cobbzilla.util.json.JsonUtil.toJson;
 @Slf4j
 public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBase<OPT> {
 
+    private static final String TOKEN_PREFIX = "token:"
+            ;
     @Getter(value=AccessLevel.PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
     private ApiClientBase initApiClient() {
         return new ApiClientBase(getOptions().getApiBase()) {
@@ -18,9 +20,7 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
         };
     }
 
-    @Override protected void preRun() {
-        if (getOptions().requireAccount()) login();
-    }
+    @Override protected void preRun() { if (getOptions().requireAccount()) login(); }
 
     /** @return the Java object to POST as JSON for the login */
     protected abstract Object buildLoginRequest(OPT options);
@@ -35,15 +35,23 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
 
     protected void login () {
         final OPT options = getOptions();
-        log.info("logging in "+ options.getAccount()+" ...");
-        try {
-            final Object loginRequest = buildLoginRequest(options);
-            final ApiClientBase api = getApiClient();
-            final RestResponse response = api.post(getLoginUri(), toJson(loginRequest));
-            api.pushToken(getSessionId(response));
+        final String account = getOptions().getAccount();
+        if (account.startsWith(TOKEN_PREFIX)) {
+            final String token = account.substring(TOKEN_PREFIX.length());
+            log.info("not logging in, using token provided on command line instead");
+            getApiClient().pushToken(token);
 
-        } catch (Exception e) {
-            throw new IllegalStateException("Error logging in: "+e, e);
+        } else {
+            log.info("logging in " + account + " ...");
+            try {
+                final Object loginRequest = buildLoginRequest(options);
+                final ApiClientBase api = getApiClient();
+                final RestResponse response = api.post(getLoginUri(), toJson(loginRequest));
+                api.pushToken(getSessionId(response));
+
+            } catch (Exception e) {
+                throw new IllegalStateException("Error logging in: " + e, e);
+            }
         }
     }
 
