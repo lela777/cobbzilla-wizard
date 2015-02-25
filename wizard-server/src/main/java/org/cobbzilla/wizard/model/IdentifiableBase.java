@@ -16,7 +16,7 @@ public class IdentifiableBase implements Identifiable {
 
     public static final int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
 
-    @Id @Column(unique=true, updatable=false, nullable=false, length= UUID_MAXLEN)
+    @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
     public boolean hasUuid () { return !StringUtil.empty(uuid); }
