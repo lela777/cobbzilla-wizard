@@ -8,8 +8,8 @@ public class RestServerConfiguration {
 
     @Getter @Setter private String serverName;
     @Getter @Setter private String publicUriBase;
-    @Getter @Setter private String springContextPath;
-    @Getter @Setter private int bcryptRounds;
+    @Getter @Setter private String springContextPath = "classpath:/spring.xml";
+    @Getter @Setter private int bcryptRounds = 12;
 
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
