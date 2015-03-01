@@ -84,31 +84,16 @@ public class RedisService {
 
     public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
 
-    // override these for full control -- toJson/fromJson will not be called at all
+    // override these for full control
     protected String encrypt(String data) {
         if (!hasKey()) return data;
-        try { return Base64.encodeBytes(CryptoUtil.encryptOrDie(pad(data).getBytes(), getKey())); } catch (Exception e) {
-            throw new IllegalStateException("Error encrypting: "+e, e);
-        }
+        return CryptoUtil.string_encrypt(data, getKey());
     }
 
     protected String decrypt(String data) {
         if (!hasKey()) return data;
         if (data == null) return null;
-        try { return unpad(new String(CryptoUtil.decrypt(Base64.decode(data), getKey()))); } catch (Exception e) {
-            throw new IllegalStateException("Error decrypting: "+e, e);
-        }
-    }
-
-    private static final String PADDING_SUFFIX = "__PADDING__";
-
-    private String pad(String data) throws Exception { return data + PADDING_SUFFIX + RandomStringUtils.random(128); }
-
-    private String unpad(String data) {
-        if (data == null) return null;
-        int paddingPos = data.indexOf(PADDING_SUFFIX);
-        if (paddingPos == -1) return null;
-        return data.substring(0, paddingPos);
+        return CryptoUtil.string_decrypt(data, getKey());
     }
 
     private void resetForRetry(int attempt, String reason) {
