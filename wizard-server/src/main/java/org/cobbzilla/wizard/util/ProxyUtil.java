@@ -120,7 +120,7 @@ public class ProxyUtil {
         // copy callerContext headers into map, these are the 'defaults'
         final MultivaluedMap<String, String> contextHeaders = callerContext.getRequest().getRequestHeaders();
         for (String key : contextHeaders.keySet()) {
-            if (!key.equalsIgnoreCase(HttpHeaders.COOKIE)) { // skip cookies, use cookiejar
+            if (!skipRequestHeader(requestBean, key)) {
                 for (String value : contextHeaders.get(key)) {
                     requestHeaders.add(key, value);
                 }
@@ -151,6 +151,13 @@ public class ProxyUtil {
         // force Host header to match URL we are requesting
         request.setHeader(HttpHeaders.HOST, requestBean.getHost());
         return request;
+    }
+
+    private static boolean skipRequestHeader(HttpRequestBean requestBean, String key) {
+               // skip cookies, use cookiejar
+        return key.equalsIgnoreCase(HttpHeaders.COOKIE)
+               // skip content-length since commons-httpclient will handke it
+               || (requestBean.hasData() && key.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH));
     }
 
     public static Response streamProxy (HttpRequestBean requestBean,

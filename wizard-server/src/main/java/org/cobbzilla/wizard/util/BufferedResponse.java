@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.cobbzilla.util.string.StringUtil.empty;
+
 @Slf4j
 public class BufferedResponse extends Response {
 
@@ -55,7 +57,7 @@ public class BufferedResponse extends Response {
     }
 
     @Getter @Setter private String document;
-    public boolean hasDocument () { return document != null; }
+    public boolean hasDocument () { return !empty(document); }
 
     @JsonIgnore public InputStream getDocumentStream() { return new ByteArrayInputStream(getDocument().getBytes()); }
 

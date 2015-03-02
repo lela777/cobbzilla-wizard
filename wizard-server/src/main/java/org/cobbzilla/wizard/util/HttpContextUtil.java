@@ -7,10 +7,8 @@ import javax.ws.rs.core.MultivaluedMap;
 public class HttpContextUtil {
 
     public static String getQueryParams(HttpContext context) {
-
         final MultivaluedMap<String, String> params = context.getRequest().getQueryParameters();
-
-        return "?"+ encodeParams(params);
+        return (params == null || params.isEmpty()) ? "" : "?" + encodeParams(params);
     }
 
     public static String encodeParams(MultivaluedMap<String, String> params) {
@@ -23,7 +21,6 @@ public class HttpContextUtil {
                 }
             }
         }
-
         return b.toString();
     }
 
