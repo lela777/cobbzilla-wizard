@@ -4,11 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum CrudOperation {
 
-    create,
-    read,
-    update,
-    delete;
+    create, read, update, delete;
 
-    @JsonCreator public CrudOperation fromString (String s) { return valueOf(s.toLowerCase()); }
+    @JsonCreator public CrudOperation create(String s) { return valueOf(s.toLowerCase()); }
 
 }

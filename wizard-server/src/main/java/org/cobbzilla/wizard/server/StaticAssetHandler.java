@@ -60,10 +60,12 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
 
     @Override
     protected boolean handle(String resourcePath, Request request, Response response) throws Exception {
-
         if (indexAliases.contains(resourcePath)) {
             return this.handle(getUtilPath(StaticUtilPath.INDEX_PATH, "/index.html"), request, response);
         }
+
+        // remove double slashes
+        while (resourcePath.contains("//")) resourcePath = resourcePath.replace("//", "/");
 
         if (isUtilPath(resourcePath, StaticUtilPath.REQUEST_HEADERS_JS, "/js/request_headers.js")) {
             final Writer writer = response.getWriter();
@@ -93,9 +95,13 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
 
         // ENV takes precedence
         if (assetDirFile != null) {
-            final File file = new File(assetDirFile, resourcePath);
+            File file = new File(assetDirFile, resourcePath);
             if (file.exists()) {
-                StaticAssetHandler.sendFile(response, file);
+                if (file.isDirectory()) {
+                    response.sendRedirect("index.html");
+                    return true;
+                }
+                sendFile(response, file);
                 return true;
             } else {
                 log.info("resource "+resourcePath+" not found in override dir ("+assetDirFile.getAbsolutePath()+"), using default from classpath");

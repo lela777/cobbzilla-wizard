@@ -1,19 +1,20 @@
 package org.cobbzilla.wizard.main;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 
+import static lombok.AccessLevel.PROTECTED;
+import static org.cobbzilla.util.io.StreamUtil.readLineFromStdin;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 
 @Slf4j
 public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBase<OPT> {
 
-    private static final String TOKEN_PREFIX = "token:"
-            ;
-    @Getter(value=AccessLevel.PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
+    private static final String TOKEN_PREFIX = "token:";
+
+    @Getter(value=PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
     private ApiClientBase initApiClient() {
         return new ApiClientBase(getOptions().getApiBase()) {
             @Override protected String getTokenHeader() { return getApiHeaderTokenName(); }
@@ -33,6 +34,8 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
 
     protected abstract String getSessionId(RestResponse response) throws Exception;
 
+    protected abstract void setSecondFactor(Object loginRequest, String token);
+
     protected void login () {
         final OPT options = getOptions();
         final String account = getOptions().getAccount();
@@ -46,7 +49,14 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
             try {
                 final Object loginRequest = buildLoginRequest(options);
                 final ApiClientBase api = getApiClient();
-                final RestResponse response = api.post(getLoginUri(), toJson(loginRequest));
+                RestResponse response = api.post(getLoginUri(), toJson(loginRequest));
+                if (response.json.contains("\"2-factor\"")) {
+                    final String token = getOptions().hasTwoFactor()
+                            ? getOptions().getTwoFactor()
+                            : readLineFromStdin("Please enter token for 2-factor authentication: ");
+                    setSecondFactor(loginRequest, token);
+                    response = getApiClient().post(getLoginUri(), toJson(loginRequest));
+                }
                 api.pushToken(getSessionId(response));
 
             } catch (Exception e) {

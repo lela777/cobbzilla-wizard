@@ -106,6 +106,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
         rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, Boolean.TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_NORMALIZE_URI, Boolean.TRUE);
 
         if (jerseyConfiguration.hasRequestFilters()) {
             rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",

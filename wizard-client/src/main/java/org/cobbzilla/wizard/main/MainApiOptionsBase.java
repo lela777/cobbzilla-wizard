@@ -2,8 +2,9 @@ package org.cobbzilla.wizard.main;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.cobbzilla.util.string.StringUtil;
 import org.kohsuke.args4j.Option;
+
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 public abstract class MainApiOptionsBase extends MainOptionsBase {
 
@@ -13,7 +14,15 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     @Option(name=OPT_ACCOUNT, aliases=LONGOPT_ACCOUNT, usage=USAGE_ACCOUNT, required=true)
     @Getter @Setter private String account;
 
-    public static final String USAGE_API_BASE = "The server's API base URI. Default is http://127.0.0.1:3001/api";
+    public static final String USAGE_TWO_FACTOR = "The token for two-factor authentication";
+    public static final String OPT_TWO_FACTOR = "-F";
+    public static final String LONGOPT_TWO_FACTOR = "--two-factor";
+    @Option(name=OPT_TWO_FACTOR, aliases=LONGOPT_TWO_FACTOR, usage=USAGE_TWO_FACTOR)
+    @Getter @Setter private String twoFactor;
+
+    public boolean hasTwoFactor () { return !empty(twoFactor); }
+
+    public static final String USAGE_API_BASE = "The server's API base URI.";
     public static final String OPT_API_BASE = "-s";
     public static final String LONGOPT_API_BASE = "--server";
     @Option(name=OPT_API_BASE, aliases=LONGOPT_API_BASE, usage=USAGE_API_BASE)
@@ -28,7 +37,7 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     private String initPassword() {
         if (!requireAccount()) return null;
         final String pass = System.getenv(getPasswordEnvVarName());
-        if (StringUtil.empty(pass)) {
+        if (empty(pass)) {
             System.err.println("No " + getPasswordEnvVarName() + " defined in environment");
             System.exit(2);
         }
