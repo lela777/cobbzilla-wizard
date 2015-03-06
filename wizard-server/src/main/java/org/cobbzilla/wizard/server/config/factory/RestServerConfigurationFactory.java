@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.server.config.factory;
 
-import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.util.yml.YmlMerger;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.yaml.snakeyaml.Yaml;
@@ -9,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static org.cobbzilla.util.io.FileUtil.abs;
 
 public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
 
@@ -30,7 +31,7 @@ public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
 
         List<String> configFiles = new ArrayList<>(configurations.size());
         for (ConfigurationSource source : configurations) {
-            configFiles.add(source.getFile().getAbsolutePath());
+            configFiles.add(abs(source.getFile()));
         }
 
         return yaml.loadAs(ymlMerger.mergeToString(configFiles), configurationClass);

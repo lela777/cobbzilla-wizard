@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.server.TServer;
 import org.cobbzilla.wizard.server.config.ThriftConfiguration;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 @Slf4j
 public class ThriftServer implements Runnable {
 
@@ -22,7 +24,7 @@ public class ThriftServer implements Runnable {
         } catch (Exception e) {
             String msg = "error in run loop (config=" + configuration + "): " + e;
             log.error(msg, e);
-            throw new IllegalStateException(msg, e);
+            die(msg, e);
         }
     }
 

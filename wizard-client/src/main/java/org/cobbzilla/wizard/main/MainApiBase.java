@@ -60,7 +60,7 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
                 api.pushToken(getSessionId(response));
 
             } catch (Exception e) {
-                throw new IllegalStateException("Error logging in: " + e, e);
+                die("Error logging in: " + e, e);
             }
         }
     }

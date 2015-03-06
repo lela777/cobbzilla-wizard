@@ -9,39 +9,33 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 /** a mongo docstore that also conforms to the DAO interface */
 public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends MongoDocStore<T> implements DAO<T> {
 
     @Override public Class<? extends Map<String, String>> boundsClass() { return null; }
 
-    @Override
-    public T get(Serializable id) {
+    @Override public T get(Serializable id) {
         return findByUuid(id.toString());
     }
 
-    @Override
-    public List<T> findAll() {
-        throw new IllegalStateException("not supported");
-    }
-
-    @Override
-    public boolean exists(String uuid) {
+    @Override public List<T> findAll() { return die("not supported"); }
+    @Override public boolean exists(String uuid) {
         return findOne(MongoDocBase.UUID, uuid) != null;
     }
 
     @Override public Object preCreate(@Valid T entity) { return entity; }
     @Override public T postCreate(T entity, Object context) { return entity; }
 
-    @Override
-    public T create(@Valid T entity) {
+    @Override public T create(@Valid T entity) {
         entity.beforeCreate();
         final Object context = preCreate(entity);
         save(entity);
         return postCreate(entity, context);
     }
 
-    @Override
-    public T createOrUpdate(@Valid T entity) {
+    @Override public T createOrUpdate(@Valid T entity) {
         if (entity.getUuid() == null) entity.beforeCreate();
         saveOrUpdate(entity);
         return entity;
@@ -66,7 +60,7 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     public T findByUniqueField(String field, Object value) {
         List<T> found = findByFilter(field, value);
         if (found.isEmpty()) return null;
-        if (found.size() > 1) throw new IllegalStateException("multiple results found for: field="+field+", value="+value+": "+found);
+        if (found.size() > 1) die("multiple results found for: field="+field+", value="+value+": "+found);
         return found.get(0);
     }
 

@@ -12,6 +12,8 @@ import org.cobbzilla.util.json.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class SearchResults<E> {
 
@@ -23,7 +25,7 @@ public class SearchResults<E> {
     @Getter @Setter private Integer totalCount;
 
     @JsonIgnore public int size() {
-        if (totalCount == null) throw new IllegalStateException("size is unknown");
+        if (totalCount == null) die("size is unknown");
         return totalCount;
     }
 

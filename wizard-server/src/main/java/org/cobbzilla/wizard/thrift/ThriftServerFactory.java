@@ -11,6 +11,8 @@ import org.springframework.context.ApplicationContext;
 
 import java.util.*;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 public class ThriftServerFactory {
 
     public static final ThriftServerFactory INSTANCE = new ThriftServerFactory();
@@ -53,7 +55,7 @@ public class ThriftServerFactory {
             server.setTServer(new TSimpleServer(new TServer.Args(serverTransport).processor(processor)));
 
         } catch (Exception e) {
-            throw new IllegalStateException("Error creating thrift tServer ("+configuration+"): "+e, e);
+            die("Error creating thrift tServer (" + configuration + "): " + e, e);
         }
 
         server.setThread(new Thread(server));

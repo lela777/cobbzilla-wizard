@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.Writer;
 import java.util.*;
 
+import static org.cobbzilla.util.io.FileUtil.abs;
+
 @Slf4j
 public class StaticAssetHandler extends CLStaticHttpHandler {
 
@@ -37,7 +39,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                 templateFileRoot = assetDirFile;
                 LocaleAwareMustacheFactory.setSkipClasspath(true);
             } else {
-                log.warn("asset dir ("+assetDirFile.getAbsolutePath()+") does not exist, all resources will be served from classpath");
+                log.warn("asset dir ("+abs(assetDirFile)+") does not exist, all resources will be served from classpath");
             }
         }
 
@@ -104,7 +106,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                 sendFile(response, file);
                 return true;
             } else {
-                log.info("resource "+resourcePath+" not found in override dir ("+assetDirFile.getAbsolutePath()+"), using default from classpath");
+                log.info("resource "+resourcePath+" not found in override dir ("+abs(assetDirFile)+"), using default from classpath");
             }
         }
 

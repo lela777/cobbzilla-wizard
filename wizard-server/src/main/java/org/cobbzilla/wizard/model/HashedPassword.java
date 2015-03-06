@@ -15,6 +15,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @Embeddable @NoArgsConstructor
@@ -56,7 +57,7 @@ public class HashedPassword {
     public void setPassword(String password) { this.hashedPassword = BCryptUtil.hash(password); }
 
     public void resetPassword(String password, long tokenDuration) {
-        if (getResetTokenAge() > tokenDuration) throw new IllegalStateException("token expired");
+        if (getResetTokenAge() > tokenDuration) die("token expired");
         setPassword(password);
     }
 

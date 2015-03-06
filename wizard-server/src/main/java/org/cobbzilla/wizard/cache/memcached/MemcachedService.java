@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
 @Service @Slf4j @NoArgsConstructor @AllArgsConstructor
@@ -30,7 +31,7 @@ public class MemcachedService {
         try {
             return new XMemcachedClient(configuration.getHost(), configuration.getPort());
         } catch (Exception e) {
-            throw new IllegalStateException("Error creating client: "+e, e);
+            return die("Error creating client: "+e, e);
         }
     }
 
@@ -58,7 +59,7 @@ public class MemcachedService {
         } catch (Exception e) {
             if (attempt > maxRetries) {
                 if (e instanceof RuntimeException) throw (RuntimeException) e;
-                throw new IllegalStateException("__get: maxRetries ("+MAX_RETRIES+") exceeded, last exception: "+e, e);
+                die("__get: maxRetries (" + MAX_RETRIES + ") exceeded, last exception: " + e, e);
             }
             resetForRetry(attempt, "retrying MemcachedService.__get");
             return __get(name, attempt+1, maxRetries);
@@ -71,7 +72,7 @@ public class MemcachedService {
         } catch (Exception e) {
             if (attempt > maxRetries) {
                 if (e instanceof RuntimeException) throw (RuntimeException) e;
-                throw new IllegalStateException("__set: maxRetries ("+MAX_RETRIES+") exceeded, last exception: "+e, e);
+                die("__set: maxRetries (" + MAX_RETRIES + ") exceeded, last exception: "+e, e);
             }
             resetForRetry(attempt, "retrying MemcachedService.__set");
             return __set(name, value, expirationSeconds, attempt+1, maxRetries);
