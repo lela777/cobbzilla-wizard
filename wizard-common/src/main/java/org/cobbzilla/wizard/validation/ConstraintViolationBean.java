@@ -1,10 +1,16 @@
 package org.cobbzilla.wizard.validation;
 
 import lombok.*;
+import org.cobbzilla.util.json.JsonUtil;
 
 import javax.validation.ConstraintViolation;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 @XmlRootElement @AllArgsConstructor @NoArgsConstructor @ToString
 public class ConstraintViolationBean {
@@ -30,6 +36,12 @@ public class ConstraintViolationBean {
         } catch (Exception e) {
             this.invalidValue = "Error converting invalid value to String: "+e;
         }
+    }
+
+    public static List<ConstraintViolationBean> fromJsonArray(String json) {
+        return empty(json)
+                ? (List<ConstraintViolationBean>) Collections.EMPTY_LIST
+                : Arrays.asList(JsonUtil.fromJsonOrDie(json, ConstraintViolationBean[].class));
     }
 
 }
