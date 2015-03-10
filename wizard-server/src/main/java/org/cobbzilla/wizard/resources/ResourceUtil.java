@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.resources;
 
-import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -12,6 +11,9 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import static org.cobbzilla.util.http.HttpStatusCodes.UNPROCESSABLE_ENTITY;
 
 public class ResourceUtil {
 
@@ -22,16 +24,12 @@ public class ResourceUtil {
         return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("resource", id)).build();
     }
 
-    public static Response forbidden() {
-        return Response.status(Response.Status.FORBIDDEN).build();
-    }
+    public static Response forbidden() { return Response.status(Response.Status.FORBIDDEN).build(); }
 
-    public static Response invalid() {
-        return Response.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).build();
-    }
+    public static Response invalid() { return Response.status(UNPROCESSABLE_ENTITY).build(); }
 
     public static Response invalid(List<ConstraintViolationBean> violations) {
-        return Response.status(HttpStatusCodes.UNPROCESSABLE_ENTITY).entity(violations).build();
+        return Response.status(UNPROCESSABLE_ENTITY).entity(violations).build();
     }
 
     public static Response invalid(ConstraintViolationBean violation) {
