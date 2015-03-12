@@ -19,6 +19,7 @@ public class ValidationRegexes {
     public static final Pattern HTTPS_PATTERN = pattern("^https://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]$");
 
     public static final Pattern FILENAME_PATTERN = pattern("^[_A-Z0-9\\-\\.]+$");
+    public static final Pattern INTEGER_PATTERN = pattern("^[0-9]+$");
 
     private static Pattern pattern(String regex) { return Pattern.compile(regex, Pattern.CASE_INSENSITIVE); }
 
