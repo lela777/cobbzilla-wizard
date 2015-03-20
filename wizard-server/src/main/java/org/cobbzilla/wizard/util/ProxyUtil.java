@@ -36,8 +36,8 @@ public class ProxyUtil {
                                                   String baseUri,
                                                   CookieJar cookieJar) throws IOException {
         if (cookieJar == null) cookieJar = new CookieJar();
-
-        @Cleanup final ProxyHttpClient proxy = new ProxyHttpClient(requestBean);
+        final CookieJar internalJar = new CookieJar();
+        @Cleanup final ProxyHttpClient proxy = new ProxyHttpClient(requestBean, internalJar);
 
         final HttpUriRequest request = buildRequest(requestBean, callerContext, cookieJar);
 
@@ -53,6 +53,9 @@ public class ProxyUtil {
         BufferedResponseBuilder buffered = new BufferedResponseBuilder(responseStatus);
         buffered.setRequestUri(request.getURI().toString());
 
+        for (HttpCookieBean cookie : internalJar.values()) {
+            cookieJar.add(cookie);
+        }
         copyHeaders(response, buffered, null, baseUri, cookieJar);
 
         // always set all cookies in the jar, in case this is the last response and will be
@@ -70,7 +73,8 @@ public class ProxyUtil {
     private static Response.ResponseBuilder copyHeaders(HttpResponse response,
                                                         BufferedResponseBuilder buffered,
                                                         Response.ResponseBuilder builder,
-                                                        String baseUri, CookieJar cookieJar) {
+                                                        String baseUri,
+                                                        CookieJar cookieJar) {
         // copy headers
         for (final Header header : response.getAllHeaders()) {
             final String headerName = header.getName();

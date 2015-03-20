@@ -10,10 +10,8 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
+import org.cobbzilla.util.http.CookieJar;
 import org.cobbzilla.util.http.HttpRequestBean;
 
 import java.io.Closeable;
@@ -24,13 +22,24 @@ public class ProxyHttpClient implements Closeable {
     @Getter @Setter private CloseableHttpClient httpClient;
     @Getter @Setter private CredentialsProvider credsProvider = null;
     @Getter @Setter HttpClientContext localContext = null;
+    @Getter @Setter CookieJar cookieJar = null;
 
     public HttpResponse execute(HttpUriRequest request) throws IOException { return httpClient.execute(request, localContext); }
 
     @Override public void close() throws IOException { if (httpClient != null) httpClient.close(); }
 
     public ProxyHttpClient(HttpRequestBean requestBean) {
+        this(requestBean, null);
+    }
+
+    public ProxyHttpClient(HttpRequestBean requestBean, CookieJar cookieJar) {
+
+        if (cookieJar == null) cookieJar = new CookieJar();
+        this.cookieJar = cookieJar;
+        final HttpClientBuilder clientBuilder = HttpClients.custom().setDefaultCookieStore(cookieJar);
+
         if (requestBean.hasAuth()) {
+            localContext = HttpClientContext.create();
             credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(
                     new AuthScope(requestBean.getHost(), requestBean.getPort()),
@@ -40,13 +49,11 @@ public class ProxyHttpClient implements Closeable {
             final AuthScheme authScheme = requestBean.getAuthType().newScheme();
             authCache.put(requestBean.getHttpHost(), authScheme);
 
-            localContext = HttpClientContext.create();
             localContext.setAuthCache(authCache);
+            clientBuilder.setDefaultCredentialsProvider(credsProvider);
         }
 
-        httpClient = requestBean.hasAuth()
-                ? HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build()
-                : HttpClients.createDefault();
+        httpClient = clientBuilder.build();
     }
 
 }
