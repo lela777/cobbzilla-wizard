@@ -14,6 +14,8 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     @Option(name=OPT_ACCOUNT, aliases=LONGOPT_ACCOUNT, usage=USAGE_ACCOUNT, required=true)
     @Getter @Setter private String account;
 
+    public boolean hasAccount () { return !empty(account); }
+
     public static final String USAGE_TWO_FACTOR = "The token for two-factor authentication";
     public static final String OPT_TWO_FACTOR = "-F";
     public static final String LONGOPT_TWO_FACTOR = "--two-factor";
@@ -31,6 +33,7 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     protected abstract String getDefaultApiBaseUri();
 
     @Getter private final String password = initPassword();
+    public boolean hasPassword () { return !empty(password); }
 
     protected boolean requireAccount() { return true; }
 
