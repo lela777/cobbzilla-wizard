@@ -2,7 +2,8 @@ package org.cobbzilla.wizard.validation;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import java.util.Collection;
+
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 public class HasValueValidator implements ConstraintValidator<HasValue, Object> {
 
@@ -11,11 +12,7 @@ public class HasValueValidator implements ConstraintValidator<HasValue, Object> 
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
-        if (value == null) return false;
-        if (value instanceof Collection) {
-            return !((Collection) value).isEmpty();
-        }
-        return value.toString().trim().length() > 0;
+        return !empty(value) && value.toString().trim().length() > 0;
     }
 
 }
