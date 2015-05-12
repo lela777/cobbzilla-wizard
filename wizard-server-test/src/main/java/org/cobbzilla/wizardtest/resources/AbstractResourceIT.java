@@ -51,6 +51,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Override public synchronized String getBaseUri() { return server.getClientUri(); }
 
+    protected C getConfiguration () { return (C) server.getConfiguration(); }
+
     public boolean shouldCacheServer () { return true; }
 
     @Before
