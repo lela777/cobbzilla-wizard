@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -29,7 +30,10 @@ public class ResultPage {
     public static final int MAX_SORTFIELD_LENGTH = 50;
     public static final String DEFAULT_SORT_FIELD = "ctime";
 
-    public enum SortOrder { ASC, DESC }
+    public enum SortOrder {
+        ASC, DESC;
+        @JsonCreator public static SortOrder create(String val) { return valueOf(val.toUpperCase()); }
+    }
     public static final String DEFAULT_SORT = SortOrder.DESC.name();
 
     public static final ResultPage DEFAULT_PAGE = new ResultPage();
