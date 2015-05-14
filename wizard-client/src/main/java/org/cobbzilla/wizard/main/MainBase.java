@@ -6,11 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+
 @Slf4j
 public abstract class MainBase<OPT extends MainOptionsBase> {
 
     @Getter private final OPT options = initOptions();
-    protected abstract OPT initOptions();
+    protected OPT initOptions() { return instantiate((Class<OPT>) getFirstTypeParam(getClass())); }
 
     @Getter(value= AccessLevel.PROTECTED) private final CmdLineParser parser = new CmdLineParser(getOptions());
 
