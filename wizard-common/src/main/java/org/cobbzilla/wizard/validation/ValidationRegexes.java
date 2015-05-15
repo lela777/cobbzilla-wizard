@@ -9,7 +9,7 @@ public class ValidationRegexes {
     public static final Pattern EMAIL_NAME_PATTERN = pattern("^[A-Z0-9][A-Z0-9._%+-]*$");
 
     public static final Pattern[] LOCALE_PATTERNS = {
-            pattern("^[a-zA-Z]{2,3}[-_][a-zA-z]{2}(@[\\w]+)?"), // ubuntu style: en_US
+            pattern("^[a-zA-Z]{2,3}([-_][a-zA-z]{2}(@[\\w]+)?)?"), // ubuntu style: en_US or just en
             pattern("^[a-zA-Z]{2,3}([-_][\\w]+)?"),             // some apps use style: ca-valencia
     };
 
