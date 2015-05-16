@@ -287,4 +287,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return StreamConfigurationSource.fromResources(clazz, args);
     }
 
+    public <T> T getBean(Class<T> bean) { return getApplicationContext().getBean(bean); }
+
 }
