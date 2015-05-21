@@ -33,6 +33,8 @@ public class ResultPage {
     public enum SortOrder {
         ASC, DESC;
         @JsonCreator public static SortOrder create(String val) { return valueOf(val.toUpperCase()); }
+        public boolean isAscending () { return this == ASC; }
+        public boolean isDescending () { return this == DESC; }
     }
     public static final String DEFAULT_SORT = SortOrder.DESC.name();
 

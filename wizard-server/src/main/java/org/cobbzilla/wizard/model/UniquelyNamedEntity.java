@@ -16,13 +16,15 @@ import javax.validation.constraints.Size;
 @ToString(callSuper=true)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
+    public static final int NAME_MAXLEN = 100;
+
     public UniquelyNamedEntity (String name) { setName(name); }
 
     protected boolean forceLowercase () { return true; }
 
     @HasValue(message="err.name.empty")
-    @Column(length=100, unique=true, nullable=false, updatable=false)
-    @Size(min=2, max=100, message="err.name.length")
+    @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)
+    @Size(min=2, max=NAME_MAXLEN, message="err.name.length")
     protected String name;
     public boolean hasName () { return !StringUtil.empty(name); }
 
