@@ -16,8 +16,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 @MappedSuperclass @EqualsAndHashCode(of={"uuid"}) @ToString
 public class IdentifiableBase implements Identifiable {
 
-    public static final int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
-
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
