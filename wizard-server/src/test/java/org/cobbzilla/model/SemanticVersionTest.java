@@ -17,7 +17,7 @@ public class SemanticVersionTest {
     @Test
     public void testValidVersions () {
         for (Object[] test : VALID_VERSIONS) {
-            final SemanticVersion v = SemanticVersion.fromString(test[0].toString());
+            final SemanticVersion v = new SemanticVersion(test[0].toString());
             final SemanticVersion expected = (SemanticVersion) test[1];
             assertEquals(expected.getMajor(), v.getMajor());
             assertEquals(expected.getMinor(), v.getMinor());
@@ -34,7 +34,7 @@ public class SemanticVersionTest {
     public void testInvalidVersions () {
         for (String test : INVALID_VERSIONS) {
             try {
-                final SemanticVersion v = SemanticVersion.fromString(test);
+                final SemanticVersion v = new SemanticVersion(test);
                 fail("expected version to be invalid: "+test+", got version="+v);
             } catch (Exception ignored) {}
         }
