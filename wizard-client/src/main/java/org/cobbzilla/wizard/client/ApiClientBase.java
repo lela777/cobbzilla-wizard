@@ -14,12 +14,12 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.http.ApiConnectionInfo;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -29,6 +29,8 @@ import org.cobbzilla.wizard.util.RestResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Stack;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j @NoArgsConstructor
 public class ApiClientBase {
@@ -202,9 +204,9 @@ public class ApiClientBase {
     }
 
     protected HttpRequestBase beforeSend(HttpRequestBase request) {
-        if (!StringUtil.empty(token)) {
+        if (!empty(token)) {
             final String tokenHeader = getTokenHeader();
-            if (StringUtil.empty(tokenHeader)) throw new IllegalArgumentException("token set but getTokenHeader returned null");
+            if (empty(tokenHeader)) throw new IllegalArgumentException("token set but getTokenHeader returned null");
             request.setHeader(tokenHeader, token);
         }
         return request;

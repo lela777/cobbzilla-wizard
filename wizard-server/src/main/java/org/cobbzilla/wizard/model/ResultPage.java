@@ -5,12 +5,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.collection.MapUtil;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @Accessors(chain=true) @ToString
 public class ResultPage {
@@ -108,7 +111,7 @@ public class ResultPage {
     @Setter private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {
         // only return the first several chars, to thwart a hypothetical injection attack.
-        final String sort = StringUtil.empty(sortField) ? DEFAULT_SORT_FIELD : sortField;
+        final String sort = empty(sortField) ? DEFAULT_SORT_FIELD : sortField;
         return StringUtil.prefix(sort, MAX_SORTFIELD_LENGTH);
     }
     @JsonIgnore public boolean getHasSortField () { return sortField != null; }

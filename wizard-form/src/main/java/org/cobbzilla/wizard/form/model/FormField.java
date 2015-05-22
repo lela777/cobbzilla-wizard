@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.IdentifiableBase;
@@ -18,6 +19,7 @@ import javax.validation.constraints.Size;
 import java.util.Collections;
 import java.util.List;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 
 @Entity
@@ -55,7 +57,7 @@ public class FormField extends IdentifiableBase implements Identifiable {
     public static final List<String> EMPTY_OPTIONS = Collections.emptyList();
 
     @Transient public List<String> getOptions () {
-        return StringUtil.empty(fieldOptions) ? EMPTY_OPTIONS : StringUtil.split(fieldOptions, OPTIONS_SEPARATOR);
+        return empty(fieldOptions) ? EMPTY_OPTIONS : StringUtil.split(fieldOptions, OPTIONS_SEPARATOR);
     }
 
     public void setOptions(List<String> options) {
@@ -65,7 +67,7 @@ public class FormField extends IdentifiableBase implements Identifiable {
         fieldOptions = (options == null) ? null : StringUtils.join(options, OPTIONS_SEPARATOR);
     }
 
-    public boolean hasOptions () { return !StringUtil.empty(fieldOptions); }
+    public boolean hasOptions () { return !empty(fieldOptions); }
 
 
     @NotNull(message=ERR_HAS_DESCRIPTION_EMPTY)

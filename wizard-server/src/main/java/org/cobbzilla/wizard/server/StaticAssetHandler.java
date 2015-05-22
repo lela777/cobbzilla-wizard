@@ -3,11 +3,11 @@ package org.cobbzilla.wizard.server;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.io.DeleteOnExit;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.mustache.LocaleAwareMustacheFactory;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.server.config.StaticHttpConfiguration;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.Request;
@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.Writer;
 import java.util.*;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.abs;
 
 @Slf4j
@@ -79,7 +80,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         if (isUtilPath(resourcePath, StaticUtilPath.LOCALIZE, "localize")) {
 
             String path = request.getQueryString();
-            if (StringUtil.empty(path)) return false;
+            if (empty(path)) return false;
 
             path = path.replaceAll("[^A-Za-z0-9/_.-]", "x");
             if (path.startsWith("/")) path = path.substring(1);

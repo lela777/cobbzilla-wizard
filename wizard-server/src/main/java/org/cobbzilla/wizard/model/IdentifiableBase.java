@@ -6,12 +6,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.beanutils.BeanUtils;
-import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 
 import javax.persistence.*;
 import java.util.UUID;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @MappedSuperclass @EqualsAndHashCode(of={"uuid"}) @ToString
 public class IdentifiableBase implements Identifiable {
@@ -19,7 +20,7 @@ public class IdentifiableBase implements Identifiable {
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
 
-    public boolean hasUuid () { return !StringUtil.empty(uuid); }
+    public boolean hasUuid () { return !empty(uuid); }
 
     public void beforeCreate() {
         if (uuid != null) die("uuid already initialized");

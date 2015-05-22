@@ -1,8 +1,8 @@
 package org.cobbzilla.wizard.resources;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -13,6 +13,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Map;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
 @Consumes(MediaType.APPLICATION_JSON)
@@ -45,7 +47,7 @@ public abstract class AbstractResource<T extends Identifiable> {
 
     public static Map<String, String> parseBounds(String bounds, DAO dao) {
         Map<String, String> boundsMap = null;
-        if (!StringUtil.empty(bounds)) {
+        if (!empty(bounds)) {
             Class<? extends Map<String, String>> clazz = dao.boundsClass();
             try {
                 boundsMap = JsonUtil.fromJson(bounds, clazz);

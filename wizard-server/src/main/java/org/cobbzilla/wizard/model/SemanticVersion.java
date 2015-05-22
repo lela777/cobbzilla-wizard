@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model;
 
 import lombok.*;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Size;
@@ -11,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @Embeddable @EqualsAndHashCode(callSuper=false)

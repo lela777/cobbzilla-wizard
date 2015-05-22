@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -9,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.UUID.randomUUID;
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 // todo: implement retries, where we tear down the client completely and rebuild it
 // this is necessary if the redis server is restarted while we're running

@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.validation;
 
 import lombok.*;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 
 import javax.validation.ConstraintViolation;
@@ -10,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @XmlRootElement @AllArgsConstructor @NoArgsConstructor @ToString
 public class ConstraintViolationBean {

@@ -1,9 +1,11 @@
 package org.cobbzilla.wizard.validation;
 
+import org.cobbzilla.util.daemon.ZillaRuntime;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class HasValueValidator implements ConstraintValidator<HasValue, Object> {
 

@@ -5,9 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.RandomStringUtils;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.security.bcrypt.BCrypt;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
@@ -16,6 +16,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @Embeddable @NoArgsConstructor
@@ -27,7 +28,7 @@ public class HashedPassword {
     @Size(max=HASHEDPASSWORD_MAXLEN, message=ERR_HASHED_PASSWORD_LENGTH)
     @Column(nullable=false, length=HASHEDPASSWORD_MAXLEN)
     @Getter @Setter private String hashedPassword;
-    @JsonIgnore public boolean hasPassword () { return !StringUtil.empty(hashedPassword); }
+    @JsonIgnore public boolean hasPassword () { return !empty(hashedPassword); }
 
     @Size(min=RESETTOKEN_MAXLEN, max=RESETTOKEN_MAXLEN, message=ERR_RESET_TOKEN_LENGTH)
     @Column(length=RESETTOKEN_MAXLEN)
