@@ -14,7 +14,6 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.http.ApiConnectionInfo;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpRequestBean;
@@ -26,10 +25,10 @@ import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.util.RestResponse;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Stack;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j @NoArgsConstructor
@@ -68,7 +67,7 @@ public class ApiClientBase {
             case HttpMethods.DELETE:
                 return doDelete(requestBean.getUri());
             default:
-                throw new IllegalArgumentException("Unsupported request method: "+requestBean.getMethod());
+                return die("Unsupported request method: "+requestBean.getMethod());
         }
     }
 
@@ -91,7 +90,7 @@ public class ApiClientBase {
 
     protected ApiException specializeApiException(RestResponse response) {
         if (response.isSuccess()) {
-            throw new IllegalArgumentException("specializeApiException: cannot specialize exception for a successful response: "+response);
+            die("specializeApiException: cannot specialize exception for a successful response: "+response);
         }
         switch (response.status) {
             case HttpStatusCodes.NOT_FOUND:
@@ -203,10 +202,34 @@ public class ApiClientBase {
         return new RestResponse(statusCode, responseJson, getLocationHeader(response));
     }
 
+    public File getFile (String path) throws IOException {
+
+        final HttpClient client = getHttpClient();
+        final String url = getUrl(path, getBaseUri());
+        @Cleanup("releaseConnection") HttpRequestBase request = new HttpGet(url);
+        request = beforeSend(request);
+
+        final HttpResponse response = client.execute(request);
+        final int statusCode = response.getStatusLine().getStatusCode();
+        if (!RestResponse.isSuccess(statusCode)) die("getFile("+url+"): error: "+statusCode);
+
+        final HttpEntity entity = response.getEntity();
+        if (entity == null) die("getFile("+url+"): No entity");
+
+        final File file = File.createTempFile(getClass().getName()+"-", ".temp");
+        try (InputStream in = entity.getContent()) {
+            try (OutputStream out = new FileOutputStream(file)) {
+                IOUtils.copyLarge(in, out);
+            }
+        }
+
+        return file;
+    }
+
     protected HttpRequestBase beforeSend(HttpRequestBase request) {
         if (!empty(token)) {
             final String tokenHeader = getTokenHeader();
-            if (empty(tokenHeader)) throw new IllegalArgumentException("token set but getTokenHeader returned null");
+            if (empty(tokenHeader)) die("token set but getTokenHeader returned null");
             request.setHeader(tokenHeader, token);
         }
         return request;

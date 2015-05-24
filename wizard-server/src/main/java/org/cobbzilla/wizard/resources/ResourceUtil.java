@@ -1,5 +1,7 @@
 package org.cobbzilla.wizard.resources;
 
+import org.apache.commons.io.IOUtils;
+import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -7,7 +9,12 @@ import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.*;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,5 +63,18 @@ public class ResourceUtil {
             return invalid(new ArrayList<>(((ValidationException) e).getViolations().values()));
         }
         return Response.serverError().build();
+    }
+
+    public static Response streamFile(final File f) {
+        return Response.ok(new StreamingOutput() {
+            @Override public void write(OutputStream out) throws IOException, WebApplicationException {
+                try (InputStream in = new FileInputStream(f)) {
+                    StreamUtil.copyLarge(in, out);
+                }
+            }
+        })
+                .header(HttpHeaders.CONTENT_TYPE, URLConnection.guessContentTypeFromName(f.getName()))
+                .header(HttpHeaders.CONTENT_LENGTH, f.length())
+                .build();
     }
 }

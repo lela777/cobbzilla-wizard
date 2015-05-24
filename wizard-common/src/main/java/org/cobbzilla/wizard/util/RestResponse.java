@@ -12,6 +12,8 @@ public class RestResponse {
 
     public String getLocationUuid () { return location.substring(location.lastIndexOf("/")+1); }
 
-    public boolean isSuccess () { return status/100 == 2; }
+    public boolean isSuccess () { return isSuccess(status); }
+
+    public static boolean isSuccess (int code) { return code/100 == 2; }
 
 }
