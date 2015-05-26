@@ -14,10 +14,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.cobbzilla.util.http.ApiConnectionInfo;
-import org.cobbzilla.util.http.HttpMethods;
-import org.cobbzilla.util.http.HttpRequestBean;
-import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.http.*;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
@@ -37,7 +34,16 @@ public class ApiClientBase {
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
 
     @Getter protected ApiConnectionInfo connectionInfo;
-    @Getter @Setter protected String token;
+    @Getter protected String token;
+
+    public void setToken(String token) {
+        this.token = token;
+        this.tokenCtime = empty(token) ? 0 : System.currentTimeMillis();
+    }
+
+    private long tokenCtime = 0;
+    public boolean hasToken () { return !empty(token); }
+    public long getTokenAge () { return System.currentTimeMillis() - tokenCtime; }
 
     public ApiClientBase (ApiConnectionInfo connectionInfo) { this.connectionInfo = connectionInfo; }
     public ApiClientBase (String baseUri) { connectionInfo = new ApiConnectionInfo(baseUri); }
@@ -217,7 +223,7 @@ public class ApiClientBase {
         final HttpEntity entity = response.getEntity();
         if (entity == null) die("getFile("+url+"): No entity");
 
-        final File file = File.createTempFile(getClass().getName()+"-", ".temp");
+        final File file = File.createTempFile(getClass().getName()+"-", getTempFileSuffix(path, HttpUtil.getContentType(response)));
         try (InputStream in = entity.getContent()) {
             try (OutputStream out = new FileOutputStream(file)) {
                 IOUtils.copyLarge(in, out);
@@ -225,6 +231,16 @@ public class ApiClientBase {
         }
 
         return file;
+    }
+
+    protected String getTempFileSuffix(String path, String contentType) {
+        if (empty(contentType)) return ".temp";
+        switch (contentType) {
+            case "image/jpeg": return ".jpg";
+            case "image/gif": return ".gif";
+            case "image/png": return ".png";
+            default: return ".temp";
+        }
     }
 
     protected HttpRequestBase beforeSend(HttpRequestBase request) {
