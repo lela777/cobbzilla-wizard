@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.resources;
 
-import org.apache.commons.io.IOUtils;
 import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
@@ -66,6 +65,10 @@ public class ResourceUtil {
     }
 
     public static Response streamFile(final File f) {
+        if (f == null) return notFound();
+        if (!f.exists()) return notFound(f.getName());
+        if (!f.canRead()) return forbidden();
+
         return Response.ok(new StreamingOutput() {
             @Override public void write(OutputStream out) throws IOException, WebApplicationException {
                 try (InputStream in = new FileInputStream(f)) {

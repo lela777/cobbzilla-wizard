@@ -211,6 +211,7 @@ public class ApiClientBase {
 
         final HttpResponse response = client.execute(request);
         final int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode == 404) return null;
         if (!RestResponse.isSuccess(statusCode)) die("getFile("+url+"): error: "+statusCode);
 
         final HttpEntity entity = response.getEntity();
