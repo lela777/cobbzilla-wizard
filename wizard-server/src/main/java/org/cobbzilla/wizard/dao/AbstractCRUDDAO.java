@@ -5,17 +5,25 @@ package org.cobbzilla.wizard.dao;
  * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
  */
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Transformer;
+import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.criterion.Restrictions;
 
 import javax.validation.Valid;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class AbstractCRUDDAO<E extends Identifiable>
         extends AbstractDAO<E>
         implements DAO<E> {
+
+    public static final Transformer TO_UUID = new FieldTransfomer("uuid");
+    public static <E> Collection<String> toUuid (Collection<E> c) { return CollectionUtils.collect(c, TO_UUID); }
 
     public List<E> findAll() { return list(criteria()); }
 
@@ -70,4 +78,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return list(criteria().add(Restrictions.eq(field, value)));
     }
 
+    public E cacheLookup(String uuid, Map<String, E> cache) {
+        E thing = cache.get(uuid);
+        return (thing != null) ? thing : findByUuid(uuid);
+    }
 }
