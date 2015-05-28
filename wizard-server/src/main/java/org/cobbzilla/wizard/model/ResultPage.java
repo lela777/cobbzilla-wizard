@@ -2,10 +2,12 @@ package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.collection.MapUtil;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
@@ -130,6 +132,9 @@ public class ResultPage {
     }
 
     @JsonIgnore public SortOrder getSortType () { return sortOrder == null ? null : SortOrder.valueOf(sortOrder); }
+
+    public ResultPage sortAscending () { sortOrder = SortOrder.ASC.name(); return this; }
+    public ResultPage sortDescending () { sortOrder = SortOrder.DESC.name(); return this; }
 
     @Setter private String filter = null;
     public String getFilter() {
