@@ -5,19 +5,17 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
 import javax.validation.ConstraintViolation;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.cobbzilla.wizard.resources.ResourceUtil.status;
+
 public abstract class AbstractConstraintViolationExceptionMapper<E extends Exception> {
 
     protected Response buildResponse(E e) {
-        return Response.status(HttpStatusCodes.UNPROCESSABLE_ENTITY)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(exception2json(e))
-                .build();
+        return status(HttpStatusCodes.UNPROCESSABLE_ENTITY, exception2json(e));
     }
 
     protected List<ConstraintViolationBean> exception2json(E e) {

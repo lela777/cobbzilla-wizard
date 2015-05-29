@@ -14,6 +14,8 @@ import java.util.List;
 
 import static org.cobbzilla.wizard.resources.AbstractResource.UUID;
 import static org.cobbzilla.wizard.resources.AbstractResource.UUID_PARAM;
+import static org.cobbzilla.wizard.resources.ResourceUtil.ok;
+import static org.cobbzilla.wizard.resources.ResourceUtil.status;
 
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -60,7 +62,7 @@ public abstract class AbstractChildResource<C extends ChildEntity<C, P>, P exten
             return Response.ok(found).build();
         } catch (Exception e) {
             log.error("Status were not updated:", e);
-            return Response.status(Response.Status.PRECONDITION_FAILED).build();
+            return status(Response.Status.PRECONDITION_FAILED);
         }
     }
 
@@ -68,6 +70,6 @@ public abstract class AbstractChildResource<C extends ChildEntity<C, P>, P exten
     @DELETE
     public Response delete(@PathParam(UUID_PARAM) String uuid) {
         dao().delete(uuid);
-        return Response.status(Response.Status.OK).build();
+        return ok();
     }
 }

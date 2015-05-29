@@ -12,6 +12,7 @@ import org.cobbzilla.wizard.validation.ValidationMessages;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
@@ -36,20 +37,22 @@ public class ResourceUtil {
 
     public static Response notFound(String id) {
         if (id == null) id = "-unknown-";
-        return Response.status(Response.Status.NOT_FOUND).entity(Collections.singletonMap("resource", id)).build();
+        return status(Response.Status.NOT_FOUND, Collections.singletonMap("resource", id));
     }
 
-    public static Response notFound_blank() {
-        return Response.status(Response.Status.NOT_FOUND).build();
+    public static Response status (Response.Status status) { return status(status.getStatusCode()); }
+    public static Response status (int status) { return Response.status(status).build(); }
+    public static Response status (Response.Status status, Object entity) { return status(status.getStatusCode(), entity); }
+    public static Response status (int status, Object entity) {
+        return Response.status(status).type(MediaType.APPLICATION_JSON).entity(entity).build();
     }
 
-    public static Response forbidden() { return Response.status(Response.Status.FORBIDDEN).build(); }
+    public static Response notFound_blank() { return status(Response.Status.NOT_FOUND); }
 
-    public static Response invalid() { return Response.status(UNPROCESSABLE_ENTITY).build(); }
+    public static Response forbidden() { return status(Response.Status.FORBIDDEN); }
 
-    public static Response invalid(List<ConstraintViolationBean> violations) {
-        return Response.status(UNPROCESSABLE_ENTITY).entity(violations).build();
-    }
+    public static Response invalid() { return status(UNPROCESSABLE_ENTITY); }
+    public static Response invalid(List<ConstraintViolationBean> violations) { return status(UNPROCESSABLE_ENTITY, violations); }
 
     public static Response invalid(ConstraintViolationBean violation) {
         List<ConstraintViolationBean> violations = new ArrayList<>();
@@ -57,9 +60,7 @@ public class ResourceUtil {
         return invalid(violations);
     }
 
-    public static Response invalid(String messageTemplate) {
-        return invalid(messageTemplate, null);
-    }
+    public static Response invalid(String messageTemplate) { return invalid(messageTemplate, null); }
 
     public static Response invalid(String messageTemplate, String invalidValue) {
         List<ConstraintViolationBean> violations = new ArrayList<>();
@@ -95,7 +96,7 @@ public class ResourceUtil {
         } else if (e instanceof ValidationException) {
             return invalid(new ArrayList<>(((ValidationException) e).getViolations().values()));
         }
-        return Response.serverError().build();
+        return serverError();
     }
 
     public static Response streamFile(final File f) {
