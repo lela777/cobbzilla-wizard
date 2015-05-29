@@ -110,6 +110,16 @@ public class ResultPage {
     @JsonIgnore public int getPageOffset () { return (pageNumber-1) * pageSize; }
     public boolean containsResult(int i) { return (i >= getPageOffset() && i <= getPageOffset()+getPageSize()); }
 
+    @JsonIgnore public boolean isInfinitePage () { return pageSize == INFINITE_PAGE.pageSize; }
+    @JsonIgnore public int getPageEndOffset() {
+        return isInfinitePage() ? INFINITE_PAGE.pageSize : getPageOffset() + getPageSize();
+    }
+
+    public static final int MAX_PAGE_BUFFER = 100;
+    @JsonIgnore public int getPageBufferSize () {
+        return isInfinitePage() || pageSize > MAX_PAGE_BUFFER ? MAX_PAGE_BUFFER : pageSize;
+    }
+
     @Setter private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {
         // only return the first several chars, to thwart a hypothetical injection attack.
