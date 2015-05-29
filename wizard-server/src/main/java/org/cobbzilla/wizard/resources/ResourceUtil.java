@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.resources;
 
 import com.sun.jersey.api.core.HttpContext;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
@@ -19,9 +20,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.http.HttpStatusCodes.UNPROCESSABLE_ENTITY;
 
+@Slf4j
 public class ResourceUtil {
+
+    public static Response ok() { return Response.ok().build(); }
+
+    public static Response ok(Object o) { return Response.ok(o).build(); }
+
+    public static Response serverError() { return Response.serverError().build(); }
 
     public static Response notFound() { return notFound(null); }
 
@@ -59,12 +68,23 @@ public class ResourceUtil {
     }
 
     public static <T> T userPrincipal(HttpContext context) {
+        return userPrincipal(context, true);
+    }
+
+    public static <T> T optionalUserPrincipal(HttpContext context) {
+        return userPrincipal(context, false);
+    }
+
+    public static <T> T userPrincipal(HttpContext context, boolean required) {
+        T user;
         try {
-            return (T) context.getRequest().getUserPrincipal();
+            user = (T) context.getRequest().getUserPrincipal();
         } catch (UnsupportedOperationException e) {
-            // expected
-            return null;
+            log.warn("userPrincipal: "+e);
+            user = null;
         }
+        if (required && user == null) die("userPrincipal: no user");
+        return user;
     }
 
     public static Response toResponse (ApiException e) {

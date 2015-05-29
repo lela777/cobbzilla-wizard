@@ -31,6 +31,10 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
     }
 
+    public List<E> findByUuids(Collection<String> uuids) {
+        return list(criteria().add(Restrictions.in("uuid", uuids)));
+    }
+
     public boolean exists(String uuid) {
         return findByUuid(uuid) != null;
     }
