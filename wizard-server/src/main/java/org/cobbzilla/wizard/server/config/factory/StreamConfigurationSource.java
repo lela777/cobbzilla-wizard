@@ -14,8 +14,7 @@ public class StreamConfigurationSource implements ConfigurationSource {
 
     private InputStream stream;
 
-    @Override
-    public File getFile() throws IOException { return StreamUtil.stream2file(stream); }
+    @Override public File getFile() throws IOException { return StreamUtil.stream2temp(stream); }
 
     public static List<ConfigurationSource> fromResources (Class clazz, String... streams) {
         List<ConfigurationSource> list = new ArrayList<>(streams.length);
