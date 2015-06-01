@@ -52,6 +52,8 @@ public class LdapConfiguration {
     public String getHost () { return URIUtil.getHost(getServer()); }
     public int getPort () { return URIUtil.getPort(getServer()); }
 
+    public String getSecure() { return val("secure", "false"); }
+
     public String getVersion() { return val("version", "3"); }
     public String getDomain () { return val("domain", CommandShell.domainname()); }
     public String getLdap_domain() { return val("ldap_domain", domainify(getDomain())); }
