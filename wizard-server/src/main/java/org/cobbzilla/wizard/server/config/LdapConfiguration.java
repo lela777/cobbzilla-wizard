@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.server.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.system.CommandShell;
 
@@ -52,7 +53,11 @@ public class LdapConfiguration {
     public String getHost () { return URIUtil.getHost(getServer()); }
     public int getPort () { return URIUtil.getPort(getServer()); }
 
-    public String getSecure() { return val("secure", "false"); }
+    public static final String[] TRANSPORTS = {"plain", "tls", "ssl"};
+    public static final String[] SECURE_TRANSPORTS = {"tls", "ssl"};
+
+    public String getTransport() { return val("transport", "plain"); }
+    public boolean isSecure() { return ArrayUtils.indexOf(SECURE_TRANSPORTS, getTransport()) >= 0; }
 
     public String getVersion() { return val("version", "3"); }
     public String getDomain () { return val("domain", CommandShell.domainname()); }
