@@ -63,9 +63,9 @@ public class LdapConfiguration {
     public String getDomain () { return val("domain", CommandShell.domainname()); }
     public String getLdap_domain() { return val("ldap_domain", domainify(getDomain())); }
     public String getRealm() { return val("realm", getDomain()); }
-    public String getBase_dn() { return val("base_dn", getParent_cn() + "," + getLdap_domain()); }
-    public String getParent() { return val("parent", "cloudos"); }
-    public String getParent_cn() { return val("parent_cn", "cn="+getParent()); }
+    public String getBase_dn() { return val("base_dn", getName_dn() + "," + getLdap_domain()); }
+    public String getName() { return val("name", "cloudos"); }
+    public String getName_dn() { return val("name_dn", "cn="+getName()); }
 
     public String getAdmin() { return val("admin", "admin"); }
     public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()+","+getLdap_domain()); }
