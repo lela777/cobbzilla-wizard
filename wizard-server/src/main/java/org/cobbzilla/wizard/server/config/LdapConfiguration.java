@@ -63,9 +63,9 @@ public class LdapConfiguration {
     public String getDomain () { return val("domain", CommandShell.domainname()); }
     public String getLdap_domain() { return val("ldap_domain", domainify(getDomain())); }
     public String getRealm() { return val("realm", getDomain()); }
-    public String getBase_dn() { return val("base_dn", getParent_cn() + getLdap_domain()); }
+    public String getBase_dn() { return val("base_dn", getParent_cn() + "," + getLdap_domain()); }
     public String getParent() { return val("parent", "cloudos"); }
-    public String getParent_cn() { return val("parent_cn", "cn="+getParent()+","); }
+    public String getParent_cn() { return val("parent_cn", "cn="+getParent()); }
 
     public String getAdmin() { return val("admin", "admin"); }
     public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()+","+getLdap_domain()); }
@@ -75,7 +75,8 @@ public class LdapConfiguration {
     public String getExternal_id() { return val("external_id", "entryUUID"); }
 
     public String getUsers() { return val("users", "People"); }
-    public String getUser_dn () { return val("user_dn", "ou="+getUsers()+","+getBase_dn()); }
+    public String getUser_simple_dn () { return val("user_dn", "ou="+getUsers()); }
+    public String getUser_dn () { return val("user_dn", getUser_simple_dn()+","+getBase_dn()); }
     public String getUser_class() { return val("user_class", "inetorgperson"); }
     public String getUser_filter() { return val("user_filter", "(objectclass="+getUser_class()+")"); }
     public String getUser_username() { return val("user_username", "uid"); }
@@ -89,7 +90,8 @@ public class LdapConfiguration {
     public String getUser_encryption() { return val("user_encryption", "sha"); }
 
     public String getGroups() { return val("groups", "Groups"); }
-    public String getGroup_dn() { return val("group_dn", "ou="+getGroups()+","+getBase_dn()); }
+    public String getGroup_simple_dn() { return "ou="+getGroups(); }
+    public String getGroup_dn() { return val("group_dn", getGroup_simple_dn()+","+getBase_dn()); }
     public String getGroup_class() { return val("group_class", "groupOfUniqueNames"); }
     public String getGroup_filter() { return val("group_filter", "(objectclass="+getGroup_class()+")"); }
     public String getGroup_name() { return val("group_name", "cn"); }
