@@ -15,12 +15,18 @@ import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 
 public class LdapConfiguration {
 
+    public static final String ENT_DOUBLE_QUOTE = "&quot;";
+    public static final String ENT_SINGLE_QUOTE = "&#39;";
+
     private Map<String, String> config = new HashMap<>();
 
     public void setJson (String json) {
-        // yaml escapes the embedded quotation marks for some reason so we un-escape them here.
-        // Please don't use &quot; within any LDAP config values :)
-        if (json.startsWith("{&quot;")) json = json.replace("&quot;", "\"");
+        // yaml escapes some characters with HTML entities. Can't figure out how to tell it not to, so we un-escape them here.
+        // Please don't use &quot; or &#39; within any LDAP config values :)
+        if (json.contains(ENT_DOUBLE_QUOTE)) json = json.replace(ENT_DOUBLE_QUOTE, "\"");
+        if (json.startsWith(ENT_SINGLE_QUOTE)) json = json.substring(ENT_SINGLE_QUOTE.length());
+        if (json.endsWith(ENT_SINGLE_QUOTE)) json = json.substring(0, json.length() - ENT_SINGLE_QUOTE.length());
+        if (json.contains(ENT_SINGLE_QUOTE)) json = json.replace(ENT_SINGLE_QUOTE, "'");
 
         final JsonNode node = fromJsonOrDie(json, JsonNode.class);
         if (!(node instanceof ObjectNode)) die("Not a JSON object node: "+json);
