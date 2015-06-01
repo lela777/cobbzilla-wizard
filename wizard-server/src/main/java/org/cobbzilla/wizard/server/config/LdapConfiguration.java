@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.server.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.system.CommandShell;
@@ -14,6 +15,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 
+@Slf4j
 public class LdapConfiguration {
 
     public static final String ENT_DOUBLE_QUOTE = "&quot;";
@@ -75,7 +77,7 @@ public class LdapConfiguration {
     public String getExternal_id() { return val("external_id", "entryUUID"); }
 
     public String getUsers() { return val("users", "People"); }
-    public String getUser_simple_dn () { return val("user_dn", "ou="+getUsers()); }
+    public String getUser_simple_dn () { return "ou="+getUsers(); }
     public String getUser_dn () { return val("user_dn", getUser_simple_dn()+","+getBase_dn()); }
     public String getUser_class() { return val("user_class", "inetorgperson"); }
     public String getUser_filter() { return val("user_filter", "(objectclass="+getUser_class()+")"); }
