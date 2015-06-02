@@ -68,9 +68,7 @@ public class ResourceUtil {
         return invalid(violations);
     }
 
-    public static <T> T userPrincipal(HttpContext context) {
-        return userPrincipal(context, true);
-    }
+    public static <T> T userPrincipal(HttpContext context) { return userPrincipal(context, true); }
 
     public static <T> T optionalUserPrincipal(HttpContext context) {
         return userPrincipal(context, false);
