@@ -104,6 +104,9 @@ public class LdapConfiguration {
     public String groupDN (String name) { return getGroup_name() + "="  + name + "," + getGroup_dn(); }
 
     public String filterGroup(String groupName) {
-        return empty(groupName) ? getGroup_filter() : "(&("+ getGroup_filter()+")("+ getGroup_name()+"="+groupName+"))";
+        String groupFilter = getGroup_filter();
+        if (!groupFilter.startsWith("(")) groupFilter = "(" + groupFilter;
+        if (!groupFilter.endsWith(")")) groupFilter += ")";
+        return empty(groupName) ? groupFilter : "(&"+ groupFilter +"("+ getGroup_name()+"="+groupName+"))";
     }
 }
