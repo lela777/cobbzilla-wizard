@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class SearchResults<E> {
@@ -29,8 +30,8 @@ public class SearchResults<E> {
         return totalCount;
     }
 
-    @JsonIgnore public boolean getHasResults () { return results != null && !results.isEmpty(); }
-    @JsonIgnore public boolean getHasTotalCount () { return totalCount != null; }
+    @JsonIgnore public boolean hasResults() { return !empty(results); }
+    @JsonIgnore public boolean hasTotalCount() { return totalCount != null; }
 
     public SearchResults(List<E> results) { this.results = results; }
 
