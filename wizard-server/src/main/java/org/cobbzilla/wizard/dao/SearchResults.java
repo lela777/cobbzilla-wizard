@@ -25,10 +25,12 @@ public class SearchResults<E> {
     @Getter @Setter private List<E> results;
     @Getter @Setter private Integer totalCount;
 
-    @JsonIgnore public int size() {
-        if (totalCount == null) die("size is unknown");
+    @JsonIgnore public int total() {
+        if (totalCount == null) die("total is unknown");
         return totalCount;
     }
+
+    @JsonIgnore public int count() { return empty(results) ? 0 : results.size(); }
 
     @JsonIgnore public boolean hasResults() { return !empty(results); }
     @JsonIgnore public boolean hasTotalCount() { return totalCount != null; }

@@ -45,7 +45,8 @@ public class ResultPage {
 
     public static final ResultPage DEFAULT_PAGE = new ResultPage();
     public static final ResultPage FIRST_RESULT = new ResultPage(1, 1);
-    public static final ResultPage INFINITE_PAGE = new ResultPage(1, Integer.MAX_VALUE);
+    public static final int INFINITE = Integer.MAX_VALUE;
+    public static final ResultPage INFINITE_PAGE = new ResultPage(1, INFINITE);
 
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
 
