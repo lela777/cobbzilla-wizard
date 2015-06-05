@@ -1,20 +1,20 @@
 package org.cobbzilla.wizard.resources;
 
+import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.io.StreamUtil;
+import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
+import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.HttpStatusCodes.UNPROCESSABLE_ENTITY;
 
 @Slf4j
@@ -97,20 +98,45 @@ public class ResourceUtil {
         return serverError();
     }
 
+    public static Response toResponse (RestResponse response) {
+        Response.ResponseBuilder builder = Response.status(response.status);
+        if (response.status/100 == 3) {
+            builder = builder.header(HttpHeaders.LOCATION, response.location);
+        }
+        if (!empty(response.json)) {
+            builder = builder.entity(response.json)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.CONTENT_LENGTH, response.json.length());
+        }
+        return builder.build();
+    }
+
+    public static Response toResponse (final HttpResponseBean response) {
+        Response.ResponseBuilder builder = Response.status(response.getStatus());
+
+        final Multimap<String, String> headers = response.getHeaders();
+        for (String name : headers.keySet()) {
+            for (String value : headers.get(name)) {
+                builder = builder.header(name, value);
+            }
+        }
+
+        if (response.hasEntity()) {
+            builder = builder.entity(new ByteStreamingOutput(response.getEntity()));
+        }
+
+        return builder.build();
+    }
+
     public static Response streamFile(final File f) {
         if (f == null) return notFound();
         if (!f.exists()) return notFound(f.getName());
         if (!f.canRead()) return forbidden();
 
-        return Response.ok(new StreamingOutput() {
-            @Override public void write(OutputStream out) throws IOException, WebApplicationException {
-                try (InputStream in = new FileInputStream(f)) {
-                    StreamUtil.copyLarge(in, out);
-                }
-            }
-        })
+        return Response.ok(new FileStreamingOutput(f))
                 .header(HttpHeaders.CONTENT_TYPE, URLConnection.guessContentTypeFromName(f.getName()))
                 .header(HttpHeaders.CONTENT_LENGTH, f.length())
                 .build();
     }
+
 }

@@ -39,6 +39,20 @@ public class TestNames {
         "Venezuelan", "Vietnamese", "Welsh", "Western", "Samoan", "Yemeni", "Yugoslav", "Zaïrean", "Zambian", "Zimbabwean"
     };
 
+    public static final String[] ANIMALS = {
+        "Elephant", "Alligator", "Kestrel", "Condor", "Arctic_Fox", "Bald_Eagle", "Black_Swan", "Duck", "Burrowing_Owl",
+        "Sea_Lion", "Chinchilla", "Collared_Peccary", "Rabbit", "Snake", "Hedgehog", "Owl", "Bear", "Leopard", "Shark",
+        "Panda", "Lynx", "Llama", "Marine_Toad", "Mouflon", "Musk_Ox", "Arrow_Frogs", "Porcupine", "Tortoise", "Red_Panda",
+        "Lemur", "Hawk", "Rhea", "Reindeer", "Siberian_Tiger", "Snow_Leopard", "Snowy_Owl", "Whites_Tree_Frog", "Wild_Boar",
+        "Invertebrates", "Centipedes", "Crustaceans", "Hermit_Crabs", "Wood_Louse", "Bullet_Ant", "Carpenter_Bee",
+        "Honey_Pot_Ant", "Honeybee", "Snails", "Spiders", "Scorpions", "Fish", "Zebra", "Tiger", "Crocodiles", "Lizards",
+        "Snakes", "King_Cobra", "Turtles", "Birds", "Penguins", "Bats", "Cheetah", "Mongoose", "Jaguar", "Kinkajou",
+        "Lion", "Otter", "Polar_Bear", "Puma", "Red_Panda", "Sand_Cat", "Slender", "Hyena", "Rhinoceros", "Gazelle",
+        "Goat", "Hippopotamus", "Okapi", "Pig", "Warthog", "Hyraxes", "Lemurs", "Monkey", "Ape", "Chimpanzee", "Gorilla",
+        "Kangaroo", "Opossum", "Giraffe", "Killer_Whale", "Horse", "Wolf", "Mole", "Dingo", "Deer", "Emu", "Crocodile",
+        "Bobcat", "Lion", "Squirrel"
+    };
+
     private static final Random rand = new Random();
 
     public static String safeName () {
@@ -50,5 +64,9 @@ public class TestNames {
     public static String fruit() { return FRUITS[rand.nextInt(FRUITS.length)]; }
 
     public static String nationality() { return NATIONALITIES[rand.nextInt(NATIONALITIES.length)]; }
+
+    public static String animal() { return ANIMALS[rand.nextInt(ANIMALS.length)]; }
+
+    public static String safeAnimal() { return animal()+"-"+RandomStringUtils.randomAlphanumeric(10); }
 
 }

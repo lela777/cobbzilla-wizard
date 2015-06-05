@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.server;
+package org.cobbzilla.wizard.server.handler;
 
 public enum StaticUtilPath {
 

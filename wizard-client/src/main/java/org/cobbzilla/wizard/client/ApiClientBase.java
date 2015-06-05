@@ -8,10 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.cobbzilla.util.http.*;
@@ -77,6 +79,21 @@ public class ApiClientBase {
         }
     }
 
+    public <T> RestResponse process_raw(HttpRequestBean<T> requestBean) throws Exception {
+        switch (requestBean.getMethod()) {
+            case HttpMethods.GET:
+                return doGet(requestBean.getUri());
+            case HttpMethods.POST:
+                return doPost(requestBean.getUri(), requestBean.getData(), requestBean.getContentType());
+            case HttpMethods.PUT:
+                return doPut(requestBean.getUri(), requestBean.getData(), requestBean.getContentType());
+            case HttpMethods.DELETE:
+                return doDelete(requestBean.getUri());
+            default:
+                return die("Unsupported request method: "+requestBean.getMethod());
+        }
+    }
+
     protected void assertStatusOK(RestResponse response) {
         if (response.status != HttpStatusCodes.OK
                 && response.status != HttpStatusCodes.CREATED
@@ -86,7 +103,7 @@ public class ApiClientBase {
     private String getJson(HttpRequestBean requestBean) throws Exception {
         Object data = requestBean.getData();
         if (data == null) return null;
-        if (data instanceof String) return data.toString();
+        if (data instanceof String) return (String) data;
         return JsonUtil.toJson(data);
     }
 
@@ -122,18 +139,27 @@ public class ApiClientBase {
         return restResponse;
     }
 
+    protected <T> void setRequestEntity(HttpEntityEnclosingRequest entityRequest, T data, ContentType contentType) {
+        if (data != null) {
+            if (data instanceof InputStream) {
+                entityRequest.setEntity(new InputStreamEntity((InputStream) data, contentType));
+                log.info("doPut sending JSON=(InputStream)");
+            } else {
+                entityRequest.setEntity(new StringEntity(data.toString(), contentType));
+                log.info("doPut sending JSON=" + data);
+            }
+        }
+    }
+
     public RestResponse doPost(String path, String json) throws Exception {
         return doPost(path, json, CONTENT_TYPE_JSON);
     }
 
-    public RestResponse doPost(String path, String data, ContentType contentType) throws Exception {
+    public <T> RestResponse doPost(String path, T data, ContentType contentType) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
-        if (data != null) {
-            httpPost.setEntity(new StringEntity(data, contentType));
-            log.info("doPost("+url+") sending JSON=" + data);
-        }
+        setRequestEntity(httpPost, data, contentType);
         return getResponse(client, httpPost);
     }
 
@@ -151,14 +177,11 @@ public class ApiClientBase {
         return doPut(path, json, CONTENT_TYPE_JSON);
     }
 
-    public RestResponse doPut(String path, String data, ContentType contentType) throws Exception {
+    public <T> RestResponse doPut(String path, T data, ContentType contentType) throws Exception {
         HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
-        if (data != null) {
-            httpPut.setEntity(new StringEntity(data, contentType));
-            log.info("doPut sending JSON="+data);
-        }
+        setRequestEntity(httpPut, data, contentType);
         return getResponse(client, httpPut);
     }
 

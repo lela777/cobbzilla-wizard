@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.model;
 
 import lombok.*;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Size;
@@ -19,7 +18,8 @@ import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 @NoArgsConstructor @AllArgsConstructor
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
-    public static final String VERSION_REGEXP = "^(\\d+)\\.(\\d+)\\.(\\d+)$";
+    public static final String SEMANTIC_VERSION_RE = "(\\d+)\\.(\\d+)\\.(\\d+)";
+    public static final String VERSION_REGEXP = "^" + SEMANTIC_VERSION_RE + "$";
     public static final Pattern VERSION_PATTERN = Pattern.compile(VERSION_REGEXP);
 
     public static final FileFilter DIR_FILTER = new FileFilter() {

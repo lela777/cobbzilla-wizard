@@ -14,17 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
 import org.cobbzilla.util.system.PortPicker;
-import org.cobbzilla.wizard.server.config.HttpConfiguration;
-import org.cobbzilla.wizard.server.config.JerseyConfiguration;
-import org.cobbzilla.wizard.server.config.RestServerConfiguration;
-import org.cobbzilla.wizard.server.config.StaticHttpConfiguration;
+import org.cobbzilla.wizard.server.config.*;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
+import org.cobbzilla.wizard.server.handler.StaticAssetHandler;
 import org.cobbzilla.wizard.validation.Validator;
-import org.glassfish.grizzly.http.server.HttpHandler;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.*;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.config.DependencyDescriptor;
@@ -138,10 +134,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final NetworkListener listener = new NetworkListener("grizzly-"+serverName, getListenAddress(), configuration.getHttp().getPort());
         httpServer.addListener(listener);
 
+        final ServerConfiguration serverConfig = httpServer.getServerConfiguration();
+
+        // add handlers -- first the REST/Jersey handler
         final HttpHandler processor = ContainerFactory.createContainer(HttpHandler.class, rc, factory);
         final String restBase = configuration.getHttp().getBaseUri();
-        httpServer.getServerConfiguration().addHttpHandler(processor, restBase);
+        serverConfig.addHttpHandler(processor, restBase);
 
+        // optional static asset handler
         if (configuration.hasStaticAssets()) {
             final StaticHttpConfiguration staticAssets = configuration.getStaticAssets();
             final String staticBase = staticAssets.getBaseUri();
@@ -149,14 +149,29 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                 throw new IllegalArgumentException("staticAssetBaseUri not defined, or is same as restServerBaseUri");
             }
             final StaticAssetHandler staticHandler = new StaticAssetHandler(staticAssets, getClass().getClassLoader());
-            httpServer.getServerConfiguration().addHttpHandler(staticHandler, staticBase);
+            serverConfig.addHttpHandler(staticHandler, staticBase);
+        }
+
+        // optional additional http handlers
+        if (configuration.hasHandlers()) {
+            for (HttpHandlerConfiguration config : configuration.getHandlers()) {
+
+                // which bean will handle this?
+                final HttpHandler bean = getBean(config.getBean());
+
+                final HttpHandlerRegistration handlerRegistration = HttpHandlerRegistration.bulder()
+                        .contextPath(config.contextPath())
+                        .urlPattern("/*")
+                        .build();
+
+                serverConfig.addHttpHandler(bean, handlerRegistration);
+            }
         }
 
         return httpServer;
     }
 
-    @Override
-    public ConfigurableApplicationContext buildSpringApplicationContext() {
+    @Override public ConfigurableApplicationContext buildSpringApplicationContext() {
 
         // Create a special factory that will always correctly resolve this specific configuration
         final DefaultListableBeanFactory factory = new DefaultListableBeanFactory() {
@@ -287,6 +302,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return StreamConfigurationSource.fromResources(clazz, args);
     }
 
-    public <T> T getBean(Class<T> bean) { return getApplicationContext().getBean(bean); }
+    public <T> T getBean(String beanName) { return (T) getApplicationContext().getBean(beanName); }
+
+    public <T> T getBean(Class<T> beanClass) { return getApplicationContext().getBean(beanClass); }
 
 }

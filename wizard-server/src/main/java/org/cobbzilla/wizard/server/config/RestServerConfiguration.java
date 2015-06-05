@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationContext;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 public class RestServerConfiguration {
 
     @Getter @Setter private String serverName;
@@ -17,6 +19,9 @@ public class RestServerConfiguration {
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
     public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }
+
+    @Getter @Setter private HttpHandlerConfiguration[] handlers;
+    public boolean hasHandlers () { return !empty(handlers); }
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 

@@ -1,9 +1,8 @@
-package org.cobbzilla.wizard.server;
+package org.cobbzilla.wizard.server.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.io.DeleteOnExit;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
