@@ -143,10 +143,11 @@ public class ApiClientBase {
         if (data != null) {
             if (data instanceof InputStream) {
                 entityRequest.setEntity(new InputStreamEntity((InputStream) data, contentType));
-                log.debug("doPut sending JSON=(InputStream)");
+                log.debug("setting entity=(InputStream)");
             } else {
                 entityRequest.setEntity(new StringEntity(data.toString(), contentType));
-                log.debug("doPut sending JSON=" + data);
+                log.debug("setting entity=(" + data.toString().length()+" json chars)");
+                log.trace(data.toString());
             }
         }
     }
