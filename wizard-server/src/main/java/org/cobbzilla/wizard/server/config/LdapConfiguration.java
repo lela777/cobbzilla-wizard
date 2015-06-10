@@ -2,6 +2,8 @@ package org.cobbzilla.wizard.server.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.http.URIUtil;
@@ -22,6 +24,8 @@ public class LdapConfiguration {
     public static final String ENT_SINGLE_QUOTE = "&#39;";
 
     private Map<String, String> config = new HashMap<>();
+
+    @Getter @Setter private String password;
 
     public void setJson (String json) {
         // yaml escapes some characters with HTML entities. Can't figure out how to tell it not to, so we un-escape them here.
@@ -71,7 +75,6 @@ public class LdapConfiguration {
 
     public String getAdmin() { return val("admin", "admin"); }
     public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()+","+getLdap_domain()); }
-    public String getPassword() { return System.getenv("LDAP_PASSWORD"); }
 
     public String getOrg_unit_class () { return val("org_unit_class", "organizationalUnit"); }
     public String getExternal_id() { return val("external_id", "entryUUID"); }

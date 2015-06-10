@@ -50,6 +50,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
             final Class<C> configurationClass = ReflectionUtil.getTypeParameter(getRestServerClass(), RestServerConfiguration.class);
             final RestServerConfigurationFactory<C> factory = new RestServerConfigurationFactory<>(configurationClass);
             configuration = factory.build(configurations, env);
+            configuration.setEnvironment(env);
 
             server.setConfiguration(configuration);
             log.info("starting " + configuration.getServerName() + ": " + server.getClass().getName() + " with config: " + configuration);

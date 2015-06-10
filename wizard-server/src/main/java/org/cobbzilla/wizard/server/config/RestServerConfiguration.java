@@ -4,9 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationContext;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class RestServerConfiguration {
+
+    @Getter @Setter private Map<String, String> environment = new HashMap<>();
 
     @Getter @Setter private String serverName;
     @Getter @Setter private String publicUriBase;
