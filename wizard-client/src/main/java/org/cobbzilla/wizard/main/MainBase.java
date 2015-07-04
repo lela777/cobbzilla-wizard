@@ -15,9 +15,11 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
     @Getter private final OPT options = initOptions();
     protected OPT initOptions() { return instantiate((Class<OPT>) getFirstTypeParam(getClass())); }
 
-    @Getter(value= AccessLevel.PROTECTED) private final CmdLineParser parser = new CmdLineParser(getOptions());
+    @Getter(value=AccessLevel.PROTECTED) private final CmdLineParser parser = new CmdLineParser(getOptions());
 
     protected abstract void run() throws Exception;
+
+    public void runOrDie () { try { run(); } catch (Exception e) { die("runOrDie: "+e, e); } }
 
     @Getter private String[] args;
     public void setArgs(String[] args) throws CmdLineException {
