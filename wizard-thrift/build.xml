@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="billing-thrift" default="thrift" basedir="../wizard-server">
+<project name="wizard-thrift" default="thrift" basedir="../wizard-server">
 
     <description>
         Generate code from thrift files
