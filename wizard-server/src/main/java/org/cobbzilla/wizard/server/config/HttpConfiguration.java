@@ -8,7 +8,7 @@ import java.net.URISyntaxException;
 
 public class HttpConfiguration {
 
-    @Getter @Setter private int port;
+    @Getter @Setter private int port = 0;
     @Getter @Setter private String baseUri;
 
     public String getHost () throws URISyntaxException {

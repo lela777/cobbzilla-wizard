@@ -33,10 +33,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
 
@@ -240,10 +237,26 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return main(EMPTY_ARRAY, mainClass, listener, configSources);
     }
 
+    public static <S extends RestServerBase<C>, C extends RestServerConfiguration> S
+    main(Class<S> mainClass,
+         final RestServerLifecycleListener listener,
+         List<ConfigurationSource> configSources,
+         Map<String, String> env) throws Exception {
+        return main(EMPTY_ARRAY, mainClass, listener, configSources, env);
+    }
+
     public static <S extends RestServer<C>, C extends RestServerConfiguration> S
     main(String[] args, Class<S> mainClass,
          final RestServerLifecycleListener listener,
          List<ConfigurationSource> configSources) throws Exception {
+        return main(args, mainClass, listener, configSources, null);
+    }
+
+    public static <S extends RestServer<C>, C extends RestServerConfiguration> S
+    main(String[] args, Class<S> mainClass,
+         final RestServerLifecycleListener listener,
+         List<ConfigurationSource> configSources,
+         Map<String, String> env) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
 
@@ -256,7 +269,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final RestServerHarness<C, S> serverHarness = new RestServerHarness<>(mainClass);
 
         serverHarness.addConfigurations(configSources);
-        serverHarness.init(System.getenv());
+        serverHarness.init(env != null ? env : System.getenv());
 
         final S server = serverHarness.getServer();
         if (listener != null) server.addLifecycleListener(listener);
