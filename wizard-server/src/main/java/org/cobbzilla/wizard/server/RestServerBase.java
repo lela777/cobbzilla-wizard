@@ -123,7 +123,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, applicationContext);
 
         // pick a port
-        if (configuration.getHttp().getPort() == 0) {
+        if (!configuration.getHttp().hasPort()) {
             configuration.getHttp().setPort(PortPicker.pick());
         }
 
