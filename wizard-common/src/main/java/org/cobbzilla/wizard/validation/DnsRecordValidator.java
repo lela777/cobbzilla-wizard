@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.validation;
 
 import org.cobbzilla.util.dns.DnsRecord;
+import org.cobbzilla.util.string.ValidationRegexes;
 
 import java.util.ArrayList;
 import java.util.List;

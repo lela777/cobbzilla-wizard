@@ -13,6 +13,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
+import org.cobbzilla.util.system.NetworkUtil;
 import org.cobbzilla.util.system.PortPicker;
 import org.cobbzilla.wizard.server.config.*;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
@@ -35,6 +36,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
 
 @Slf4j
@@ -66,10 +69,20 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     protected String getListenAddress() { return ALL_ADDRS; }
 
+    public String getPrimaryListenAddress() {
+        String addr = getListenAddress();
+        if (!addr.equals(ALL_ADDRS)) return addr;
+        addr = NetworkUtil.getFirstPublicIpv4();
+        if (!empty(addr)) return addr;
+        addr = NetworkUtil.getFirstEthernetIpv4();
+        if (!empty(addr)) return addr;
+        return die("getPrimaryListenAddress: could not determine address");
+    }
+
     @Override
     public String getClientUri() {
         verifyPort();
-        return buildURI(LOCALHOST).toString();
+        return buildURI(getPrimaryListenAddress()).toString();
     }
 
     protected URI buildURI(String host) {
