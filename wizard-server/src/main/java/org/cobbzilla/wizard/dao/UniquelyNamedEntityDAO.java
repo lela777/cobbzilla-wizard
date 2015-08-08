@@ -14,7 +14,9 @@ public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> exte
 
     public boolean forceLowercase () { return true; }
 
-    public E findByName (String name) { return findByUniqueField("name", forceLowercase() ? name.toLowerCase() : name); }
+    public E findByName (String name) { return findByUniqueField("name", nameValue(name)); }
+
+    protected String nameValue(String name) { return forceLowercase() ? name.toLowerCase() : name; }
 
     protected Map<String, UniqueValidatorDaoHelper.Finder<E>> getUniqueHelpers() {
         return MapBuilder.build(new Object[][]{

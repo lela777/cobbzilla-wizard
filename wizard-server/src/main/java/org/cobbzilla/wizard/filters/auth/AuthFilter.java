@@ -2,27 +2,25 @@ package org.cobbzilla.wizard.filters.auth;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Set;
 
 public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerRequestFilter {
 
-    @Getter @Setter private String authTokenHeader;
-    @Getter @Setter private Set<String> skipAuthPaths;
-    @Getter @Setter private Set<String> skipAuthPrefixes;
+    protected abstract String getAuthTokenHeader();
+    protected abstract Set<String> getSkipAuthPaths();
+    protected abstract Set<String> getSkipAuthPrefixes();
 
     @Override
     public ContainerRequest filter(ContainerRequest request) {
 
         final String uri = request.getRequestUri().getPath();
 
-        if (skipAuthPaths.contains(uri)) return request;
+        if (getSkipAuthPaths().contains(uri)) return request;
 
-        if (startsWith(uri, skipAuthPrefixes)) return request;
+        if (startsWith(uri, getSkipAuthPrefixes())) return request;
 
-        final String token = request.getHeaderValue(authTokenHeader);
+        final String token = request.getHeaderValue(getAuthTokenHeader());
         if (token == null) throw new AuthException();
 
         final T principal = getAuthProvider().find(token);

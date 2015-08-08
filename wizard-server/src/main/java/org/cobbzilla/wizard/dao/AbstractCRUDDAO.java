@@ -40,7 +40,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     }
 
     @Override public Object preCreate(@Valid E entity) { return entity; }
-    @Override public E postCreate(E entity, Object context) { return  entity; }
+    @Override public E postCreate(E entity, Object context) { return entity; }
 
     public E create(@Valid E entity) {
         entity.beforeCreate();
@@ -64,7 +64,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
         entity = hibernateTemplate.merge(checkNotNull(entity));
-        return  postUpdate(entity, ctx);
+        return postUpdate(entity, ctx);
     }
 
     public void delete(String uuid) {
