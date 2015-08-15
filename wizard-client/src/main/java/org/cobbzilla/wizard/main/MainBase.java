@@ -3,9 +3,11 @@ package org.cobbzilla.wizard.main;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.wizard.util.RestResponse;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
@@ -66,6 +68,11 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
     }
 
     protected void out (String message) { System.out.println(message); }
+
+    protected void out (RestResponse response) {
+        out(response.isSuccess() && !empty(response.json) ? response.json : response.toString());
+    }
+
     protected void err (String message) { System.err.println(message); }
 
     protected void die (String message) {

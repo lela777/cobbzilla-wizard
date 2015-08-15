@@ -29,8 +29,8 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
     /** @return the name of the HTTP header that will hold the session id on future requests */
     protected abstract String getApiHeaderTokenName();
 
-    /** @return the URI to POST the login request to */
-    protected abstract String getLoginUri();
+    /** @return the URI to POST the login request to (account may be null if the URI does not take an account) */
+    protected abstract String getLoginUri(String account);
 
     protected abstract String getSessionId(RestResponse response) throws Exception;
 
@@ -49,13 +49,15 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
             try {
                 final Object loginRequest = buildLoginRequest(options);
                 final ApiClientBase api = getApiClient();
-                RestResponse response = api.post(getLoginUri(), toJson(loginRequest));
+                final String loginUri = getLoginUri(account);
+
+                RestResponse response = api.post(loginUri, toJson(loginRequest));
                 if (response.json.contains("\"2-factor\"")) {
                     final String token = getOptions().hasTwoFactor()
                             ? getOptions().getTwoFactor()
                             : readLineFromStdin("Please enter token for 2-factor authentication: ");
                     setSecondFactor(loginRequest, token);
-                    response = getApiClient().post(getLoginUri(), toJson(loginRequest));
+                    response = getApiClient().post(loginUri, toJson(loginRequest));
                 }
                 api.pushToken(getSessionId(response));
 

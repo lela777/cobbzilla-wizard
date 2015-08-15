@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.validation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -18,7 +19,7 @@ public class SimpleViolationException extends RuntimeException {
         this(messageTemplate, message, null);
     }
 
-    public ConstraintViolationBean getBean () {
+    @JsonIgnore public ConstraintViolationBean getBean () {
         return new ConstraintViolationBean(messageTemplate, message, invalidValue);
     }
 }
