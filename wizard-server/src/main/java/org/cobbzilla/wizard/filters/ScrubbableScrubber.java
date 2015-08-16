@@ -10,7 +10,7 @@ public class ScrubbableScrubber extends ResultScrubber {
     @Override
     protected ScrubbableField[] getFieldsToScrub(Object entity) {
         if (entity instanceof Scrubbable) {
-            return ((Scrubbable) entity).getFieldsToScrub();
+            return ((Scrubbable) entity).fieldsToScrub();
         }
         return NOTHING_TO_SCRUB;
     }

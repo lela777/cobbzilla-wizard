@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ScrubbableField {
 
-    public Class<?> targetType;
+    public Class targetType;
     public String name;
     public Class type;
 

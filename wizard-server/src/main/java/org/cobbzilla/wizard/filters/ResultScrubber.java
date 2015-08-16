@@ -17,7 +17,11 @@ public abstract class ResultScrubber implements ContainerResponseFilter {
         for (ScrubbableField field : getFieldsToScrub(entity)) {
             if (entity != null && field.targetType.isAssignableFrom(entity.getClass())) {
                 try {
-                    ReflectionUtil.setNull(entity, field.name, field.type);
+                    if (entity instanceof CustomScrubbage) {
+                        ((CustomScrubbage)entity).scrub(entity, field);
+                    } else {
+                        ReflectionUtil.setNull(entity, field.name, field.type);
+                    }
                 } catch (Exception e) {
                     log.warn("filter: Error calling ReflectionUtil.setNull("+entity+", "+field.name+", "+field.type.getName()+"): "+e);
                 }
