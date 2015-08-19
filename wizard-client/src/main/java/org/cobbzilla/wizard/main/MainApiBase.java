@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.main;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 
@@ -60,6 +61,9 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
                     response = getApiClient().post(loginUri, toJson(loginRequest));
                 }
                 api.pushToken(getSessionId(response));
+
+            } catch (NotFoundException e) {
+                die("Account not found: "+account);
 
             } catch (Exception e) {
                 die("Error logging in: " + e, e);
