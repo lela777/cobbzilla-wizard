@@ -16,10 +16,12 @@ public class DnsRecordValidator {
             errors.add(new ConstraintViolationBean("err.dnsRecord.fqdn.invalid"));
         }
 
-        if (!ValidationRegexes.IPv4_PATTERN.matcher(dnsRecord.getFqdn()).matches()
-                && !ValidationRegexes.IPv6_PATTERN.matcher(dnsRecord.getFqdn()).matches()) {
+        /* todo: the "value" field is not always an IP address, depends on record type
+        if (!ValidationRegexes.IPv4_PATTERN.matcher(dnsRecord.getValue()).matches()
+                && !ValidationRegexes.IPv6_PATTERN.matcher(dnsRecord.getValue()).matches()) {
             errors.add(new ConstraintViolationBean("err.dnsRecord.ip.invalid"));
         }
+        */
 
         if (dnsRecord.getTtl() <= 0) {
             errors.add(new ConstraintViolationBean("err.dnsRecord.ttl.invalid"));
