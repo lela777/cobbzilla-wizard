@@ -33,16 +33,18 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     protected abstract String getDefaultApiBaseUri();
 
     @Getter private final String password = initPassword();
-    public boolean hasPassword () { return !empty(password); }
+    public boolean hasPassword () { return !empty(getPassword()) && password != INVALID_PASSWORD; }
 
     protected boolean requireAccount() { return true; }
+
+    private static final String INVALID_PASSWORD = " -- password not set -- ";
 
     private String initPassword() {
         if (!requireAccount()) return null;
         final String pass = System.getenv(getPasswordEnvVarName());
         if (empty(pass)) {
-            System.err.println("No " + getPasswordEnvVarName() + " defined in environment");
-            System.exit(2);
+            System.err.println("Warning: " + getPasswordEnvVarName() + " not defined in environment");
+            return INVALID_PASSWORD;
         }
         return pass;
     }
