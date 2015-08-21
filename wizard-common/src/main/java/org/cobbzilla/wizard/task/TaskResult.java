@@ -6,11 +6,13 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @ToString
-public class TaskResult {
+public class TaskResult<E extends TaskEvent> {
 
+    @JsonIgnore @Getter @Setter private TaskBase task;
     @Getter @Setter private String actionMessageKey;
     @Getter @Setter private String target;
 
@@ -22,23 +24,35 @@ public class TaskResult {
     /** an error message for the task */
     public String getError () { return exception == null ? null : exception.toString(); }
     public void setError (String error) { exception = new Exception(error); }
+    public boolean hasError () { return getError() == null; }
 
-    private final List<TaskEvent> events = new ArrayList<>();
-    public List<TaskEvent> getEvents () {
+    private final List<E> events = new ArrayList<>();
+    public List<E> getEvents () {
         synchronized (events) {
             return new ArrayList<>(events);
         }
     }
 
-    public void add(TaskEvent event) {
+    public void add(E event) {
         synchronized (events) {
             this.events.add(event);
         }
     }
 
-    public void error(TaskEvent event, Exception e) {
-        add(event);
+    public void addAll(Collection<E> e) {
+        synchronized (events) {
+            events.addAll(e);
+        }
+    }
+
+    public void error(E event, Exception e) {
+        add((E) event.setException(e.toString()));
         this.exception = e;
+    }
+
+    public void success (E event) {
+        add((E) event.setSuccess(true));
+        this.success = true;
     }
 
     public void description (String actionMessageKey, String target) {
@@ -46,6 +60,17 @@ public class TaskResult {
         setTarget(target);
     }
 
-    @JsonIgnore public boolean isComplete () { return success || getError() != null; }
+    @JsonIgnore public boolean isComplete () { return success || hasError(); }
+
+    public void initRetry() { exception = null; success = false; }
+
+    public String getErrorMessageKey() {
+        return hasError() && !getEvents().isEmpty() ? getMostRecentEvent().getMessageKey() : null;
+    }
+
+    // so json won't complain
+    public void setErrorMessageKey(String ignored) {}
+
+    @JsonIgnore public E getMostRecentEvent() { return events.isEmpty() ? null : events.get(events.size() - 1); }
 
 }

@@ -1,6 +1,6 @@
 package org.cobbzilla.wizardtest;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.security.SecureRandom;
 
@@ -12,17 +12,12 @@ public class RandomUtil {
 
     public static String randomName() { return randomName(20); }
 
-    public static String randomName(int length) {
-        return RandomStringUtils.randomAlphanumeric(length);
-    }
+    public static String randomName(int length) { return RandomStringUtils.randomAlphanumeric(length); }
 
-    public static String randomDigits(int length) {
-        return RandomStringUtils.randomNumeric(length);
-    }
+    public static String randomDigits(int length) { return RandomStringUtils.randomNumeric(length); }
 
-    public static String randomEmail () {
-        return randomName(5) + System.currentTimeMillis() + TEST_EMAIL_SUFFIX;
-    }
+    public static String randomEmail () { return randomName(5) + System.currentTimeMillis() + TEST_EMAIL_SUFFIX; }
+
     public static String randomEmail (int length) {
         final String baseEmail = System.currentTimeMillis() + TEST_EMAIL_SUFFIX;
         final int emailLength = Math.max(10, length - baseEmail.length());

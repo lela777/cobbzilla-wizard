@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.form.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -23,10 +23,7 @@ public class FormData {
     @Column(length=FIELD_DATA_DESCRIPTION_MAXLEN)
     @Getter @Setter private String description;
 
-    @JsonIgnore
-    @Transient
-    public boolean isEmpty() {
-        return StringUtils.isEmpty(value) && StringUtils.isEmpty(description);
-    }
+    @JsonIgnore @Transient
+    public boolean isEmpty() { return StringUtils.isEmpty(value) && StringUtils.isEmpty(description); }
 
 }

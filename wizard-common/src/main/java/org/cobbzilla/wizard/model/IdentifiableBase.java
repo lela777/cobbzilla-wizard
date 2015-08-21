@@ -6,9 +6,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.beanutils.BeanUtils;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.util.UUID;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
