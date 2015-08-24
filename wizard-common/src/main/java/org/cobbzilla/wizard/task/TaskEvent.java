@@ -7,7 +7,9 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.cobbzilla.wizard.model.IdentifiableBase;
 
+import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
@@ -15,9 +17,15 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @Accessors(chain=true) @ToString
 public class TaskEvent extends IdentifiableBase {
 
+    @Column(length=UUID_MAXLEN, nullable=false)
     @Getter @Setter protected String taskId;
+
+    @Column(length=1000, nullable=false)
     @Getter @Setter protected String messageKey;
+
     @Getter @Setter protected boolean success = false;
+
+    @Column(length=32000, nullable=false)
     @Getter @Setter protected String exception;
     public boolean hasException () { return !empty(exception); }
 

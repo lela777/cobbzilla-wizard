@@ -18,8 +18,8 @@ public class TaskResult<E extends TaskEvent> {
 
     @Getter @Setter private String returnValue;
 
-    @Getter @Setter private boolean success = false;
-    @Getter @Setter @JsonIgnore private Exception exception;
+    @Getter @Setter private volatile boolean success = false;
+    @Getter @Setter @JsonIgnore private volatile Exception exception;
 
     /** an error message for the task */
     public String getError () { return exception == null ? null : exception.toString(); }

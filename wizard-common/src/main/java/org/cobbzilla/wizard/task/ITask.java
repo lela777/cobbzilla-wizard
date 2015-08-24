@@ -11,6 +11,8 @@ public interface ITask<R> extends Callable<R> {
 
     public R getResult();
 
+    public R execute();
+
     public void init();
 
     public void description(String messageKey, String target);
@@ -22,4 +24,6 @@ public interface ITask<R> extends Callable<R> {
     public void error(String messageKey, String message);
 
     public void error(String messageKey, List<ConstraintViolationBean> errors);
+
+    public void cancel();
 }
