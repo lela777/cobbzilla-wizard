@@ -28,4 +28,14 @@ public class MainOptionsBase {
             die("No such field: "+field+": "+e, e);
         }
     }
+
+    public void requiredAndDie(String field) {
+        try {
+            final Field optField = getClass().getField("OPT_"+field);
+            final Field longOptField = getClass().getField("LONGOPT_"+field);
+            die("Missing option: "+optField.get(null)+"/"+longOptField.get(null));
+        } catch (Exception e) {
+            die("No such field: "+field+": "+e, e);
+        }
+    }
 }
