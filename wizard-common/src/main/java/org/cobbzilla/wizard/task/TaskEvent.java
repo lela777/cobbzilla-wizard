@@ -9,7 +9,6 @@ import org.cobbzilla.wizard.model.IdentifiableBase;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
@@ -25,7 +24,7 @@ public class TaskEvent extends IdentifiableBase {
 
     @Getter @Setter protected boolean success = false;
 
-    @Column(length=32000, nullable=false)
+    @Column(length=32000)
     @Getter @Setter protected String exception;
     public boolean hasException () { return !empty(exception); }
 

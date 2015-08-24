@@ -17,12 +17,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
 
     @Getter @Setter protected TaskId taskId;
-    @Getter @Setter protected R result = newTaskResult();
-
-    @Getter(lazy=true) private final Class typeParam = initTypeParam();
-    private Class initTypeParam() { return getFirstTypeParam(getClass(), ITask.class); }
-
-    protected R newTaskResult() { return (R) instantiate(getTypeParam()); }
+    @Getter @Setter protected R result = (R) instantiate(getFirstTypeParam(getClass(), ITask.class));
 
     @Override public void init() {
         taskId = new TaskId();
@@ -46,7 +41,7 @@ public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
     protected volatile boolean cancelled = false;
     public static final long TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
-    protected long getTimeout() { return TIMEOUT; }
+    protected long getTerminationTimeout() { return TIMEOUT; }
 
     @Override public R call() throws Exception {
         thread = Thread.currentThread();
@@ -55,7 +50,7 @@ public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
 
     @Override public void cancel() {
         cancelled = true;
-        if (thread != null) terminate(thread, getTimeout());
+        if (thread != null) terminate(thread, getTerminationTimeout());
     }
 
 }

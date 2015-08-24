@@ -47,7 +47,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         // create a dummy location where no templates will be found.
         if (templateFileRoot == null) {
             templateFileRoot = FileUtil.createTempDirOrDie(RandomStringUtils.randomAlphanumeric(20));
-            DeleteOnExit.schedule(log, templateFileRoot);
+            DeleteOnExit.add(templateFileRoot);
         }
 
         final Map<String, String> utilPaths = configuration.getUtilPaths();

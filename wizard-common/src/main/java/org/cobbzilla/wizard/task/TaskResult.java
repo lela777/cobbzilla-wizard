@@ -24,7 +24,7 @@ public class TaskResult<E extends TaskEvent> {
     /** an error message for the task */
     public String getError () { return exception == null ? null : exception.toString(); }
     public void setError (String error) { exception = new Exception(error); }
-    public boolean hasError () { return getError() == null; }
+    public boolean hasError () { return getError() != null; }
 
     private final List<E> events = new ArrayList<>();
     public List<E> getEvents () {
