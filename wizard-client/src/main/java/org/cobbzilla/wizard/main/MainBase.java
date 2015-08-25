@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.main;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -50,6 +51,7 @@ public abstract class MainBase<OPT extends MainOptionsBase> {
 
         } catch (Exception e) {
             log.error("Unexpected error: " + e, e);
+            ZillaRuntime.die("Unexpected error: " + e);
         }
     }
 
