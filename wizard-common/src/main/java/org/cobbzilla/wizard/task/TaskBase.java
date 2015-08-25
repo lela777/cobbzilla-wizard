@@ -13,7 +13,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 @Accessors(chain=true)
-public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
+public abstract class TaskBase<R extends TaskResult<E>, E extends TaskEvent> implements ITask<R> {
 
     @Getter @Setter protected TaskId taskId;
     @Getter @Setter protected R result = (R) instantiate(getFirstTypeParam(getClass(), ITask.class));
@@ -26,9 +26,15 @@ public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
 
     @Override public void description(String messageKey, String target) { result.description(messageKey, target); }
 
-    @Override public void addEvent(String messageKey) { result.add(new TaskEvent(this, messageKey)); }
+    @Override public void addEvent(String messageKey) { result.add(newEvent(messageKey)); }
 
-    @Override public void error(String messageKey, Exception e) { result.error(new TaskEvent(this, messageKey), e); }
+    protected E newEvent(String messageKey) {
+        return (E) ((E) instantiate(getFirstTypeParam(result.getClass(), TaskResult.class)))
+                .setMessageKey(messageKey)
+                .setTaskId(taskId.getUuid());
+    }
+
+    @Override public void error(String messageKey, Exception e) { result.error(newEvent(messageKey), e); }
 
     @Override public void error(String messageKey, String message) { error(messageKey, new Exception(message)); }
 
