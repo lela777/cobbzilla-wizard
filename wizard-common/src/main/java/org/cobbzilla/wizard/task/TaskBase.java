@@ -9,7 +9,6 @@ import org.cobbzilla.wizard.validation.MultiViolationException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.terminate;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
@@ -50,7 +49,7 @@ public abstract class TaskBase<R extends TaskResult> implements ITask<R> {
 
     @Override public void cancel() {
         cancelled = true;
-        if (thread != null) terminate(thread, getTerminationTimeout());
+        if (thread != null) thread.interrupt();
     }
 
 }
