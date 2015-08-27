@@ -26,9 +26,13 @@ import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.*;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.http.HttpStatusCodes.SERVER_UNAVAILABLE;
+import static org.cobbzilla.util.system.Sleep.sleep;
+import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
 @Slf4j @NoArgsConstructor
 public class ApiClientBase {
@@ -37,6 +41,10 @@ public class ApiClientBase {
 
     @Getter protected ApiConnectionInfo connectionInfo;
     @Getter protected String token;
+
+    // the server may be coming up, and either not accepting connections or issuing 503 Service Unavailable.
+    @Getter @Setter protected int numTries = 5;
+    @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(4);
 
     public void setToken(String token) {
         this.token = token;
@@ -217,19 +225,38 @@ public class ApiClientBase {
 
     protected RestResponse getResponse(HttpClient client, HttpRequestBase request) throws IOException {
         request = beforeSend(request);
-        final HttpResponse response = client.execute(request);
-        final int statusCode = response.getStatusLine().getStatusCode();
-        final String responseJson;
-        final HttpEntity entity = response.getEntity();
-        if (entity != null) {
-            try (InputStream in = entity.getContent()) {
-                responseJson = IOUtils.toString(in);
-                log.info("read response callback server: "+responseJson);
+        RestResponse restResponse = null;
+        IOException exception = null;
+        for (int i=0; i<numTries; i++) {
+            if (i > 0) {
+                sleep(retryDelay);
+                retryDelay *= 2;
             }
-        } else {
-            responseJson = null;
+            try {
+                final HttpResponse response = client.execute(request);
+                final int statusCode = response.getStatusLine().getStatusCode();
+                final String responseJson;
+                final HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    try (InputStream in = entity.getContent()) {
+                        responseJson = IOUtils.toString(in);
+                        log.info("read response callback server: " + responseJson);
+                    }
+                } else {
+                    responseJson = null;
+                }
+
+                restResponse = new RestResponse(statusCode, responseJson, getLocationHeader(response));
+                if (statusCode != SERVER_UNAVAILABLE) return restResponse;
+                log.warn("getResponse(attempt="+i+"/"+numTries+") returned "+SERVER_UNAVAILABLE+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
+
+            } catch (IOException e) {
+                log.warn("getResponse(attempt="+i+"/"+numTries+") threw exception "+e+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
+                exception = e;
+            }
         }
-        return new RestResponse(statusCode, responseJson, getLocationHeader(response));
+        if (restResponse != null) return restResponse;
+        throw exception;
     }
 
     public File getFile (String path) throws IOException {
