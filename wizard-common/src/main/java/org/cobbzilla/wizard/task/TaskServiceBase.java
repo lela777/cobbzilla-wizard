@@ -1,6 +1,9 @@
 package org.cobbzilla.wizard.task;
 
+import lombok.AllArgsConstructor;
+
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +15,7 @@ public class TaskServiceBase<T extends ITask<R>, R extends TaskResult> {
 
     public TaskId execute(T task) {
         task.init();
-        executor.submit(task);
+        executor.submit(new TaskWrapper(task, this));
         taskMap.put(task.getTaskId().getUuid(), task);
         return task.getTaskId();
     }
@@ -26,6 +29,28 @@ public class TaskServiceBase<T extends ITask<R>, R extends TaskResult> {
         final T task = taskMap.remove(taskId);
         if (task != null) task.cancel();
         return task;
+
+    }
+
+    protected void completed(T task) {
+        final R result = task.getResult();
+        if (!result.isComplete()) {
+            result.setError("task completed with neither success nor error!"); // should never happen
+        }
+        // todo: periodically clean out old tasks from taskMap
+    }
+
+    @AllArgsConstructor
+    private class TaskWrapper implements Callable<R> {
+        private T task;
+        private TaskServiceBase<T, R> taskService;
+        @Override public R call() throws Exception {
+            try {
+                return task.call();
+            } finally {
+                taskService.completed(task);
+            }
+        }
 
     }
 }

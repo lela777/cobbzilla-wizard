@@ -26,4 +26,5 @@ public interface ITask<R> extends Callable<R> {
     public void error(String messageKey, List<ConstraintViolationBean> errors);
 
     public void cancel();
+
 }
