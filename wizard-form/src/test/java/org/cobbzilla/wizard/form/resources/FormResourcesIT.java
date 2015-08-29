@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.form.resources;
 
 import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.form.model.Form;
 import org.cobbzilla.wizard.form.model.FormField;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.http.HttpStatusCodes.CREATED;
 import static org.cobbzilla.util.http.HttpStatusCodes.UNSUPPORTED_MEDIA_TYPE;
+import static org.cobbzilla.util.json.JsonUtil.EMPTY_JSON;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;

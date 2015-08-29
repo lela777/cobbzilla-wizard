@@ -49,12 +49,23 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
 
             final Class<C> configurationClass = ReflectionUtil.getTypeParameter(getRestServerClass(), RestServerConfiguration.class);
             final RestServerConfigurationFactory<C> factory = new RestServerConfigurationFactory<>(configurationClass);
-            configuration = factory.build(configurations, env);
+            configuration = filterConfiguration(factory.build(configurations, env));
             configuration.setEnvironment(env);
-
             server.setConfiguration(configuration);
             log.info("starting " + configuration.getServerName() + ": " + server.getClass().getName() + " with config: " + configuration);
         }
+    }
+
+    private List<RestServerConfigurationFilter> configurationFilters = new ArrayList<>();
+    public void addConfigurationFilter(RestServerConfigurationFilter filter) {
+        configurationFilters.add(filter);
+    }
+
+    protected C filterConfiguration(C configuration) {
+        for (RestServerConfigurationFilter filter : configurationFilters) {
+            configuration = (C) filter.filterConfiguration(configuration);
+        }
+        return configuration;
     }
 
     public synchronized void stopServer () throws Exception {

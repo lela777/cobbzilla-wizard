@@ -5,6 +5,7 @@ import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
+import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.RestServerLifecycleListener;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
@@ -24,10 +25,7 @@ import static junit.framework.Assert.assertNotNull;
 
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
-        extends ApiClientBase implements RestServerLifecycleListener<C> {
-
-    public static final String EMPTY_JSON = "{}";
-    public static final String EMPTY_JSON_ARRAY = "[]";
+        extends ApiClientBase implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
 
     protected abstract List<ConfigurationSource> getConfigurations();
     protected List<ConfigurationSource> getConfigurationSources(String... paths) {
@@ -36,6 +34,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected abstract Class<? extends S> getRestServerClass();
 
+    @Override public C filterConfiguration(C configuration) { return configuration; }
+
     @Override public void beforeStart(RestServer<C> server) {}
     @Override public void onStart(RestServer<C> server) {
         final RestServerConfiguration config = serverHarness.getConfiguration();
@@ -43,8 +43,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
     @Override public void beforeStop(RestServer<C> server) {}
     @Override public void onStop(RestServer<C> server) {}
-
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
+
     protected static volatile RestServer server = null;
 
     protected static <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
@@ -61,6 +61,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (server != null) server.stopServer();
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
+            serverHarness.addConfigurationFilter(this);
             serverHarness.init(getServerEnvironment());
             server = serverHarness.getServer();
             server.addLifecycleListener(this);

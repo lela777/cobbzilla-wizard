@@ -9,7 +9,8 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.junit.After;
 import org.junit.AfterClass;
 
-public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S extends RestServer<C>> extends AbstractResourceIT<C, S> {
+public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
+        extends AbstractResourceIT<C, S> {
 
     protected static TemplateCaptureTarget apiDocs = new TemplateCaptureTarget("target/api-examples");
 
