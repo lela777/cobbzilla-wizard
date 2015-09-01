@@ -16,7 +16,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 public abstract class TaskBase<R extends TaskResult<E>, E extends TaskEvent> implements ITask<R> {
 
     @Getter @Setter protected TaskId taskId;
-    @Getter @Setter protected R result = (R) instantiate(getFirstTypeParam(getClass(), ITask.class));
+    @Getter @Setter protected R result = (R) instantiate(getFirstTypeParam(getClass(), TaskResult.class));
 
     @Override public void init() {
         taskId = new TaskId();
@@ -29,7 +29,7 @@ public abstract class TaskBase<R extends TaskResult<E>, E extends TaskEvent> imp
     @Override public void addEvent(String messageKey) { result.add(newEvent(messageKey)); }
 
     protected E newEvent(String messageKey) {
-        return (E) ((E) instantiate(getFirstTypeParam(result.getClass(), TaskResult.class)))
+        return (E) ((E) instantiate(getFirstTypeParam(result.getClass(), TaskEvent.class)))
                 .setMessageKey(messageKey)
                 .setTaskId(taskId.getUuid());
     }
