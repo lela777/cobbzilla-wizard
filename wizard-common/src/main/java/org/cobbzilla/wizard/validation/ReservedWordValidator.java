@@ -5,7 +5,7 @@ import javax.validation.ConstraintValidatorContext;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 public class ReservedWordValidator implements ConstraintValidator<NotReservedWord, Object> {
 
@@ -31,11 +31,7 @@ public class ReservedWordValidator implements ConstraintValidator<NotReservedWor
     private String[] getReservedWords() {
         String[] words = cache.get(reserved);
         if (words == null) {
-            try {
-                words = reserved.newInstance().getReservedWords();
-            } catch (Exception e) {
-                return die("Error instantiating ReservedWords class (" + reserved.getName() + "): " + e, e);
-            }
+            words = instantiate(reserved).getReservedWords();
             cache.put(reserved, words);
         }
         return words;
