@@ -4,17 +4,22 @@ import lombok.Getter;
 import lombok.Setter;
 import org.kohsuke.args4j.Option;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public abstract class MainApiOptionsBase extends MainOptionsBase {
 
-    public static final String USAGE_ACCOUNT = "The account name. Required. The password must be in the appropriate environment variable";
+    public static final String USAGE_ACCOUNT = "The account name, or @ENV_VAR to specify which environment variable to check. Default is to check the API_ACCOUNT environment variable";
     public static final String OPT_ACCOUNT = "-a";
     public static final String LONGOPT_ACCOUNT = "--account";
-    @Option(name=OPT_ACCOUNT, aliases=LONGOPT_ACCOUNT, usage=USAGE_ACCOUNT, required=true)
-    @Getter @Setter private String account;
-
-    public boolean hasAccount () { return !empty(account); }
+    @Option(name=OPT_ACCOUNT, aliases=LONGOPT_ACCOUNT, usage=USAGE_ACCOUNT, required=false)
+    @Setter private String account = "@API_ACCCOUNT";
+    public String getAccount() {
+        final String name = account.startsWith("@") ? System.getenv(account.substring(1)) : account;
+        if (requireAccount() && empty(name)) die("No account provided (use option "+OPT_ACCOUNT+"/"+LONGOPT_ACCOUNT+")");
+        return name;
+    }
+    public boolean hasAccount () { return !empty(getAccount()); }
 
     public static final String USAGE_TWO_FACTOR = "The token for two-factor authentication";
     public static final String OPT_TWO_FACTOR = "-F";
