@@ -13,7 +13,7 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     public static final String OPT_ACCOUNT = "-a";
     public static final String LONGOPT_ACCOUNT = "--account";
     @Option(name=OPT_ACCOUNT, aliases=LONGOPT_ACCOUNT, usage=USAGE_ACCOUNT, required=false)
-    @Setter private String account = "@API_ACCCOUNT";
+    @Setter private String account = "@API_ACCOUNT";
     public String getAccount() {
         final String name = account.startsWith("@") ? System.getenv(account.substring(1)) : account;
         if (requireAccount() && empty(name)) die("No account provided (use option "+OPT_ACCOUNT+"/"+LONGOPT_ACCOUNT+")");
