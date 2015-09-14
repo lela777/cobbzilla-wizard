@@ -10,6 +10,8 @@ public class RestResponse {
     public String json;
     public String location;
 
+    public RestResponse(int status) { this.status = status; }
+
     public String getLocationUuid () { return location.substring(location.lastIndexOf("/")+1); }
 
     public boolean isSuccess () { return isSuccess(status); }

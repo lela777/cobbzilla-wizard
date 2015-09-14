@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.http.HttpStatusCodes.SERVER_UNAVAILABLE;
+import static org.cobbzilla.util.http.HttpStatusCodes.*;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
@@ -124,11 +124,11 @@ public class ApiClientBase {
             die("specializeApiException: cannot specialize exception for a successful response: "+response);
         }
         switch (response.status) {
-            case HttpStatusCodes.NOT_FOUND:
+            case NOT_FOUND:
                 return new NotFoundException(response);
-            case HttpStatusCodes.FORBIDDEN:
+            case FORBIDDEN:
                 return new ForbiddenException(response);
-            case HttpStatusCodes.UNPROCESSABLE_ENTITY:
+            case UNPROCESSABLE_ENTITY:
                 return new ValidationException(response);
             default: return new ApiException(response);
         }
@@ -268,7 +268,8 @@ public class ApiClientBase {
 
         final HttpResponse response = client.execute(request);
         final int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode == 404) return null;
+        if (statusCode == NOT_FOUND) return null;
+        if (statusCode == FORBIDDEN) throw new ForbiddenException();
         if (!RestResponse.isSuccess(statusCode)) die("getFile("+url+"): error: "+statusCode);
 
         final HttpEntity entity = response.getEntity();
