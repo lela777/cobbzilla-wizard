@@ -33,9 +33,14 @@ public abstract class MainApiOptionsBase extends MainOptionsBase {
     public static final String OPT_API_BASE = "-s";
     public static final String LONGOPT_API_BASE = "--server";
     @Option(name=OPT_API_BASE, aliases=LONGOPT_API_BASE, usage=USAGE_API_BASE)
-    @Getter @Setter private String apiBase = getDefaultApiBaseUri();
+    @Setter private String apiBase = getDefaultApiBaseUri();
 
-    protected abstract String getDefaultApiBaseUri();
+    public String getApiBase() {
+        if (empty(apiBase)) die("No API base URI defined!");
+        return apiBase.startsWith("@") ? System.getenv(apiBase.substring(1)) : apiBase;
+    }
+
+    protected String getDefaultApiBaseUri() { return "@API_SERVER"; }
 
     @Getter private final String password = initPassword();
     public boolean hasPassword () { return !empty(getPassword()) && password != INVALID_PASSWORD; }
