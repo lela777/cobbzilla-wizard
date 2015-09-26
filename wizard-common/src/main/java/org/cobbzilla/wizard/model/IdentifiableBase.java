@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.beanutils.BeanUtils;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -33,7 +33,7 @@ public class IdentifiableBase implements Identifiable {
     public void update(Identifiable thing) {
         String existingUuid = getUuid();
         try {
-            BeanUtils.copyProperties(this, thing);
+            ReflectionUtil.copy(this, thing);
 
         } catch (Exception e) {
             throw new IllegalArgumentException("update: error copying properties: "+e, e);
