@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import static org.cobbzilla.util.system.ExUtil.notSupported;
+import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 
 public abstract class AbstractRedisDAO<T extends ExpirableBase> implements DAO<T> {
 

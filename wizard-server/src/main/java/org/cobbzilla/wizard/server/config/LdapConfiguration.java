@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.system.CommandShell;
+import org.cobbzilla.wizard.model.LdapContext;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,7 +19,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 
 @Slf4j
-public class LdapConfiguration {
+public class LdapConfiguration implements LdapContext {
 
     public static final String ENT_DOUBLE_QUOTE = "&quot;";
     public static final String ENT_SINGLE_QUOTE = "&#39;";
@@ -73,8 +74,8 @@ public class LdapConfiguration {
     public String getName() { return val("name", "cloudos"); }
     public String getName_dn() { return val("name_dn", "cn="+getName()); }
 
-    public String getAdmin() { return val("admin", "admin"); }
-    public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()+","+getLdap_domain()); }
+    public String getAdmin() { return val("admin", "Directory Manager"); }
+    public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()); }
 
     public String getOrg_unit_class () { return val("org_unit_class", "organizationalUnit"); }
     public String getExternal_id() { return val("external_id", "entryUUID"); }
@@ -105,6 +106,15 @@ public class LdapConfiguration {
 
     public String userDN (String name) { return getUser_username() + "=" + name + "," + getUser_dn(); }
     public String groupDN (String name) { return getGroup_name() + "="  + name + "," + getGroup_dn(); }
+
+    @Override public String getUser_mobilePhone() { return "mobilePhone"; }
+    @Override public String getUser_mobilePhoneCountryCode() { return "mobilePhoneCountryCode"; }
+    @Override public String getUser_admin() { return "admin"; }
+    @Override public String getUser_suspended() { return "suspended"; }
+    @Override public String getUser_twoFactor() { return "twoFactor"; }
+    @Override public String getUser_lastLogin() { return "lastLogin"; }
+    @Override public String getUser_locale() { return "preferredLanguage"; }
+    @Override public String getUser_storageQuota() { return "storageQuota"; }
 
     public String filterGroup(String groupName) {
         String groupFilter = getGroup_filter();
