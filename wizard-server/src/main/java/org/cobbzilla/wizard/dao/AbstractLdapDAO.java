@@ -32,6 +32,12 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
     // convenience method
     private LdapConfiguration ldap() { return getLdapConfiguration(); }
 
+    protected String getUserDn(String accountName) { return accountName+","+ldap().getUser_dn(); }
+
+    public void authenticate(String accountName, String password) {
+        okResult(run_ldapsearch(getUserDn(accountName), password, getUserDn(accountName)));
+    }
+
     // not supported
     @Override public Class<? extends Map<String, String>> boundsClass() { return notSupported(); }
 
@@ -137,6 +143,10 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         return run_ldapsearch(ldap().getAdmin_dn(), ldap().getPassword(), filter, base, sort, sortOrder);
     }
 
+    private CommandResult run_ldapsearch(String userDn, String password, String filter) {
+        return run_ldapsearch(userDn, password, filter, null, null, null);
+    }
+
     private CommandResult run_ldapsearch(String userDn, String password,
                                          String filter, String base,
                                          String sort, ResultPage.SortOrder sortOrder) {
@@ -185,14 +195,15 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         final CommandLine command =  ldapRootCommand("ldappasswd")
                 .addArgument("-a").addArgument(oldPassword)
                 .addArgument("-s").addArgument(newPassword)
-                .addArgument(accountName+","+ldap().getUser_dn());
+                .addArgument(getUserDn(accountName));
         okResult(exec(command));
     }
 
     public void adminChangePassword(String accountName, String newPassword) {
         final CommandLine command =  ldapRootCommand("ldappasswd")
                 .addArgument("-s").addArgument(newPassword)
-                .addArgument(accountName+","+ldap().getUser_dn());
+                .addArgument(getUserDn(accountName));
         okResult(exec(command));
     }
+
 }
