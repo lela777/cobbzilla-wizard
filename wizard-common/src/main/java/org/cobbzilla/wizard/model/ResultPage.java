@@ -65,8 +65,8 @@ public class ResultPage {
     }
 
     public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, Map<String, String> bounds) {
-        if (pageNumber != null) this.pageNumber = pageNumber;
-        if (pageSize != null) this.pageSize = pageSize;
+        if (pageNumber != null) setPageNumber(pageNumber);
+        if (pageSize != null) setPageSize(pageSize);
         if (sortField != null) this.sortField = sortField;
         if (sortOrder != null) this.sortOrder = SortOrder.valueOf(sortOrder).name();
         if (filter != null) this.filter = filter;
@@ -105,10 +105,13 @@ public class ResultPage {
         return new ResultPage(new Integer(1), new Integer(1), sortField, sortOrder, filter);
     }
 
-    @Getter @Setter private int pageNumber = 1;
-    @Getter @Setter private int pageSize = 10;
+    @Getter private int pageNumber = 1;
+    public ResultPage setPageNumber(int pageNumber) { this.pageNumber = pageNumber <= 0 ? 1 : pageNumber; return this; }
 
-    @JsonIgnore public int getPageOffset () { return (pageNumber-1) * pageSize; }
+    @Getter private int pageSize = 10;
+    public ResultPage setPageSize(int pageSize) { this.pageSize = pageSize <= 0 ? 10 : pageSize; return this; }
+
+    @JsonIgnore public int getPageOffset () { return (getPageNumber()-1) * pageSize; }
     public boolean containsResult(int i) { return (i >= getPageOffset() && i <= getPageOffset()+getPageSize()); }
 
     @JsonIgnore public boolean isInfinitePage () { return pageSize == INFINITE_PAGE.pageSize; }
@@ -155,11 +158,13 @@ public class ResultPage {
     @JsonIgnore public boolean getHasFilter() { return filter != null && filter.trim().length() > 0; }
 
     @Getter @Setter private Map<String, String> bounds;
-    @JsonIgnore public boolean getHasBounds() { return bounds != null && !bounds.isEmpty(); }
+    @JsonIgnore public boolean getHasBounds() { return !empty(bounds); }
+    public boolean hasBound (String name) { return getHasBounds() && bounds.containsKey(name); }
 
-    public void setBound(String name, String value) {
+    public ResultPage setBound(String name, String value) {
         if (bounds == null) bounds = new LinkedHashMap<>();
         bounds.put(name, value);
+        return this;
     }
 
     public void unsetBound(String name) { bounds.remove(name); }
@@ -174,8 +179,8 @@ public class ResultPage {
 
         ResultPage that = (ResultPage) o;
 
-        if (pageNumber != that.pageNumber) return false;
-        if (pageSize != that.pageSize) return false;
+        if (getPageNumber() != that.getPageNumber()) return false;
+        if (getPageSize() != that.getPageSize()) return false;
         if (!MapUtil.deepEquals(bounds, that.bounds)) return false;
         if (filter != null ? !filter.equals(that.filter) : that.filter != null) return false;
         if (sortField != null ? !sortField.equals(that.sortField) : that.sortField != null) return false;
@@ -186,8 +191,8 @@ public class ResultPage {
 
     @Override
     public int hashCode() {
-        int result = pageNumber;
-        result = 31 * result + pageSize;
+        int result = getPageNumber();
+        result = 31 * result + getPageSize();
         result = 31 * result + (sortField != null ? sortField.hashCode() : 0);
         result = 31 * result + (sortOrder != null ? sortOrder.hashCode() : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);

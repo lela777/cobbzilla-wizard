@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.io.FileUtil.abs;
 
 public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
@@ -25,16 +26,21 @@ public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
         return build(configurations, null);
     }
 
-    public C build(List<? extends ConfigurationSource> configurations, Map<String, String> env) throws IOException {
+    public C build(List<? extends ConfigurationSource> configurations, Map<String, String> env) {
 
         YmlMerger ymlMerger = new YmlMerger(env);
 
         List<String> configFiles = new ArrayList<>(configurations.size());
-        for (ConfigurationSource source : configurations) {
-            configFiles.add(abs(source.getFile()));
-        }
+        try {
+            for (ConfigurationSource source : configurations) {
+                configFiles.add(abs(source.getFile()));
+            }
 
-        return yaml.loadAs(ymlMerger.mergeToString(configFiles), configurationClass);
+            return yaml.loadAs(ymlMerger.mergeToString(configFiles), configurationClass);
+
+        } catch (Exception e) {
+            return die("build: "+e, e);
+        }
     }
 
 }

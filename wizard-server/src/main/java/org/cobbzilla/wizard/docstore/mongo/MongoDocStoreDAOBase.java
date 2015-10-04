@@ -7,23 +7,16 @@ import org.cobbzilla.wizard.model.ResultPage;
 import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
 /** a mongo docstore that also conforms to the DAO interface */
 public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends MongoDocStore<T> implements DAO<T> {
 
-    @Override public Class<? extends Map<String, String>> boundsClass() { return null; }
-
-    @Override public T get(Serializable id) {
-        return findByUuid(id.toString());
-    }
+    @Override public T get(Serializable id) { return findByUuid(id.toString()); }
 
     @Override public List<T> findAll() { return die("not supported"); }
-    @Override public boolean exists(String uuid) {
-        return findOne(MongoDocBase.UUID, uuid) != null;
-    }
+    @Override public boolean exists(String uuid) { return findOne(MongoDocBase.UUID, uuid) != null; }
 
     @Override public Object preCreate(@Valid T entity) { return entity; }
     @Override public T postCreate(T entity, Object context) { return entity; }
@@ -44,28 +37,22 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     @Override public Object preUpdate(@Valid T entity) { return entity; }
     @Override public T postUpdate(@Valid T entity, Object context) { return entity; }
 
-    @Override
-    public T update(@Valid T entity) {
+    @Override public T update(@Valid T entity) {
         if (entity.getUuid() == null) entity.beforeCreate();
         saveOrUpdate(entity);
         return entity;
     }
 
-    @Override
-    public void delete(String uuid) {
-        delete(get(uuid).getId());
-    }
+    @Override public void delete(String uuid) { delete(get(uuid).getId()); }
 
-    @Override
-    public T findByUniqueField(String field, Object value) {
+    @Override public T findByUniqueField(String field, Object value) {
         List<T> found = findByFilter(field, value);
         if (found.isEmpty()) return null;
         if (found.size() > 1) die("multiple results found for: field="+field+", value="+value+": "+found);
         return found.get(0);
     }
 
-    @Override
-    public SearchResults<T> search(ResultPage resultPage) {
+    @Override public SearchResults<T> search(ResultPage resultPage) {
         // todo
         return new SearchResults<>();
     }

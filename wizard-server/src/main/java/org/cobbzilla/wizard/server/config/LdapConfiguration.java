@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.system.CommandShell;
-import org.cobbzilla.wizard.model.LdapContext;
+import org.cobbzilla.wizard.model.ldap.LdapContext;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,7 +24,7 @@ public class LdapConfiguration implements LdapContext {
     public static final String ENT_DOUBLE_QUOTE = "&quot;";
     public static final String ENT_SINGLE_QUOTE = "&#39;";
 
-    private Map<String, String> config = new HashMap<>();
+    @Getter private Map<String, String> config = new HashMap<>();
 
     @Getter @Setter private String password;
 
@@ -104,14 +104,15 @@ public class LdapConfiguration implements LdapContext {
     public String getGroup_description() { return val("group_description", "description"); }
     public String getGroup_usernames() { return val("group_usernames", "uniqueMember"); }
 
-    public String userDN (String name) { return getUser_username() + "=" + name + "," + getUser_dn(); }
-    public String groupDN (String name) { return getGroup_name() + "="  + name + "," + getGroup_dn(); }
+    @Override public String userDN (String name) { return getUser_username() + "=" + name + "," + getUser_dn(); }
+    @Override public String groupDN (String name) { return getGroup_name() + "="  + name + "," + getGroup_dn(); }
 
     @Override public String getUser_mobilePhone() { return "mobilePhone"; }
     @Override public String getUser_mobilePhoneCountryCode() { return "mobilePhoneCountryCode"; }
     @Override public String getUser_admin() { return "admin"; }
     @Override public String getUser_suspended() { return "suspended"; }
     @Override public String getUser_twoFactor() { return "twoFactor"; }
+    @Override public String getUser_twoFactorAuthId() { return "twoFactorAuthId"; }
     @Override public String getUser_lastLogin() { return "lastLogin"; }
     @Override public String getUser_locale() { return "preferredLanguage"; }
     @Override public String getUser_storageQuota() { return "storageQuota"; }

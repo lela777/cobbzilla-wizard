@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.sun.jersey.api.container.ContainerFactory;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
+import static java.lang.Boolean.TRUE;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
@@ -111,9 +113,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final JerseyConfiguration jerseyConfiguration = configuration.getJersey();
         final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
-        rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        rc.getFeatures().put(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, Boolean.TRUE);
-        rc.getFeatures().put(ResourceConfig.FEATURE_NORMALIZE_URI, Boolean.TRUE);
+        rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_NORMALIZE_URI, TRUE);
 
         if (jerseyConfiguration.hasRequestFilters()) {
             rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
@@ -124,7 +126,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                     Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
         }
 
-        rc.getSingletons().add(new JacksonMessageBodyProvider(JsonUtil.NOTNULL_MAPPER, new Validator()));
+        rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), new Validator()));
         rc.getSingletons().add(new StreamingOutputProvider());
 
         BCryptUtil.setBcryptRounds(configuration.getBcryptRounds());
@@ -180,6 +182,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         return httpServer;
     }
+
+    protected ObjectMapper getObjectMapper() { return JsonUtil.NOTNULL_MAPPER; }
 
     @Override public ConfigurableApplicationContext buildSpringApplicationContext() {
 

@@ -1,8 +1,7 @@
 package org.cobbzilla.wizard.resources;
 
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.daemon.ZillaRuntime;
-import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.collection.MapUtil;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -12,9 +11,12 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.NOTNULL_MAPPER;
 
 @Slf4j
 @Consumes(MediaType.APPLICATION_JSON)
@@ -41,26 +43,19 @@ public abstract class AbstractResource<T extends Identifiable> {
         if (usePagination == null || !usePagination) return findAll();
 
         final DAO<T> dao = dao();
-        final Map<String, String> boundsMap = parseBounds(bounds, dao);
+        final Map<String, String> boundsMap = parseBounds(bounds);
         return Response.ok(dao.search(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
     }
 
-    public static Map<String, String> parseBounds(String bounds, DAO dao) {
-        Map<String, String> boundsMap = null;
-        if (!empty(bounds)) {
-            Class<? extends Map<String, String>> clazz = dao.boundsClass();
-            try {
-                boundsMap = JsonUtil.fromJson(bounds, clazz);
-            } catch (Exception e) {
-                log.warn("index: invalid bounds (" + bounds + ") for boundsClass " + clazz + ": " + e);
-            }
+    public static Map<String, String> parseBounds(String bounds) {
+        try {
+            return empty(bounds) ? Collections.EMPTY_MAP : (Map<String, String>) NOTNULL_MAPPER.readValue(bounds, MapUtil.JSON_STRING_STRING_MAP);
+        } catch (Exception e) {
+            return die("parseBounds: invalid bounds (" + bounds + "): " + e);
         }
-        return boundsMap;
     }
 
-    protected Response findAll() {
-        return Response.ok(dao().findAll()).build();
-    }
+    protected Response findAll() { return Response.ok(dao().findAll()).build(); }
 
     @POST
     public Response create(@Valid T thing) {

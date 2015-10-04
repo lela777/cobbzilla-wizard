@@ -5,19 +5,17 @@ import org.cobbzilla.wizard.model.ResultPage;
 import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 public interface DAO<E> {
 
     public SearchResults<E> search(ResultPage resultPage);
-
-    public Class<? extends Map<String, String>> boundsClass();
 
     public E get(Serializable id);
 
     public List<E> findAll();
     public E findByUuid(String uuid);
     public E findByUniqueField(String field, Object value);
+    public List<E> findByField(String field, Object value);
 
     public boolean exists(String uuid);
 

@@ -18,16 +18,14 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class AbstractCRUDDAO<E extends Identifiable>
-        extends AbstractDAO<E>
-        implements DAO<E> {
+public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
 
     public static final Transformer TO_UUID = new FieldTransfomer("uuid");
     public static <E> Collection<String> toUuid (Collection<E> c) { return CollectionUtils.collect(c, TO_UUID); }
 
-    public List<E> findAll() { return list(criteria()); }
+    @Override public List<E> findAll() { return list(criteria()); }
 
-    public E findByUuid(String uuid) {
+    @Override public E findByUuid(String uuid) {
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
     }
 
@@ -35,21 +33,19 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
         return list(criteria().add(Restrictions.in("uuid", uuids)));
     }
 
-    public boolean exists(String uuid) {
-        return findByUuid(uuid) != null;
-    }
+    @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
     @Override public Object preCreate(@Valid E entity) { return entity; }
     @Override public E postCreate(E entity, Object context) { return entity; }
 
-    public E create(@Valid E entity) {
+    @Override public E create(@Valid E entity) {
         entity.beforeCreate();
         final Object ctx = preCreate(entity);
         entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
         return postCreate(entity, ctx);
     }
 
-    public E createOrUpdate(@Valid E entity) {
+    @Override public E createOrUpdate(@Valid E entity) {
         return (entity.getUuid() == null) ? create(entity) : update(entity);
     }
 
@@ -61,29 +57,27 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     @Override public Object preUpdate(@Valid E entity) { return entity; }
     @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
 
-    public E update(@Valid E entity) {
+    @Override public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
         entity = hibernateTemplate.merge(checkNotNull(entity));
         return postUpdate(entity, ctx);
     }
 
-    public void delete(String uuid) {
-        E found = get(checkNotNull(uuid));
-        if (found != null) {
-            hibernateTemplate.delete(found);
-        }
+    @Override public void delete(String uuid) {
+        final E found = get(checkNotNull(uuid));
+        if (found != null) hibernateTemplate.delete(found);
     }
 
-    public E findByUniqueField(String field, Object value) {
+    @Override public E findByUniqueField(String field, Object value) {
         return uniqueResult(Restrictions.eq(field, value));
     }
 
-    public List<E> findByField(String field, Object value) {
+    @Override public List<E> findByField(String field, Object value) {
         return list(criteria().add(Restrictions.eq(field, value)));
     }
 
     public E cacheLookup(String uuid, Map<String, E> cache) {
-        E thing = cache.get(uuid);
+        final E thing = cache.get(uuid);
         return (thing != null) ? thing : findByUuid(uuid);
     }
 }

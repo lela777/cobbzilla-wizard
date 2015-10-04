@@ -1,14 +1,15 @@
 package org.cobbzilla.wizard.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.Size;
 
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @MappedSuperclass
@@ -23,7 +24,6 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
 
     protected boolean forceLowercase () { return true; }
 
-    @HasValue(message="err.name.empty")
     @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)
     @Size(min=2, max=NAME_MAXLEN, message="err.name.length")
     protected String name;

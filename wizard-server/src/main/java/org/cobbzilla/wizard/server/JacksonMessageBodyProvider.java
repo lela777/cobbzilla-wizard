@@ -1,3 +1,6 @@
+/**
+ * Forked from dropwizard a long time ago. http://dropwizard.github.io/
+ */
 package org.cobbzilla.wizard.server;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
@@ -7,6 +10,7 @@ import org.cobbzilla.wizard.validation.InvalidEntityException;
 import org.cobbzilla.wizard.validation.Validated;
 import org.cobbzilla.wizard.validation.ValidationResult;
 import org.cobbzilla.wizard.validation.Validator;
+import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
 import javax.validation.groups.Default;

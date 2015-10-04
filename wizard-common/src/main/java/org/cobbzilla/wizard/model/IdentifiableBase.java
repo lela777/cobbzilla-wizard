@@ -28,7 +28,7 @@ public class IdentifiableBase implements Identifiable {
         initUuid();
     }
 
-    public void initUuid() { uuid = UUID.randomUUID().toString(); }
+    public void initUuid() { setUuid(UUID.randomUUID().toString()); }
 
     public void update(Identifiable thing) {
         String existingUuid = getUuid();

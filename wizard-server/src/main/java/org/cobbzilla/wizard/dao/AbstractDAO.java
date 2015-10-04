@@ -19,16 +19,16 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 
 /**
  * An abstract base class for Hibernate DAO classes.
  *
  * @param <E> the class which this DAO manages
  */
-public class AbstractDAO<E> {
+public abstract class AbstractDAO<E> implements DAO<E> {
 
     @Autowired protected HibernateTemplate hibernateTemplate;
 
@@ -37,9 +37,7 @@ public class AbstractDAO<E> {
     /**
      * Creates a new DAO with a given session provider.
      */
-    public AbstractDAO() {
-        this.entityClass = ReflectionUtil.getTypeParameter(getClass());
-    }
+    public AbstractDAO() { this.entityClass = ReflectionUtil.getTypeParameter(getClass()); }
 
     /**
      * Creates a new {@link Criteria} query for {@code <E>}.
@@ -47,13 +45,9 @@ public class AbstractDAO<E> {
      * @return a new {@link Criteria} query
      * @see Session#createCriteria(Class)
      */
-    protected DetachedCriteria criteria() {
-        return DetachedCriteria.forClass(getEntityClass());
-    }
+    protected DetachedCriteria criteria() { return DetachedCriteria.forClass(getEntityClass()); }
 
-    protected DetachedCriteria criteria(Class entityClass) {
-        return DetachedCriteria.forClass(entityClass);
-    }
+    protected DetachedCriteria criteria(Class entityClass) { return DetachedCriteria.forClass(entityClass); }
 
     /**
      * Returns the entity class managed by this DAO.
@@ -61,9 +55,7 @@ public class AbstractDAO<E> {
      * @return the entity class managed by this DAO
      */
     @SuppressWarnings("unchecked")
-    public Class<E> getEntityClass() {
-        return (Class<E>) entityClass;
-    }
+    public Class<E> getEntityClass() { return (Class<E>) entityClass; }
 
     /**
      * Convenience method to return a single instance that matches the criteria, or null if the
@@ -106,9 +98,7 @@ public class AbstractDAO<E> {
      * @see Session#get(Class, Serializable)
      */
     @SuppressWarnings("unchecked")
-    public E get(Serializable id) {
-        return (E) hibernateTemplate.get(entityClass, checkNotNull(id));
-    }
+    @Override public E get(Serializable id) { return (E) hibernateTemplate.get(entityClass, checkNotNull(id)); }
 
     /**
      * Either save or update the given instance, depending upon resolution of the unsaved-value
@@ -143,15 +133,13 @@ public class AbstractDAO<E> {
         return proxy;
     }
 
-    public Class<? extends Map<String, String>> boundsClass() { return null; }
-
     public static final String entityAlias = "x";
     public static final String FILTER_PARAM = "filter";
     public static final String[] EMPTY_PARAMS = new String[0];
     public static final Object[] EMPTY_VALUES = new Object[0];
     public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
 
-    public SearchResults<E> search(ResultPage resultPage) {
+    @Override public SearchResults<E> search(ResultPage resultPage) {
         String filterClause = "";
         String[] params;
         Object[] values;
@@ -191,7 +179,7 @@ public class AbstractDAO<E> {
         return hibernateTemplate.executeFind(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
     }
 
-    protected String formatBound(String entityAlias, String bound, String value) { throw new IllegalArgumentException("Invalid bound: "+bound); }
+    protected String formatBound(String entityAlias, String bound, String value) { return notSupported("Invalid bound: " + bound); }
 
     public static String caseInsensitiveLike(String entityAlias, String filterParam, final String attribute) {
         return new StringBuilder().append("lower(").append(entityAlias).append(".").append(attribute).append(") LIKE lower(:").append(filterParam).append(") ").toString();

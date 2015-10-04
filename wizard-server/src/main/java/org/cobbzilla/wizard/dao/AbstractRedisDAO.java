@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 
@@ -21,7 +20,6 @@ public abstract class AbstractRedisDAO<T extends ExpirableBase> implements DAO<T
 
     // not supported
     @Override public SearchResults<T> search(ResultPage resultPage) { return notSupported(); }
-    @Override public Class<? extends Map<String, String>> boundsClass() { return notSupported(); }
     @Override public T findByUniqueField(String field, Object value) { return notSupported(); }
     @Override public List<T> findAll() { return notSupported(); }
 

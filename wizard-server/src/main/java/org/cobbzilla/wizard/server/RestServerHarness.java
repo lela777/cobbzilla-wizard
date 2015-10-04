@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+
 @Slf4j
 public class RestServerHarness<C extends RestServerConfiguration, S extends RestServer<C>> {
 
@@ -43,11 +46,11 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
         }
     }
 
-    public synchronized void init(Map<String, String> env) throws InstantiationException, IllegalAccessException, IOException {
+    public synchronized void init(Map<String, String> env) {
         if (server == null) {
-            server = getRestServerClass().newInstance();
+            server = instantiate(getRestServerClass());
 
-            final Class<C> configurationClass = ReflectionUtil.getTypeParameter(getRestServerClass(), RestServerConfiguration.class);
+            final Class<C> configurationClass = getTypeParameter(getRestServerClass(), RestServerConfiguration.class);
             final RestServerConfigurationFactory<C> factory = new RestServerConfigurationFactory<>(configurationClass);
             configuration = filterConfiguration(factory.build(configurations, env));
             configuration.setEnvironment(env);

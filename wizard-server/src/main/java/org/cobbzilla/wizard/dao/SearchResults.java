@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.wizard.filters.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +17,18 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
-public class SearchResults<E> {
+public class SearchResults<E> implements Scrubbable {
+
+    public static final ScrubbableField[] SCRUBBABLE_FIELDS = new ScrubbableField[]{
+            new ScrubbableField(SearchResults.class, "results.*", List.class)
+    };
+    @Override public ScrubbableField[] fieldsToScrub() { return SCRUBBABLE_FIELDS; }
 
     public static JavaType jsonType(Class klazz) {
         return JsonUtil.PUBLIC_MAPPER.getTypeFactory().constructParametricType(SearchResults.class, klazz);
     }
 
-    @Getter @Setter private List<E> results;
+    @Getter @Setter private List<E> results = new ArrayList<>();
     @Getter @Setter private Integer totalCount;
 
     @JsonIgnore public int total() {
