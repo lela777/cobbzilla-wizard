@@ -3,6 +3,7 @@ package org.cobbzilla.wizardtest.resources;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
@@ -32,7 +34,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         return StreamConfigurationSource.fromResources(getClass(), paths);
     }
 
-    protected abstract Class<? extends S> getRestServerClass();
+    protected Class<? extends S> getRestServerClass() { return getFirstTypeParam(getClass(), RestServer.class); }
 
     @Override public C filterConfiguration(C configuration) { return configuration; }
 

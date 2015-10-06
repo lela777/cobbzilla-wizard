@@ -77,7 +77,7 @@ public abstract class LdapServiceBase implements LdapService {
         return new CommandLine(command)
                 .addArgument("-x")
                 .addArgument("-H")
-                .addArgument("ldap://127.0.0.1")
+                .addArgument(config().getServer())
                 .addArgument("-D")
                 .addArgument(dn)
                 .addArgument("-w")

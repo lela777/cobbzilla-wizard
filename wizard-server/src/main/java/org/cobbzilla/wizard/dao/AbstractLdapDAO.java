@@ -70,12 +70,8 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         return mapped;
     }
 
-    public String formatSearchFilter(ResultPage resultPage) {
-        return formatSearchFilter(resultPage.getFilter(), resultPage.getBounds());
-    }
-
     public String formatSearchFilter(String filter, Map<String, String> bounds) {
-        String query = "("+idField()+"=*)";
+        String query = bounds.containsKey(LdapService.BOUND_NAME) ? "" : "("+idField()+"=*)";
         if (!empty(filter)) {
             query = "(&" + query + "(|"
                     + attrFilter(config().getUser_email(), filter)

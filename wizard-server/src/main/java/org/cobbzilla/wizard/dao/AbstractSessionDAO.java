@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 import static java.util.UUID.randomUUID;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-// todo: implement retries, where we tear down the client completely and rebuild it
-// this is necessary if the redis server is restarted while we're running
 @Slf4j
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 

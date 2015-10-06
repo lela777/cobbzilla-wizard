@@ -67,12 +67,10 @@ public class LdapConfiguration implements LdapContext {
     public boolean isSecure() { return ArrayUtils.indexOf(SECURE_TRANSPORTS, getTransport()) >= 0; }
 
     public String getVersion() { return val("version", "3"); }
-    public String getDomain () { return val("domain", CommandShell.domainname()); }
+    public String getDomain () { return val("domain", CommandShell.hostname()); }
     public String getLdap_domain() { return val("ldap_domain", domainify(getDomain())); }
     public String getRealm() { return val("realm", getDomain()); }
-    public String getBase_dn() { return val("base_dn", getName_dn() + "," + getLdap_domain()); }
-    public String getName() { return val("name", "cloudos"); }
-    public String getName_dn() { return val("name_dn", "cn="+getName()); }
+    public String getBase_dn() { return val("base_dn", getLdap_domain()); }
 
     public String getAdmin() { return val("admin", "Directory Manager"); }
     public String getAdmin_dn () { return val("admin_dn", "cn="+getAdmin()); }

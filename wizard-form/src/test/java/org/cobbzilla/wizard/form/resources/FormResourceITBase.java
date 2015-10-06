@@ -9,12 +9,8 @@ import java.util.List;
 
 public class FormResourceITBase extends ApiDocsResourceIT<FormApiConfiguration, FormApiServer> {
 
-    @Override
-    protected List<ConfigurationSource> getConfigurations() {
+    @Override protected List<ConfigurationSource> getConfigurations() {
         return getConfigurationSources("/conf/form-api-test.yml");
     }
-
-    @Override protected Class<? extends FormApiServer> getRestServerClass() { return FormApiServer.class; }
-
 
 }
