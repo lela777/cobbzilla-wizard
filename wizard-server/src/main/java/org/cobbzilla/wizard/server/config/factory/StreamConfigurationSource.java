@@ -12,6 +12,10 @@ import java.util.List;
 @AllArgsConstructor
 public class StreamConfigurationSource implements ConfigurationSource {
 
+    public StreamConfigurationSource (String resourcePath) {
+        this(StreamConfigurationSource.class.getClassLoader().getResourceAsStream(resourcePath));
+    }
+
     private InputStream stream;
 
     @Override public File getFile() throws IOException { return StreamUtil.stream2temp(stream); }
