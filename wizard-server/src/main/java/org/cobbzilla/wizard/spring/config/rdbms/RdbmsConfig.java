@@ -3,28 +3,27 @@ package org.cobbzilla.wizard.spring.config.rdbms;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HibernateConfiguration;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.HibernateTransactionManager;
-import org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean;
+import org.springframework.orm.hibernate4.HibernateTemplate;
+import org.springframework.orm.hibernate4.HibernateTransactionManager;
+import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 
 import javax.sql.DataSource;
 import java.util.Properties;
 
-@Configuration
-public class RdbmsConfig {
+@Configuration public class RdbmsConfig {
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired private HasDatabaseConfiguration configuration;
     private HasDatabaseConfiguration configuration () { return configuration; }
 
-    @Bean
-    public DataSource dataSource() {
+    @Bean public DataSource dataSource() {
         DatabaseConfiguration dbConfiguration = configuration().getDatabase();
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName(dbConfiguration.getDriver());
@@ -34,22 +33,19 @@ public class RdbmsConfig {
         return ds;
     }
 
-    @Bean
-    public HibernateTransactionManager transactionManager(SessionFactory sessionFactory) {
+    @Bean public HibernateTransactionManager transactionManager(SessionFactory sessionFactory) {
         HibernateTransactionManager htm = new HibernateTransactionManager();
         htm.setSessionFactory(sessionFactory);
         return htm;
     }
 
-    @Bean
-    public HibernateTemplate hibernateTemplate(SessionFactory sessionFactory) {
+    @Bean public HibernateTemplate hibernateTemplate(SessionFactory sessionFactory) {
         HibernateTemplate hibernateTemplate = new HibernateTemplate(sessionFactory);
         return hibernateTemplate;
     }
 
-    @Bean
-    public AnnotationSessionFactoryBean sessionFactory() {
-        AnnotationSessionFactoryBean asfb = new AnnotationSessionFactoryBean();
+    @Bean public LocalSessionFactoryBean sessionFactory() {
+        LocalSessionFactoryBean asfb = new LocalSessionFactoryBean();
         asfb.setNamingStrategy(ImprovedNamingStrategy.INSTANCE);
         asfb.setDataSource(dataSource());
         asfb.setHibernateProperties(hibernateProperties());
@@ -57,8 +53,7 @@ public class RdbmsConfig {
         return asfb;
     }
 
-    @Bean
-    public Properties hibernateProperties() {
+    @Bean public Properties hibernateProperties() {
         HibernateConfiguration hibernateConfiguration = configuration().getDatabase().getHibernate();
         Properties properties = new Properties();
         properties.put("hibernate.dialect", hibernateConfiguration.getDialect());

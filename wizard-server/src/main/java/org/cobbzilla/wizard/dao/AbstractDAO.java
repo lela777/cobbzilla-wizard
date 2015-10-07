@@ -15,7 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.SimpleExpression;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate4.HibernateTemplate;
 
 import java.io.Serializable;
 import java.util.List;
@@ -84,7 +84,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
     @SuppressWarnings("unchecked")
     protected List<E> list(DetachedCriteria criteria) throws HibernateException {
-        return hibernateTemplate.findByCriteria(checkNotNull(criteria));
+        return (List<E>) hibernateTemplate.findByCriteria(checkNotNull(criteria));
     }
 
     /**
@@ -176,7 +176,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     }
 
     public List query(String queryString, ResultPage resultPage, String[] params, Object[] values) {
-        return hibernateTemplate.executeFind(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
+        return (List) hibernateTemplate.execute(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
     }
 
     protected String formatBound(String entityAlias, String bound, String value) { return notSupported("Invalid bound: " + bound); }

@@ -9,7 +9,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.hibernate.FlushMode;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Transactional
 public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
 
     public static final Transformer TO_UUID = new FieldTransfomer("uuid");
@@ -41,7 +44,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public E create(@Valid E entity) {
         entity.beforeCreate();
         final Object ctx = preCreate(entity);
+        setFlushMode();
         entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
+        hibernateTemplate.flush();
         return postCreate(entity, ctx);
     }
 
@@ -59,13 +64,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Override public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
+        setFlushMode();
         entity = hibernateTemplate.merge(checkNotNull(entity));
+        hibernateTemplate.flush();
         return postUpdate(entity, ctx);
     }
 
     @Override public void delete(String uuid) {
         final E found = get(checkNotNull(uuid));
+        setFlushMode();
         if (found != null) hibernateTemplate.delete(found);
+        hibernateTemplate.flush();
     }
 
     @Override public E findByUniqueField(String field, Object value) {
@@ -80,4 +89,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         final E thing = cache.get(uuid);
         return (thing != null) ? thing : findByUuid(uuid);
     }
+
+    protected void setFlushMode() { hibernateTemplate.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+
 }

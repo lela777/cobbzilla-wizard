@@ -13,9 +13,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.security.bcrypt.BCryptUtil;
 import org.cobbzilla.util.network.NetworkUtil;
 import org.cobbzilla.util.network.PortPicker;
+import org.cobbzilla.util.security.bcrypt.BCryptUtil;
 import org.cobbzilla.wizard.server.config.*;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
@@ -189,19 +189,17 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         // Create a special factory that will always correctly resolve this specific configuration
         final DefaultListableBeanFactory factory = new DefaultListableBeanFactory() {
-            @Override
-            protected Object doResolveDependency(DependencyDescriptor descriptor, Class<?> type, String beanName, Set<String> autowiredBeanNames, TypeConverter typeConverter) throws BeansException {
-                if (type.isAssignableFrom(configuration.getClass())) {
+            @Override public Object doResolveDependency(DependencyDescriptor descriptor, String beanName, Set<String> autowiredBeanNames, TypeConverter typeConverter) throws BeansException {
+                if (descriptor.getDependencyType().isAssignableFrom(configuration.getClass())) {
                     return configuration;
                 }
-                return super.doResolveDependency(descriptor, type, beanName, autowiredBeanNames, typeConverter);
+                return super.doResolveDependency(descriptor, beanName, autowiredBeanNames, typeConverter);
             }
         };
 
         // Create a special context that uses the above factory
         final ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext() {
-            @Override
-            protected DefaultListableBeanFactory createBeanFactory() {
+            @Override protected DefaultListableBeanFactory createBeanFactory() {
                 return factory;
             }
         };

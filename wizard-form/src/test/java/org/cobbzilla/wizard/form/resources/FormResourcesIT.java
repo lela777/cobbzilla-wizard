@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.form.resources;
 
 import org.cobbzilla.util.http.HttpStatusCodes;
-import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.form.model.Form;
 import org.cobbzilla.wizard.form.model.FormField;
@@ -18,9 +17,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.http.HttpStatusCodes.CREATED;
 import static org.cobbzilla.util.http.HttpStatusCodes.UNSUPPORTED_MEDIA_TYPE;
-import static org.cobbzilla.util.json.JsonUtil.EMPTY_JSON;
-import static org.cobbzilla.util.json.JsonUtil.fromJson;
-import static org.cobbzilla.util.json.JsonUtil.toJson;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.wizard.form.model.FormConstraintConstants.*;
 import static org.cobbzilla.wizardtest.RandomUtil.randomName;
 import static org.junit.Assert.assertEquals;
@@ -29,15 +26,13 @@ public class FormResourcesIT extends FormResourceITBase {
 
     public static final String DOC_TARGET = "form create/read/update/delete";
 
-    @Test
-    public void testCreateWithNoPayload () throws Exception {
+    @Test public void testCreateWithNoPayload () throws Exception {
         apiDocs.startRecording(DOC_TARGET, "with no payload");
         final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, null);
         assertEquals(UNSUPPORTED_MEDIA_TYPE, response.status);
     }
 
-    @Test
-    public void testCreateWithEmptyPayload () throws Exception {
+    @Test public void testCreateWithEmptyPayload () throws Exception {
         apiDocs.startRecording(DOC_TARGET, "with empty payload");
         final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, EMPTY_JSON);
         assertExpectedViolations(response, new String[] {
@@ -45,8 +40,7 @@ public class FormResourcesIT extends FormResourceITBase {
         });
     }
 
-    @Test
-    public void testFormCrud () throws Exception {
+    @Test public void testFormCrud () throws Exception {
         final String owner = randomName(FORM_OWNER_MAXLEN);
 
         apiDocs.startRecording(DOC_TARGET, "full CRUD cycle");
@@ -80,8 +74,7 @@ public class FormResourcesIT extends FormResourceITBase {
         assertEquals(HttpStatusCodes.NOT_FOUND, notFound.status);
     }
 
-    @Test
-    public void testAddRemoveFields () throws Exception {
+    @Test public void testAddRemoveFields () throws Exception {
 
         final String owner = randomName(FORM_OWNER_MAXLEN);
 

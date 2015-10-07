@@ -12,8 +12,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
-        extends AbstractDAO<C> {
+public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P> extends AbstractDAO<C> {
 
     @Autowired protected SessionFactory sessionFactory;
 
@@ -23,17 +22,17 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
         this.parentEntityClass = parentEntityClass;
     }
 
-    public C findByUuid(String uuid) {
+    @Override public C findByUuid(String uuid) {
         return uniqueResult(Restrictions.eq("uuid", uuid));
     }
 
-    public C findByUniqueField(String field, Object value) {
+    @Override public C findByUniqueField(String field, Object value) {
         return uniqueResult(Restrictions.eq(field, value));
     }
 
     public List<C> findByParentUuid(String parentUuid) {
         final String queryString = "from " + getEntityClass().getSimpleName() + " x where x." + parentEntityClass.getSimpleName().toLowerCase() + ".uuid=? order by x.ctime";
-        return hibernateTemplate.find(queryString, parentUuid);
+        return (List<C>) hibernateTemplate.find(queryString, parentUuid);
     }
 
     public Map<String, C> mapChildrenOfParentByUuid(String parentUuid) {
@@ -58,18 +57,18 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P>
         return create(child);
     }
 
-    public C create(@Valid C child) {
+    @Override public C create(@Valid C child) {
         child.beforeCreate();
         child.setUuid((String) hibernateTemplate.save(checkNotNull(child)));
         return child;
     }
 
-    public C update(@Valid C child) {
+    @Override public C update(@Valid C child) {
         hibernateTemplate.update(checkNotNull(child));
         return child;
     }
 
-    public void delete(String uuid) {
+    @Override public void delete(String uuid) {
         C found = get(checkNotNull(uuid));
         if (found != null) {
             hibernateTemplate.delete(found);

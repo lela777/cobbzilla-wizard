@@ -52,7 +52,7 @@ cobbzilla-wizard is available under the Apache License, version 2: http://www.ap
 
         <!--  JSR 303 with Hibernate Validator -->
         <dependency>
-            <groupId>javassist</groupId>
+            <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>${javassist.version}</version>
         </dependency>

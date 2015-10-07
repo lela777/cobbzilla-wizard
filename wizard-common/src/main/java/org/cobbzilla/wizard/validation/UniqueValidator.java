@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service @Slf4j
 public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, ApplicationContextAware {
@@ -33,26 +35,38 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
         this.daoBean = constraintAnnotation.daoBean();
     }
 
+    private Map<String, Boolean> checking = new ConcurrentHashMap<>();
+
     @Override public boolean isValid(Object object, ConstraintValidatorContext context) {
 
-        UniqueValidatorDao dao = (UniqueValidatorDao) applicationContext.getBean(daoBean);
-
-        Object idValue = (idProperty.equals(IsUnique.CREATE_ONLY) || !ReflectionUtil.hasGetter(object, idProperty)) ? null : ReflectionUtil.get(object, idProperty);
-        final Object fieldValue;
+        if (object == null) return false;
+        final String hash = object.getClass().getName()+"-"+object.hashCode();
+        if (checking.containsKey(hash)) return true; // someone else is already checking this
         try {
-            fieldValue = ReflectionUtil.get(object, uniqueProperty);
-        } catch (Exception e) {
-            log.warn("uniqueProperty ("+uniqueProperty+") couldn't be read from target object "+object+": "+e, e);
-            return true;
-        }
+            checking.put(hash, true);
 
-        if (uniqueField.equals(IsUnique.DEFAULT)) uniqueField = uniqueProperty;
-        if (idField.equals(IsUnique.DEFAULT)) idField = idProperty;
+            UniqueValidatorDao dao = (UniqueValidatorDao) applicationContext.getBean(daoBean);
 
-        if (idValue == null) {
-            return dao.isUnique(uniqueField, fieldValue);
+            Object idValue = (idProperty.equals(IsUnique.CREATE_ONLY) || !ReflectionUtil.hasGetter(object, idProperty)) ? null : ReflectionUtil.get(object, idProperty);
+            final Object fieldValue;
+            try {
+                fieldValue = ReflectionUtil.get(object, uniqueProperty);
+            } catch (Exception e) {
+                log.warn("uniqueProperty (" + uniqueProperty + ") couldn't be read from target object " + object + ": " + e, e);
+                return true;
+            }
+
+            if (uniqueField.equals(IsUnique.DEFAULT)) uniqueField = uniqueProperty;
+            if (idField.equals(IsUnique.DEFAULT)) idField = idProperty;
+
+            if (idValue == null) {
+                return dao.isUnique(uniqueField, fieldValue);
+            }
+            return dao.isUnique(uniqueField, fieldValue, idField, idValue);
+
+        } finally {
+            checking.remove(hash);
         }
-        return dao.isUnique(uniqueField, fieldValue, idField, idValue);
     }
 
 }

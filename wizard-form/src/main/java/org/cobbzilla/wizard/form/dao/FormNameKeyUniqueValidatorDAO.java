@@ -8,8 +8,7 @@ public abstract class FormNameKeyUniqueValidatorDAO<E extends Identifiable> exte
 
     protected abstract E findByNameKey(String nameKey);
 
-    @Override
-    public boolean isUnique(String uniqueFieldName, Object uniqueValue) {
+    @Override public boolean isUnique(String uniqueFieldName, Object uniqueValue) {
         if (uniqueValue == null) return true;
         switch (uniqueFieldName) {
             case "nameKey":
@@ -19,8 +18,7 @@ public abstract class FormNameKeyUniqueValidatorDAO<E extends Identifiable> exte
         }
     }
 
-    @Override
-    public boolean isUnique(String uniqueFieldName, Object uniqueValue, String idFieldName, Object idValue) {
+    @Override public boolean isUnique(String uniqueFieldName, Object uniqueValue, String idFieldName, Object idValue) {
         if (uniqueValue == null) return true;
         switch (uniqueFieldName) {
             case "nameKey":

@@ -3,9 +3,8 @@ package org.cobbzilla.wizard.dao;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,8 +49,7 @@ public class HibernateCallbackImpl<T> implements HibernateCallback<List<T>> {
         this.maxResults = maxResults;
     }
 
-    @Override
-    public List<T> doInHibernate(Session session) throws HibernateException, SQLException {
+    @Override public List<T> doInHibernate(Session session) throws HibernateException {
 
         final Query query = session.createQuery(queryString);
         query.setFirstResult(firstResult);
