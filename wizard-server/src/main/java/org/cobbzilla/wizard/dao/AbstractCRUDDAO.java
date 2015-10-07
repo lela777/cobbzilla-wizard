@@ -26,16 +26,20 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     public static final Transformer TO_UUID = new FieldTransfomer("uuid");
     public static <E> Collection<String> toUuid (Collection<E> c) { return CollectionUtils.collect(c, TO_UUID); }
 
+    @Transactional(readOnly=true)
     @Override public List<E> findAll() { return list(criteria()); }
 
+    @Transactional(readOnly=true)
     @Override public E findByUuid(String uuid) {
         return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
     }
 
+    @Transactional(readOnly=true)
     public List<E> findByUuids(Collection<String> uuids) {
         return list(criteria().add(Restrictions.in("uuid", uuids)));
     }
 
+    @Transactional(readOnly=true)
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
     @Override public Object preCreate(@Valid E entity) { return entity; }
@@ -77,14 +81,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         hibernateTemplate.flush();
     }
 
+    @Transactional(readOnly=true)
     @Override public E findByUniqueField(String field, Object value) {
         return uniqueResult(Restrictions.eq(field, value));
     }
 
+    @Transactional(readOnly=true)
     @Override public List<E> findByField(String field, Object value) {
         return list(criteria().add(Restrictions.eq(field, value)));
     }
 
+    @Transactional(readOnly=true)
     public E cacheLookup(String uuid, Map<String, E> cache) {
         final E thing = cache.get(uuid);
         return (thing != null) ? thing : findByUuid(uuid);
