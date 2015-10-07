@@ -21,13 +21,11 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
 
     private static ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    @Override public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         UniqueValidator.applicationContext = applicationContext;
     }
 
-    @Override
-    public void initialize(IsUnique constraintAnnotation) {
+    @Override public void initialize(IsUnique constraintAnnotation) {
         this.uniqueProperty = constraintAnnotation.unique();
         this.uniqueField = constraintAnnotation.uniqueField();
         this.idProperty = constraintAnnotation.id();
@@ -35,8 +33,7 @@ public class UniqueValidator implements ConstraintValidator<IsUnique, Object>, A
         this.daoBean = constraintAnnotation.daoBean();
     }
 
-    @Override
-    public boolean isValid(Object object, ConstraintValidatorContext context) {
+    @Override public boolean isValid(Object object, ConstraintValidatorContext context) {
 
         UniqueValidatorDao dao = (UniqueValidatorDao) applicationContext.getBean(daoBean);
 
