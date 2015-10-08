@@ -68,6 +68,7 @@ public class RdbmsConfig {
         properties.put("hibernate.dialect", hibernateConfiguration.getDialect());
         properties.put("hibernate.show_sql", hibernateConfiguration.isShowSql());
         properties.put("hibernate.hbm2ddl.auto", hibernateConfiguration.getHbm2ddlAuto());
+        properties.put("hibernate.validator.apply_to_ddl", hibernateConfiguration.isApplyValidatorToDDL());
         properties.put("javax.persistence.verification.mode", hibernateConfiguration.getValidationMode());
         return properties;
     }

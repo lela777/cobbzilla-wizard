@@ -30,9 +30,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public List<E> findAll() { return list(criteria()); }
 
     @Transactional(readOnly=true)
-    @Override public E findByUuid(String uuid) {
-        return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid)));
-    }
+    @Override public E findByUuid(String uuid) { return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid))); }
 
     @Transactional(readOnly=true)
     public List<E> findByUuids(Collection<String> uuids) {
