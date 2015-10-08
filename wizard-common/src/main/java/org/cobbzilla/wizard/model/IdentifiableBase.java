@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import javax.persistence.Column;
@@ -15,7 +14,7 @@ import java.util.UUID;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@MappedSuperclass @EqualsAndHashCode(of={"uuid"}) @ToString
+@MappedSuperclass @EqualsAndHashCode(of={"uuid"})
 public class IdentifiableBase implements Identifiable {
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
@@ -49,4 +48,5 @@ public class IdentifiableBase implements Identifiable {
     private long ctime = System.currentTimeMillis();
     public void setCtime (long time) { /*noop*/ }
 
+    @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
 }

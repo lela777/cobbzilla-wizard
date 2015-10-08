@@ -2,7 +2,6 @@ package org.cobbzilla.wizard.model;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -12,7 +11,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @MappedSuperclass @NoArgsConstructor
 @EqualsAndHashCode(of={"name"}, callSuper=false)
-@ToString(callSuper=true)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
     public static final int NAME_MAXLEN = 100;
@@ -31,4 +29,5 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
 
     public boolean isSameName(UniquelyNamedEntity other) { return getName().equals(other.getName()); }
 
+    @Override public String toString() { return "{"+getName() + ": "+super.toString()+"}"; }
 }

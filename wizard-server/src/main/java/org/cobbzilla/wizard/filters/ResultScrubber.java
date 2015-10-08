@@ -33,7 +33,7 @@ public abstract class ResultScrubber implements ContainerResponseFilter {
                         final String fieldName = recurse ? field.name.substring(0, field.name.length()-".*".length()) : field.name;
                         final Object thing = ReflectionUtil.get(entity, fieldName);
                         if (thing == null) continue;
-                        if (!field.type.isAssignableFrom(thing.getClass())) die("scrub: incompatbile types: "+thing.getClass().getName()+", "+field.type.getName());
+                        if (!field.type.isAssignableFrom(thing.getClass())) die("scrub: incompatible types: "+thing.getClass().getName()+", "+field.type.getName());
                         if (recurse) {
                             if (thing instanceof Collection) {
                                 for (Object subThing : (Collection) thing) {

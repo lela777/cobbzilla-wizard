@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.cobbzilla.wizard.validation.HasValue;
+import org.hibernate.validator.constraints.Email;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -22,6 +23,7 @@ public class UniqueEmailEntity extends IdentifiableBase {
 
     protected boolean forceLowercase () { return true; }
 
+    @Email(message="err.email.invalid")
     @HasValue(message="err.email.empty")
     @Column(length=EMAIL_MAXLEN, unique=true, nullable=false, updatable=false)
     @Size(min=2, max=EMAIL_MAXLEN, message="err.email.length")
