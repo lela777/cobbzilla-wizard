@@ -80,6 +80,18 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <version>${httpcomponents.version}</version>
         </dependency>
 
+        <!-- transparent data encryption -->
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
+            <version>${jasypt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt-hibernate4</artifactId>
+            <version>${jasypt.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>

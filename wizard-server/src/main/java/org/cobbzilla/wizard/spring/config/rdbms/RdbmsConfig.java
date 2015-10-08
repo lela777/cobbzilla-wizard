@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.spring.config.rdbms;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.wizard.model.EncryptedTypes;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HibernateConfiguration;
@@ -53,12 +54,12 @@ public class RdbmsConfig {
     }
 
     @Bean public LocalSessionFactoryBean sessionFactory() {
-        final LocalSessionFactoryBean asfb = new LocalSessionFactoryBean();
-        asfb.setNamingStrategy(ImprovedNamingStrategy.INSTANCE);
-        asfb.setDataSource(dataSource());
-        asfb.setHibernateProperties(hibernateProperties());
-        asfb.setPackagesToScan(configuration().getDatabase().getHibernate().getEntityPackages());
-        return asfb;
+        final LocalSessionFactoryBean factory = new LocalSessionFactoryBean();
+        factory.setNamingStrategy(ImprovedNamingStrategy.INSTANCE);
+        factory.setDataSource(dataSource());
+        factory.setHibernateProperties(hibernateProperties());
+        factory.setPackagesToScan(configuration().getDatabase().getHibernate().getEntityPackages());
+        return factory;
     }
 
     @Bean public Properties hibernateProperties() {
@@ -75,7 +76,7 @@ public class RdbmsConfig {
     @Bean public PBEStringEncryptor strongEncryptor () {
 
         if (!configuration.getDatabase().isEncryptionEnabled()) {
-            log.warn("strongEncrypto: encryption is disabled, will not work!");
+            log.warn("strongEncryptor: encryption is disabled, will not work!");
             return poisonProxy(PBEStringEncryptor.class);
         }
 
@@ -92,7 +93,7 @@ public class RdbmsConfig {
     @Bean public HibernatePBEStringEncryptor hibernateEncryptor() {
         final HibernatePBEStringEncryptor encryptor = new HibernatePBEStringEncryptor();
         encryptor.setEncryptor(strongEncryptor());
-        encryptor.setRegisteredName("hibernateEncryptor");
+        encryptor.setRegisteredName(EncryptedTypes.STRING_ENCRYPTOR_NAME);
         return encryptor;
     }
 }

@@ -9,8 +9,9 @@
         }
 )
 
-package org.cobbzilla.wizard.spring.config.rdbms;
+package org.cobbzilla.wizard.model;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
 import org.jasypt.hibernate4.type.EncryptedStringType;
+
