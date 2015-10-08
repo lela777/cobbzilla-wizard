@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Target({FIELD, ANNOTATION_TYPE})
+@Target({FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Constraint(validatedBy = HasValueValidator.class)
 @Documented

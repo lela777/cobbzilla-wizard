@@ -10,8 +10,7 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@MappedSuperclass
-@NoArgsConstructor
+@MappedSuperclass @NoArgsConstructor
 @EqualsAndHashCode(of={"name"}, callSuper=false)
 @ToString(callSuper=true)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {

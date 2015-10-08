@@ -1,7 +1,5 @@
 package org.cobbzilla.wizard.validation;
 
-import org.cobbzilla.util.daemon.ZillaRuntime;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
@@ -9,11 +7,9 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class HasValueValidator implements ConstraintValidator<HasValue, Object> {
 
-    @Override
-    public void initialize(HasValue constraintAnnotation) {}
+    @Override public void initialize(HasValue constraintAnnotation) {}
 
-    @Override
-    public boolean isValid(Object value, ConstraintValidatorContext context) {
+    @Override public boolean isValid(Object value, ConstraintValidatorContext context) {
         return !empty(value) && value.toString().trim().length() > 0;
     }
 
