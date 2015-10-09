@@ -16,15 +16,16 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
 
         final String uri = request.getRequestUri().getPath();
 
-        if (getSkipAuthPaths().contains(uri)) return request;
-
-        if (startsWith(uri, getSkipAuthPrefixes())) return request;
+        boolean canSkip =  getSkipAuthPaths().contains(uri) || startsWith(uri, getSkipAuthPrefixes());
 
         final String token = request.getHeaderValue(getAuthTokenHeader());
-        if (token == null) throw new AuthException();
+        if (token == null) {
+            if (canSkip) return request;
+            throw new AuthException();
+        }
 
         final T principal = getAuthProvider().find(token);
-        if (principal == null) throw new AuthException();
+        if (principal == null && !canSkip) throw new AuthException();
 
         if (!isPermitted(principal, request)) throw new AuthException();
 
