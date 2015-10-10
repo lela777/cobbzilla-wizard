@@ -12,6 +12,7 @@ import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
+import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,14 +42,21 @@ public class ResourceUtil {
         return status(Response.Status.NOT_FOUND, Collections.singletonMap("resource", id));
     }
 
+    public static Response notFound_blank() { return status(Response.Status.NOT_FOUND); }
+
+    public static <T> T notFoundEx() { return notFoundEx("-unknown-"); }
+
+    public static <T> T notFoundEx(String id) {
+        if (id == null) id = "-unknown-";
+            throw new EntityNotFoundException(id);
+    }
+
     public static Response status (Response.Status status) { return status(status.getStatusCode()); }
     public static Response status (int status) { return Response.status(status).build(); }
     public static Response status (Response.Status status, Object entity) { return status(status.getStatusCode(), entity); }
     public static Response status (int status, Object entity) {
         return Response.status(status).type(MediaType.APPLICATION_JSON).entity(entity).build();
     }
-
-    public static Response notFound_blank() { return status(Response.Status.NOT_FOUND); }
 
     public static Response forbidden() { return status(Response.Status.FORBIDDEN); }
 
