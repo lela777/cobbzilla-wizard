@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
-import org.cobbzilla.wizard.validation.EntityNotFoundException;
-
+import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -14,7 +13,7 @@ public class EntityNotFoundExceptionMapper
         implements ExceptionMapper<EntityNotFoundException> {
 
     @Override public Response toResponse(EntityNotFoundException e) {
-        return notFound(e.getEntity());
+        return notFound(e.getMessage());
     }
 
 }
