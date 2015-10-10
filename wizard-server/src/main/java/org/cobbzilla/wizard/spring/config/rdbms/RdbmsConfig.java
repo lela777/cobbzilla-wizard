@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.spring.config.rdbms;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.reflect.PoisonProxy;
 import org.cobbzilla.wizard.model.EncryptedTypes;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
@@ -23,7 +24,6 @@ import java.util.Properties;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.reflect.ReflectionUtil.poisonProxy;
 
 @Configuration @Slf4j
 public class RdbmsConfig {
@@ -78,7 +78,7 @@ public class RdbmsConfig {
 
         if (!configuration.getDatabase().isEncryptionEnabled()) {
             log.warn("strongEncryptor: encryption is disabled, will not work!");
-            return poisonProxy(PBEStringEncryptor.class);
+            return PoisonProxy.wrap(PBEStringEncryptor.class);
         }
 
         final String key = configuration.getDatabase().getEncryptionKey();

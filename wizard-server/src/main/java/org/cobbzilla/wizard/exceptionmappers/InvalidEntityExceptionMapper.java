@@ -14,13 +14,11 @@ public class InvalidEntityExceptionMapper
     extends AbstractConstraintViolationExceptionMapper<InvalidEntityException>
     implements ExceptionMapper<InvalidEntityException> {
 
-    @Override
-    public Response toResponse(InvalidEntityException exception) {
+    @Override public Response toResponse(InvalidEntityException exception) {
         return buildResponse(exception);
     }
 
-    @Override
-    protected List<ConstraintViolationBean> exception2json(InvalidEntityException exception) {
+    @Override protected List<ConstraintViolationBean> exception2json(InvalidEntityException exception) {
         final List<ConstraintViolation> violations = exception.getResult().getViolations();
         return getConstraintViolationBeans(violations);
     }

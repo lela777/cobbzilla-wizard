@@ -14,7 +14,7 @@ import java.util.UUID;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@MappedSuperclass @EqualsAndHashCode(of={"uuid"})
+@MappedSuperclass @EqualsAndHashCode(of="uuid")
 public class IdentifiableBase implements Identifiable {
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)

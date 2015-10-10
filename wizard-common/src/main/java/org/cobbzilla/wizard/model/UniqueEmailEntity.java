@@ -21,8 +21,6 @@ public class UniqueEmailEntity extends IdentifiableBase {
 
     public UniqueEmailEntity (String email) { setEmail(email); }
 
-    protected boolean forceLowercase () { return true; }
-
     @Email(message="err.email.invalid")
     @HasValue(message="err.email.empty")
     @Column(length=EMAIL_MAXLEN, unique=true, nullable=false, updatable=false)
