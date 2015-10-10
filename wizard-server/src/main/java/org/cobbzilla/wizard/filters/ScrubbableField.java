@@ -1,8 +1,9 @@
 package org.cobbzilla.wizard.filters;
 
 import lombok.AllArgsConstructor;
+import lombok.ToString;
 
-@AllArgsConstructor
+@AllArgsConstructor @ToString(of="name")
 public class ScrubbableField {
 
     public Class targetType;
