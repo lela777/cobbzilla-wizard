@@ -168,6 +168,7 @@ public class ResultPage {
     }
 
     public void unsetBound(String name) { bounds.remove(name); }
+    public void unsetBounds() { bounds.clear(); }
 
     @JsonIgnore @Getter @Setter private SearchScrubber scrubber;
     public boolean hasScrubber () { return scrubber != null; }
