@@ -2,8 +2,8 @@ package org.cobbzilla.wizard.model;
 
 import java.util.List;
 
-public interface SearchScrubber {
+public interface SearchScrubber<IN, OUT> {
 
-    public List scrub(List results);
+    public List<OUT> scrub(List<IN> results);
 
 }
