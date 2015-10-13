@@ -75,6 +75,7 @@ cobbzilla-wizard is available under the Apache License, version 2: http://www.ap
                     <source>1.7</source>
                     <target>1.7</target>
                     <showWarnings>true</showWarnings>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
         </plugins>
