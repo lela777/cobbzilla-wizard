@@ -7,6 +7,7 @@ import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.impl.provider.entity.StreamingOutputProvider;
+import com.sun.jersey.core.impl.provider.entity.StringProvider;
 import com.sun.jersey.core.spi.component.ioc.IoCComponentProviderFactory;
 import com.sun.jersey.spi.spring.container.SpringComponentProviderFactory;
 import lombok.Getter;
@@ -128,6 +129,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), new Validator()));
         rc.getSingletons().add(new StreamingOutputProvider());
+        rc.getSingletons().add(new StringProvider());
 
         BCryptUtil.setBcryptRounds(configuration.getBcryptRounds());
 
