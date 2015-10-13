@@ -25,12 +25,14 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
         }
 
         final T principal = getAuthProvider().find(token);
-        if (principal == null && !canSkip) throw new AuthException();
+        if (principal == null) {
+            if (!canSkip) throw new AuthException();
+            return request;
+        }
 
         if (!isPermitted(principal, request)) throw new AuthException();
 
         principal.setApiToken(token);
-
         request.setSecurityContext(new SimpleSecurityContext(principal));
 
         return request;
