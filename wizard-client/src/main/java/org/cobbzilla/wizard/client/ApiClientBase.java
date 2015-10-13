@@ -55,6 +55,8 @@ public class ApiClientBase {
     public boolean hasToken () { return !empty(token); }
     public long getTokenAge () { return System.currentTimeMillis() - tokenCtime; }
 
+    public void logout () { setToken(null); }
+
     public ApiClientBase (ApiConnectionInfo connectionInfo) { this.connectionInfo = connectionInfo; }
     public ApiClientBase (String baseUri) { connectionInfo = new ApiConnectionInfo(baseUri); }
 
