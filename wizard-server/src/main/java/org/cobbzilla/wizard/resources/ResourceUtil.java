@@ -10,6 +10,7 @@ import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
+import org.cobbzilla.wizard.validation.SimpleViolationException;
 import org.cobbzilla.wizard.validation.ValidationMessages;
 
 import javax.persistence.EntityNotFoundException;
@@ -75,6 +76,12 @@ public class ResourceUtil {
         List<ConstraintViolationBean> violations = new ArrayList<>();
         violations.add(new ConstraintViolationBean(messageTemplate, ValidationMessages.translateMessage(messageTemplate), invalidValue));
         return invalid(violations);
+    }
+
+    public static SimpleViolationException invalidEx(String messageTemplate) { return invalidEx(messageTemplate, null, null); }
+    public static SimpleViolationException invalidEx(String messageTemplate, String message) { return invalidEx(messageTemplate, message, null); }
+    public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue) {
+        return new SimpleViolationException(messageTemplate, message, invalidValue);
     }
 
     public static <T> T userPrincipal(HttpContext context) { return userPrincipal(context, true); }
