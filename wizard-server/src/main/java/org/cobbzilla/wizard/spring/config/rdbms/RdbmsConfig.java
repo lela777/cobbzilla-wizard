@@ -97,4 +97,18 @@ public class RdbmsConfig {
         encryptor.setRegisteredName(EncryptedTypes.STRING_ENCRYPTOR_NAME);
         return encryptor;
     }
+
+    @Bean public HibernatePBEStringEncryptor hibernateIntegerEncryptor() {
+        final HibernatePBEStringEncryptor encryptor = new HibernatePBEStringEncryptor();
+        encryptor.setEncryptor(strongEncryptor());
+        encryptor.setRegisteredName(EncryptedTypes.INTEGER_ENCRYPTOR_NAME);
+        return encryptor;
+    }
+
+    @Bean public HibernatePBEStringEncryptor hibernateLongEncryptor() {
+        final HibernatePBEStringEncryptor encryptor = new HibernatePBEStringEncryptor();
+        encryptor.setEncryptor(strongEncryptor());
+        encryptor.setRegisteredName(EncryptedTypes.LONG_ENCRYPTOR_NAME);
+        return encryptor;
+    }
 }
