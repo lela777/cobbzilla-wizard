@@ -9,6 +9,7 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import java.util.Comparator;
 import java.util.UUID;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
@@ -49,4 +50,15 @@ public class IdentifiableBase implements Identifiable {
     public void setCtime (long time) { /*noop*/ }
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
+
+    public static final Comparator<IdentifiableBase> CTIME_NEWEST_FIRST = new Comparator<IdentifiableBase>() {
+        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) {
+            return new Long(o1.getCtime()).compareTo(o2.getCtime());
+        }
+    };
+    public static final Comparator<IdentifiableBase> CTIME_OLDEST_FIRST = new Comparator<IdentifiableBase>() {
+        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) {
+            return new Long(o2.getCtime()).compareTo(o1.getCtime());
+        }
+    };
 }
