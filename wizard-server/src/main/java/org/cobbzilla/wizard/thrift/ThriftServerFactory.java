@@ -6,12 +6,15 @@ import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.cobbzilla.wizard.server.config.ThriftConfiguration;
-import org.cobbzilla.wizard.util.SpringUtil;
 import org.springframework.context.ApplicationContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.wizard.util.SpringUtil.autowire;
 
 public class ThriftServerFactory {
 
@@ -41,9 +44,7 @@ public class ThriftServerFactory {
         final ThriftServer server = new ThriftServer();
         server.setConfiguration(configuration);
         try {
-            final Class handlerClass = Class.forName(configuration.getHandler());
-            handler = handlerClass.newInstance();
-            SpringUtil.autowire(applicationContext, handler);
+            handler = autowire(applicationContext, instantiate(configuration.getHandler()));
 
             final String serviceClass = configuration.getService();
             final Class ifaceClass = Class.forName(serviceClass + "$Iface");

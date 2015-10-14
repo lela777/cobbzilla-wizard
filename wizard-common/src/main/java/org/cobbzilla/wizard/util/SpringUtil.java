@@ -13,8 +13,9 @@ import java.io.OutputStream;
 
 public class SpringUtil {
 
-    public static void autowire(ApplicationContext ctx, Object bean) {
+    public static <T> T autowire(ApplicationContext ctx, T bean) {
         ctx.getAutowireCapableBeanFactory().autowireBean(bean);
+        return bean;
     }
 
     public static Resource[] listResources(String pattern) throws Exception {
