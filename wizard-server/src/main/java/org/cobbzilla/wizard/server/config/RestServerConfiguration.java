@@ -23,7 +23,7 @@ public class RestServerConfiguration {
     @Getter @Setter private JerseyConfiguration jersey;
 
     @Getter @Setter private ApplicationContext applicationContext;
-    public <T> T autowire (T bean) { SpringUtil.autowire(applicationContext, bean); return bean; }
+    public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
     public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }
