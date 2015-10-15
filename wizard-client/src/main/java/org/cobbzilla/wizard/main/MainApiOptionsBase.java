@@ -2,12 +2,13 @@ package org.cobbzilla.wizard.main;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.util.main.BaseMainOptions;
 import org.kohsuke.args4j.Option;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-public abstract class MainApiOptionsBase extends MainOptionsBase {
+public abstract class MainApiOptionsBase extends BaseMainOptions {
 
     public static final String USAGE_ACCOUNT = "The account name, or @ENV_VAR to specify which environment variable to check. Default is to check the API_ACCOUNT environment variable";
     public static final String OPT_ACCOUNT = "-a";
