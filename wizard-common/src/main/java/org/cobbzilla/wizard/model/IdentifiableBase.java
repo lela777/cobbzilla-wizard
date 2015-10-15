@@ -9,6 +9,7 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -48,6 +49,8 @@ public class IdentifiableBase implements Identifiable {
     @Getter @JsonIgnore
     private long ctime = System.currentTimeMillis();
     public void setCtime (long time) { /*noop*/ }
+
+    @JsonIgnore @Transient public long getCtimeAge () { return System.currentTimeMillis() - ctime; }
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
 
