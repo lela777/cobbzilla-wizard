@@ -12,12 +12,17 @@ import org.junit.AfterClass;
 public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         extends AbstractResourceIT<C, S> {
 
+    protected static boolean docsEnabled = true;
+
     protected static TemplateCaptureTarget apiDocs = new TemplateCaptureTarget("target/api-examples");
 
-    @Getter protected HttpClient httpClient = new RestexClientConnectionManager(apiDocs).getHttpClient();
+    @Getter(lazy=true) private final HttpClient httpClient = initHttpClient();
+    protected HttpClient initHttpClient() {
+        return docsEnabled ? new RestexClientConnectionManager(apiDocs).getHttpClient() : super.getHttpClient();
+    }
 
-    @After public void commitDocCapture () throws Exception { apiDocs.commit(); }
+    @After public void commitDocCapture () throws Exception { if (docsEnabled) apiDocs.commit(); }
 
-    @AfterClass public static void finalizeDocCapture () throws Exception { apiDocs.close(); }
+    @AfterClass public static void finalizeDocCapture () throws Exception { if (docsEnabled) apiDocs.close(); }
 
 }
