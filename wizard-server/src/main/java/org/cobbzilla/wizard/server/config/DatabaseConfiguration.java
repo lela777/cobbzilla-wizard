@@ -3,6 +3,10 @@ package org.cobbzilla.wizard.server.config;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 public class DatabaseConfiguration {
 
     @Getter @Setter private String driver;
@@ -16,4 +20,7 @@ public class DatabaseConfiguration {
 
     @Getter @Setter private HibernateConfiguration hibernate;
 
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
 }
