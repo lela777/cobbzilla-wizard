@@ -2,6 +2,8 @@ package org.cobbzilla.wizard.dao;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Transformer;
 import org.cobbzilla.wizard.ldap.LdapService;
 import org.cobbzilla.wizard.model.ResultPage;
 import org.cobbzilla.wizard.model.ldap.LdapEntity;
@@ -17,6 +19,7 @@ import java.util.Map;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.wizard.model.ldap.LdapAttributeType.OBJECT_CLASS;
 
 @Slf4j
 public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
@@ -36,6 +39,17 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
     // convenience methods
     protected LdapService ldap() { return getLdapService(); }
     public LdapConfiguration config() { return getLdapService().getConfiguration(); }
+
+    @Getter private final DnTransformer dnTransformer = new DnTransformer();
+    private class DnTransformer implements Transformer {
+        @Override public Object transform(Object input) {
+            LdapEntity entity = (LdapEntity) input;
+            return findByDn(entity.getDn());
+        }
+    }
+    protected List<E> dnTransform (List<E> list) {
+        return (List<E>) CollectionUtils.collect(list, dnTransformer);
+    }
 
     protected String getUserDn(String accountName) { return idField() +"="+accountName.toLowerCase()+","+ config().getUser_dn(); }
 
@@ -81,7 +95,10 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
                     + attrFilter(config().getUser_username(), filter)
                     + "))";
         }
-        if (!empty(bounds)) query = "(&" + query + formatSearchBounds(bounds) + ")";
+        if (!empty(bounds)) {
+            final String searchBounds = formatSearchBounds(bounds);
+            query = empty(query) ? searchBounds : "(&" + query + searchBounds + ")";
+        }
         return query;
     }
 
@@ -119,16 +136,14 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         final List<E> found = findByField(field, value);
         switch (found.size()) {
             case 0: return null;
-            case 1: return found.get(0);
+            case 1: return findByDn(found.get(0).getDn());
             default: return die("findByUniqueField: multiple results found with "+field+"="+value);
         }
     }
 
     public E fromLdif(String ldif) {
-
         E entity = null;
         for (String line : ldif.split("\n")) {
-
             line = line.trim();
             if (line.startsWith("#")) continue;
             if (line.length() == 0) {
@@ -147,14 +162,22 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
                     continue;
                 }
                 if (entity != null) die("multiple results found: " + ldif);
-                entity = (E) instantiate(entityClass());
-                entity.setLdapContext(config()).setDn(value);
+                if (getTemplateObject().isValidDn(value)) {
+                    entity = (E) instantiate(entityClass());
+                    entity.setLdapContext(config()).setDn(value);
+                }
 
             } else if (entity != null) {
                 entity.attrFromLdif(name, value);
             }
         }
-        return entity == null ? null : (E) entity.clean();
+        if (entity == null) return null;
+        if (!entity.hasAttribute(OBJECT_CLASS)) {
+            for (String oc : entity.getObjectClasses()) {
+                entity.append(OBJECT_CLASS, oc);
+            }
+        }
+        return (E) entity.validate();
     }
 
     private List<E> multiFromLdif(String ldif) {
@@ -168,13 +191,19 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         return results;
     }
 
-    public E findByName (String name) { return findByUniqueField("name", name.toLowerCase()); }
+    public E findByName (String name) {
+        final E found = findByUniqueField("name", name.toLowerCase());
+        return found == null ? null : findByDn(found.getDn());
+    }
 
     public E findByDn(String dn) { return fromLdif(ldap().rootsearch(dn)); }
 
     @Override public E findByUuid(String dn) { return findByDn(dn); }
 
-    @Override public E get(Serializable id) { return findByUuid(id.toString()); }
+    @Override public E get(Serializable id) {
+        final E found = findByUuid(id.toString());
+        return found == null ? null : findByDn(found.getDn());
+    }
 
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
@@ -198,8 +227,11 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
 
     @Override public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
-        ldap().ldapmodify(entity.ldifModify());
-        entity.clean();
+        final String ldif = entity.ldifModify();
+        if (ldif != null) {
+            ldap().ldapmodify(ldif);
+            entity.clean();
+        }
         return postUpdate(entity, ctx);
     }
 

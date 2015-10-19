@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonSet;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.model.ResultPage;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
@@ -15,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.wizard.ldap.LdapUtil.getFirstDnLabel;
 import static org.cobbzilla.wizard.ldap.LdapUtil.getFirstDnValue;
+import static org.cobbzilla.wizard.model.ldap.LdapAttributeType.OBJECT_CLASS;
+import static org.cobbzilla.wizard.model.ldap.LdapAttributeType.standardAttr;
 
 /**
  * Abstract LdapEntity. Encapsulates logic for storing a DN, a base location, and arbitrary attributes.
@@ -29,14 +32,15 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
     public LdapEntity (LdapEntity other) {
         setLdapContext(other.getLdapContext());
         setDn(other.getDn());
-        setAttributes(other.getAttributes());
+        setAttrMap(other.getAttrMap());
         clean();
     }
 
     public LdapEntity merge (LdapEntity other) {
         if (empty(getDn())) setDn(other.getDn());
-        final List<LdapAttribute> attributes = getAttributes();
-        for (LdapAttribute attr : other.getAttributes()) {
+        final List<LdapAttribute> attributes = attributes();
+        for (LdapAttribute attr : other.attributes()) {
+            if (attr.getName().equals(OBJECT_CLASS)) continue;
             if (attributes.contains(attr)) {
                 final LdapAttributeType type = typeForLdap(attr.getName());
                 if (type.isMultiple()) {
@@ -54,15 +58,22 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
     @Getter protected String dn;
     public LdapEntity setDn(String dn) {
         if (dn != null) {
-            final String label = getFirstDnLabel(dn);
-            if (label.equals(getIdField())) {
-                set(getIdField(), getFirstDnValue(dn));
-            } else {
-                die("setDn: invalid DN (expected prefix="+getIdField()+"): "+dn);
-            }
+            if (!isValidDn(dn)) die("setDn: invalid DN (expected prefix="+getIdField()+"): "+dn);
+        } else {
+            set(getIdField(), getFirstDnValue(dn));
         }
         this.dn = dn;
         return this;
+    }
+
+    public boolean isValidDn(String dn) {
+        if (empty(dn)) return false;
+        try {
+            return getFirstDnLabel(dn).equals(getIdField());
+        } catch (Exception e) {
+            log.error("isValidDn: "+e);
+            return false;
+        }
     }
 
     @JsonIgnore @Transient @Getter @Setter protected LdapContext ldapContext;
@@ -80,9 +91,13 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
 
     @JsonIgnore public abstract String getIdField();
     @JsonIgnore public abstract String getParentDn();
+    @JsonIgnore public abstract String[] getObjectClasses();
+    @JsonIgnore public abstract String[] getRequiredAttributes();
 
     @Getter(lazy=true, value=AccessLevel.PROTECTED) private final List<LdapAttributeType> ldapTypes = initLdapTypes();
-    protected List<LdapAttributeType> initLdapTypes () { return Collections.emptyList(); }
+    protected List<LdapAttributeType> initLdapTypes () {
+        return new ArrayList<>(new SingletonSet<>(LdapAttributeType.objectClass));
+    }
 
     @Getter(lazy=true) private final Map<String, LdapAttributeType> typesByJavaName = initTypesByJavaName();
     private Map<String, LdapAttributeType> initTypesByJavaName() {
@@ -100,29 +115,29 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
 
     public LdapAttributeType typeForLdap(String ldapName) {
         final LdapAttributeType type = getTypesByLdapName().get(ldapName);
-        return type != null ? type : new LdapAttributeType(ldapName, ldapName);
+        return type != null ? type : standardAttr(ldapName, ldapName);
     }
 
     public LdapAttributeType typeForJava(String javaName) {
         final LdapAttributeType type = getTypesByJavaName().get(javaName);
-        return type != null ? type : new LdapAttributeType(javaName, javaName);
+        return type != null ? type : standardAttr(javaName, javaName);
     }
 
     @JsonIgnore protected String getDnValue(String dn) { return getFirstDnValue(dn); }
 
-    @JsonIgnore @Getter @Setter private List<LdapAttribute> attributes = new ArrayList<>();
-    @JsonIgnore @Getter private List<LdapAttributeDelta> deltas = new ArrayList<>();
+    @JsonIgnore @Transient @Getter @Setter private LdapAttributeMap attrMap = new LdapAttributeMap();
+    private List<LdapAttribute> attributes () { return attrMap.attributes(); }
 
     public boolean hasAttribute (String attrName) {
-        for (LdapAttribute attr : attributes) if (attr.isName(attrName)) return true;
+        for (LdapAttribute attr : attributes()) if (attr.isName(attrName)) return true;
         return false;
     }
 
-    public LdapEntity clean () { deltas.clear(); return this; }
+    public LdapEntity clean () { attrMap.clean(); return this; }
 
     public List<String> get(String attrName) {
         final List<String> found = new ArrayList<>();
-        for (LdapAttribute attr : attributes) {
+        for (LdapAttribute attr : attributes()) {
             if (attr.isName(attrName)) found.add(attr.getValue());
         }
         return found.isEmpty() ? null : found;
@@ -136,24 +151,21 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
     public LdapEntity set(String name, String value) {
         final LdapAttribute attribute = new LdapAttribute(name, value);
         LdapAttribute found = null;
-        for (LdapAttribute attr : attributes) {
+        for (LdapAttribute attr : attributes()) {
             if (attr.isName(name)) {
                 if (found != null) die("set: multiple values found for "+name);
                 found = attr;
             }
         }
         if (found == null && value != null) {
-            attributes.add(attribute);
-            deltas.add(new LdapAttributeDelta(attribute, LdapOperation.add));
+            attrMap.addAttribute(attribute);
 
         } else if (found != null && !found.getValue().equals(value)) {
             if (empty(value)) {
                 log.warn("not removing field by setting empty value: " + name);
             } else {
                 // remove + add works because LdapAttribute.equals operates on name only
-                attributes.remove(attribute);
-                attributes.add(attribute);
-                deltas.add(new LdapAttributeDelta(attribute, LdapOperation.replace));
+                attrMap.replaceAttribute(attribute);
             }
 
         } else {
@@ -166,9 +178,7 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
         // id field must be single-valued
         if (name.equals(getIdField())) return set(name, value);
 
-        final LdapAttribute attribute = new LdapAttribute(name, value);
-        attributes.add(attribute);
-        deltas.add(new LdapAttributeDelta(attribute, LdapOperation.add));
+        getAttrMap().addAttribute(new LdapAttribute(name, value));
         return this;
     }
 
@@ -177,31 +187,11 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
         return this;
     }
 
-    public void remove(String name) {
-        boolean found = false;
-        for (Iterator<LdapAttribute> i = attributes.iterator(); i.hasNext(); ) {
-            LdapAttribute attr = i.next();
-            if (attr.isName(name)) {
-                i.remove();
-                found = true;
-            }
-        }
-        if (found) deltas.add(new LdapAttributeDelta(new LdapAttribute(name), LdapOperation.delete));
-    }
+    public void remove(String name) { attrMap.removeAttribute(name); }
 
-    public void remove(String name, String value) {
-        for (Iterator<LdapAttribute> i = attributes.iterator(); i.hasNext(); ) {
-            LdapAttribute attr = i.next();
-            if (attr.isName(name) && attr.getValue().equals(value)) {
-                i.remove();
-                deltas.add(deleted(name, value));
-            }
-        }
-    }
+    public void remove(String name, String value) { attrMap.removeAttribute(name, value); }
 
-    private LdapAttributeDelta deleted(String name, String value) {
-        return new LdapAttributeDelta(new LdapAttribute(name, value), LdapOperation.delete);
-    }
+    public String ldapBoolean(boolean b) { return b ? "TRUE" : "FALSE"; }
 
     private static Map<String, Comparator<LdapEntity>> comparatorCache = new ConcurrentHashMap<>();
 
@@ -234,24 +224,41 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
 
     public String ldifCreate() {
         final StringBuilder b = startLdif();
-        for (LdapAttribute attr : attributes) {
+        final Set<String> added = new HashSet<>();
+        for (LdapAttribute attr : attrMap.getAttributes()) {
             b.append(attr.getName()).append(": ").append(attr.getValue()).append("\n");
+            added.add(attr.getName());
+        }
+        for (LdapAttributeType type : getLdapTypes()) {
+            if (!type.isDerived()) continue;;
+            if (!added.contains(type.getLdapName())) {
+                if (type.isMultiple()) {
+                    for (String value : type.getValues(this)) {
+                        b.append(type.getLdapName()).append(": ").append(value).append("\n");
+                    }
+                } else {
+                    b.append(type.getLdapName()).append(": ").append(type.getValue(this)).append("\n");
+                }
+            }
         }
         return b.toString();
     }
 
     public String ldifModify() {
+
+        if (!attrMap.isDirty()) return null;
+
         final StringBuilder b = startLdif();
         b.append("changetype: modify\n");
         boolean firstOperation = true;
-        for (LdapAttributeDelta delta : deltas) {
+        for (LdapAttributeDelta delta : attrMap.getDeltas()) {
             if (!firstOperation) b.append("-\n");
             firstOperation = false;
             final String attrName = delta.getAttribute().getName();
-            final String value = delta.getAttribute().getValue();
+            String value = delta.getAttribute().getValue();
+            final LdapAttributeType attrType = typeForLdap(attrName);
             switch (delta.getOperation()) {
                 case add:
-                    final LdapAttributeType attrType = typeForLdap(attrName);
                     if (attrType.isMultiple() || !hasAttribute(attrName)) {
                         b.append("add: ").append(attrName).append("\n")
                                 .append(attrName).append(": ").append(value).append("\n");
@@ -290,4 +297,15 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
 
     public void attrFromLdif(String name, String value) { append(name, value); }
 
+    public LdapEntity validate() {
+        for (String attrName : getRequiredAttributes()) {
+            final LdapAttributeType type = getTypesByLdapName().get(attrName);
+            if (type == null) die("validate: require attribute has no type: "+attrName);
+            if (type.isDerived()) continue;
+            if (!getAttrMap().contains(attrName)) {
+                die("validate: missing required attribute: "+attrName);
+            }
+        }
+        return clean();
+    }
 }

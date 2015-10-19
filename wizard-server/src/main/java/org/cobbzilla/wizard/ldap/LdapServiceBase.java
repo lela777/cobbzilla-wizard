@@ -5,6 +5,7 @@ import org.cobbzilla.util.system.Command;
 import org.cobbzilla.util.system.CommandResult;
 import org.cobbzilla.util.system.CommandShell;
 import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.ldap.LdapBindException;
 import org.cobbzilla.wizard.server.config.LdapConfiguration;
 
 import java.util.Map;
@@ -41,6 +42,7 @@ public abstract class LdapServiceBase implements LdapService {
     @Override public String rootsearch(ResultPage page) { return ldapsearch(adminDN(), password(), page); }
 
     protected abstract String ldapFilter(String base, String filter, Map<String, String> bounds);
+    protected abstract String ldapField(String base, String javaName);
 
     @Override public String ldapsearch(String userDn, String password, String dn) {
         return ldapsearch(userDn, password, resultPage(dn));
@@ -56,7 +58,7 @@ public abstract class LdapServiceBase implements LdapService {
         if (base != null) command.addArgument("-b").addArgument(base);
         if (!empty(dn)) {
             if (!empty(bounds)) die("ldapsearch: if bound '"+BOUND_DN+"' is set, no other bounds may be set");
-            command.addArgument(dn);
+            command.addArgument("-b").addArgument(dn, false);
         } else {
             if (!empty(filter) || !empty(bounds)) command.addArgument(ldapFilter(base, filter, bounds));
             if (page.getHasSortField()) {
@@ -64,11 +66,21 @@ public abstract class LdapServiceBase implements LdapService {
                 final String sort = page.getSortField();
                 if (sort != null) {
                     final String sortArg = ((sortOrder != null && sortOrder == ResultPage.SortOrder.DESC) ? "-" : "");
-                    command.addArgument("-E").addArgument("!sss=" + sortArg);
+                    command.addArgument("-E").addArgument("!sss=" + sortArg + sort);
                 }
             }
         }
-        return exec(command).getStdout();
+        final CommandResult result = exec(command);
+        if (!result.isZeroExitStatus()) {
+            final String stderr = result.getStderr();
+            if (stderr.contains("ldap_bind: No such object") ||
+                stderr.contains("ldap_bind: Invalid credentials")) {
+                throw new LdapBindException(userDn);
+            } else {
+                die("ldap_search: "+result);
+            }
+        }
+        return result.getStdout();
     }
 
     private CommandLine ldapRootCommand(String cmd) { return ldapCommand(cmd, adminDN(), password()); }
@@ -79,7 +91,7 @@ public abstract class LdapServiceBase implements LdapService {
                 .addArgument("-H")
                 .addArgument(config().getServer())
                 .addArgument("-D")
-                .addArgument(dn)
+                .addArgument(dn, false)
                 .addArgument("-w")
                 .addArgument(password);
     }
@@ -111,5 +123,4 @@ public abstract class LdapServiceBase implements LdapService {
                 .addArgument(accountDN(accountName));
         okResult(exec(command));
     }
-
 }

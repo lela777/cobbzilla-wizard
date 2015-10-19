@@ -8,6 +8,8 @@ public interface LdapContext {
     public String getExternal_id();
 
     public String getUser_dn();
+    public String getUser_username_rdn();
+    public String getUser_displayname();
     public String getUser_password();
     public String getUser_username();
     public String getUser_email();

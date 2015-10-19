@@ -1,5 +1,5 @@
 /**
- * Defines Jasypt data type for transparent hibernate encryption
+ * Defines Jasypt data types for transparent hibernate encryption
  */
 @TypeDefs({
 
