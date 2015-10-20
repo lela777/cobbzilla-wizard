@@ -94,19 +94,19 @@ public abstract class LdapEntity extends UniquelyNamedEntity {
     @JsonIgnore public abstract String[] getObjectClasses();
     @JsonIgnore public abstract String[] getRequiredAttributes();
 
-    @Getter(lazy=true, value=AccessLevel.PROTECTED) private final List<LdapAttributeType> ldapTypes = initLdapTypes();
+    @JsonIgnore @Getter(lazy=true, value=AccessLevel.PROTECTED) private final List<LdapAttributeType> ldapTypes = initLdapTypes();
     protected List<LdapAttributeType> initLdapTypes () {
         return new ArrayList<>(new SingletonSet<>(LdapAttributeType.objectClass));
     }
 
-    @Getter(lazy=true) private final Map<String, LdapAttributeType> typesByJavaName = initTypesByJavaName();
+    @JsonIgnore @Getter(lazy=true) private final Map<String, LdapAttributeType> typesByJavaName = initTypesByJavaName();
     private Map<String, LdapAttributeType> initTypesByJavaName() {
         final Map<String, LdapAttributeType> map = new HashMap<>();
         for (LdapAttributeType t : getLdapTypes()) map.put(t.getJavaName(), t);
         return map;
     }
 
-    @Getter(lazy=true) private final Map<String, LdapAttributeType> typesByLdapName = initTypesByLdapName();
+    @JsonIgnore @Getter(lazy=true) private final Map<String, LdapAttributeType> typesByLdapName = initTypesByLdapName();
     private Map<String, LdapAttributeType> initTypesByLdapName() {
         final Map<String, LdapAttributeType> map = new HashMap<>();
         for (LdapAttributeType t : getLdapTypes()) map.put(t.getLdapName(), t);
