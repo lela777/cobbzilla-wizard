@@ -1,15 +1,14 @@
 package org.cobbzilla.wizardtest.resources;
 
-import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.RestServerLifecycleListener;
-import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
@@ -18,15 +17,12 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
 import org.junit.Before;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 @Slf4j
@@ -101,25 +97,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    protected void execSql(String sql, Object... args) throws Exception {
-
-        C configuration = getConfiguration();
-        if (!(configuration instanceof HasDatabaseConfiguration)) die("execSql: configuration does not implement HasDatabaseConfiguration: "+configuration.getClass().getName());
-
-        @Cleanup Connection conn = ((HasDatabaseConfiguration)configuration).getDatabase().getConnection();
-        @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
-        int i = 1;
-        for (Object o : args) {
-            if (o instanceof String) {
-                ps.setString(i++, (String) o);
-            } else if (o instanceof Long) {
-                ps.setLong(i++, (Long) o);
-            } else if (o instanceof Integer) {
-                ps.setInt(i++, (Integer) o);
-            } else {
-                die("unsupported argument type: "+o.getClass().getName());
-            }
-        }
-        ps.executeUpdate();
+    protected ResultSetBean execSql(String sql, Object... args) throws Exception {
+        return getConfiguration().execSql(sql, args);
     }
 }
