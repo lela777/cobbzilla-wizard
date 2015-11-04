@@ -2,9 +2,8 @@ package org.cobbzilla.wizardtest.sql;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -15,10 +14,8 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Statement;
 
-@Service
+@Service @Slf4j
 public class SqlInit {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SqlInit.class);
 
     @Autowired private ApplicationContext applicationContext;
     @Autowired private DataSource dataSource;
