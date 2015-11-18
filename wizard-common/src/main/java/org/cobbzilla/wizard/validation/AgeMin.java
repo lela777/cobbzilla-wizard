@@ -17,8 +17,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface AgeMin {
 
     long min ();
-    String format ();
-    boolean emptyOk ();
+    String format () default "";
+    boolean emptyOk () default false;
 
     Class<?>[] groups() default {};
 

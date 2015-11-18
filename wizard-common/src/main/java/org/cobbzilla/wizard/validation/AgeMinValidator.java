@@ -21,11 +21,12 @@ public class AgeMinValidator implements ConstraintValidator<AgeMin, Object> {
 
     @Override public boolean isValid(Object value, ConstraintValidatorContext context) {
         if (empty(value)) return emptyOk;
-        if (value instanceof Number) {
-            return System.currentTimeMillis() - ((Number) value).longValue() >= min;
-        } else if (!empty(format) && value instanceof String) {
+        if (!empty(format) && value instanceof String) {
             return System.currentTimeMillis() - DateTimeFormat.forPattern(format).parseMillis(value.toString()) >= min;
+        } else if (value instanceof Number) {
+            return System.currentTimeMillis() - ((Number) value).longValue() >= min;
+        } else {
+            return isValid(Long.parseLong(value.toString()), context);
         }
-        return isValid(Long.parseLong(value.toString()), context);
     }
 }
