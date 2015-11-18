@@ -17,6 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface AgeMax {
 
     long max ();
+    String format ();
     boolean emptyOk ();
 
     Class<?>[] groups() default {};
