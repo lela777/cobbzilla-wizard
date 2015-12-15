@@ -44,7 +44,7 @@ public class ApiClientBase {
 
     // the server may be coming up, and either not accepting connections or issuing 503 Service Unavailable.
     @Getter @Setter protected int numTries = 5;
-    @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(4);
+    @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(1);
 
     public void setToken(String token) {
         this.token = token;
