@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -11,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.UUID.randomUUID;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 @Slf4j
 public abstract class AbstractSessionDAO<T extends Identifiable> {
@@ -18,7 +18,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     @Autowired private RedisService redis;
 
     // what are we storing?
-    protected abstract Class<T> getEntityClass();
+    protected Class<T> getEntityClass() { return getFirstTypeParam(getClass(), Identifiable.class); }
 
     // what's the cipher key?
     protected abstract String getPassphrase();

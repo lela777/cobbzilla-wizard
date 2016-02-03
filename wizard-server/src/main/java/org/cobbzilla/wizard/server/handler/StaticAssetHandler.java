@@ -7,6 +7,7 @@ import org.cobbzilla.util.io.DeleteOnExit;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.mustache.LocaleAwareMustacheFactory;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.server.config.StaticHttpConfiguration;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.Request;
@@ -76,6 +77,18 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
             return true;
         }
 
+        if (isUtilPath(resourcePath, StaticUtilPath.LOCALE, "locale")) {
+            final Writer writer = response.getWriter();
+            final List<Locale> locales = request.getLocales();
+            final String data;
+            if (locales.size() > 0) {
+                data = "{'locale': '"+request.getLocale()+"', 'locales': ['"+ StringUtil.toString(locales, "', '") + "']}";
+            } else {
+                data = "{}";
+            }
+            writer.write(data);
+            return true;
+        }
         if (isUtilPath(resourcePath, StaticUtilPath.LOCALIZE, "localize")) {
 
             String path = request.getQueryString();
