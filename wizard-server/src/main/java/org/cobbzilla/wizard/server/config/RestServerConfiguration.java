@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 public class RestServerConfiguration {
 
@@ -32,6 +33,7 @@ public class RestServerConfiguration {
     @Getter @Setter private ApplicationContext applicationContext;
     public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }
     public <T> T getBean (Class<T> clazz) { return applicationContext.getBean(clazz); }
+    public <T> T getBean (String clazz) { return (T) applicationContext.getBean(forName(clazz)); }
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
     public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }

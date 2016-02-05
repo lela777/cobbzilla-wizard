@@ -2,8 +2,10 @@ package org.cobbzilla.wizard.model;
 
 import lombok.*;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Comparator;
@@ -43,14 +45,23 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         setPatch(Integer.parseInt(matcher.group(3)));
     }
 
-    @Size(max=SV_VERSION_MAXLEN, message=SV_MAJOR_LENGTH)
+    @Max(value=SV_VERSION_MAX, message=SV_MAJOR_TOO_LARGE)
+    @Min(value=SV_VERSION_MIN, message=SV_MAJOR_TOO_SMALL)
+    @Column(name="major_version", length=SV_VERSION_MAXLEN)
     @Getter @Setter private int major = 1;
+    public SemanticVersion incrementMajor () { return new SemanticVersion(major+1, 0, 0); }
 
-    @Size(max=SV_VERSION_MAXLEN, message=SV_MINOR_LENGTH)
+    @Max(value=SV_VERSION_MAX, message=SV_MINOR_TOO_LARGE)
+    @Min(value=SV_VERSION_MIN, message=SV_MINOR_TOO_SMALL)
+    @Column(name="minor_version", length=SV_VERSION_MAXLEN)
     @Getter @Setter private int minor = 0;
+    public SemanticVersion incrementMinor () { return new SemanticVersion(major, minor+1, 0); }
 
-    @Size(max=SV_VERSION_MAXLEN, message=SV_PATCH_LENGTH)
+    @Max(value=SV_VERSION_MAX, message=SV_PATCH_TOO_LARGE)
+    @Min(value=SV_VERSION_MIN, message=SV_PATCH_TOO_SMALL)
+    @Column(name="patch_version", length=SV_VERSION_MAXLEN)
     @Getter @Setter private int patch = 0;
+    public SemanticVersion incrementPatch () { return new SemanticVersion(major, minor, patch+1); }
 
     public static SemanticVersion incrementPatch(SemanticVersion other) {
         return new SemanticVersion(other.getMajor(), other.getMinor(), other.getPatch()+1);

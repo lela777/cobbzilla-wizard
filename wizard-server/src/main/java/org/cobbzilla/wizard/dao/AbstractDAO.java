@@ -22,6 +22,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 /**
  * An abstract base class for Hibernate DAO classes.
@@ -56,6 +57,12 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
     @SuppressWarnings("unchecked")
     public Class<E> getEntityClass() { return (Class<E>) entityClass; }
+
+    /**
+     * Creates a new instance of the entity class using the default constructor
+     * @return a new instance of E
+     */
+    public E newEntity () { return (E) instantiate(entityClass); }
 
     /**
      * Convenience method to return a single instance that matches the criteria, or null if the
