@@ -6,6 +6,6 @@ import java.util.UUID;
 @MappedSuperclass
 public class StrongIdentifiableBase extends IdentifiableBase {
 
-    @Override public void initUuid() { setUuid(UUID.randomUUID().toString() + "-" + System.currentTimeMillis()); }
-    
+    @Override public void initUuid() { setUuid(UUID.randomUUID().toString() + "-" + Long.toHexString(System.currentTimeMillis())); }
+
 }
