@@ -59,7 +59,7 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
 
     protected String formatBound(String bound, String value) { return notSupported("Invalid bound: " + bound); }
 
-    @Override public SearchResults<E> search(ResultPage resultPage) {
+    @Override public SearchResults<E> search(ResultPage resultPage, String entityAlias) {
         mapBounds(resultPage);
         final String ldif = ldap().rootsearch(resultPage);
         final List<E> matches = multiFromLdif(ldif);

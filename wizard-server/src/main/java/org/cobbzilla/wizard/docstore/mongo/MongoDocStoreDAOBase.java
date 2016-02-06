@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.docstore.mongo;
 
+import lombok.Getter;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.dao.SearchResults;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -9,9 +10,13 @@ import java.io.Serializable;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 /** a mongo docstore that also conforms to the DAO interface */
 public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends MongoDocStore<T> implements DAO<T> {
+
+    @Getter(lazy=true) private final Class entityClass = initEntityClass();
+    private Class initEntityClass() { return getFirstTypeParam(getClass(), MongoDocBase.class); }
 
     @Override public T get(Serializable id) { return findByUuid(id.toString()); }
 
@@ -53,6 +58,10 @@ public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends Mongo
     }
 
     @Override public SearchResults<T> search(ResultPage resultPage) {
+        return search(resultPage, getEntityClass().getSimpleName());
+    }
+
+    @Override public SearchResults<T> search(ResultPage resultPage, String entityAlias) {
         // todo
         return new SearchResults<>();
     }

@@ -20,6 +20,7 @@ public abstract class AbstractRedisDAO<T extends ExpirableBase> implements DAO<T
 
     // not supported
     @Override public SearchResults<T> search(ResultPage resultPage) { return notSupported(); }
+    @Override public SearchResults<T> search(ResultPage resultPage, String entityAlias) { return notSupported(); }
     @Override public T findByUniqueField(String field, Object value) { return notSupported(); }
     @Override public List<T> findAll() { return notSupported(); }
 

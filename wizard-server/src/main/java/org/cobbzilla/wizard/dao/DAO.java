@@ -9,6 +9,7 @@ import java.util.List;
 public interface DAO<E> {
 
     public SearchResults<E> search(ResultPage resultPage);
+    public SearchResults<E> search(ResultPage resultPage, String entityType);
 
     public E get(Serializable id);
 

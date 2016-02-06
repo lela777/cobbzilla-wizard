@@ -5,6 +5,7 @@ package org.cobbzilla.wizard.dao;
  * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
  */
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.collection.FieldTransfomer;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Transactional
+@Transactional @Slf4j
 public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
 
     public static final Transformer TO_UUID = new FieldTransfomer("uuid");

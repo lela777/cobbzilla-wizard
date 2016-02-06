@@ -147,6 +147,10 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
 
     @Override public SearchResults<E> search(ResultPage resultPage) {
+        return search(resultPage, getEntityClass().getSimpleName());
+    }
+
+    @Override public SearchResults<E> search(ResultPage resultPage, String entityType) {
         String filterClause = "";
         String[] params;
         Object[] values;
