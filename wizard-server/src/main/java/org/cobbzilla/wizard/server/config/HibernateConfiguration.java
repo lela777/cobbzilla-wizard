@@ -6,6 +6,7 @@ import lombok.Setter;
 public class HibernateConfiguration {
 
     @Getter @Setter private String[] entityPackages;
+    @Getter @Setter private String[] archivePackages;
 
     @Getter @Setter private String dialect;
     @Getter @Setter private boolean showSql = false;
