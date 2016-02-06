@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.util.SpringUtil;
+import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
 
 import java.sql.Connection;
@@ -40,6 +41,8 @@ public class RestServerConfiguration {
 
     @Getter @Setter private HttpHandlerConfiguration[] handlers;
     public boolean hasHandlers () { return !empty(handlers); }
+
+    @Getter @Setter private Validator validator;
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 

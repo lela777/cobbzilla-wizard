@@ -8,10 +8,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.wizard.filters.*;
+import org.cobbzilla.wizard.filters.Scrubbable;
+import org.cobbzilla.wizard.filters.ScrubbableField;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -24,8 +27,14 @@ public class SearchResults<E> implements Scrubbable {
     };
     @Override public ScrubbableField[] fieldsToScrub() { return SCRUBBABLE_FIELDS; }
 
+    private static Map<Class, JavaType> jsonTypeCache = new ConcurrentHashMap<>();
     public static JavaType jsonType(Class klazz) {
-        return JsonUtil.PUBLIC_MAPPER.getTypeFactory().constructParametricType(SearchResults.class, klazz);
+        JavaType type = jsonTypeCache.get(klazz);
+        if (type == null) {
+            type = JsonUtil.PUBLIC_MAPPER.getTypeFactory().constructParametricType(SearchResults.class, klazz);
+            jsonTypeCache.put(klazz, type);
+        }
+        return type;
     }
 
     @Getter @Setter private List<E> results = new ArrayList<>();

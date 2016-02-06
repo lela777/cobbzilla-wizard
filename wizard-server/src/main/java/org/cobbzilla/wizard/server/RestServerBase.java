@@ -50,6 +50,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter @Setter private C configuration;
 
     @Getter @Setter private List<RestServerLifecycleListener<C>> listeners = new ArrayList<>();
+
     @Override public synchronized void addLifecycleListener(RestServerLifecycleListener<C> listener) { listeners.add(listener); }
     @Override public synchronized void removeLifecycleListener(RestServerLifecycleListener<C> listener) { listeners.remove(listener); }
 
@@ -127,7 +128,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                     Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
         }
 
-        rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), new Validator()));
+        configuration.setValidator(new Validator());
+        rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), configuration.getValidator()));
         rc.getSingletons().add(new StreamingOutputProvider());
         rc.getSingletons().add(new StringProvider());
 
