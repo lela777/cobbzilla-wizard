@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.util.string.StringUtil;
+import org.hibernate.cfg.ImprovedNamingStrategy;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -18,6 +20,15 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @MappedSuperclass @EqualsAndHashCode(of="uuid")
 public class IdentifiableBase implements Identifiable {
+
+    public String simpleName () { return getClass().getSimpleName(); }
+    public String propName () { return StringUtil.uncapitalize(getClass().getSimpleName()); }
+
+    public String tableName () { return ImprovedNamingStrategy.INSTANCE.classToTableName(getClass().getName()); }
+    public String tableName (String className) { return ImprovedNamingStrategy.INSTANCE.classToTableName(className); }
+
+    public String columnName () { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName()); }
+    public String columnName (String propName) { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName); }
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;

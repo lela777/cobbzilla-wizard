@@ -46,6 +46,8 @@ public class RestServerConfiguration {
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 
+    public String getApiUriBase() { return getPublicUriBase() + getHttp().getBaseUri(); }
+
     public ResultSetBean execSql(String sql, Object[] args) throws SQLException {
 
         if (!(this instanceof HasDatabaseConfiguration)) die("execSql: "+getClass().getName()+" is not an instance of HasDatabaseConfiguration");

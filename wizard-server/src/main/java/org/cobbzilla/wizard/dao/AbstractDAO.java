@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
@@ -187,7 +188,17 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     }
 
     public List query(String queryString, ResultPage resultPage, String[] params, Object[] values) {
-        return (List) hibernateTemplate.execute(new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize()));
+        return query(queryString, resultPage, params, values, null);
+    }
+
+    public List query(String queryString, ResultPage resultPage, String[] params, Object[] values, String[] listParams) {
+        final HibernateCallbackImpl callback = new HibernateCallbackImpl(queryString, params, values, resultPage.getPageOffset(), resultPage.getPageSize());
+        if (!empty(listParams)) {
+            for (String listParam : listParams) {
+                callback.markAsListParameter(listParam);
+            }
+        }
+        return (List) hibernateTemplate.execute(callback);
     }
 
     protected String formatBound(String entityAlias, String bound, String value) { return notSupported("Invalid bound: " + bound); }
