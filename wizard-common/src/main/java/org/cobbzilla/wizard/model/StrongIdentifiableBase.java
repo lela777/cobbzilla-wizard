@@ -8,7 +8,9 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @MappedSuperclass
 public class StrongIdentifiableBase extends IdentifiableBase {
 
-    @Override public void initUuid() { setUuid(UUID.randomUUID().toString() + "-" + Long.toHexString(System.currentTimeMillis())); }
+    @Override public void initUuid() { setUuid(newStrongUuid()); }
+
+    public static String newStrongUuid() { return UUID.randomUUID().toString() + "-" + Long.toHexString(System.currentTimeMillis()); }
 
     public static boolean isStrongUuid(String maybeUuid) {
         // must be non-empty, at least 40 chars, and cannot contain any letter chars that
