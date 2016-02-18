@@ -32,7 +32,7 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P> extends Abs
 
     public List<C> findByParentUuid(String parentUuid) {
         final String queryString = "from " + getEntityClass().getSimpleName() + " x where x." + parentEntityClass.getSimpleName().toLowerCase() + ".uuid=? order by x.ctime";
-        return (List<C>) hibernateTemplate.find(queryString, parentUuid);
+        return (List<C>) getHibernateTemplate().find(queryString, parentUuid);
     }
 
     public Map<String, C> mapChildrenOfParentByUuid(String parentUuid) {
@@ -59,19 +59,19 @@ public abstract class AbstractChildCRUDDAO<C extends ChildEntity, P> extends Abs
 
     @Override public C create(@Valid C child) {
         child.beforeCreate();
-        child.setUuid((String) hibernateTemplate.save(checkNotNull(child)));
+        child.setUuid((String) getHibernateTemplate().save(checkNotNull(child)));
         return child;
     }
 
     @Override public C update(@Valid C child) {
-        hibernateTemplate.update(checkNotNull(child));
+        getHibernateTemplate().update(checkNotNull(child));
         return child;
     }
 
     @Override public void delete(String uuid) {
         C found = get(checkNotNull(uuid));
         if (found != null) {
-            hibernateTemplate.delete(found);
+            getHibernateTemplate().delete(found);
         }
     }
 

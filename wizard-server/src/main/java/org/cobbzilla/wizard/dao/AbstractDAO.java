@@ -5,6 +5,7 @@ package org.cobbzilla.wizard.dao;
  * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
  */
 
+import lombok.Getter;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -32,7 +33,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
  */
 public abstract class AbstractDAO<E> implements DAO<E> {
 
-    @Autowired protected HibernateTemplate hibernateTemplate;
+    @Getter @Autowired private HibernateTemplate hibernateTemplate;
 
     private final Class<?> entityClass;
 
@@ -76,7 +77,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
     @SuppressWarnings("unchecked")
     protected E uniqueResult(DetachedCriteria criteria) throws HibernateException {
-        return (E) DAOUtil.uniqueResult(hibernateTemplate.findByCriteria(criteria));
+        return (E) DAOUtil.uniqueResult(getHibernateTemplate().findByCriteria(criteria));
     }
 
     protected E uniqueResult(SimpleExpression expression) {
@@ -92,7 +93,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
     @SuppressWarnings("unchecked")
     protected List<E> list(DetachedCriteria criteria) throws HibernateException {
-        return (List<E>) hibernateTemplate.findByCriteria(checkNotNull(criteria));
+        return (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria));
     }
 
     /**
@@ -106,7 +107,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
     @SuppressWarnings("unchecked")
     protected List<E> list(DetachedCriteria criteria, int firstResult, int maxResults) throws HibernateException {
-        return (List<E>) hibernateTemplate.findByCriteria(checkNotNull(criteria), firstResult, maxResults);
+        return (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria), firstResult, maxResults);
     }
 
     /**
@@ -120,7 +121,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      * @see Session#get(Class, Serializable)
      */
     @SuppressWarnings("unchecked")
-    @Override public E get(Serializable id) { return (E) hibernateTemplate.get(entityClass, checkNotNull(id)); }
+    @Override public E get(Serializable id) { return (E) getHibernateTemplate().get(entityClass, checkNotNull(id)); }
 
     /**
      * Either save or update the given instance, depending upon resolution of the unsaved-value
@@ -135,7 +136,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
      */
 //    @Transactional
     public E persist(E entity) throws HibernateException {
-        hibernateTemplate.saveOrUpdate(checkNotNull(entity));
+        getHibernateTemplate().saveOrUpdate(checkNotNull(entity));
         return entity;
     }
 
@@ -212,7 +213,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
                 callback.markAsListParameter(listParam);
             }
         }
-        return (List) hibernateTemplate.execute(callback);
+        return (List) getHibernateTemplate().execute(callback);
     }
 
     protected String formatBound(String entityAlias, String bound, String value) { return notSupported("Invalid bound: " + bound); }

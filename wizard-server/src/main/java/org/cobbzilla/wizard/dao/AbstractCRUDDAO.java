@@ -48,8 +48,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         entity.beforeCreate();
         final Object ctx = preCreate(entity);
         setFlushMode();
-        entity.setUuid((String) hibernateTemplate.save(checkNotNull(entity)));
-        hibernateTemplate.flush();
+        entity.setUuid((String) getHibernateTemplate().save(checkNotNull(entity)));
+        getHibernateTemplate().flush();
         return postCreate(entity, ctx);
     }
 
@@ -68,16 +68,16 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
         setFlushMode();
-        entity = hibernateTemplate.merge(checkNotNull(entity));
-        hibernateTemplate.flush();
+        entity = getHibernateTemplate().merge(checkNotNull(entity));
+        getHibernateTemplate().flush();
         return postUpdate(entity, ctx);
     }
 
     @Override public void delete(String uuid) {
         final E found = get(checkNotNull(uuid));
         setFlushMode();
-        if (found != null) hibernateTemplate.delete(found);
-        hibernateTemplate.flush();
+        if (found != null) getHibernateTemplate().delete(found);
+        getHibernateTemplate().flush();
     }
 
     @Transactional(readOnly=true)
@@ -96,6 +96,6 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         return (thing != null) ? thing : findByUuid(uuid);
     }
 
-    protected void setFlushMode() { hibernateTemplate.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+    protected void setFlushMode() { getHibernateTemplate().getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
 
 }
