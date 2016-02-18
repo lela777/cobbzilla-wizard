@@ -39,6 +39,12 @@ public class ValidationResult {
         beans.add(new ConstraintViolationBean(messageTemplate, message, invalidValue));
     }
 
+    public void addAll(ValidationResult result) {
+        for (ConstraintViolationBean violationBean : result.getViolationBeans()) {
+            addViolation(violationBean);
+        }
+    }
+
     public List<ConstraintViolationBean> getViolationBeans() {
         final List<ConstraintViolationBean> beanList = (List<ConstraintViolationBean>) CollectionUtils.collect(violations, BEAN_XFORM);
         beanList.addAll(beans);

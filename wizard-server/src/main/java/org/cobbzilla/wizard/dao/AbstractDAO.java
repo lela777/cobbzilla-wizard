@@ -96,6 +96,20 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     }
 
     /**
+     * Get the results of a {@link Criteria} query, with a firstResult and maxResults
+     *
+     * @param criteria the {@link Criteria} query to run
+     * @param firstResult the first result number (skip results before this)
+     * @param maxResults the maximum number of results
+     * @return the list of matched query results
+     * @see Criteria#list()
+     */
+    @SuppressWarnings("unchecked")
+    protected List<E> list(DetachedCriteria criteria, int firstResult, int maxResults) throws HibernateException {
+        return (List<E>) hibernateTemplate.findByCriteria(checkNotNull(criteria), firstResult, maxResults);
+    }
+
+    /**
      * Return the persistent instance of {@code <E>} with the given identifier, or {@code null} if
      * there is no such persistent instance. (If the instance, or a proxy for the instance, is
      * already associated with the session, return that instance or proxy.)

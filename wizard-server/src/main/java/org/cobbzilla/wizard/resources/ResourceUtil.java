@@ -43,9 +43,9 @@ public class ResourceUtil {
 
     public static Response notFound_blank() { return status(Response.Status.NOT_FOUND); }
 
-    public static <T> T notFoundEx() { return notFoundEx("-unknown-"); }
+    public static EntityNotFoundException notFoundEx() { return notFoundEx("-unknown-"); }
 
-    public static <T> T notFoundEx(String id) {
+    public static EntityNotFoundException notFoundEx(String id) {
         if (id == null) id = "-unknown-";
             throw new EntityNotFoundException(id);
     }
