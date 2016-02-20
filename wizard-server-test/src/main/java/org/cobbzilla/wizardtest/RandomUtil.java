@@ -1,6 +1,7 @@
 package org.cobbzilla.wizardtest;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.security.SecureRandom;
 
@@ -28,5 +29,7 @@ public class RandomUtil {
         int days = minDaysInFuture + RANDOM.nextInt();
         return System.currentTimeMillis() + (days * 1000 * 60 * 60 * 24);
     }
+
+    public static boolean randomBoolean() { return RandomUtils.nextInt(0, 2) % 2 == 0; }
 
 }
