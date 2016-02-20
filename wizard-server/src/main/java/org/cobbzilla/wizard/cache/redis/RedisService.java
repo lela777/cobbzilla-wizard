@@ -1,32 +1,54 @@
 package org.cobbzilla.wizard.cache.redis;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.daemon.ZillaRuntime;
-import org.cobbzilla.util.security.CryptoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.security.CryptoUtil.string_decrypt;
+import static org.cobbzilla.util.security.CryptoUtil.string_encrypt;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
-@Service @Slf4j
+@Service @NoArgsConstructor @Slf4j
 public class RedisService {
 
     public static final int MAX_RETRIES = 5;
 
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
+
     private String getKey() { return configuration.getRedis().getKey(); }
     protected boolean hasKey () { return !empty(getKey()); }
 
     private final AtomicReference<Jedis> redis = new AtomicReference<>();
     private Jedis newJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
+
+    @Getter @Setter private String prefix = "";
+
+    public RedisService(HasRedisConfiguration configuration, String prefix) {
+        this.configuration = configuration;
+        this.prefix = prefix;
+    }
+
+    private Map<String, RedisService> prefixServiceCache = new ConcurrentHashMap<>();
+    public RedisService prefixNamespace(String prefix) {
+        RedisService r = prefixServiceCache.get(prefix);
+        if (r == null) {
+            r = new RedisService(configuration, prefix + this.prefix);
+            prefixServiceCache.put(prefix, r);
+        }
+        return r;
+
+    }
 
     public void reconnect () {
         log.info("marking redis for reconnection...");
@@ -86,13 +108,13 @@ public class RedisService {
     // override these for full control
     protected String encrypt(String data) {
         if (!hasKey()) return data;
-        return CryptoUtil.string_encrypt(data, getKey());
+        return string_encrypt(data, getKey());
     }
 
     protected String decrypt(String data) {
         if (!hasKey()) return data;
         if (data == null) return null;
-        return CryptoUtil.string_decrypt(data, getKey());
+        return string_decrypt(data, getKey());
     }
 
     private void resetForRetry(int attempt, String reason) {
@@ -100,9 +122,13 @@ public class RedisService {
         sleep(attempt * 10, reason);
     }
 
+    private String prefix (String key) {
+        return prefix == null ? key : prefix + "." + key;
+    }
+
     private String __get(String key, int attempt, int maxRetries) {
         try {
-            return getRedis().get(key);
+            return getRedis().get(prefix(key));
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__get");
@@ -112,7 +138,7 @@ public class RedisService {
 
     private String __set(String key, String value, String exxx, String nxex, long time, int attempt, int maxRetries) {
         try {
-            return getRedis().set(key, encrypt(value), exxx, nxex, time);
+            return getRedis().set(prefix(key), encrypt(value), exxx, nxex, time);
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__set");
@@ -122,7 +148,7 @@ public class RedisService {
 
     private String __set(String key, String value, int attempt, int maxRetries) {
         try {
-            return getRedis().set(key, encrypt(value));
+            return getRedis().set(prefix(key), encrypt(value));
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__set");
@@ -132,7 +158,7 @@ public class RedisService {
 
     private Long __lpush(String key, String value, int attempt, int maxRetries) {
         try {
-            return getRedis().lpush(key, encrypt(value));
+            return getRedis().lpush(prefix(key), encrypt(value));
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__lpush");
@@ -152,7 +178,7 @@ public class RedisService {
 
     private Long __del(String key, int attempt, int maxRetries) {
         try {
-            return getRedis().del(key);
+            return getRedis().del(prefix(key));
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__del");
@@ -162,7 +188,7 @@ public class RedisService {
 
     private Long __incrBy(String key, long value, int attempt, int maxRetries) {
         try {
-            return getRedis().incrBy(key, value);
+            return getRedis().incrBy(prefix(key), value);
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__incrBy");
@@ -172,7 +198,7 @@ public class RedisService {
 
     private Long __decrBy(String key, long value, int attempt, int maxRetries) {
         try {
-            return getRedis().decrBy(key, value);
+            return getRedis().decrBy(prefix(key), value);
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__decrBy");
@@ -185,7 +211,7 @@ public class RedisService {
             final Long llen = getRedis().llen(key);
             if (llen == null) return null;
 
-            final List<String> range = getRedis().lrange(key, 0, llen);
+            final List<String> range = getRedis().lrange(prefix(key), 0, llen);
             final List<String> list = new ArrayList<>(range.size());
             for (String item : range) list.add(decrypt(item));
 

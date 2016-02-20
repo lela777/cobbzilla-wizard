@@ -1,6 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
-import org.cobbzilla.util.json.JsonUtil;
+import lombok.Getter;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.model.ExpirableBase;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -11,51 +11,74 @@ import java.io.Serializable;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
+import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
+import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
 
-public abstract class AbstractRedisDAO<T extends ExpirableBase> implements DAO<T> {
+public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E> {
 
-    public abstract Class<T> getEntityClass();
+    @Getter private final Class<E> entityClass;
+
+    public AbstractRedisDAO () { this.entityClass = (Class<E>) getTypeParameter(getClass()); }
 
     @Autowired private RedisService redis;
+    @Getter(lazy=true) private final RedisService prefixRedis = initPrefixRedis();
+    protected RedisService initPrefixRedis() { return redis.prefixNamespace(getRedisKeyPrefix()); }
+    private RedisService getRedis () { return getPrefixRedis(); }
+
+    protected String getRedisKeyPrefix() { return entityClass.getSimpleName(); }
 
     // not supported
-    @Override public SearchResults<T> search(ResultPage resultPage) { return notSupported(); }
-    @Override public SearchResults<T> search(ResultPage resultPage, String entityAlias) { return notSupported(); }
-    @Override public T findByUniqueField(String field, Object value) { return notSupported(); }
-    @Override public List<T> findAll() { return notSupported(); }
+    @Override public SearchResults<E> search(ResultPage resultPage) { return notSupported(); }
+    @Override public SearchResults<E> search(ResultPage resultPage, String entityAlias) { return notSupported(); }
+    @Override public E findByUniqueField(String field, Object value) { return notSupported(); }
+    @Override public List<E> findByField(String field, Object value) { return notSupported(); }
+
+    @Override public List<E> findAll() { return notSupported(); }
 
     // default implementations
-    @Override public Object preCreate(@Valid T entity) { if (!entity.hasUuid()) entity.initUuid(); return entity; }
-    @Override public T postCreate(T entity, Object context) { return entity; }
-    @Override public Object preUpdate(@Valid T entity) { return entity; }
-    @Override public T postUpdate(@Valid T entity, Object context) { return entity; }
+    @Override public Object preCreate(@Valid E entity) { if (!entity.hasUuid()) entity.initUuid(); return entity; }
+    @Override public E postCreate(E entity, Object context) { return entity; }
+    @Override public Object preUpdate(@Valid E entity) { return entity; }
+    @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
 
     // get something
-    @Override public T get(Serializable id) {
-        final String json = redis.get(id.toString());
-        return json == null ? null : JsonUtil.fromJsonOrDie(json, getEntityClass());
+    @Override public E get(Serializable id) {
+        final String json = getRedis().get(id.toString());
+        return json == null ? null : fromJsonOrDie(json, getEntityClass());
     }
 
-    @Override public T findByUuid(String uuid) { return get(uuid); }
+    @Override public E findByUuid(String uuid) { return get(uuid); }
 
     @Override public boolean exists(String uuid) { return get(uuid) != null; }
 
     // set something
-    @Override public T create(@Valid T entity) {
-        redis.set(entity.getUuid(), JsonUtil.toJsonOrDie(entity), "NX", "EX", entity.getExpirationSeconds());
+    @Override public E create(@Valid E entity) {
+        if (entity.shouldExpire()) {
+            getRedis().set(entity.getUuid(), toJsonOrDie(entity), "NX", "EX", entity.getExpirationSeconds());
+        } else {
+            getRedis().set(entity.getUuid(), toJsonOrDie(entity));
+        }
         return entity;
     }
 
-    @Override public T update(@Valid T entity) {
-        redis.set(entity.getUuid(), JsonUtil.toJsonOrDie(entity));
+    @Override public E update(@Valid E entity) {
+        getRedis().set(entity.getUuid(), toJsonOrDie(entity));
         return entity;
     }
 
-    @Override public T createOrUpdate(@Valid T entity) {
+    @Override public E createOrUpdate(@Valid E entity) {
         return entity.hasUuid() ? update(entity) : create(entity);
     }
 
     // delete something
-    @Override public void delete(String uuid) { redis.del(uuid); }
+    @Override public void delete(String uuid) { getRedis().del(uuid); }
+
+    public String getMetadata (String key) {
+        return null;
+    }
+    public void setMetadata (String key, String value) {
+
+    }
 
 }
