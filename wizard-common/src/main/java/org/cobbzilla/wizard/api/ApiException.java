@@ -2,10 +2,11 @@ package org.cobbzilla.wizard.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.wizard.util.RestResponse;
 
-@AllArgsConstructor
+@AllArgsConstructor @ToString
 public class ApiException extends RuntimeException {
 
     @Getter private HttpRequestBean request;

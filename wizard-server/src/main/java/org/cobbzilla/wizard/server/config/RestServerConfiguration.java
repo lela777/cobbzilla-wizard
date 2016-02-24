@@ -57,6 +57,9 @@ public class RestServerConfiguration {
         @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
         int i = 1;
         for (Object o : args) {
+            if (o == null) {
+                die("null arguments not supported. null value at parameter index="+i+", sql="+sql);
+            }
             if (o instanceof String) {
                 ps.setString(i++, (String) o);
             } else if (o instanceof Long) {
