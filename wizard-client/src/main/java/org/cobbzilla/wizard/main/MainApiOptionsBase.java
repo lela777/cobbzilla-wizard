@@ -51,9 +51,8 @@ public abstract class MainApiOptionsBase extends BaseMainOptions {
     private static final String INVALID_PASSWORD = " -- password not set -- ";
 
     private String initPassword() {
-        if (!requireAccount()) return null;
         final String pass = System.getenv(getPasswordEnvVarName());
-        if (empty(pass)) {
+        if (empty(pass) && requireAccount()) {
             System.err.println("Warning: " + getPasswordEnvVarName() + " not defined in environment");
             return INVALID_PASSWORD;
         }

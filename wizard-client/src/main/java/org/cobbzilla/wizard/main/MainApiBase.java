@@ -63,12 +63,16 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
                 api.pushToken(getSessionId(response));
 
             } catch (NotFoundException e) {
-                die("Account not found: "+account);
+                handleAccountNotFound(account);
 
             } catch (Exception e) {
                 die("Error logging in: " + e, e);
             }
         }
+    }
+
+    protected void handleAccountNotFound(String account) {
+        die("Account not found: "+account);
     }
 
 }
