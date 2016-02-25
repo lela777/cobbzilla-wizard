@@ -72,14 +72,17 @@ public class RedisService {
         return redis.get();
     }
 
+    public <V> RedisMap<V> map (String prefix) { return map(prefix, null); }
+    public <V> RedisMap<V> map (String prefix, Long duration) { return new RedisMap<>(prefix, duration, this); }
+
     public String get(String key) { return decrypt(__get(key, 0, MAX_RETRIES)); }
 
     public String get_plaintext(String key) { return __get(key, 0, MAX_RETRIES); }
 
     public String lpop(String data) { return decrypt(__lpop(data, 0, MAX_RETRIES)); }
 
-    public void set(String key, String value, String exxx, String nxex, long time) {
-        __set(key, value, exxx, nxex, time, 0, MAX_RETRIES);
+    public void set(String key, String value, String nxxx, String expx, long time) {
+        __set(key, value, nxxx, expx, time, 0, MAX_RETRIES);
     }
 
     public void set(String key, String value) { __set(key, value, 0, MAX_RETRIES); }
@@ -88,8 +91,8 @@ public class RedisService {
 
     public void del(String key) { __del(key, 0, MAX_RETRIES); }
 
-    public void set_plaintext(String key, String value, String exxx, String nxex, long time) {
-        __set(key, value, exxx, nxex, time, 0, MAX_RETRIES);
+    public void set_plaintext(String key, String value, String nxxx, String expx, long time) {
+        __set(key, value, nxxx, expx, time, 0, MAX_RETRIES);
     }
 
     public void set_plaintext(String key, String value) {
@@ -136,13 +139,13 @@ public class RedisService {
         }
     }
 
-    private String __set(String key, String value, String exxx, String nxex, long time, int attempt, int maxRetries) {
+    private String __set(String key, String value, String nxxx, String expx, long time, int attempt, int maxRetries) {
         try {
-            return getRedis().set(prefix(key), encrypt(value), exxx, nxex, time);
+            return getRedis().set(prefix(key), encrypt(value), nxxx, expx, time);
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__set");
-            return __set(key, value, exxx, nxex, time, attempt + 1, maxRetries);
+            return __set(key, value, nxxx, expx, time, attempt + 1, maxRetries);
         }
     }
 

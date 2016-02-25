@@ -53,8 +53,11 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
     @Override public boolean exists(String uuid) { return get(uuid) != null; }
 
     // set something
-    @Override public E create(@Valid E entity) {
+    @Override public E create(@Valid E entity) { return update(entity); }
+
+    @Override public E update(@Valid E entity) {
         if (entity.shouldExpire()) {
+            getRedis().set(entity.getUuid(), toJsonOrDie(entity), "XX", "EX", entity.getExpirationSeconds());
             getRedis().set(entity.getUuid(), toJsonOrDie(entity), "NX", "EX", entity.getExpirationSeconds());
         } else {
             getRedis().set(entity.getUuid(), toJsonOrDie(entity));
@@ -62,23 +65,12 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
         return entity;
     }
 
-    @Override public E update(@Valid E entity) {
-        getRedis().set(entity.getUuid(), toJsonOrDie(entity));
-        return entity;
-    }
-
-    @Override public E createOrUpdate(@Valid E entity) {
-        return entity.hasUuid() ? update(entity) : create(entity);
-    }
+    @Override public E createOrUpdate(@Valid E entity) { return update(entity); }
 
     // delete something
     @Override public void delete(String uuid) { getRedis().del(uuid); }
 
-    public String getMetadata (String key) {
-        return null;
-    }
-    public void setMetadata (String key, String value) {
-
-    }
+    public String getMetadata (String key) { return getRedis().get("__metadata_"+key); }
+    public void setMetadata (String key, String value) { getRedis().set("__metadata_"+key, value); }
 
 }
