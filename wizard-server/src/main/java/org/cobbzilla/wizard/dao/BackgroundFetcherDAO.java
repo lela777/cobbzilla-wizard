@@ -46,9 +46,11 @@ public abstract class BackgroundFetcherDAO<E extends ExpirableBase> extends Abst
     public String metadataCtimeKey(E entity) { return entity.getUuid()+".ctime"; }
 
     private Map<String, EntityJobResult> jobs = new ConcurrentHashMap<>();
-    private ExecutorService executor = Executors.newFixedThreadPool(getThreadPoolSize());
 
-    public abstract int getThreadPoolSize ();
+    @Getter(lazy=true) private final ExecutorService executor = initExecutor();
+    private ExecutorService initExecutor() { return Executors.newFixedThreadPool(getThreadPoolSize()); }
+
+    public int getThreadPoolSize () { return 1; }
     protected abstract Callable<E> newEntityJob(String uuid, Map<String, Object> context);
 
     public E queueJob(String uuid, Map<String, Object> context) {
@@ -60,18 +62,23 @@ public abstract class BackgroundFetcherDAO<E extends ExpirableBase> extends Abst
                     return null;
                 }
                 if (result.getSummaryAge() > getRecalculateInterval()) {
-                    jobs.put(uuid, new EntityJobResult(executor.submit(newEntityJob(uuid, context))));
+                    jobs.put(uuid, new EntityJobResult(getExecutor().submit(newEntityJob(uuid, context))));
                 }
                 return result.getEntity();
 
             } else {
-                jobs.put(uuid, new EntityJobResult(executor.submit(newEntityJob(uuid, context))));
+                jobs.put(uuid, new EntityJobResult(getExecutor().submit(newEntityJob(uuid, context))));
                 return null;
             }
         } catch (Exception e) {
             log.error("queueJob: "+e, e);
             return null;
         }
+    }
+
+    public boolean isRunning(String uuid) {
+        final EntityJobResult result = jobs.get(uuid);
+        return result == null ? null : result.isRunning();
     }
 
     private class EntityJobResult {
