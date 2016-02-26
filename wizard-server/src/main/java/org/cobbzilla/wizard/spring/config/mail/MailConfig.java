@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.spring.config.mail;
 
-import org.cobbzilla.mail.TemplatedMailConfiguration;
 import org.cobbzilla.mail.client.TemplatedMailClient;
 import org.cobbzilla.wizard.server.config.HasMailConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
