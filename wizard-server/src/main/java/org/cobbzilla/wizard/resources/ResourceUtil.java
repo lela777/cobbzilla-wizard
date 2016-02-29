@@ -4,6 +4,7 @@ import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpResponseBean;
+import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -31,6 +32,8 @@ public class ResourceUtil {
     public static Response ok() { return Response.ok().build(); }
 
     public static Response ok(Object o) { return Response.ok(o).build(); }
+
+    public static Response accepted() { return Response.status(HttpStatusCodes.ACCEPTED).build(); }
 
     public static Response serverError() { return Response.serverError().build(); }
 

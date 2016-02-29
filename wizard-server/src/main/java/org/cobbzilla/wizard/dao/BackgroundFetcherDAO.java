@@ -25,9 +25,10 @@ public abstract class BackgroundFetcherDAO<E extends ExpirableBase> extends Abst
         if (entity != null) {
             if (!entity.hasUuid()) {
                 // should never happen
-                log.warn("get("+id+"): job was missing UUID, re-adding");
+                log.warn("get("+id+"): job was missing UUID, re-adding (should never happen)");
                 entity.setUuid(id.toString());
             }
+            // if this result is really old, queue another job
             final String ctimeString = super.getMetadata(metadataCtimeKey(entity));
             if (!empty(ctimeString)) {
                 try {
