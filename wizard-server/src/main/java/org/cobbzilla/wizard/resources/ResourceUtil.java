@@ -33,6 +33,8 @@ public class ResourceUtil {
 
     public static Response ok(Object o) { return Response.ok(o).build(); }
 
+    public static Response ok_empty() { return Response.ok(Collections.emptyMap()).build(); }
+
     public static Response accepted() { return Response.status(HttpStatusCodes.ACCEPTED).build(); }
 
     public static Response serverError() { return Response.serverError().build(); }
