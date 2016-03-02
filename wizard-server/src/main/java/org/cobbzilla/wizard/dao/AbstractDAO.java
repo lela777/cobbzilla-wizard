@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -108,6 +109,34 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     @SuppressWarnings("unchecked")
     protected List<E> list(DetachedCriteria criteria, int firstResult, int maxResults) throws HibernateException {
         return (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria), firstResult, maxResults);
+    }
+
+    /**
+     * Apply a filter and continue querying the database until maxResults or end of query results
+     *
+     * @param criteria the {@link Criteria} query to run
+     * @param firstResult the first result number (skip results before this)
+     * @param maxResults the maximum number of results
+     * @param filter An object implementing the EntityFilter interface
+     * @return the list of matched query results
+     * @see Criteria#list()
+     */
+    @SuppressWarnings("unchecked")
+    protected List<E> list(DetachedCriteria criteria, int firstResult, int maxResults, EntityFilter<E> filter) throws HibernateException {
+        final List<E> results = new ArrayList<>();
+        int offset = firstResult;
+        while (results.size() < maxResults) {
+
+            final List<E> candidates = (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria), offset, maxResults);
+            if (candidates.isEmpty()) break;
+            if (filter == null) return candidates;
+
+            for (E thing : candidates) {
+                if (filter.isAcceptable(thing)) results.add(thing);
+            }
+            offset += candidates.size();
+        }
+        return results;
     }
 
     /**
