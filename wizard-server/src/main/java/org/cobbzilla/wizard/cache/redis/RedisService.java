@@ -85,6 +85,11 @@ public class RedisService {
         __set(key, value, nxxx, expx, time, 0, MAX_RETRIES);
     }
 
+    public void set(String key, String value, String expx, long time) {
+        __set(key, value, "XX", expx, time, 0, MAX_RETRIES);
+        __set(key, value, "NX", expx, time, 0, MAX_RETRIES);
+    }
+
     public void set(String key, String value) { __set(key, value, 0, MAX_RETRIES); }
 
     public void lpush(String key, String value) { __lpush(key, value, 0, MAX_RETRIES); }
