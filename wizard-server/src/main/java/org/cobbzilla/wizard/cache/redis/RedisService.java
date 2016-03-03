@@ -122,7 +122,13 @@ public class RedisService {
     protected String decrypt(String data) {
         if (!hasKey()) return data;
         if (data == null) return null;
-        return string_decrypt(data, getKey());
+        final String key = getKey();
+        try {
+            return string_decrypt(data, key);
+        } catch (RuntimeException e) {
+            log.warn("decrypt: error decrypting key "+key+" (data="+data+"): "+e);
+            throw e;
+        }
     }
 
     private void resetForRetry(int attempt, String reason) {
