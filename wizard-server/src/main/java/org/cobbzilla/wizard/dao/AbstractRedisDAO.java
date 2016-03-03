@@ -23,10 +23,11 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
 
     @Autowired private RedisService redis;
     @Getter(lazy=true) private final RedisService prefixRedis = initPrefixRedis();
-    protected RedisService initPrefixRedis() { return redis.prefixNamespace(getRedisKeyPrefix()); }
+    protected RedisService initPrefixRedis() { return redis.prefixNamespace(getRedisKeyPrefix(), getRedisEncryptionKey()); }
     private RedisService getRedis () { return getPrefixRedis(); }
 
     protected String getRedisKeyPrefix() { return entityClass.getSimpleName(); }
+    protected String getRedisEncryptionKey() { return null; }
 
     // not supported
     @Override public SearchResults<E> search(ResultPage resultPage) { return notSupported(); }

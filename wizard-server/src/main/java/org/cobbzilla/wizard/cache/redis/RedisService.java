@@ -26,7 +26,7 @@ public class RedisService {
 
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
 
-    private String getKey() { return configuration.getRedis().getKey(); }
+    @Getter @Setter private String key;
     protected boolean hasKey () { return !empty(getKey()); }
 
     private final AtomicReference<Jedis> redis = new AtomicReference<>();
@@ -35,15 +35,23 @@ public class RedisService {
     @Getter @Setter private String prefix = "";
 
     public RedisService(HasRedisConfiguration configuration, String prefix) {
+        this(configuration, prefix, configuration.getRedis().getKey());
+    }
+
+    public RedisService(HasRedisConfiguration configuration, String prefix, String key) {
         this.configuration = configuration;
         this.prefix = prefix;
+        this.key = key;
     }
 
     private Map<String, RedisService> prefixServiceCache = new ConcurrentHashMap<>();
-    public RedisService prefixNamespace(String prefix) {
+
+    public RedisService prefixNamespace(String prefix) { return prefixNamespace(prefix, configuration.getRedis().getKey()); }
+
+    public RedisService prefixNamespace(String prefix, String key) {
         RedisService r = prefixServiceCache.get(prefix);
         if (r == null) {
-            r = new RedisService(configuration, prefix + this.prefix);
+            r = new RedisService(configuration, prefix + this.prefix, key);
             prefixServiceCache.put(prefix, r);
         }
         return r;
@@ -75,7 +83,9 @@ public class RedisService {
     public <V> RedisMap<V> map (String prefix) { return map(prefix, null); }
     public <V> RedisMap<V> map (String prefix, Long duration) { return new RedisMap<>(prefix, duration, this); }
 
-    public String get(String key) { return decrypt(__get(key, 0, MAX_RETRIES)); }
+    public String get(String key) {
+        return decrypt(__get(key, 0, MAX_RETRIES));
+    }
 
     public String get_plaintext(String key) { return __get(key, 0, MAX_RETRIES); }
 
@@ -122,13 +132,7 @@ public class RedisService {
     protected String decrypt(String data) {
         if (!hasKey()) return data;
         if (data == null) return null;
-        final String key = getKey();
-        try {
-            return string_decrypt(data, key);
-        } catch (RuntimeException e) {
-            log.warn("decrypt: error decrypting key "+key+" (data="+data+"): "+e);
-            throw e;
-        }
+        return string_decrypt(data, getKey());
     }
 
     private void resetForRetry(int attempt, String reason) {
@@ -142,7 +146,9 @@ public class RedisService {
 
     private String __get(String key, int attempt, int maxRetries) {
         try {
-            return getRedis().get(prefix(key));
+            synchronized (redis) {
+                return getRedis().get(prefix(key));
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__get");
@@ -152,7 +158,9 @@ public class RedisService {
 
     private String __set(String key, String value, String nxxx, String expx, long time, int attempt, int maxRetries) {
         try {
-            return getRedis().set(prefix(key), encrypt(value), nxxx, expx, time);
+            synchronized (redis) {
+                return getRedis().set(prefix(key), encrypt(value), nxxx, expx, time);
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__set");
@@ -162,7 +170,9 @@ public class RedisService {
 
     private String __set(String key, String value, int attempt, int maxRetries) {
         try {
-            return getRedis().set(prefix(key), encrypt(value));
+            synchronized (redis) {
+                return getRedis().set(prefix(key), encrypt(value));
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__set");
@@ -172,7 +182,9 @@ public class RedisService {
 
     private Long __lpush(String key, String value, int attempt, int maxRetries) {
         try {
-            return getRedis().lpush(prefix(key), encrypt(value));
+            synchronized (redis) {
+                return getRedis().lpush(prefix(key), encrypt(value));
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__lpush");
@@ -182,7 +194,9 @@ public class RedisService {
 
     private String __lpop(String data, int attempt, int maxRetries) {
         try {
-            return getRedis().lpop(data);
+            synchronized (redis) {
+                return getRedis().lpop(data);
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__lpop");
@@ -192,7 +206,9 @@ public class RedisService {
 
     private Long __del(String key, int attempt, int maxRetries) {
         try {
-            return getRedis().del(prefix(key));
+            synchronized (redis) {
+                return getRedis().del(prefix(key));
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__del");
@@ -202,7 +218,9 @@ public class RedisService {
 
     private Long __incrBy(String key, long value, int attempt, int maxRetries) {
         try {
-            return getRedis().incrBy(prefix(key), value);
+            synchronized (redis) {
+                return getRedis().incrBy(prefix(key), value);
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__incrBy");
@@ -212,7 +230,9 @@ public class RedisService {
 
     private Long __decrBy(String key, long value, int attempt, int maxRetries) {
         try {
-            return getRedis().decrBy(prefix(key), value);
+            synchronized (redis) {
+                return getRedis().decrBy(prefix(key), value);
+            }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__decrBy");
@@ -222,10 +242,16 @@ public class RedisService {
 
     private List<String> __list(String key, int attempt, int maxRetries) {
         try {
-            final Long llen = getRedis().llen(key);
+            final Long llen;
+            synchronized (redis) {
+                llen = getRedis().llen(key);
+            }
             if (llen == null) return null;
 
-            final List<String> range = getRedis().lrange(prefix(key), 0, llen);
+            final List<String> range;
+            synchronized (redis) {
+                range = getRedis().lrange(prefix(key), 0, llen);
+            }
             final List<String> list = new ArrayList<>(range.size());
             for (String item : range) list.add(decrypt(item));
 
