@@ -19,6 +19,7 @@ import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.abs;
+import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 
 @Slf4j
 public class StaticAssetHandler extends CLStaticHttpHandler {
@@ -116,6 +117,10 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                     response.sendRedirect("index.html");
                     return true;
                 }
+                final Map<String, String> substitutions = configuration.getSubstitutions(resourcePath);
+                if (substitutions != null) {
+                    file = substitute(file, substitutions);
+                }
                 sendFile(response, file);
                 return true;
             } else {
@@ -124,6 +129,29 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         }
 
         return super.handle(resourcePath, request, response);
+    }
+
+    protected File substitute(File file, Map<String, String> substitutions) {
+        final StringBuilder b = new StringBuilder(abs(file)).append(":");
+        for (Map.Entry<String, String> entry : substitutions.entrySet()) {
+            b.append(entry.getKey()).append("=").append(entry.getValue()).append(":");
+        }
+        final String cacheKey = sha256_hex(b.toString());
+        final File cached = new File(configuration.getSubstitutionCacheDir(), cacheKey);
+        final String delim = configuration.getSubstitutionDelimiter();
+        if (!cached.exists()) {
+            try {
+                String data = FileUtil.toString(file);
+                for (Map.Entry<String, String> entry : substitutions.entrySet()) {
+                    data = data.replace(delim + entry.getKey() + delim, entry.getValue());
+                }
+                FileUtil.toFile(cached, data);
+            } catch (Exception e) {
+                log.error("substitute: Error generating/writing substitutions (returning unsubstituted file): "+e);
+                return file;
+            }
+        }
+        return cached;
     }
 
     private String getUtilPath(StaticUtilPath utilPath, String defaultPath) {
