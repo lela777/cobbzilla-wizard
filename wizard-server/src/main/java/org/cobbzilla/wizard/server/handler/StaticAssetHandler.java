@@ -119,7 +119,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
                 }
                 final Map<String, String> substitutions = configuration.getSubstitutions(resourcePath);
                 if (substitutions != null) {
-                    file = substitute(file, substitutions);
+                    file = substitute(file, substitutions, request.getParameter("_flush") != null);
                 }
                 sendFile(response, file);
                 return true;
@@ -131,7 +131,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         return super.handle(resourcePath, request, response);
     }
 
-    protected File substitute(File file, Map<String, String> substitutions) {
+    protected File substitute(File file, Map<String, String> substitutions, boolean recalc) {
         final StringBuilder b = new StringBuilder(abs(file)).append(":");
         for (Map.Entry<String, String> entry : substitutions.entrySet()) {
             b.append(entry.getKey()).append("=").append(entry.getValue()).append(":");
@@ -139,7 +139,7 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
         final String cacheKey = sha256_hex(b.toString());
         final File cached = new File(configuration.getSubstitutionCacheDir(), cacheKey);
         final String delim = configuration.getSubstitutionDelimiter();
-        if (!cached.exists()) {
+        if (!cached.exists() || recalc) {
             try {
                 String data = FileUtil.toString(file);
                 for (Map.Entry<String, String> entry : substitutions.entrySet()) {
