@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.hibernate.criterion.Restrictions.and;
+import static org.hibernate.criterion.Restrictions.eq;
 
 @Transactional @Slf4j
 public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
@@ -31,7 +33,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public List<E> findAll() { return list(criteria()); }
 
     @Transactional(readOnly=true)
-    @Override public E findByUuid(String uuid) { return uniqueResult(criteria().add(Restrictions.eq("uuid", uuid))); }
+    @Override public E findByUuid(String uuid) { return uniqueResult(criteria().add(eq("uuid", uuid))); }
 
     @Transactional(readOnly=true)
     public List<E> findByUuids(Collection<String> uuids) {
@@ -82,12 +84,32 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Transactional(readOnly=true)
     @Override public E findByUniqueField(String field, Object value) {
-        return uniqueResult(Restrictions.eq(field, value));
+        return uniqueResult(eq(field, value));
+    }
+
+    @Transactional(readOnly=true)
+    public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
+        return uniqueResult(and(eq(f1, v1), eq(f2, v2)));
+    }
+
+    @Transactional(readOnly=true)
+    public E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
+        return uniqueResult(and(eq(f1, v1), eq(f2, v2), eq(f3, v3)));
     }
 
     @Transactional(readOnly=true)
     @Override public List<E> findByField(String field, Object value) {
-        return list(criteria().add(Restrictions.eq(field, value)));
+        return list(criteria().add(eq(field, value)));
+    }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
+        return list(criteria().add(and(eq(f1, v1), eq(f2, v2))));
+    }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
+        return list(criteria().add(and(eq(f1, v1), eq(f2, v2), eq(f3, v3))));
     }
 
     @Transactional(readOnly=true)

@@ -13,8 +13,8 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.SimpleExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 
@@ -81,7 +81,7 @@ public abstract class AbstractDAO<E> implements DAO<E> {
         return (E) DAOUtil.uniqueResult(getHibernateTemplate().findByCriteria(criteria));
     }
 
-    protected E uniqueResult(SimpleExpression expression) {
+    protected E uniqueResult(Criterion expression) {
         return uniqueResult(criteria().add(expression));
     }
 
