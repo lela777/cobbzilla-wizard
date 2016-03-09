@@ -52,7 +52,7 @@ public class ResourceUtil {
 
     public static EntityNotFoundException notFoundEx(String id) {
         if (id == null) id = "-unknown-";
-            throw new EntityNotFoundException(id);
+        throw new EntityNotFoundException(id);
     }
 
     public static Response status (Response.Status status) { return status(status.getStatusCode()); }

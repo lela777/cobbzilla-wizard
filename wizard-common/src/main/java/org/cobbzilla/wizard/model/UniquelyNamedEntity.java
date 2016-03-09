@@ -17,7 +17,7 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
 
     public UniquelyNamedEntity (String name) { setName(name); }
 
-    protected boolean forceLowercase () { return true; }
+    public boolean forceLowercase () { return true; }
 
     @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)
     @Size(min=2, max=NAME_MAXLEN, message="err.name.length")

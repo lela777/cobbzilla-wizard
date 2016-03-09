@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import lombok.Getter;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.util.collection.MapBuilder;
@@ -12,7 +13,7 @@ public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> exte
 
     public static final Transformer TO_NAME = new FieldTransfomer("name");
 
-    public boolean forceLowercase () { return true; }
+    public boolean forceLowercase () { return getEntityProto().forceLowercase(); }
 
     public E findByName (String name) { return findByUniqueField("name", nameValue(name)); }
 
