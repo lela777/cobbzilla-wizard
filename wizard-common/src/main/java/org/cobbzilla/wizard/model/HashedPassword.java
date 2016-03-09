@@ -16,6 +16,7 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.*;
 
 @Embeddable @NoArgsConstructor
@@ -35,7 +36,7 @@ public class HashedPassword {
     public String getResetToken() { return resetToken; }
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
-        this.resetTokenCtime = (resetToken == null) ? null : System.currentTimeMillis();
+        this.resetTokenCtime = (resetToken == null) ? null : now();
     }
 
     public String initResetToken() {
@@ -47,7 +48,7 @@ public class HashedPassword {
     @Getter @Setter private Long resetTokenCtime;
 
     @Transient
-    public long getResetTokenAge () { return resetTokenCtime == null ? 0 : System.currentTimeMillis() - resetTokenCtime; }
+    public long getResetTokenAge () { return resetTokenCtime == null ? 0 : now() - resetTokenCtime; }
 
     @Transient
     public boolean isCorrectPassword (String password) {

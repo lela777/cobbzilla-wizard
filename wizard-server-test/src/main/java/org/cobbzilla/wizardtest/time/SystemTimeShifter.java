@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+
 /**
  * Found at: http://virgo47.wordpress.com/2012/06/22/changing-system-time-in-java/
  *
@@ -61,7 +63,7 @@ public class SystemTimeShifter {
      */
     public static final String PROPERTY_ISO_DATE = "systime.iso";
 
-    private static final long INIT_MILLIS = System.currentTimeMillis();
+    private static final long INIT_MILLIS = now();
     private static final long INIT_NANOS = System.nanoTime();
     private static long offset;
 

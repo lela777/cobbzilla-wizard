@@ -6,6 +6,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
 public class AgeMaxValidator implements ConstraintValidator<AgeMax, Object> {
 
@@ -22,9 +23,9 @@ public class AgeMaxValidator implements ConstraintValidator<AgeMax, Object> {
     @Override public boolean isValid(Object value, ConstraintValidatorContext context) {
         if (empty(value)) return emptyOk;
         if (!empty(format) && value instanceof String) {
-            return System.currentTimeMillis() - DateTimeFormat.forPattern(format).parseMillis(value.toString()) <= max;
+            return now() - DateTimeFormat.forPattern(format).parseMillis(value.toString()) <= max;
         } else if (value instanceof Number) {
-            return System.currentTimeMillis() - ((Number) value).longValue() <= max;
+            return now() - ((Number) value).longValue() <= max;
         } else {
             return isValid(Long.parseLong(value.toString()), context);
         }

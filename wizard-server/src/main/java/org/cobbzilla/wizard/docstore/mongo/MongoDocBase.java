@@ -13,6 +13,7 @@ import javax.validation.constraints.Size;
 
 import java.util.UUID;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.ERR_UUID_LENGTH;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.UUID_MAXLEN;
 
@@ -34,7 +35,7 @@ public class MongoDocBase implements Identifiable {
     }
 
     @NotNull @Setter
-    private long ctime = System.currentTimeMillis();
+    private long ctime = now();
     @JsonIgnore public long getCtime () { return ctime; }
 
 }

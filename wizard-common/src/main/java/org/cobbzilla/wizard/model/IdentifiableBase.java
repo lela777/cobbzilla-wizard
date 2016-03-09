@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
 @MappedSuperclass @EqualsAndHashCode(of="uuid")
 public class IdentifiableBase implements Identifiable {
@@ -58,10 +59,10 @@ public class IdentifiableBase implements Identifiable {
 
     @Column(updatable=false, nullable=false)
     @Getter @JsonIgnore
-    private long ctime = System.currentTimeMillis();
+    private long ctime = now();
     public void setCtime (long time) { /*noop*/ }
 
-    @JsonIgnore @Transient public long getCtimeAge () { return System.currentTimeMillis() - ctime; }
+    @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
 

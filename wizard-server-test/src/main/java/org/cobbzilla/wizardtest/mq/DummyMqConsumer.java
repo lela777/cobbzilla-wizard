@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+
 public class DummyMqConsumer implements MqConsumer {
 
     private static final long DEFAULT_TIMEOUT = 5000;
@@ -42,8 +44,8 @@ public class DummyMqConsumer implements MqConsumer {
     public boolean waitForMessages (int count) throws InterruptedException { return waitForMessages(count, DEFAULT_TIMEOUT); }
 
     public boolean waitForMessages (int count, long timeout) throws InterruptedException {
-        long start = System.currentTimeMillis();
-        while (messageCount.get() < count && System.currentTimeMillis() < start + timeout) {
+        long start = now();
+        while (messageCount.get() < count && now() < start + timeout) {
             Thread.sleep(100);
         }
         return messageCount.get() >= count;

@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.http.HttpStatusCodes.*;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
@@ -48,12 +49,12 @@ public class ApiClientBase {
 
     public void setToken(String token) {
         this.token = token;
-        this.tokenCtime = empty(token) ? 0 : System.currentTimeMillis();
+        this.tokenCtime = empty(token) ? 0 : now();
     }
 
     private long tokenCtime = 0;
     public boolean hasToken () { return !empty(token); }
-    public long getTokenAge () { return System.currentTimeMillis() - tokenCtime; }
+    public long getTokenAge () { return now() - tokenCtime; }
 
     public void logout () { setToken(null); }
 

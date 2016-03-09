@@ -6,6 +6,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
 public class AgeMinValidator implements ConstraintValidator<AgeMin, Object> {
 
@@ -22,9 +23,9 @@ public class AgeMinValidator implements ConstraintValidator<AgeMin, Object> {
     @Override public boolean isValid(Object value, ConstraintValidatorContext context) {
         if (empty(value)) return emptyOk;
         if (!empty(format) && value instanceof String) {
-            return System.currentTimeMillis() - DateTimeFormat.forPattern(format).parseMillis(value.toString()) >= min;
+            return now() - DateTimeFormat.forPattern(format).parseMillis(value.toString()) >= min;
         } else if (value instanceof Number) {
-            return System.currentTimeMillis() - ((Number) value).longValue() >= min;
+            return now() - ((Number) value).longValue() >= min;
         } else {
             return isValid(Long.parseLong(value.toString()), context);
         }
