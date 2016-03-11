@@ -18,9 +18,7 @@ public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
 
     private final Class<C> configurationClass;
 
-    public RestServerConfigurationFactory(Class<C> configurationClass) {
-        this.configurationClass = configurationClass;
-    }
+    public RestServerConfigurationFactory(Class<C> configurationClass) { this.configurationClass = configurationClass; }
 
     public C build(List<? extends ConfigurationSource> configurations) throws IOException {
         return build(configurations, null);
