@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 
 import java.security.SecureRandom;
+import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
@@ -14,6 +15,8 @@ public class RandomUtil {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public static String randomName() { return randomName(20); }
+
+    public static String randomName(String prefix) { return prefix + "-" + randomName(20); }
 
     public static String randomName(int length) { return RandomStringUtils.randomAlphanumeric(length); }
 
@@ -33,5 +36,9 @@ public class RandomUtil {
     }
 
     public static boolean randomBoolean() { return RandomUtils.nextInt(0, 2) % 2 == 0; }
+
+    public static <T> T pickRandom(T[] things) { return things[RandomUtils.nextInt(0, things.length)]; }
+
+    public static <T> T pickRandom(List<T> things) { return things.get(RandomUtils.nextInt(0, things.size())); }
 
 }
