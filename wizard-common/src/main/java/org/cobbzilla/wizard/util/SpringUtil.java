@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+
 public class SpringUtil {
 
     public static <T> T autowire(ApplicationContext ctx, T bean) {
@@ -32,5 +34,13 @@ public class SpringUtil {
             @Cleanup final OutputStream out = new FileOutputStream(temp);
             IOUtils.copy(in, out);
         }
+    }
+
+    public static <T> T getBean (ApplicationContext applicationContext, Class<T> clazz) {
+        return applicationContext.getBean(clazz);
+    }
+
+    public static <T> T getBean (ApplicationContext applicationContext, String clazz) {
+        return (T) applicationContext.getBean(forName(clazz));
     }
 }

@@ -12,12 +12,9 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-import java.util.Comparator;
 import java.util.UUID;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 
 @MappedSuperclass @EqualsAndHashCode(of="uuid")
 public class IdentifiableBase implements Identifiable {
@@ -66,14 +63,4 @@ public class IdentifiableBase implements Identifiable {
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
 
-    public static final Comparator<IdentifiableBase> CTIME_NEWEST_FIRST = new Comparator<IdentifiableBase>() {
-        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) {
-            return new Long(o1.getCtime()).compareTo(o2.getCtime());
-        }
-    };
-    public static final Comparator<IdentifiableBase> CTIME_OLDEST_FIRST = new Comparator<IdentifiableBase>() {
-        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) {
-            return new Long(o2.getCtime()).compareTo(o1.getCtime());
-        }
-    };
 }

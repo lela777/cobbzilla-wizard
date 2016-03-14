@@ -37,9 +37,6 @@ public class RandomUtil {
 
     public static boolean randomBoolean() { return RandomUtils.nextInt(0, 2) % 2 == 0; }
 
-    public static <T> T pickRandom(T[] things) { return things[RandomUtils.nextInt(0, things.length)]; }
-    public static <T> T pickRandom(List<T> things) { return things.get(RandomUtils.nextInt(0, things.size())); }
-
     public static <T> T pickMod(T[] things, int i) {
         if (i <= 0 || i > things.length) i = things.length;
         return things[things.length % i];

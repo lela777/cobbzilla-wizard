@@ -83,9 +83,9 @@ public class RedisService {
     public <V> RedisMap<V> map (String prefix) { return map(prefix, null); }
     public <V> RedisMap<V> map (String prefix, Long duration) { return new RedisMap<>(prefix, duration, this); }
 
-    public String get(String key) {
-        return decrypt(__get(key, 0, MAX_RETRIES));
-    }
+    public boolean exists(String key) { return __exists(key, 0, MAX_RETRIES); }
+
+    public String get(String key) { return decrypt(__get(key, 0, MAX_RETRIES)); }
 
     public String get_plaintext(String key) { return __get(key, 0, MAX_RETRIES); }
 
@@ -153,6 +153,18 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__get");
             return __get(key, attempt+1, maxRetries);
+        }
+    }
+
+    private boolean __exists(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().exists(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__exists");
+            return __exists(key, attempt+1, maxRetries);
         }
     }
 

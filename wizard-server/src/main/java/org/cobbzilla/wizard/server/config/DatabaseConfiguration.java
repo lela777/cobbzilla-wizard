@@ -2,10 +2,13 @@ package org.cobbzilla.wizard.server.config;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.wizard.model.shard.ShardMap;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DatabaseConfiguration {
 
@@ -22,5 +25,33 @@ public class DatabaseConfiguration {
 
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
+    }
+
+    @Getter @Setter private ShardSetConfiguration[] shard;
+
+    public DatabaseConfiguration getShardDatabaseConfiguration(ShardMap map) {
+        final DatabaseConfiguration config = new DatabaseConfiguration();
+            config.setDriver(driver);
+            config.setUrl(map.getUrl());
+            config.setUser(user);
+            config.setPassword(password);
+            config.setEncryptionEnabled(encryptionEnabled);
+            config.setEncryptionKey(encryptionKey);
+            config.setEncryptorPoolSize(encryptorPoolSize);
+            config.setHibernate(hibernate);
+        return config;
+    }
+
+    @Getter(lazy=true) private final Set<String> shardSetNames = initShardSetNames();
+
+    protected Set<String> initShardSetNames() {
+        final Set<String> names = new HashSet<>();
+        if (shard != null) for (ShardSetConfiguration config : shard) names.add(config.getName());
+        return names;
+    }
+
+    public int getLogicalShardCount(String shardSet) {
+        for (ShardSetConfiguration config : shard) if (config.getName().equals(shardSet)) return config.getLogicalShards();
+        return ShardSetConfiguration.DEFAULT_LOGICAL_SHARDS;
     }
 }

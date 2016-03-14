@@ -6,6 +6,7 @@ package org.cobbzilla.wizard.dao;
  */
 
 import lombok.Getter;
+import lombok.Setter;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -34,7 +35,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
  */
 public abstract class AbstractDAO<E> implements DAO<E> {
 
-    @Getter @Autowired private HibernateTemplate hibernateTemplate;
+    @Autowired @Getter @Setter private HibernateTemplate hibernateTemplate;
 
     private final Class<?> entityClass;
 
@@ -134,13 +135,17 @@ public abstract class AbstractDAO<E> implements DAO<E> {
         while (results.size() < maxResults) {
 
             final List<E> candidates = (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria), offset, maxResults);
-            if (candidates.isEmpty()) break;
+            offset += candidates.size();
+            if (candidates.isEmpty()) {
+                if (offset == firstResult) return null; // end of everything
+            } else {
+                break;
+            }
             if (filter == null) return candidates;
 
             for (E thing : candidates) {
                 if (filter.isAcceptable(thing)) results.add(thing);
             }
-            offset += candidates.size();
         }
         return results;
     }

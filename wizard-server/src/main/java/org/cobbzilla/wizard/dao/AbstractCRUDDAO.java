@@ -12,6 +12,7 @@ import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.FlushMode;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
@@ -46,17 +47,22 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public Object preCreate(@Valid E entity) { return entity; }
     @Override public E postCreate(E entity, Object context) { return entity; }
 
-    @Override public E create(@Valid E entity) {
+    @Override public E create(@Valid E entity) { return AbstractCRUDDAO.create(entity, this); }
+
+    public static <E extends Identifiable> E create(E entity, AbstractCRUDDAO<E> dao) {
         entity.beforeCreate();
-        final Object ctx = preCreate(entity);
-        setFlushMode();
-        entity.setUuid((String) getHibernateTemplate().save(checkNotNull(entity)));
-        getHibernateTemplate().flush();
-        return postCreate(entity, ctx);
+        final Object ctx = dao.preCreate(entity);
+        setFlushMode(dao.getHibernateTemplate());
+        entity.setUuid((String) dao.getHibernateTemplate().save(checkNotNull(entity)));
+        dao.getHibernateTemplate().flush();
+        return dao.postCreate(entity, ctx);
     }
 
     @Override public E createOrUpdate(@Valid E entity) {
         return (entity.getUuid() == null) ? create(entity) : update(entity);
+    }
+    public static <E extends Identifiable> E createOrUpdate(@Valid E entity, DAO<E> dao) {
+        return (entity.getUuid() == null) ? dao.create(entity) : dao.update(entity);
     }
 
     public E upsert(@Valid E entity) {
@@ -73,6 +79,14 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         entity = getHibernateTemplate().merge(checkNotNull(entity));
         getHibernateTemplate().flush();
         return postUpdate(entity, ctx);
+    }
+
+    public static <E extends Identifiable> E update(@Valid E entity, AbstractCRUDDAO<E> dao) {
+        final Object ctx = dao.preUpdate(entity);
+        setFlushMode(dao.getHibernateTemplate());
+        entity = dao.getHibernateTemplate().merge(checkNotNull(entity));
+        dao.getHibernateTemplate().flush();
+        return dao.postUpdate(entity, ctx);
     }
 
     @Override public void delete(String uuid) {
@@ -118,6 +132,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         return (thing != null) ? thing : findByUuid(uuid);
     }
 
-    protected void setFlushMode() { getHibernateTemplate().getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+    protected void setFlushMode() { setFlushMode(getHibernateTemplate()); }
+    protected static void setFlushMode(HibernateTemplate template) { template.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
 
 }

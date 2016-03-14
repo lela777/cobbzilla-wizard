@@ -32,7 +32,7 @@ public class RdbmsConfigCommon {
     protected HasDatabaseConfiguration configuration () { return configuration; }
 
     public DataSource dataSource() {
-        final DatabaseConfiguration dbConfiguration = configuration().getDatabase();
+        final DatabaseConfiguration dbConfiguration = getDatabase();
         final DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName(dbConfiguration.getDriver());
         ds.setUrl(dbConfiguration.getUrl());
@@ -57,12 +57,12 @@ public class RdbmsConfigCommon {
         factory.setNamingStrategy(ImprovedNamingStrategy.INSTANCE);
         factory.setDataSource(dataSource());
         factory.setHibernateProperties(hibernateProperties());
-        factory.setPackagesToScan(configuration().getDatabase().getHibernate().getEntityPackages());
+        factory.setPackagesToScan(getDatabase().getHibernate().getEntityPackages());
         return factory;
     }
 
     public Properties hibernateProperties() {
-        final HibernateConfiguration hibernateConfiguration = configuration().getDatabase().getHibernate();
+        final HibernateConfiguration hibernateConfiguration = getDatabase().getHibernate();
         final Properties properties = new Properties();
         properties.put("hibernate.dialect", hibernateConfiguration.getDialect());
         properties.put("hibernate.show_sql", hibernateConfiguration.isShowSql());
@@ -75,19 +75,23 @@ public class RdbmsConfigCommon {
     public static final int MIN_KEY_LENGTH = 15;
     @Bean public PBEStringEncryptor strongEncryptor () {
 
-        if (!configuration.getDatabase().isEncryptionEnabled()) {
+        if (!getDatabase().isEncryptionEnabled()) {
             log.warn("strongEncryptor: encryption is disabled, will not work!");
             return PoisonProxy.wrap(PBEStringEncryptor.class);
         }
 
-        final String key = configuration.getDatabase().getEncryptionKey();
+        final String key = getDatabase().getEncryptionKey();
         if (empty(key) || key.length() < MIN_KEY_LENGTH) die("strongEncryptor: encryption was enabled, but key was too short (min length "+MIN_KEY_LENGTH+"): '"+key+"'");
 
         final PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
         encryptor.setPassword(key);
         encryptor.setAlgorithm("PBEWithMD5AndTripleDES");
-        encryptor.setPoolSize(configuration.getDatabase().getEncryptorPoolSize());
+        encryptor.setPoolSize(getDatabase().getEncryptorPoolSize());
         return encryptor;
+    }
+
+    protected DatabaseConfiguration getDatabase() {
+        return configuration.getDatabase();
     }
 
     @Bean public HibernatePBEStringEncryptor hibernateEncryptor() {
