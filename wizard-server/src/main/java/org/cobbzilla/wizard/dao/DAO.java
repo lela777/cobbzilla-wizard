@@ -4,31 +4,37 @@ import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.List;
 
 public interface DAO<E> {
 
-    public SearchResults<E> search(ResultPage resultPage);
-    public SearchResults<E> search(ResultPage resultPage, String entityType);
+    Class<E> getEntityClass();
 
-    public E get(Serializable id);
+    SearchResults<E> search(ResultPage resultPage);
+    SearchResults<E> search(ResultPage resultPage, String entityType);
 
-    public List<E> findAll();
-    public E findByUuid(String uuid);
-    public E findByUniqueField(String field, Object value);
-    public List<E> findByField(String field, Object value);
+    E get(Serializable id);
 
-    public boolean exists(String uuid);
+    List<E> findAll();
+    E findByUuid(String uuid);
+    E findByUniqueField(String field, Object value);
+    List<E> findByField(String field, Object value);
 
-    public Object preCreate(@Valid E entity);
-    public E create(@Valid E entity);
-    public E createOrUpdate(@Valid E entity);
-    public E postCreate(E entity, Object context);
+    boolean exists(String uuid);
 
-    public Object preUpdate(@Valid E entity);
-    public E update(@Valid E entity);
-    public E postUpdate(@Valid E entity, Object context);
+    Iterator<E> iterate(String hsql, List<Object> args);
+    void closeIterator(Iterator<E> iterator);
 
-    public void delete(String uuid);
+    Object preCreate(@Valid E entity);
+    E create(@Valid E entity);
+    E createOrUpdate(@Valid E entity);
+    E postCreate(E entity, Object context);
+
+    Object preUpdate(@Valid E entity);
+    E update(@Valid E entity);
+    E postUpdate(@Valid E entity, Object context);
+
+    void delete(String uuid);
 
 }

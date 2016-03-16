@@ -11,6 +11,8 @@ public class RedisConfiguration {
     @Getter @Setter private String host = "127.0.0.1";
     @Getter @Setter private int port = 6379;
     @Getter @Setter private String key;
+    @Setter private String prefix;
+    public String getPrefix () { return prefix == null ? "" : prefix; }
 
     public RedisConfiguration (String key) { this.key = key; }
 

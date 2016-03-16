@@ -21,6 +21,7 @@ import org.springframework.orm.hibernate4.HibernateTemplate;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -148,6 +149,25 @@ public abstract class AbstractDAO<E> implements DAO<E> {
             }
         }
         return results;
+    }
+
+    /**
+     * Iterate the results of a {@link Criteria} query.
+     *
+     * @param hsql the Hibernate HSQL to run
+     * @param values the query argument values
+     * @return an iterator -- close it with closeIterator
+     * @see Criteria#list()
+     */
+    @SuppressWarnings("unchecked")
+    public Iterator<E> iterate(String hsql, Object... values) throws HibernateException {
+        return (Iterator<E>) getHibernateTemplate().iterate(hsql, values);
+    }
+
+    @Override public Iterator<E> iterate(String hsql, List<Object> args) { return iterate(hsql, args.toArray(new Object[args.size()])); }
+
+    public void closeIterator (Iterator<E> iterator) {
+        if (iterator != null) getHibernateTemplate().closeIterator(iterator);
     }
 
     /**

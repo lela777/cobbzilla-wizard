@@ -7,6 +7,7 @@ import org.cobbzilla.wizard.model.IdentifiableBase;
 
 import javax.persistence.Embedded;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import java.util.Comparator;
@@ -42,4 +43,7 @@ public class ShardMap extends IdentifiableBase {
                 + '/' + (allowRead && allowWrite ? "read+write" : allowRead ? "read" : allowWrite ? "write" : "disabled")
                 + '/' + url + '}';
     }
+
+    @Transient @Getter @Setter private boolean defaultShard = false;
+
 }

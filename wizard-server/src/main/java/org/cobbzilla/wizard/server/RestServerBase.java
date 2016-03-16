@@ -190,12 +190,23 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     protected ObjectMapper getObjectMapper() { return JsonUtil.NOTNULL_MAPPER; }
 
     @Override public ConfigurableApplicationContext buildSpringApplicationContext() {
+        return buildSpringApplicationContext(new ApplicationContextConfig<C>(configuration));
+    }
+
+    @Override public ConfigurableApplicationContext buildSpringApplicationContext(final ApplicationContextConfig ctxConfig) {
+
+        final RestServer server = this;
 
         // Create a special factory that will always correctly resolve this specific configuration
         final DefaultListableBeanFactory factory = new DefaultListableBeanFactory() {
             @Override public Object doResolveDependency(DependencyDescriptor descriptor, String beanName, Set<String> autowiredBeanNames, TypeConverter typeConverter) throws BeansException {
-                if (descriptor.getDependencyType().isAssignableFrom(configuration.getClass())) {
-                    return configuration;
+                if (descriptor.getDependencyType().isAssignableFrom(ctxConfig.getConfig().getClass())) return ctxConfig.getConfig();
+                if (RestServer.class.isAssignableFrom(descriptor.getDependencyType())) return server;
+                if (ctxConfig.hasResolvers()) {
+                    for (CustomBeanResolver resolver : ctxConfig.getResolvers()) {
+                        Object resolved = resolver.resolve(this, descriptor, beanName, autowiredBeanNames, typeConverter);
+                        if (resolved != null) return resolved;
+                    }
                 }
                 return super.doResolveDependency(descriptor, beanName, autowiredBeanNames, typeConverter);
             }
@@ -209,7 +220,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         };
 
         // create the full context, with the config bean now "predefined"
-        applicationContext.setConfigLocation(configuration.getSpringContextPath());
+        applicationContext.setConfigLocation(ctxConfig.getSpringContextPath());
         applicationContext.refresh();
         return applicationContext;
     }

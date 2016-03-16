@@ -10,24 +10,26 @@ import java.net.URI;
 
 public interface RestServer<C extends RestServerConfiguration> {
 
-    public static final String ALL_ADDRS = "0.0.0.0";
-    public static final String LOCALHOST = "127.0.0.1";
+    String ALL_ADDRS = "0.0.0.0";
+    String LOCALHOST = "127.0.0.1";
 
-    public HttpServer startServer() throws IOException;
+    HttpServer startServer() throws IOException;
 
-    public C getConfiguration();
-    public void setConfiguration(C configuration);
+    C getConfiguration();
+    void setConfiguration(C configuration);
 
-    public ConfigurableApplicationContext buildSpringApplicationContext();
+    ConfigurableApplicationContext buildSpringApplicationContext();
+    ConfigurableApplicationContext buildSpringApplicationContext(final ApplicationContextConfig ctxConfig);
 
-    public void addLifecycleListener (RestServerLifecycleListener<C> listener);
-    public void removeLifecycleListener (RestServerLifecycleListener<C> listener);
+    void addLifecycleListener (RestServerLifecycleListener<C> listener);
+    void removeLifecycleListener (RestServerLifecycleListener<C> listener);
 
-    public void stopServer();
+    void stopServer();
 
-    public String getClientUri();
+    String getClientUri();
 
-    public ApplicationContext getApplicationContext();
+    ApplicationContext getApplicationContext();
 
-    public URI getBaseUri();
+    URI getBaseUri();
+
 }

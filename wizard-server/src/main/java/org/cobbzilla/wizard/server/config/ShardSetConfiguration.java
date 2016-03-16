@@ -9,7 +9,6 @@ public class ShardSetConfiguration {
 
     @Getter @Setter private String name;
     @Getter @Setter private String entity;
-    @Getter @Setter private String hashOn = "uuid";
 
     // default is 64k logical shards
     public static final int DEFAULT_LOGICAL_SHARDS = (int) (64 * KB);

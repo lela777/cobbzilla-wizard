@@ -90,9 +90,7 @@ public class RdbmsConfigCommon {
         return encryptor;
     }
 
-    protected DatabaseConfiguration getDatabase() {
-        return configuration.getDatabase();
-    }
+    public DatabaseConfiguration getDatabase() { return configuration.getDatabase(); }
 
     @Bean public HibernatePBEStringEncryptor hibernateEncryptor() {
         final HibernatePBEStringEncryptor encryptor = new HibernatePBEStringEncryptor();

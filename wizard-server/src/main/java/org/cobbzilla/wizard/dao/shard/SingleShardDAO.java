@@ -1,32 +1,20 @@
 package org.cobbzilla.wizard.dao.shard;
 
+import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
-import org.springframework.orm.hibernate4.HibernateTemplate;
 
-import java.io.Serializable;
+import java.util.Iterator;
 import java.util.List;
 
-public interface SingleShardDAO<E extends Identifiable> {
-
-    void setDatabase(DatabaseConfiguration configuration);
-
-    DatabaseConfiguration getDatabase();
-
-    void setHibernateTemplate(HibernateTemplate hibernateTemplate);
-
-    E get(Serializable id);
-
-    List<E> findByField(String field, Object value);
+public interface SingleShardDAO<E extends Identifiable> extends DAO<E> {
 
     E findByUniqueFields(String f1, Object v1, String f2, Object v2);
+    E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3);
+    List<E> findByFields(String f1, Object v1, String f2, Object v2);
 
-    E create(E entity);
+    void cleanup();
 
-    E createOrUpdate(E entity);
-
-    E update(E entity);
-
-    void delete(String uuid);
+    Iterator<E> iterate(String hsql, Object... args);
+    void closeIterator(Iterator<E> iterator);
 
 }

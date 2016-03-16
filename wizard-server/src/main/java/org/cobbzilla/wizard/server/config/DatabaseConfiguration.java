@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.server.config;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.cobbzilla.wizard.model.shard.ShardMap;
 
@@ -10,7 +11,12 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
+
+@NoArgsConstructor
 public class DatabaseConfiguration {
+
+    public DatabaseConfiguration(DatabaseConfiguration other) { copy(this, other); }
 
     @Getter @Setter private String driver;
     @Getter @Setter private String url;
@@ -29,16 +35,26 @@ public class DatabaseConfiguration {
 
     @Getter @Setter private ShardSetConfiguration[] shard;
 
+    public ShardSetConfiguration getShard (String shardSet) {
+        if (shard != null) {
+            for (ShardSetConfiguration c : shard) {
+                if (c.getName().equals(shardSet)) return c;
+            }
+        }
+        return null;
+    }
+
     public DatabaseConfiguration getShardDatabaseConfiguration(ShardMap map) {
         final DatabaseConfiguration config = new DatabaseConfiguration();
-            config.setDriver(driver);
-            config.setUrl(map.getUrl());
-            config.setUser(user);
-            config.setPassword(password);
-            config.setEncryptionEnabled(encryptionEnabled);
-            config.setEncryptionKey(encryptionKey);
-            config.setEncryptorPoolSize(encryptorPoolSize);
-            config.setHibernate(hibernate);
+        config.setDriver(driver);
+        config.setUrl(map.getUrl());
+        config.setUser(user);
+        config.setPassword(password);
+        config.setEncryptionEnabled(encryptionEnabled);
+        config.setEncryptionKey(encryptionKey);
+        config.setEncryptorPoolSize(encryptorPoolSize);
+        config.setHibernate(new HibernateConfiguration(hibernate));
+        config.getHibernate().setValidationMode("validate");
         return config;
     }
 

@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.server.config;
 
 public interface HasDatabaseConfiguration {
 
-    public DatabaseConfiguration getDatabase();
+    DatabaseConfiguration getDatabase();
+    void setDatabase(DatabaseConfiguration config);
 
 }
