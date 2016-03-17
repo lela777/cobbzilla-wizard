@@ -70,6 +70,12 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     public E newEntity () { return (E) instantiate(entityClass); }
 
     /**
+     * Creates a new instance of the entity class using the copy constructor
+     * @return a new instance of E created with the copy constructor
+     */
+    public E newEntity (E other) { return (E) instantiate(entityClass, other); }
+
+    /**
      * Returns a single canonical instance of the entity class. DO NOT MODIFY THE OBJECT RETURNED.
      */
     @Getter(lazy=true) private final E entityProto = initEntityProto();
