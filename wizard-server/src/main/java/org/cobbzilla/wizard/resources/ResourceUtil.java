@@ -16,7 +16,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.File;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,12 +57,19 @@ public class ResourceUtil {
 
     public static Response status (Response.Status status) { return status(status.getStatusCode()); }
     public static Response status (int status) { return Response.status(status).build(); }
-    public static Response status (Response.Status status, Object entity) { return status(status.getStatusCode(), entity); }
+    public static Response status (Response.Status status, Object entity) {
+        return entity != null
+                ? status(status.getStatusCode(), entity)
+                : status(status.getStatusCode());
+    }
     public static Response status (int status, Object entity) {
-        return Response.status(status).type(MediaType.APPLICATION_JSON).entity(entity).build();
+        return entity != null
+                ? Response.status(status).type(MediaType.APPLICATION_JSON).entity(entity).build()
+                : status(status);
     }
 
     public static Response forbidden() { return status(Response.Status.FORBIDDEN); }
+    public static ResourceHttpException forbiddenEx() { return new ResourceHttpException(HttpStatusCodes.FORBIDDEN); }
 
     public static Response invalid() { return status(UNPROCESSABLE_ENTITY); }
     public static Response invalid(List<ConstraintViolationBean> violations) { return status(UNPROCESSABLE_ENTITY, violations); }

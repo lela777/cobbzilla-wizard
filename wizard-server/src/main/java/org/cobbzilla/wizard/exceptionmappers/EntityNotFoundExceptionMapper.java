@@ -12,8 +12,6 @@ public class EntityNotFoundExceptionMapper
         extends AbstractConstraintViolationExceptionMapper<EntityNotFoundException>
         implements ExceptionMapper<EntityNotFoundException> {
 
-    @Override public Response toResponse(EntityNotFoundException e) {
-        return notFound(e.getMessage());
-    }
+    @Override public Response toResponse(EntityNotFoundException e) { return notFound(e.getMessage()); }
 
 }
