@@ -93,7 +93,9 @@ public class ResourceUtil {
     public static SimpleViolationException invalidEx(String messageTemplate) { return invalidEx(messageTemplate, null, null); }
     public static SimpleViolationException invalidEx(String messageTemplate, String message) { return invalidEx(messageTemplate, message, null); }
     public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue) {
-        return new SimpleViolationException(messageTemplate, message, invalidValue);
+        final SimpleViolationException ex = new SimpleViolationException(messageTemplate, message, invalidValue);
+        log.warn("invalidEx: "+ex);
+        return ex;
     }
 
     public static MultiViolationException invalidEx(ValidationResult result) {

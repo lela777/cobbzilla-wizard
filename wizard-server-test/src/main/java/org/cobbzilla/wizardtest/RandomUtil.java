@@ -22,6 +22,8 @@ public class RandomUtil {
 
     public static String randomDigits(int length) { return RandomStringUtils.randomNumeric(length); }
 
+    public static String randomEmail (String prefix) { return prefix + "-" + randomName(5) + now() + TEST_EMAIL_SUFFIX; }
+
     public static String randomEmail () { return randomName(5) + now() + TEST_EMAIL_SUFFIX; }
 
     public static String randomEmail (int length) {

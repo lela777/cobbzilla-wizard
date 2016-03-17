@@ -3,8 +3,9 @@ package org.cobbzilla.wizard.validation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 
-@AllArgsConstructor
+@AllArgsConstructor @ToString(of={"messageTemplate","message","invalidValue"}, callSuper=false)
 public class SimpleViolationException extends RuntimeException {
 
     @Getter private final String messageTemplate;
