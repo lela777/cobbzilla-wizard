@@ -40,10 +40,12 @@ public class IdentifiableBase implements Identifiable {
 
     public void initUuid() { setUuid(UUID.randomUUID().toString()); }
 
-    public void update(Identifiable thing) {
+    public void update(Identifiable thing) { update(thing, null); }
+
+    public void update(Identifiable thing, String[] fields) {
         String existingUuid = getUuid();
         try {
-            ReflectionUtil.copy(this, thing);
+            ReflectionUtil.copy(this, thing, fields);
 
         } catch (Exception e) {
             throw new IllegalArgumentException("update: error copying properties: "+e, e);
