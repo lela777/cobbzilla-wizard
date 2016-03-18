@@ -11,13 +11,24 @@ public abstract class AuditLogDAO<E extends AuditLog> extends AbstractCRUDDAO<E>
     public abstract String getEncryptionKey ();
 
     @Override public Object preCreate(@Valid E entity) {
-        final String key = getEncryptionKey();
-        return empty(key) ? super.preCreate(entity) : super.preCreate((E) entity.encrypt(key));
+        entity = prepare(entity);
+        return super.preCreate(entity);
     }
 
     @Override public Object preUpdate(@Valid E entity) {
+        entity = prepare(entity);
+        return super.preUpdate(entity);
+    }
+
+    protected E prepare(@Valid E entity) {
         final String key = getEncryptionKey();
-        return empty(key) ? super.preCreate(entity) : super.preCreate((E) entity.encrypt(key));
+        if (empty(key)) {
+            entity.setKeyHash("-not-encrypted-");
+            entity.setRecordHash("-not-encrypted-");
+        } else {
+            entity = entity.encrypt(key);
+        }
+        return entity;
     }
 
 }
