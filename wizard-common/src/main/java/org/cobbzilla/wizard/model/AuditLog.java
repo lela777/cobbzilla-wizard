@@ -23,28 +23,28 @@ import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 @MappedSuperclass @NoArgsConstructor @Accessors(chain=true)
 public class AuditLog extends StrongIdentifiableBase {
 
-    @Size(max=200, message="err.entityType.length")
-    @Column(length=200, nullable=false, updatable=false)
+    private static final int ENC_PAD = 500;
+    public static final int STATE_MAXLEN = (int) (512 * Bytes.KB);
+
+    @HasValue(message="err.entityType.empty")
+    @Column(length=200+ENC_PAD, nullable=false, updatable=false)
     @Getter @Setter private String entityType;
 
     @HasValue(message="err.uuid.empty")
-    @Size(max=UUID_MAXLEN, message="err.uuid.length")
-    @Column(length=UUID_MAXLEN, nullable=false, updatable=false)
+    @Column(length=UUID_MAXLEN+ENC_PAD, nullable=false, updatable=false)
     @Getter @Setter private String entityUuid;
 
     @Column(length=10, nullable=false, updatable=false)
     @Enumerated(EnumType.STRING)
     @Getter @Setter private CrudOperation operation;
 
-    public static final int STATE_MAXLEN = (int) (512 * Bytes.KB);
-
     @Size(max=STATE_MAXLEN, message="err.prevState.length")
-    @Column(length=STATE_MAXLEN, updatable=false)
+    @Column(length=STATE_MAXLEN+ENC_PAD, updatable=false)
     @Getter @Setter private String prevState;
     public boolean hasPrevState() { return !empty(prevState); }
 
     @Size(max=STATE_MAXLEN, message="err.newState.length")
-    @Column(length=STATE_MAXLEN, updatable=false)
+    @Column(length=STATE_MAXLEN+ENC_PAD, updatable=false)
     @Getter @Setter private String newState;
     public boolean hasNewState() { return !empty(newState); }
 
