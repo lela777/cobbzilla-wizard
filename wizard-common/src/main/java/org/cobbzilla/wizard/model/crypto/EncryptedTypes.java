@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.model.crypto;
 public class EncryptedTypes {
 
     public static final int ENC_PAD  = 100;
-    public static final int ENC_INT  = 30;
+    public static final int ENC_INT  = 50;
     public static final int ENC_LONG = 50;
 
     public static final String ENCRYPTED_STRING = "encryptedString";

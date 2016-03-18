@@ -64,6 +64,8 @@ public class AuditLog extends StrongIdentifiableBase {
         setRecordHash(sha256_hex(toString()));
         if (hasPrevState()) setPrevState(string_encrypt(getPrevState(), key));
         if (hasNewState()) setNewState(string_encrypt(getNewState(), key));
+        setEntityType(string_encrypt(getEntityType(), key));
+        setEntityUuid(string_encrypt(getEntityUuid(), key));
         return (E) this;
     }
 
@@ -71,6 +73,8 @@ public class AuditLog extends StrongIdentifiableBase {
         if (!sha256_hex(key).equals(getKeyHash())) die("decrypt: wrong key");
         if (hasPrevState()) setPrevState(string_decrypt(getPrevState(), key));
         if (hasNewState()) setNewState(string_decrypt(getNewState(), key));
+        setEntityType(string_decrypt(getEntityType(), key));
+        setEntityUuid(string_decrypt(getEntityUuid(), key));
         if (!sha256_hex(toString()).equals(recordHash)) die("decrypt: record hash failure");
         return (E) this;
     }
