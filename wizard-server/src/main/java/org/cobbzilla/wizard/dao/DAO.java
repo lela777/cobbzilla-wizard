@@ -29,7 +29,7 @@ public interface DAO<E> {
 
     Object preUpdate(@Valid E entity);
     E update(@Valid E entity);
-    E postUpdate(@Valid E entity, Object context);
+    E postUpdate(E entity, Object context);
 
     void delete(String uuid);
 

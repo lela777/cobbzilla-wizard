@@ -389,7 +389,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return rval;
     }
 
-    @Override public E postUpdate(@Valid E entity, Object context) { return null; }
+    @Override public E postUpdate(E entity, Object context) { return null; }
 
     @Override public void delete(String uuid) {
         for (D dao : getDAOs(uuid, ShardIO.read)) {

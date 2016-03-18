@@ -82,7 +82,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
     }
 
-    @Override public E postUpdate(@Valid E entity, Object context) {
+    @Override public E postUpdate(E entity, Object context) {
         return auditingEnabled() ? commit_audit(entity, context) : entity;
     }
 
