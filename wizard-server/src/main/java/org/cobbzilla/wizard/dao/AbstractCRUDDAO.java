@@ -9,23 +9,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.collection.FieldTransfomer;
+import org.cobbzilla.wizard.api.CrudOperation;
+import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.FlushMode;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.hibernate.criterion.Restrictions.and;
-import static org.hibernate.criterion.Restrictions.eq;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
+import static org.hibernate.criterion.Restrictions.*;
 
 @Transactional @Slf4j
 public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
+
+    public <A extends AuditLog> AuditLogDAO<A> getAuditLogDAO() { return null; }
+    public boolean auditingEnabled () { return getAuditLogDAO() != null; }
 
     public static final Transformer TO_UUID = new FieldTransfomer("uuid");
     public static <E> Collection<String> toUuid (Collection<E> c) { return CollectionUtils.collect(c, TO_UUID); }
@@ -37,15 +43,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public E findByUuid(String uuid) { return uniqueResult(criteria().add(eq("uuid", uuid))); }
 
     @Transactional(readOnly=true)
-    public List<E> findByUuids(Collection<String> uuids) {
-        return list(criteria().add(Restrictions.in("uuid", uuids)));
-    }
+    public List<E> findByUuids(Collection<String> uuids) { return list(criteria().add(in("uuid", uuids))); }
 
     @Transactional(readOnly=true)
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
-    @Override public Object preCreate(@Valid E entity) { return entity; }
-    @Override public E postCreate(E entity, Object context) { return entity; }
+    @Override public Object preCreate(@Valid E entity) {
+        return auditingEnabled() ? audit(null, entity, CrudOperation.create) : entity;
+    }
+    @Override public E postCreate(E entity, Object context) {
+        return auditingEnabled() ? commit_audit(entity, context) : entity;
+    }
 
     @Override public E create(@Valid E entity) { return AbstractCRUDDAO.create(entity, this); }
 
@@ -70,8 +78,13 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         return exists(entity.getUuid()) ? update(entity) : create(entity);
     }
 
-    @Override public Object preUpdate(@Valid E entity) { return entity; }
-    @Override public E postUpdate(@Valid E entity, Object context) { return entity; }
+    @Override public Object preUpdate(@Valid E entity) {
+        return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
+    }
+
+    @Override public E postUpdate(@Valid E entity, Object context) {
+        return auditingEnabled() ? commit_audit(entity, context) : entity;
+    }
 
     @Override public E update(@Valid E entity) {
         final Object ctx = preUpdate(entity);
@@ -92,14 +105,14 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public void delete(String uuid) {
         final E found = get(checkNotNull(uuid));
         setFlushMode();
+        final AuditLog auditLog = auditingEnabled() ? audit_delete(found) : null;
         if (found != null) getHibernateTemplate().delete(found);
         getHibernateTemplate().flush();
+        if (auditLog != null) commit_audit_delete(auditLog);
     }
 
     @Transactional(readOnly=true)
-    @Override public E findByUniqueField(String field, Object value) {
-        return uniqueResult(eq(field, value));
-    }
+    @Override public E findByUniqueField(String field, Object value) { return uniqueResult(eq(field, value)); }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
@@ -134,5 +147,49 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     protected void setFlushMode() { setFlushMode(getHibernateTemplate()); }
     protected static void setFlushMode(HibernateTemplate template) { template.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+
+    private static final String PROP_AUDIT_LOG = "__auditLog";
+
+    private Object audit(E prevEntity, E newEntity, CrudOperation operation) {
+
+        if (newEntity == null) die("audit("+operation.name()+"): newEntity cannot be null");
+
+        AuditLog auditLog = getAuditLogDAO().newEntity()
+                .setEntityType(getEntityClass().getName())
+                .setEntityUuid(newEntity.getUuid())
+                .setOperation(operation)
+                .setPrevState(prevEntity == null ? null : toJsonOrDie(prevEntity))
+                .setNewState(toJsonOrDie(newEntity));
+
+        auditLog = getAuditLogDAO().create(auditLog);
+
+        final Map<String, Object> ctx = new HashMap<>();
+        ctx.put(PROP_AUDIT_LOG, auditLog);
+        return ctx;
+    }
+
+    private E commit_audit(E entity, Object context) {
+        final Map<String, Object> ctx = (Map<String, Object>) context;
+        final AuditLog auditLog = (AuditLog) ctx.get(PROP_AUDIT_LOG);
+        auditLog.setSuccess(true);
+        getAuditLogDAO().update(auditLog);
+        return entity;
+    }
+
+    private AuditLog audit_delete(E found) {
+        AuditLog auditLog = getAuditLogDAO().newEntity()
+                .setEntityType(getEntityClass().getName())
+                .setEntityUuid(found.getUuid())
+                .setOperation(CrudOperation.delete)
+                .setPrevState(toJsonOrDie(found))
+                .setNewState(null);
+
+        return getAuditLogDAO().create(auditLog);
+    }
+
+    private void commit_audit_delete(AuditLog auditLog) {
+        auditLog.setSuccess(true);
+        getAuditLogDAO().update(auditLog);
+    }
 
 }
