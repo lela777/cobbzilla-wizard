@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
@@ -19,9 +18,6 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
 public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E> {
 
     @Getter private final Class<E> entityClass;
-
-    @Override public Iterator<E> iterate(String hsql, List<Object> args) { return notSupported(); }
-    @Override public void closeIterator(Iterator<E> iterator) { notSupported(); }
 
     public AbstractRedisDAO () { this.entityClass = (Class<E>) getTypeParameter(getClass()); }
 

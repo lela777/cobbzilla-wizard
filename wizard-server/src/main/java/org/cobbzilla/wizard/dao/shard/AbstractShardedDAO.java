@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,7 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
-import static org.cobbzilla.wizard.util.Await.*;
+import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
+import static org.cobbzilla.wizard.util.Await.awaitFirst;
 import static org.cobbzilla.wizard.util.SpringUtil.autowire;
 
 @Transactional @Slf4j
@@ -259,7 +259,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return queryShardsList(new ShardFindBy2FieldsTask.Factory(f1, v1, f2, v2), "findByFields");
     }
 
-    protected E queryShardsUnique(ShardTaskFactory<E, D, E, E> factory, String ctx) {
+    protected E queryShardsUnique(ShardTaskFactory<E, D, E> factory, String ctx) {
         try {
             // Start iterator tasks on all DAOs
             final List<Future<E>> futures = new ArrayList<>();
@@ -275,7 +275,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         }
     }
 
-    protected List<E> queryShardsList(ShardTaskFactory<E, D, List<E>, List<E>> factory, String ctx) {
+    protected List<E> queryShardsList(ShardTaskFactory<E, D, List<E>> factory, String ctx) {
         try {
             // Start iterator tasks on all DAOs
             final List<Future<List<E>>> futures = new ArrayList<>();
@@ -291,66 +291,25 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         }
     }
 
-    @Override public Iterator<E> iterate(String hsql, List<Object> args) { return iterate(null, hsql, args); }
-
-    public Iterator<E> iterate(String shardHash, String hsql, List<Object> args) {
-        if (shardHash != null) {
-            return getDAO(shardHash).iterate(hsql, args);
+    public <R> List<R> search(ShardSearch search) {
+        long timeout = search.hasTimeout() ? search.getTimeout() : getShardQueryTimeout("search");
+        if (search.hasHash()) {
+            final D dao = getDAO(search.getHash());
+            return dao.search(search);
         } else {
-            final ShardTaskFactory<E, D, Iterator<E>, Iterator<E>> factory = new ShardIterateTask.Factory<>(hsql, args);
+            final ShardTaskFactory factory = new ShardSearchTask.Factory(search);
             try {
                 // Start iterator tasks on all DAOs
-                final List<Future<Iterator<E>>> futures = new ArrayList<>();
+                final List<Future<List<R>>> futures = new ArrayList<>();
                 for (D dao : getNonOverlappingDAOs()) {
                     futures.add(queryWorkerPool.submit(factory.newTask(dao)));
                 }
 
                 // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
-                return awaitAndCollect(futures, MAX_QUERY_RESULTS, getShardQueryTimeout("iterate"));
+                return search.sort(awaitAndCollect(futures, MAX_QUERY_RESULTS, timeout));
 
             } finally {
-                for (ShardTask task : factory.getTasks()) task.cancel();
-            }
-        }
-    }
-    @Override public void closeIterator(Iterator<E> iterator) {
-        if (iterator != null) {
-            try {
-                final Method closeMethod = iterator.getClass().getMethod("close", null);
-                if (closeMethod == null) die("no close method found on "+iterator.getClass().getName());
-                closeMethod.invoke(iterator);
-
-            } catch (Exception e) {
-                log.warn("closeIterator: error closing: "+e);
-            }
-        }
-    }
-
-    public <R> List<R> iterate(ShardIteratorFactory<E, D, R> iteratorFactory) {
-        final Set<ShardTask<E, D, E, R>> tasks = new ConcurrentSkipListSet<>();
-        List<ShardIterator<E, D>> iterators = null;
-        try {
-            // Start iterator tasks on all DAOs
-            final List<Future> futures = new ArrayList<>();
-            iterators = iteratorFactory.iterators(getNonOverlappingDAOs());
-            for (ShardIterator<E, D> iterator : iterators) {
-                final ShardIteratorTask<E, D, E, R> task = new ShardIteratorTask<>(iterator.getDao(), tasks, iterator, iteratorFactory.getResultCollector());
-                futures.add(queryWorkerPool.submit(task));
-            }
-
-            // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
-            awaitAll(futures, getShardQueryTimeout("iterate"));
-
-            return iteratorFactory.getResultCollector().getResults();
-
-        } finally {
-            for (ShardTask task : tasks) task.cancel();
-            if (iterators != null) {
-                for (ShardIterator iter : iterators) {
-                    try { iter.close(); } catch (Exception e) {
-                        log.warn("search: error closing iterator: "+e);
-                    }
-                }
+                for (Object task : factory.getTasks()) ((ShardTask) task).cancel();
             }
         }
     }

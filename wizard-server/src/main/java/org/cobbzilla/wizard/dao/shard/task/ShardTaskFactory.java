@@ -5,11 +5,11 @@ import org.cobbzilla.wizard.model.Identifiable;
 
 import java.util.Set;
 
-public interface ShardTaskFactory<E extends Identifiable, D extends SingleShardDAO<E>, T, R> {
+public interface ShardTaskFactory<E extends Identifiable, D extends SingleShardDAO<E>, R> {
 
-    ShardTask<E, D, T, R> newTask (D dao);
+    ShardTask<E, D, R> newTask (D dao);
 
-    Set<ShardTask<E, D, T, R>> getTasks ();
+    Set<ShardTask<E, D, R>> getTasks ();
 
     void cancelTasks();
 }

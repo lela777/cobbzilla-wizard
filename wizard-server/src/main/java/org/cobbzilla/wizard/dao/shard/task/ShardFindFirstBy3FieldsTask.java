@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.cobbzilla.wizard.dao.shard.SimpleShardTask;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.util.ResultCollectorBase;
 
 import java.util.Set;
 
@@ -13,7 +14,7 @@ public class ShardFindFirstBy3FieldsTask<E extends Identifiable, D extends Singl
 
     @AllArgsConstructor
     public static class Factory<E extends Identifiable, D extends SingleShardDAO<E>>
-            extends ShardTaskFactoryBase<E, D, E, E> {
+            extends ShardTaskFactoryBase<E, D, E> {
         private String f1;
         private Object v1;
         private String f2;
@@ -33,8 +34,8 @@ public class ShardFindFirstBy3FieldsTask<E extends Identifiable, D extends Singl
     private String f3;
     private Object v3;
 
-    public ShardFindFirstBy3FieldsTask(D dao, Set<ShardTask<E, D, E, E>> tasks, String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        super(dao, tasks, new ShardResultCollectorBase<E>());
+    public ShardFindFirstBy3FieldsTask(D dao, Set<ShardTask<E, D, E>> tasks, String f1, Object v1, String f2, Object v2, String f3, Object v3) {
+        super(dao, tasks, new ResultCollectorBase());
         this.f1 = f1;
         this.v1 = v1;
         this.f2 = f2;

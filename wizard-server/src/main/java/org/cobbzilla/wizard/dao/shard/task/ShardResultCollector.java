@@ -1,15 +1,11 @@
 package org.cobbzilla.wizard.dao.shard.task;
 
-import java.util.List;
+import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.util.ResultCollector;
 
-public interface ShardResultCollector<R> {
+public interface ShardResultCollector<E> extends ResultCollector {
 
-    List<R> getResults();
-
-    void addResult(Object thing);
-
-    int size();
-
-    int getMaxResults();
+    DAO<E> getDAO();
+    void setDAO(DAO<E> dao);
 
 }

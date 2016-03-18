@@ -4,7 +4,6 @@ import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
 
 public interface DAO<E> {
@@ -22,9 +21,6 @@ public interface DAO<E> {
     List<E> findByField(String field, Object value);
 
     boolean exists(String uuid);
-
-    Iterator<E> iterate(String hsql, List<Object> args);
-    void closeIterator(Iterator<E> iterator);
 
     Object preCreate(@Valid E entity);
     E create(@Valid E entity);

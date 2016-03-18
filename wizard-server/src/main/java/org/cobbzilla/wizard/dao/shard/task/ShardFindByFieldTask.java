@@ -7,13 +7,13 @@ import org.cobbzilla.wizard.model.Identifiable;
 import java.util.List;
 import java.util.Set;
 
-public class ShardFindByFieldTask<E extends Identifiable, D extends SingleShardDAO<E>> extends ShardFindAllTask<E, D> {
+public class ShardFindByFieldTask<E extends Identifiable, D extends SingleShardDAO<E>> extends ShardFindListTask<E, D> {
 
     @Override protected List<E> find() { return dao.findByField(field, value); }
 
     @AllArgsConstructor
     public static class Factory<E extends Identifiable, D extends SingleShardDAO<E>>
-            extends ShardTaskFactoryBase<E, D, List<E>, List<E>> {
+            extends ShardTaskFactoryBase<E, D, List<E>> {
         private String field;
         private Object value;
 
@@ -25,7 +25,7 @@ public class ShardFindByFieldTask<E extends Identifiable, D extends SingleShardD
     private String field;
     private Object value;
 
-    public ShardFindByFieldTask(D dao, Set<ShardTask<E, D, List<E>, List<E>>> tasks, String field, Object value) {
+    public ShardFindByFieldTask(D dao, Set<ShardTask<E, D, List<E>>> tasks, String field, Object value) {
         super(dao, tasks);
         this.field = field;
         this.value = value;
