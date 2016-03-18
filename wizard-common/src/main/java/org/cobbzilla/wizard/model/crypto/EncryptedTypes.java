@@ -1,9 +1,10 @@
-package org.cobbzilla.wizard.model;
+package org.cobbzilla.wizard.model.crypto;
 
 public class EncryptedTypes {
 
-    public static final int ENC_PAD = 100;
-    public static final int ENC_INT = 100;
+    public static final int ENC_PAD  = 100;
+    public static final int ENC_INT  = 30;
+    public static final int ENC_LONG = 50;
 
     public static final String ENCRYPTED_STRING = "encryptedString";
     public static final String STRING_ENCRYPTOR_NAME = "hibernateStringEncryptor";

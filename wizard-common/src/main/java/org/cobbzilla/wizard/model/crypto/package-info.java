@@ -14,7 +14,7 @@
 
 })
 
-package org.cobbzilla.wizard.model;
+package org.cobbzilla.wizard.model.crypto;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
@@ -23,5 +23,5 @@ import org.jasypt.hibernate4.type.EncryptedIntegerAsStringType;
 import org.jasypt.hibernate4.type.EncryptedLongAsStringType;
 import org.jasypt.hibernate4.type.EncryptedStringType;
 
-import static org.cobbzilla.wizard.model.EncryptedTypes.*;
+import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.*;
 

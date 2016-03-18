@@ -2,7 +2,7 @@ package org.cobbzilla.wizard.spring.config.rdbms;
 
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.PoisonProxy;
-import org.cobbzilla.wizard.model.EncryptedTypes;
+import org.cobbzilla.wizard.model.crypto.EncryptedTypes;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HibernateConfiguration;
