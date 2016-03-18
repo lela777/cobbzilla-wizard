@@ -63,6 +63,8 @@ public abstract class AbstractSingleShardDAO<E extends Identifiable>
         }
     }
 
+    @Override public void initialize() {}
+
     @Override public void cleanup() {
         try {
             getHibernateTemplate().getSessionFactory().close();

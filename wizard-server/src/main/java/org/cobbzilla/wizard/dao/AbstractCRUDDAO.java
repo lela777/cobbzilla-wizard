@@ -146,7 +146,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     protected void setFlushMode() { setFlushMode(getHibernateTemplate()); }
-    protected static void setFlushMode(HibernateTemplate template) { template.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+    public static void setFlushMode(HibernateTemplate template) { template.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
 
     private static final String PROP_AUDIT_LOG = "__auditLog";
 

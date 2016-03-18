@@ -49,6 +49,8 @@ public class RestServerConfiguration {
 
     public String getApiUriBase() { return getPublicUriBase() + getHttp().getBaseUri(); }
 
+    public String getLoopbackApiBase() { return "http://127.0.0.1:" + getHttp().getPort() + getHttp().getBaseUri(); }
+
     public ResultSetBean execSql(String sql, Object[] args) throws SQLException {
 
         if (!(this instanceof HasDatabaseConfiguration)) die("execSql: "+getClass().getName()+" is not an instance of HasDatabaseConfiguration");

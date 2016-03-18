@@ -15,6 +15,7 @@ import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.ShardRange;
 import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.server.ApplicationContextConfig;
+import org.cobbzilla.wizard.server.CustomBeanResolver;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
@@ -66,14 +67,17 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     protected ApplicationContext getApplicationContext(DatabaseConfiguration database) {
 
-        final HasDatabaseConfiguration config = instantiate(configuration.getClass());
-        copy(config, configuration);
-        config.setDatabase(database);
-        config.getDatabase().getHibernate().setHbm2ddlAuto("validate");
+        final HasDatabaseConfiguration singleShardConfig = instantiate(configuration.getClass());
+        copy(singleShardConfig, configuration);
+        singleShardConfig.setDatabase(database);
+        singleShardConfig.getDatabase().getHibernate().setHbm2ddlAuto("validate");
 
-        final ApplicationContextConfig ctxConfig = new ApplicationContextConfig((RestServerConfiguration) config).setSpringContextPath(getSpringShardContextPath());
+        final ApplicationContextConfig ctxConfig = new ApplicationContextConfig()
+                .setConfig((RestServerConfiguration) singleShardConfig)
+                .setResolvers(new CustomBeanResolver[] {new CustomShardedDAOResolver(server.getApplicationContext())})
+                .setSpringContextPath(getSpringShardContextPath());
         final ApplicationContext applicationContext = server.buildSpringApplicationContext(ctxConfig);
-        ((RestServerConfiguration) config).setApplicationContext(applicationContext);
+        ((RestServerConfiguration) singleShardConfig).setApplicationContext(applicationContext);
 
         return applicationContext;
     }
@@ -93,9 +97,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Getter(lazy=true) private final ShardMap defaultShardMap = initDefaultShardMap();
     private ShardMap initDefaultShardMap () {
-        log.warn("no shards defined, using master DB only: "+entityClass.getName());
+        log.warn("no shards defined, using master DB only: "+getShardConfiguration().getName());
         return new ShardMap()
-                .setShardSet(entityClass.getName())
+                .setShardSet(getShardConfiguration().getName())
                 .setRange(new ShardRange(0, Integer.MAX_VALUE))
                 .setUrl(getMasterDbConfiguration().getUrl())
                 .setAllowRead(true)
@@ -109,6 +113,17 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         if (shardMaps.isEmpty()) shardMaps = new SingletonList<>(getDefaultShardMap());
         final List<D> found = toDAOs(shardMaps);
         return found;
+    }
+
+    protected List<D> getDAOs(ShardIO shardIO) {
+        List<ShardMap> shards;
+        switch (shardIO) {
+            case read: shards = getReadShards(); break;
+            case write: shards = getWriteShards(); break;
+            default: return die("getDAOs: invalid shardIO: "+shardIO);
+        }
+        if (shards.isEmpty()) shards = new SingletonList<>(getDefaultShardMap());
+        return toDAOs(shards);
     }
 
     protected List<D> getDAOs(E entity) { return getDAOs(entity, ShardIO.read); }
@@ -147,6 +162,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                     final DatabaseConfiguration database = getMasterDbConfiguration().getShardDatabaseConfiguration(map);
                     final ApplicationContext ctx = getApplicationContext(database);
                     dao = autowire(ctx, instantiate(singleShardDaoClass));
+                    dao.initialize();
                     daos.put(map, dao);
                 }
             }
@@ -168,7 +184,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Transactional(readOnly=true)
     public List<D> getNonOverlappingDAOs() {
-        List<ShardMap> shards = getShardDAO().findReadShards(entityClass.getName());
+        List<ShardMap> shards = getReadShards();
         if (shards.isEmpty()) {
             shards = new SingletonList<>(getDefaultShardMap());
         } else {
@@ -183,6 +199,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         }
         return toDAOs(shards);
     }
+
+    public List<ShardMap> getReadShards() { return getShardDAO().findReadShards(getShardConfiguration().getName()); }
+    public List<ShardMap> getWriteShards() { return getShardDAO().findWriteShards(getShardConfiguration().getName()); }
 
     @Transactional(readOnly=true)
     @Override public SearchResults<E> search(ResultPage resultPage) { return notSupported(); }
@@ -253,6 +272,16 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
         if (hashOn.equals(f1)) {
             return getDAO((String) v1).findByFields(f1, v1, f2, v2);
+        }
+
+        // have to search all shards for it
+        return queryShardsList(new ShardFindBy2FieldsTask.Factory(f1, v1, f2, v2), "findByFields");
+    }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
+        if (hashOn.equals(f1)) {
+            return getDAO((String) v1).findByFields(f1, v1, f2, v2, f3, v3);
         }
 
         // have to search all shards for it
