@@ -203,10 +203,10 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     public List<ShardMap> getReadShards() { return getShardDAO().findReadShards(getShardConfiguration().getName()); }
     public List<ShardMap> getWriteShards() { return getShardDAO().findWriteShards(getShardConfiguration().getName()); }
 
-    @Transactional(readOnly=true)
+    @Transactional(readOnly=true) // todo
     @Override public SearchResults<E> search(ResultPage resultPage) { return notSupported(); }
 
-    @Transactional(readOnly=true)
+    @Transactional(readOnly=true) // todo
     @Override public SearchResults<E> search(ResultPage resultPage, String entityType) { return notSupported(); }
 
     @Transactional(readOnly=true)
@@ -266,6 +266,26 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
         // have to search all shards for it
         return queryShardsList(new ShardFindByFieldTask.Factory(field, value), "findByField");
+    }
+
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldLike(String field, String value) {
+        if (hashOn.equals(field)) {
+            return getDAO(value).findByFieldLike(field, value);
+        }
+
+        // have to search all shards for it
+        return queryShardsList(new ShardFindByFieldLikeTask.Factory(field, value), "findByFieldLike");
+    }
+
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
+        if (hashOn.equals(eqField)) {
+            return getDAO((String) eqValue).findByFieldEqualAndFieldLike(eqField, eqValue, likeField, likeValue);
+        }
+
+        // have to search all shards for it
+        return queryShardsList(new ShardFindByFieldEqualAndFieldLikeTask.Factory(eqField, eqValue, likeField, likeValue), "findByFieldEqualAndFieldLike");
     }
 
     @Transactional(readOnly=true)

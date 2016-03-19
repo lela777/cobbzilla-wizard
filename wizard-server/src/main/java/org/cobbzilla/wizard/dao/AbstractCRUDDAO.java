@@ -13,6 +13,7 @@ import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.FlushMode;
+import org.hibernate.criterion.Order;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,9 +126,22 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
-    @Override public List<E> findByField(String field, Object value) {
-        return list(criteria().add(eq(field, value)));
+    @Override public List<E> findByField(String field, Object value) { return list(criteria().add(eq(field, value))); }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFieldLike(String field, String value) {
+        return list(criteria().add(like(field, value)).addOrder(Order.asc(field)), 0, getFindByFieldLikeMaxResults());
     }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
+        return list(criteria().add(and(
+                eq(eqField, eqValue),
+                like(likeField, likeValue)
+        )).addOrder(Order.asc(likeField)), 0, getFindByFieldLikeMaxResults());
+    }
+
+    protected int getFindByFieldLikeMaxResults() { return 100; }
 
     @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {

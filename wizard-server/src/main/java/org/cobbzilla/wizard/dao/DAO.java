@@ -19,6 +19,8 @@ public interface DAO<E> {
     E findByUuid(String uuid);
     E findByUniqueField(String field, Object value);
     List<E> findByField(String field, Object value);
+    List<E> findByFieldLike(String field, String value);
+    List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue);
 
     boolean exists(String uuid);
 
