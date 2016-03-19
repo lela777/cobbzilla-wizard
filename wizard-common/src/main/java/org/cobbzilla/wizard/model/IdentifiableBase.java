@@ -34,7 +34,7 @@ public class IdentifiableBase implements Identifiable {
     public boolean hasUuid () { return !empty(uuid); }
 
     public void beforeCreate() {
-        if (uuid != null) die("uuid already initialized");
+        if (uuid != null) die("uuid already initialized on "+getClass().getName());
         initUuid();
     }
 

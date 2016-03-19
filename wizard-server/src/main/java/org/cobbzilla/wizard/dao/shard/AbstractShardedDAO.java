@@ -5,8 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.collection.mappy.MappyList;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.cache.redis.HasRedisConfiguration;
+import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.dao.SearchResults;
+import org.cobbzilla.wizard.dao.shard.cache.*;
 import org.cobbzilla.wizard.dao.shard.task.*;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
@@ -27,7 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,12 +49,23 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     public static final int MAX_QUERY_RESULTS = 200;
 
-    @Autowired private HasDatabaseConfiguration configuration;
+    public static final String NULL_CACHE = "__null__";
+
+    @Autowired private HasDatabaseConfiguration dbConfig;
+    @Autowired private HasRedisConfiguration redisConfig;
     @Autowired private RestServer server;
+    @Autowired private RedisService redisService;
+
+    private long getCacheTimeoutSeconds() { return TimeUnit.MINUTES.toSeconds(30); }
+
+    @Getter(lazy=true) private final RedisService shardCache = initShardCache();
+    private RedisService initShardCache() { return redisService.prefixNamespace("shard-cache-"+getEntityClass().getName()); }
 
     @Getter private final Class<E> entityClass;
-    private final Class<D> singleShardDaoClass;
-    private final String hashOn;
+    @Getter private final Class<D> singleShardDaoClass;
+    @Getter private final String hashOn;
+
+    public E newEntity() { return instantiate(getEntityClass()); }
 
     private final Map<ShardMap, D> daos = new ConcurrentHashMap<>();
 
@@ -67,8 +84,8 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     protected ApplicationContext getApplicationContext(DatabaseConfiguration database) {
 
-        final HasDatabaseConfiguration singleShardConfig = instantiate(configuration.getClass());
-        copy(singleShardConfig, configuration);
+        final HasDatabaseConfiguration singleShardConfig = instantiate(dbConfig.getClass());
+        copy(singleShardConfig, dbConfig);
         singleShardConfig.setDatabase(database);
         singleShardConfig.getDatabase().getHibernate().setHbm2ddlAuto("validate");
 
@@ -84,7 +101,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     protected String getSpringShardContextPath() { return "spring-shard.xml"; }
 
-    protected abstract ShardSetConfiguration getShardConfiguration();
+    public abstract ShardSetConfiguration getShardConfiguration();
     protected abstract DatabaseConfiguration getMasterDbConfiguration();
     protected abstract ShardMapDAO getShardDAO();
 
@@ -107,9 +124,14 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 .setDefaultShard(true);
     }
 
-    protected List<D> getDAOs(Serializable id) { return getDAOs(id, ShardIO.read); }
+    protected List<D> getAllDAOs(Serializable id) {
+        return toDAOs(getShardDAO().getShardList(getShardConfiguration().getName(), getLogicalShard(id)));
+    }
+
+    protected List<D> getAllDAOs(E entity) { return getAllDAOs((Serializable) getIdToHash(entity)); }
+
     protected List<D> getDAOs(Serializable id, ShardIO shardIO) {
-        List<ShardMap> shardMaps = getShardDAO().findByEntityAndLogicalShard(getShardConfiguration().getName(), getLogicalShard(id), shardIO);
+        List<ShardMap> shardMaps = getShardDAO().getShardList(getShardConfiguration().getName(), getLogicalShard(id), shardIO);
         if (shardMaps.isEmpty()) shardMaps = new SingletonList<>(getDefaultShardMap());
         final List<D> found = toDAOs(shardMaps);
         return found;
@@ -126,7 +148,6 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return toDAOs(shards);
     }
 
-    protected List<D> getDAOs(E entity) { return getDAOs(entity, ShardIO.read); }
     protected List<D> getDAOs(E entity, ShardIO shardIO) {
         final Object value = getIdToHash(entity);
         if (value == null) die("getDAOs: value of hashOn field ("+hashOn+") was null");
@@ -170,7 +191,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return dao;
     }
 
-    protected D getDAO(Serializable id) { return getDAO(id, ShardIO.read); }
+    public D getDAO(Serializable id) { return getDAO(id, ShardIO.read); }
     protected D getDAO(Serializable id, ShardIO shardIO) { return pickRandom(getDAOs(id, shardIO)); }
 
     protected D getDAO(E entity) { return getDAO(entity, ShardIO.read); }
@@ -210,52 +231,35 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     @Override public SearchResults<E> search(ResultPage resultPage, String entityType) { return notSupported(); }
 
     @Transactional(readOnly=true)
-    @Override public E get(Serializable id) { return getDAO((String) id).get(id); }
-
-    @Transactional(readOnly=true)
-    @Override public List<E> findAll() { return notSupported(); }
-
-    @Transactional(readOnly=true)
-    @Override public E findByUuid(final String uuid) {
-        if (hashOn.equals("uuid")) return get(uuid);
-        return findByUniqueField("uuid", uuid);
+    @Override public E get(Serializable id) {
+        return new ShardableShardCacheableIdentityFinder<>(this, getCacheTimeoutSeconds()).get(id.toString(), id);
     }
 
     @Transactional(readOnly=true)
+    @Override public List<E> findAll() {
+        final List<E> results = new ArrayList<>();
+        for (D dao : getNonOverlappingDAOs()) {
+            results.addAll(dao.findAll());
+        }
+        return results;
+    }
+
+    @Transactional(readOnly=true)
+    @Override public E findByUuid(final String uuid) { return findByUniqueField("uuid", uuid); }
+
+    @Transactional(readOnly=true)
     @Override public E findByUniqueField(String field, Object value) {
-        if (hashOn.equals(field)) return getDAO((String) value).get((String) value);
-        // have to search all shards for it
-        return queryShardsUnique(new ShardFindFirstByFieldTask.Factory(field, value), "findByUniqueField");
+        return new ShardableShardCacheableUniqueFieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-field:"+field+":"+value, field, value);
     }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
-        D dao = null;
-        if (hashOn.equals(f1)) {
-            dao = getDAO((String) v1);
-        } else if (hashOn.equals(f2)) {
-            dao = getDAO((String) v2);
-        }
-        if (dao != null) return dao.findByUniqueFields(f1, v1, f2, v2);
-
-        // have to search all shards for it
-        return queryShardsUnique(new ShardFindFirstBy2FieldsTask.Factory(f1, v1, f2, v2), "findByUniqueFields");
+        return new ShardableShardCacheableFindByUnique2FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields2:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2);
     }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        D dao = null;
-        if (hashOn.equals(f1)) {
-            dao = getDAO((String) v1);
-        } else if (hashOn.equals(f2)) {
-            dao = getDAO((String) v2);
-        } else if (hashOn.equals(f3)) {
-            dao = getDAO((String) v3);
-        }
-        if (dao != null) return dao.findByUniqueFields(f1, v1, f2, v2, f3, v3);
-
-        // have to search all shards for it
-        return queryShardsUnique(new ShardFindFirstBy3FieldsTask.Factory(f1, v1, f2, v2, f3, v3), "findByUniqueFields");
+        return new ShardableShardCacheableFindByUnique3FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields3:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2, f3, v3);
     }
 
     @Transactional(readOnly=true)
@@ -289,6 +293,16 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     @Transactional(readOnly=true)
+    @Override public List<E> findByFieldIn(String field, Object[] values) {
+        if (hashOn.equals(field) && values.length == 1) {
+            return getDAO((String) values[0]).findByFieldIn(field, values);
+        }
+
+        // have to search all shards for it
+        return queryShardsList(new ShardFindByFieldInTask.Factory(field, values), "findByFieldIn");
+    }
+
+    @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
         if (hashOn.equals(f1)) {
             return getDAO((String) v1).findByFields(f1, v1, f2, v2);
@@ -308,7 +322,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return queryShardsList(new ShardFindBy2FieldsTask.Factory(f1, v1, f2, v2), "findByFields");
     }
 
-    protected E queryShardsUnique(ShardTaskFactory<E, D, E> factory, String ctx) {
+    public E queryShardsUnique(ShardTaskFactory<E, D, E> factory, String ctx) {
         try {
             // Start iterator tasks on all DAOs
             final List<Future<E>> futures = new ArrayList<>();
@@ -389,7 +403,10 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return getDAO(entity).createOrUpdate(entity);
     }
 
-    @Override public E postCreate(E entity, Object context) { return null; }
+    @Override public E postCreate(E entity, Object context) {
+        flushShardCache(entity.getUuid());
+        return entity;
+    }
 
     @Override public Object preUpdate(@Valid E entity) { return null; }
 
@@ -409,15 +426,29 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return rval;
     }
 
-    @Override public E postUpdate(E entity, Object context) { return null; }
+    @Override public E postUpdate(E entity, Object context) {
+        flushShardCache(entity.getUuid());
+        return entity;
+    }
 
     @Override public void delete(String uuid) {
-        for (D dao : getDAOs(uuid, ShardIO.read)) {
-            dao.delete(uuid);
-        }
-        for (D dao : getDAOs(uuid, ShardIO.write)) {
-            dao.delete(uuid);
-        }
+        for (D dao : getAllDAOs(uuid)) dao.delete(uuid);
+        flushShardCache(uuid);
     }
+
+    public void flushShardCache(String uuid) {
+        flushCacheRefs(getCacheRefsKey(uuid));
+        flushCacheRefs(getCacheRefsKey(NULL_CACHE));
+    }
+
+    public void flushCacheRefs(String cacheRefsKey) {
+        if (cacheRefsKey == null) return;
+        final List<String> cacheRefs = getShardCache().list(cacheRefsKey);
+        getShardCache().del(cacheRefsKey);
+        if (!empty(cacheRefs)) for (String ref : cacheRefs) getShardCache().del(ref);
+        getShardCache().del(cacheRefsKey);
+    }
+
+    public String getCacheRefsKey(String uuid) { return getShardConfiguration().getName()+":cache-refs:"+uuid; }
 
 }

@@ -93,10 +93,10 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         return new HashSet<>(CollectionUtils.collect(flatCache, TO_SHARD_SET));
     }
 
-    public List<ShardMap> findByEntityAndLogicalShard(String shardSet, int logicalShard, ShardIO shardIO) {
+    public List<E> getShardList(String shardSet, int logicalShard, ShardIO shardIO) {
         List<E> maps = getShardList(shardSet, shardIO);
-        final List<ShardMap> matches = new ArrayList<>();
-        for (ShardMap m : maps) {
+        final List<E> matches = new ArrayList<>();
+        for (E m : maps) {
             if (m.mapsShard(logicalShard)) matches.add(m);
         }
         return matches;
@@ -109,6 +109,14 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
             case write: return writeCache.get().getAll(shardSet);
             default: return die("getShardList: invalid shardIO: "+shardIO);
         }
+    }
+
+    protected List<E> getShardList(String shardSet, int logicalShard) {
+        refreshCache();
+        final Set<E> maps = new HashSet<>();
+        for (E map : readCache.get().getAll(shardSet)) if (map.mapsShard(logicalShard)) maps.add(map);
+        for (E map : writeCache.get().getAll(shardSet)) if (map.mapsShard(logicalShard)) maps.add(map);
+        return new ArrayList<>(maps);
     }
 
     public List<E> findReadShards(String shardSet) {

@@ -126,31 +126,38 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
-    @Override public List<E> findByField(String field, Object value) { return list(criteria().add(eq(field, value))); }
-
-    @Transactional(readOnly=true)
-    public List<E> findByFieldLike(String field, String value) {
-        return list(criteria().add(like(field, value)).addOrder(Order.asc(field)), 0, getFindByFieldLikeMaxResults());
+    @Override public List<E> findByField(String field, Object value) {
+        return list(criteria().add(eq(field, value)), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
-    public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
+    @Override public List<E> findByFieldLike(String field, String value) {
+        return list(criteria().add(like(field, value)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
         return list(criteria().add(and(
                 eq(eqField, eqValue),
                 like(likeField, likeValue)
-        )).addOrder(Order.asc(likeField)), 0, getFindByFieldLikeMaxResults());
+        )).addOrder(Order.asc(likeField)), 0, getFinderMaxResults());
     }
 
-    protected int getFindByFieldLikeMaxResults() { return 100; }
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldIn(String field, Object[] values) {
+        return list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+    }
+
+    protected int getFinderMaxResults() { return 100; }
 
     @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
-        return list(criteria().add(and(eq(f1, v1), eq(f2, v2))));
+        return list(criteria().add(and(eq(f1, v1), eq(f2, v2))), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        return list(criteria().add(and(eq(f1, v1), eq(f2, v2), eq(f3, v3))));
+        return list(criteria().add(and(eq(f1, v1), eq(f2, v2), eq(f3, v3))), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)

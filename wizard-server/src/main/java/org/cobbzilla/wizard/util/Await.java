@@ -23,13 +23,14 @@ public class Await {
 
     public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout, long retrySleep, long getSleep) {
         long start = now();
-        while (now() - start < timeout) {
+        while (!futures.isEmpty() && now() - start < timeout) {
             for (Iterator<Future<E>> iter = futures.iterator(); iter.hasNext(); ) {
                 Future<E> future = iter.next();
                 try {
                     final E value = future.get(getSleep, TimeUnit.MILLISECONDS);
                     if (value != null) return value;
                     iter.remove();
+                    if (futures.isEmpty()) break;
 
                 } catch (InterruptedException e) {
                     die("await: interrupted: " + e);
@@ -41,7 +42,7 @@ public class Await {
                 sleep(retrySleep);
             }
         }
-        if (now() - start < timeout) return die("await: timed out");
+        if (now() - start > timeout) return die("await: timed out");
         return null; // all futures had a null result
     }
 
@@ -64,13 +65,14 @@ public class Await {
     public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep, long getSleep, List<E> results) {
         long start = now();
         int size = futures.size();
-        while (now() - start < timeout) {
+        while (!futures.isEmpty() && now() - start < timeout) {
             for (Iterator<Future<List<E>>> iter = futures.iterator(); iter.hasNext(); ) {
                 Future future = iter.next();
                 try {
                     results.addAll((List<E>) future.get(getSleep, TimeUnit.MILLISECONDS));
                     iter.remove();
                     if (--size <= 0 || results.size() >= maxResults) return results;
+                    break;
 
                 } catch (InterruptedException e) {
                     die("await: interrupted: " + e);
@@ -82,7 +84,7 @@ public class Await {
                 sleep(retrySleep);
             }
         }
-        if (now() - start < timeout) die("await: timed out");
+        if (now() - start > timeout) die("await: timed out");
         return results;
     }
 

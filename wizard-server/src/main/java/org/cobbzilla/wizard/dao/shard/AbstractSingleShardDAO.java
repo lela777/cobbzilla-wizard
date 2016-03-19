@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.dao.shard;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.dao.shard.task.ShardSearchTask;
-import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
@@ -19,7 +19,7 @@ import java.util.List;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
 @Slf4j
-public abstract class AbstractSingleShardDAO<E extends Identifiable>
+public abstract class AbstractSingleShardDAO<E extends Shardable>
         extends AbstractCRUDDAO<E>
         implements SingleShardDAO<E> {
 

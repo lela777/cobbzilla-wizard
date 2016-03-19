@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import org.cobbzilla.wizard.dao.shard.ShardSearch;
 import org.cobbzilla.wizard.dao.shard.SimpleShardTask;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
-import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.util.ResultCollector;
 
 import java.util.List;
 import java.util.Set;
 
-public class ShardSearchTask <E extends Identifiable, D extends SingleShardDAO<E>, R> extends SimpleShardTask<E, D, List<R>> {
+public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, R> extends SimpleShardTask<E, D, List<R>> {
 
     @Override public List<R> execTask() {
         final ResultCollector collector = search.getCollector();

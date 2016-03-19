@@ -1,8 +1,8 @@
 package org.cobbzilla.wizard.dao.shard;
 
 import lombok.AllArgsConstructor;
-import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.shard.ShardMap;
+import org.cobbzilla.wizard.model.shard.Shardable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @AllArgsConstructor
-public class DaoMapCleaner<E extends Identifiable, D extends SingleShardDAO<E>> implements Runnable {
+public class DaoMapCleaner<E extends Shardable, D extends SingleShardDAO<E>> implements Runnable {
 
     private Map<ShardMap, D> daos;
     private ShardMapDAO shardMapDAO;

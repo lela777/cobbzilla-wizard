@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
-import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.util.ResultCollector;
 
 import java.util.Set;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
 @AllArgsConstructor @Slf4j
-public abstract class ShardTask<E extends Identifiable, D extends SingleShardDAO<E>, R> implements Callable, Comparable {
+public abstract class ShardTask<E extends Shardable, D extends SingleShardDAO<E>, R> implements Callable, Comparable {
 
     protected D dao;
     protected Set<ShardTask<E, D, R>> tasks;

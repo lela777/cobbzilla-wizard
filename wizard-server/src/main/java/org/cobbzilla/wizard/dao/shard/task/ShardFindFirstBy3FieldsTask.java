@@ -3,17 +3,17 @@ package org.cobbzilla.wizard.dao.shard.task;
 import lombok.AllArgsConstructor;
 import org.cobbzilla.wizard.dao.shard.SimpleShardTask;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
-import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.util.ResultCollectorBase;
 
 import java.util.Set;
 
-public class ShardFindFirstBy3FieldsTask<E extends Identifiable, D extends SingleShardDAO<E>> extends SimpleShardTask<E, D, E> {
+public class ShardFindFirstBy3FieldsTask<E extends Shardable, D extends SingleShardDAO<E>> extends SimpleShardTask<E, D, E> {
 
     @Override protected E execTask() { return dao.findByUniqueFields(f1, v1, f2, v2, f3, v3); }
 
     @AllArgsConstructor
-    public static class Factory<E extends Identifiable, D extends SingleShardDAO<E>>
+    public static class Factory<E extends Shardable, D extends SingleShardDAO<E>>
             extends ShardTaskFactoryBase<E, D, E> {
         private String f1;
         private Object v1;
