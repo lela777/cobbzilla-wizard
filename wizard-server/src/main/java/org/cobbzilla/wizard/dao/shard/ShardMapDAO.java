@@ -121,6 +121,18 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         return writeCache.get().getAll(shardSet);
     }
 
+    private List<E> findReadShards(E[] shards) {
+        final List<E> list = new ArrayList<>();
+        for (E shard : shards) if (shard.isAllowRead()) list.add(shard);
+        return list;
+    }
+
+    private List<E> findWriteShards(E[] shards) {
+        final List<E> list = new ArrayList<>();
+        for (E shard : shards) if (shard.isAllowWrite()) list.add(shard);
+        return list;
+    }
+
     public List<E> findShards(String shardSet, ShardIO shardIO) {
         switch (shardIO) {
             case read:  return findReadShards(shardSet);
@@ -129,9 +141,19 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         }
     }
 
+    public List<E> findByShardSet(String shardSet) { return findByField("shardSet", shardSet); }
+
     public ShardSetStatus validate(String shardSet) {
         final List<E> readShards = findReadShards(shardSet);
         final List<E> writeShards = findWriteShards(shardSet);
+        return new ShardSetStatus(shardSet,
+                                  readShards,  validate(shardSet, readShards),
+                                  writeShards, validate(shardSet, writeShards));
+    }
+
+    public ShardSetStatus validate(String shardSet, E[] shards) {
+        final List<E> readShards = findReadShards(shards);
+        final List<E> writeShards = findWriteShards(shards);
         return new ShardSetStatus(shardSet,
                                   readShards,  validate(shardSet, readShards),
                                   writeShards, validate(shardSet, writeShards));

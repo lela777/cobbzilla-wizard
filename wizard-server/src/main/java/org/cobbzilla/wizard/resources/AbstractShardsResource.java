@@ -31,15 +31,17 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     class ShardContext {
         public A account;
         public E shard;
-        public Response response;
-        public boolean hasResponse () { return response != null; }
-        public ShardContext (HttpContext ctx) { this(ctx, null); }
-        public ShardContext (HttpContext ctx, String shardUuid) {
+        public ShardContext (HttpContext ctx) { this(ctx, null, null); }
+        public ShardContext (HttpContext ctx, String shardSet) { this(ctx, shardSet, null); }
+        public ShardContext (HttpContext ctx, String shardSet, String shardUuid) {
             account = userPrincipal(ctx);
-            if (!isAuthorized(ctx, account)) response = forbidden();
+            if (!isAuthorized(ctx, account)) throw forbiddenEx();
+            if (shardSet != null) {
+                if (!getConfiguredShardSets().contains(shardSet)) throw notFoundEx(shardSet);
+            }
             if (shardUuid != null) {
                 shard = getShardDAO().findByUuid(shardUuid);
-                if (shard == null) response = notFound(shardUuid);
+                if (shard == null) throw notFoundEx(shardUuid);
             }
         }
     }
@@ -57,7 +59,6 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     @GET
     public Response findAllShardSets (@Context HttpContext context) {
         final ShardContext ctx = new ShardContext(context);
-        if (ctx.hasResponse()) return ctx.response;
         return ok(toShardSetStatus(getConfiguredShardSets()));
     }
 
@@ -65,10 +66,7 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     @Path("/{shardSet}")
     public Response findShardSet(@Context HttpContext context,
                                  @PathParam("shardSet") String shardSet) {
-        final ShardContext ctx = new ShardContext(context);
-        if (ctx.hasResponse()) return ctx.response;
-
-        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
+        final ShardContext ctx = new ShardContext(context, shardSet);
         return ok(getShardDAO().validate(shardSet));
     }
 
@@ -77,11 +75,7 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     public Response findShard(@Context HttpContext context,
                               @PathParam("uuid") String uuid,
                               @PathParam("shardSet") String shardSet) {
-        final ShardContext ctx = new ShardContext(context);
-        if (ctx.hasResponse()) return ctx.response;
-
-        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
-        if (!ctx.shard.getShardSet().equals(shardSet)) invalid("err.shardSet.mismatch");
+        final ShardContext ctx = new ShardContext(context, shardSet, uuid);
         return ok(ctx.shard);
     }
 
@@ -90,9 +84,7 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     public Response createShard (@Context HttpContext context,
                                  @PathParam("shardSet") String shardSet,
                                  @Valid ShardMap request) {
-        final ShardContext ctx = new ShardContext(context);
-        if (ctx.hasResponse()) return ctx.response;
-        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
+        final ShardContext ctx = new ShardContext(context, shardSet);
         if (!request.getShardSet().equals(shardSet)) return invalid("err.shardSet.mismatch");
         final E shard = getShardDAO().newEntity();
         copy(shard, request, UPDATE_FIELDS);
@@ -101,17 +93,38 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     }
 
     @POST
+    @Path("/{shardSet}")
+    public Response updateShardSet (@Context HttpContext context,
+                                    @PathParam("shardSet") String shardSet,
+                                    @Valid E[] map) {
+
+        final ShardContext ctx = new ShardContext(context, shardSet);
+        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
+        if (!getShardDAO().validate(shardSet, map).isValid()) return invalid("err.shardSet.invalid");
+
+        // disable all current shards
+        for (E shard : getShardDAO().findByShardSet(shardSet)) {
+            shard.setAllowRead(false);
+            shard.setAllowWrite(false);
+            getShardDAO().update(shard);
+        }
+
+        // set new shard set
+        for (E shard : map) {
+            getShardDAO().create(shard);
+        }
+
+        return ok(getShardDAO().findByShardSet(shardSet));
+    }
+
+    @POST
     @Path("/{shardSet}/shard/{uuid}")
     public Response updateShard (@Context HttpContext context,
                                  @PathParam("shardSet") String shardSet,
                                  @PathParam("uuid") String uuid,
                                  @Valid ShardMap request) {
-        final ShardContext ctx = new ShardContext(context, uuid);
-        if (ctx.hasResponse()) return ctx.response;
-
-        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
+        final ShardContext ctx = new ShardContext(context, shardSet, uuid);
         if (!request.getShardSet().equals(shardSet)) return invalid("err.shardSet.mismatch");
-        if (!ctx.shard.getShardSet().equals(shardSet)) return invalid("err.shardSet.mismatch");
         copy(ctx.shard, request, UPDATE_FIELDS);
         return ok(getShardDAO().update(ctx.shard));
     }
@@ -121,10 +134,7 @@ public abstract class AbstractShardsResource<E extends ShardMap, A extends Ident
     public Response deleteShard (@Context HttpContext context,
                                  @PathParam("shardSet") String shardSet,
                                  @PathParam("uuid") String uuid) {
-        final ShardContext ctx = new ShardContext(context, uuid);
-        if (ctx.hasResponse()) return ctx.response;
-
-        if (!getConfiguredShardSets().contains(shardSet)) return notFound(shardSet);
+        final ShardContext ctx = new ShardContext(context, shardSet, uuid);
 
         getShardDAO().refreshCache(true);
 
