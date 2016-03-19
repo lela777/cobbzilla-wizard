@@ -125,7 +125,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     protected List<D> getAllDAOs(Serializable id) {
-        return toDAOs(getShardDAO().getShardList(getShardConfiguration().getName(), getLogicalShard(id)));
+        final List shards = getShardDAO().getShardList(getShardConfiguration().getName(), getLogicalShard(id));
+        if (shards.isEmpty()) shards.add(getDefaultShardMap());
+        return toDAOs(shards);
     }
 
     protected List<D> getAllDAOs(E entity) { return getAllDAOs((Serializable) getIdToHash(entity)); }
