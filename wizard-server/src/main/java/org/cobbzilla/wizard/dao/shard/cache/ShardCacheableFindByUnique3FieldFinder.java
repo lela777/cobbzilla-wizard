@@ -5,9 +5,9 @@ import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
 import org.cobbzilla.wizard.dao.shard.task.ShardFindFirstBy3FieldsTask;
 import org.cobbzilla.wizard.model.shard.Shardable;
 
-public class ShardableShardCacheableFindByUnique3FieldFinder<E extends Shardable, D extends SingleShardDAO<E>> extends ShardCacheableFinder<E, D> {
+public class ShardCacheableFindByUnique3FieldFinder<E extends Shardable, D extends SingleShardDAO<E>> extends ShardCacheableFinder<E, D> {
 
-    public ShardableShardCacheableFindByUnique3FieldFinder(AbstractShardedDAO<E, D> shardedDAO, long timeout) { super(shardedDAO, timeout); }
+    public ShardCacheableFindByUnique3FieldFinder(AbstractShardedDAO<E, D> shardedDAO, long timeout) { super(shardedDAO, timeout); }
 
     @Override
     public E find(Object... args) {

@@ -231,7 +231,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Transactional(readOnly=true)
     @Override public E get(Serializable id) {
-        return new ShardableShardCacheableIdentityFinder<>(this, getCacheTimeoutSeconds()).get(id.toString(), id);
+        return new ShardCacheableIdentityFinder<>(this, getCacheTimeoutSeconds()).get(id.toString(), id);
     }
 
     @Transactional(readOnly=true)
@@ -248,17 +248,17 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Transactional(readOnly=true)
     @Override public E findByUniqueField(String field, Object value) {
-        return new ShardableShardCacheableUniqueFieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-field:"+field+":"+value, field, value);
+        return new ShardCacheableUniqueFieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-field:"+field+":"+value, field, value);
     }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
-        return new ShardableShardCacheableFindByUnique2FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields2:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2);
+        return new ShardCacheableFindByUnique2FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields2:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2);
     }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        return new ShardableShardCacheableFindByUnique3FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields3:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2, f3, v3);
+        return new ShardCacheableFindByUnique3FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields3:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2, f3, v3);
     }
 
     @Transactional(readOnly=true)

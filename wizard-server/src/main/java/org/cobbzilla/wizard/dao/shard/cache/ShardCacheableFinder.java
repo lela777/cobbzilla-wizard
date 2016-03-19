@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.dao.shard.AbstractShardedDAO;
-import org.cobbzilla.wizard.dao.shard.CacheableFinder;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
 import org.cobbzilla.wizard.model.shard.Shardable;
 
