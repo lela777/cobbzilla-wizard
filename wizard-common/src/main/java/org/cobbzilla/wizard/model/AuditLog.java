@@ -23,7 +23,7 @@ import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 @MappedSuperclass @NoArgsConstructor @Accessors(chain=true)
 public class AuditLog extends StrongIdentifiableBase {
 
-    private static final int ENC_PAD = 500;
+    private static final int ENC_PAD = 1000;
     public static final int STATE_MAXLEN = (int) (512 * Bytes.KB);
 
     @HasValue(message="err.entityType.empty")

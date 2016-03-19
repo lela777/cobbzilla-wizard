@@ -11,8 +11,7 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
     protected abstract Set<String> getSkipAuthPaths();
     protected abstract Set<String> getSkipAuthPrefixes();
 
-    @Override
-    public ContainerRequest filter(ContainerRequest request) {
+    @Override public ContainerRequest filter(ContainerRequest request) {
 
         final String uri = request.getRequestUri().getPath();
 
