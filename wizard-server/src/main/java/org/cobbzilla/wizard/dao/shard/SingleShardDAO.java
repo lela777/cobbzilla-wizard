@@ -14,10 +14,6 @@ public interface SingleShardDAO<E extends Shardable> extends DAO<E> {
     List<E> findByFields(String f1, Object v1, String f2, Object v2);
     List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3);
 
-    List<E> findByFieldLike(String field, String value);
-    List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue);
-    List<E> findByFieldIn(String field, Object[] values);
-
     void initialize();
     void cleanup();
 

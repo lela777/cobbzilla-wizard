@@ -30,10 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -295,9 +292,19 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     @Transactional(readOnly=true)
+    @Override public List<E> findByFieldNullAndFieldLike(String nullField, String likeField, String likeValue) {
+        // have to search all shards for it
+        return queryShardsList(new ShardFindByFieldNullAndFieldLikeTask.Factory(nullField, likeField, likeValue), "findByFieldEqualAndFieldLike");
+    }
+
+    @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Object[] values) {
-        if (hashOn.equals(field) && values.length == 1) {
-            return getDAO((String) values[0]).findByFieldIn(field, values);
+        if (hashOn.equals(field)) {
+            final List<E> found = new ArrayList<>();
+            final Set<D> daos = new HashSet<>();
+            for (Object value : values) daos.add(getDAO((Serializable) value));
+            for (D dao : daos) found.addAll(dao.findByFieldIn(field, values));
+            return found;
         }
 
         // have to search all shards for it
