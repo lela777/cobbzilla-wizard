@@ -30,6 +30,7 @@ public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptio
         harness.addConfiguration(new FileConfigurationSource(configFile));
         harness.init(opts.getEnv());
         harness.getServer().addLifecycleListener(new DatabagWriter(this));
+        harness.getServer().getConfiguration().getHttp().setPort(0); // always use a random port for this
         harness.startServer();
 
         synchronized (this) {
