@@ -5,6 +5,7 @@ import org.cobbzilla.util.main.BaseMain;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.RestServerLifecycleListenerBase;
+import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
 
 import java.io.File;
@@ -30,7 +31,8 @@ public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptio
         final RestServerHarness harness = new RestServerHarness(clazz);
         harness.addConfiguration(new FileConfigurationSource(configFile));
         harness.init(opts.getEnv());
-        harness.getServer().addLifecycleListener(new DatabagWriter(this));
+        Integer origPort = harness.getServer().getConfiguration().getHttp().getPort();
+        harness.getServer().addLifecycleListener(new DatabagWriter(this, origPort));
         harness.getServer().getConfiguration().getHttp().setPort(0); // always use a random port for this
         harness.startServer();
 
@@ -41,10 +43,13 @@ public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptio
     @AllArgsConstructor
     private class DatabagWriter extends RestServerLifecycleListenerBase {
         private final ConfigurationDataBagMain main;
+        private final Integer origPort;
 
         @Override public void onStart(RestServer server) {
             super.onStart(server);
-            final String databagJson = toJsonOrDie(server.getConfiguration());
+            RestServerConfiguration configuration = server.getConfiguration();
+            if (origPort != null) configuration.getHttp().setPort(origPort); // set back to original setting, if there was one
+            final String databagJson = toJsonOrDie(configuration);
             if (main.getOptions().hasOutput()) {
                 toFileOrDie(main.getOptions().getOutput(), databagJson);
             } else {
