@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.server.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,7 +30,7 @@ public class DatabaseConfiguration {
 
     @Getter @Setter private HibernateConfiguration hibernate;
 
-    public Connection getConnection() throws SQLException {
+    @JsonIgnore public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
 

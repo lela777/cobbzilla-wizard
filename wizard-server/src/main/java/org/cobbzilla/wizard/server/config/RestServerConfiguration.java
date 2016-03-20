@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.server.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +33,7 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
 
-    @Getter @Setter private ApplicationContext applicationContext;
+    @JsonIgnore @Getter @Setter private ApplicationContext applicationContext;
     public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }
     public <T> T getBean (Class<T> clazz) { return SpringUtil.getBean(applicationContext, clazz); }
     public <T> T getBean (String clazz) { return (T) SpringUtil.getBean(applicationContext, forName(clazz)); }
@@ -43,7 +44,7 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpHandlerConfiguration[] handlers;
     public boolean hasHandlers () { return !empty(handlers); }
 
-    @Getter @Setter private Validator validator;
+    @JsonIgnore @Getter @Setter private Validator validator;
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 
