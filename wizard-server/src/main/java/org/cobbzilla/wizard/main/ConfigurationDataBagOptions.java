@@ -9,6 +9,7 @@ import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -34,6 +35,12 @@ public class ConfigurationDataBagOptions extends BaseMainOptions {
             serverClass = serverClass.substring("src/main/java/".length()).replace("/", ".");
         }
         return serverClass;
+    }
+
+    private String getServerName() { return getServerName(getServerClass()); }
+
+    private String getServerName(String serverClass) {
+        return uncapitalize(chop(forName(serverClass).getSimpleName(), "Server"));
     }
 
     public static final String USAGE_ENV_FILE = "Environment file";
@@ -77,9 +84,10 @@ public class ConfigurationDataBagOptions extends BaseMainOptions {
         return CommandShell.loadShellExports(getEnvFile());
     }
 
-    private String getServerName() { return getServerName(getServerClass()); }
+    public static final String USAGE__TIMEOUT = "Timeout";
+    public static final String OPT__TIMEOUT = "-t";
+    public static final String LONGOPT__TIMEOUT= "--timeout";
+    @Option(name=OPT__TIMEOUT, aliases=LONGOPT__TIMEOUT, usage=USAGE__TIMEOUT)
+    @Getter @Setter private long timeout = TimeUnit.MINUTES.toMillis(1);
 
-    private String getServerName(String serverClass) {
-        return uncapitalize(chop(forName(serverClass).getSimpleName(), "Server"));
-    }
 }

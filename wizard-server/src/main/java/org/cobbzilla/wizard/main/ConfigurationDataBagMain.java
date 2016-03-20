@@ -13,6 +13,7 @@ import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptions> {
 
@@ -33,9 +34,8 @@ public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptio
         harness.getServer().getConfiguration().getHttp().setPort(0); // always use a random port for this
         harness.startServer();
 
-        synchronized (this) {
-            this.wait();
-        }
+        sleep(opts.getTimeout());
+        die("Timed out");
     }
 
     @AllArgsConstructor
@@ -50,9 +50,7 @@ public class ConfigurationDataBagMain extends BaseMain<ConfigurationDataBagOptio
             } else {
                 out(databagJson);
             }
-            synchronized (main) {
-                main.notify();
-            }
+            System.exit(0);
         }
     }
 }
