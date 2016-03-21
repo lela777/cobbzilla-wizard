@@ -20,9 +20,6 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     // what are we storing?
     protected Class<T> getEntityClass() { return getFirstTypeParam(getClass(), Identifiable.class); }
 
-    // what's the cipher key?
-    protected abstract String getPassphrase();
-
     public String create (T thing) {
         final String sessionId = randomUUID().toString();
         set(sessionId, thing, false);
