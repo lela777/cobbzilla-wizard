@@ -4,6 +4,6 @@ import org.cobbzilla.wizard.model.shard.Shardable;
 
 public interface CacheableFinder<E extends Shardable> {
 
-    public E find (Object... args);
+    E find (Object... args);
 
 }

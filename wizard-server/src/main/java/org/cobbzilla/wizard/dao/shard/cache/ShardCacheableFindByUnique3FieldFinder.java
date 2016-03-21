@@ -9,8 +9,7 @@ public class ShardCacheableFindByUnique3FieldFinder<E extends Shardable, D exten
 
     public ShardCacheableFindByUnique3FieldFinder(AbstractShardedDAO<E, D> shardedDAO, long timeout) { super(shardedDAO, timeout); }
 
-    @Override
-    public E find(Object... args) {
+    @Override public E find(Object... args) {
         final String f1 = args[0].toString();
         final Object v1 = args[1];
         final String f2 = args[2].toString();
