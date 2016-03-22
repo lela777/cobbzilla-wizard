@@ -9,9 +9,11 @@ import org.cobbzilla.wizard.cache.redis.HasRedisConfiguration;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.dao.SearchResults;
-import org.cobbzilla.wizard.dao.shard.cache.*;
+import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableFindByUnique2FieldFinder;
+import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableFindByUnique3FieldFinder;
+import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableIdentityFinder;
+import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableUniqueFieldFinder;
 import org.cobbzilla.wizard.dao.shard.task.*;
-import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 import org.cobbzilla.wizard.model.shard.ShardIO;
 import org.cobbzilla.wizard.model.shard.ShardMap;
@@ -32,6 +34,7 @@ import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -103,9 +106,11 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     protected abstract ShardMapDAO getShardDAO();
 
     public AbstractShardedDAO() {
-        this.entityClass = getFirstTypeParam(getClass(), Identifiable.class);
+        this.entityClass = getFirstTypeParam(getClass(), Shardable.class);
         this.hashOn = instantiate(this.entityClass).getHashToShardField();
         this.singleShardDaoClass = initShardDaoClass();
+        initAllDAOs();
+
     }
     protected Class<D> initShardDaoClass() { return getFirstTypeParam(getClass(), SingleShardDAO.class); }
 
@@ -119,6 +124,15 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 .setAllowRead(true)
                 .setAllowWrite(true)
                 .setDefaultShard(true);
+    }
+
+    @Getter private final AtomicBoolean initAll = new AtomicBoolean(false);
+    public void initAllDAOs () {
+        synchronized (getInitAll()) {
+            if (getInitAll().compareAndSet(false, true)) {
+                new DAOInitializer(this).start();
+            }
+        }
     }
 
     protected List<D> getAllDAOs(Serializable id) {
@@ -165,7 +179,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return (int) (Math.abs(val) % getShardConfiguration().getLogicalShards());
     }
 
-    private List<D> toDAOs(Collection<ShardMap> shardMaps) {
+    protected List<D> toDAOs(Collection<ShardMap> shardMaps) {
         final List<D> list = new ArrayList<>();
         for (ShardMap map : shardMaps) list.add(toDAO(map));
         return list;

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.cobbzilla.wizard.model.shard.ShardMap;
+import org.cobbzilla.wizard.model.shard.Shardable;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
 @NoArgsConstructor
@@ -70,5 +72,13 @@ public class DatabaseConfiguration {
     public int getLogicalShardCount(String shardSet) {
         for (ShardSetConfiguration config : shard) if (config.getName().equals(shardSet)) return config.getLogicalShards();
         return ShardSetConfiguration.DEFAULT_LOGICAL_SHARDS;
+    }
+
+    public <E extends Shardable> String getShardSetName(Class<E> entityClass) {
+        if (empty(shard)) return null;
+        for (ShardSetConfiguration config : shard) {
+            if (config.getEntity().equals(entityClass.getName())) return config.getName();
+        }
+        return null;
     }
 }
