@@ -6,9 +6,6 @@ package org.cobbzilla.wizard.dao;
  */
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Transformer;
-import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -31,9 +28,6 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     public <A extends AuditLog> AuditLogDAO<A> getAuditLogDAO() { return null; }
     public boolean auditingEnabled () { return getAuditLogDAO() != null; }
-
-    public static final Transformer TO_UUID = new FieldTransfomer("uuid");
-    public static <E> Collection<String> toUuid (Collection<E> c) { return CollectionUtils.collect(c, TO_UUID); }
 
     @Transactional(readOnly=true)
     @Override public List<E> findAll() { return list(criteria()); }
