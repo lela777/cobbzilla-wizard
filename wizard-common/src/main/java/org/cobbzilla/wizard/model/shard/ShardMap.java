@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model.shard;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -12,7 +13,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import java.util.Comparator;
 
-@MappedSuperclass @Accessors(chain=true)
+@MappedSuperclass @Accessors(chain=true) @EqualsAndHashCode(of={"shardSet","url","range"}, callSuper=false)
 public class ShardMap extends IdentifiableBase {
 
     @Size(max=1024, message="err.url.length")

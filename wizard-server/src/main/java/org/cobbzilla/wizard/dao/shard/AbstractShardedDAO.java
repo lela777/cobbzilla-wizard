@@ -185,23 +185,51 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return list;
     }
 
-    private D toDAO(ShardMap map) {
+    private D toDAO(ShardMap shardMap) {
         if (now() - daosLastCleaned.get() > DAO_MAP_CLEAN_INTERVAL) cleanDaoMap();
-        D dao = daos.get(map);
+        D dao = daos.get(shardMap);
         if (dao == null) {
             synchronized (daos) {
-                dao = daos.get(map);
+                dao = buildDAO(shardMap, singleShardDaoClass);
+                daos.put(shardMap, dao);
+            }
+        }
+        return dao;
+    }
+
+    private static final Map<String, Map<ShardMap, SingleShardDAO>> globalCache = new ConcurrentHashMap<>();
+    private D buildDAO(ShardMap map, Class<D> singleShardDaoClass) {
+        Map<ShardMap, SingleShardDAO> shardCache;
+        shardCache = globalCache.get(singleShardDaoClass.getName());
+        if (shardCache == null) {
+            synchronized (globalCache) {
+                shardCache = globalCache.get(singleShardDaoClass.getName());
+                if (shardCache == null) {
+                    shardCache = new ConcurrentHashMap<>();
+                    globalCache.put(singleShardDaoClass.getName(), shardCache);
+                }
+            }
+        }
+
+        SingleShardDAO dao = shardCache.get(map);
+        if (dao == null) {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
+            synchronized (shardCache) {
+                dao = shardCache.get(map);
                 if (dao == null) {
                     // Wire-up the DAO's database and hibernateTemplate to point to the shard DB
                     final DatabaseConfiguration database = getMasterDbConfiguration().getShardDatabaseConfiguration(map);
                     final ApplicationContext ctx = getApplicationContext(database);
                     dao = autowire(ctx, instantiate(singleShardDaoClass));
                     dao.initialize();
-                    daos.put(map, dao);
+                    shardCache.put(map, dao);
+                    log.warn("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
+                } else {
+                    log.warn("buildDAO(" + map + "): using cached value for " + getEntityClass().getSimpleName());
                 }
             }
         }
-        return dao;
+        return (D) dao;
     }
 
     public D getDAO(Serializable id) { return getDAO(id, ShardIO.read); }
