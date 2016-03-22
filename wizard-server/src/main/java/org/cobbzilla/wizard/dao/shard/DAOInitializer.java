@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.dao.shard;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.cobbzilla.util.system.Sleep;
 
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,7 @@ class DAOInitializer extends Thread {
         final String prefix = "initAllDAOs(" + shardedDAO.getEntityClass().getSimpleName() + ")";
         String shardSetName = null;
         while (attempt <= MAX_INIT_DAO_ATTEMPTS) {
+            Sleep.sleep(10000 + RandomUtils.nextLong(1000, 5000));
             try {
                 boolean ok = false;
                 while (!ok) {

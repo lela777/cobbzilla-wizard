@@ -34,7 +34,6 @@ import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -126,11 +125,14 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 .setDefaultShard(true);
     }
 
-    @Getter private final AtomicBoolean initAll = new AtomicBoolean(false);
+    private static final Set<String> daosInitialized = new HashSet<>();
     public void initAllDAOs () {
-        synchronized (getInitAll()) {
-            if (getInitAll().compareAndSet(false, true)) {
-                new DAOInitializer(this).start();
+        if (!daosInitialized.contains(getClass().getName())) {
+            synchronized (daosInitialized) {
+                if (!daosInitialized.contains(getClass().getName())) {
+                    daosInitialized.add(getClass().getName());
+                    new DAOInitializer(this).start();
+                }
             }
         }
     }
