@@ -16,13 +16,14 @@ class DAOInitializer extends Thread {
 
     @Override public void run() {
         int attempt = 1;
-        final String shardSetName = shardedDAO.getMasterDbConfiguration().getShardSetName(shardedDAO.getEntityClass());
         final String prefix = "initAllDAOs(" + shardedDAO.getEntityClass().getSimpleName() + ")";
+        String shardSetName = null;
         while (attempt <= MAX_INIT_DAO_ATTEMPTS) {
             try {
                 // don't all hit the CPU at the same time, building ApplicationContexts is expensive,
                 // even as lightweight as the shard context aims to be.
                 Sleep.sleep(RandomUtils.nextLong(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(60)));
+                if (shardSetName == null) shardSetName = shardedDAO.getMasterDbConfiguration().getShardSetName(shardedDAO.getEntityClass());
                 shardedDAO.toDAOs(shardedDAO.getShardDAO().findByShardSet(shardSetName));
                 log.warn(prefix + " SUCCEEDED ON attempt " + attempt);
                 return;
