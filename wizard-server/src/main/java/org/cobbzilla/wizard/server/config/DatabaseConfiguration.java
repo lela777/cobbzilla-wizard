@@ -36,7 +36,7 @@ public class DatabaseConfiguration {
         return DriverManager.getConnection(url, user, password);
     }
 
-    @Getter @Setter private ShardSetConfiguration[] shard;
+    @Getter @Setter private volatile ShardSetConfiguration[] shard;
 
     public ShardSetConfiguration getShard (String shardSet) {
         if (shard != null) {

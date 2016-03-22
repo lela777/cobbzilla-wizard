@@ -2,7 +2,6 @@ package org.cobbzilla.wizard.dao.shard;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
 import org.cobbzilla.util.system.Sleep;
 
 import java.util.concurrent.TimeUnit;
@@ -20,12 +19,15 @@ class DAOInitializer extends Thread {
         String shardSetName = null;
         while (attempt <= MAX_INIT_DAO_ATTEMPTS) {
             try {
-                // don't all hit the CPU at the same time, building ApplicationContexts is expensive,
-                // even as lightweight as the shard context aims to be.
-                Sleep.sleep(RandomUtils.nextLong(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(60)));
-                if (shardSetName == null) shardSetName = shardedDAO.getMasterDbConfiguration().getShardSetName(shardedDAO.getEntityClass());
+                boolean ok = false;
+                while (!ok) {
+                    try {
+                        if (shardSetName == null) shardSetName = shardedDAO.getMasterDbConfiguration().getShardSetName(shardedDAO.getEntityClass());
+                        ok = !shardSetName.isEmpty();
+                    } catch (Exception ignored) {}
+                    Sleep.sleep(200);
+                }
                 shardedDAO.toDAOs(shardedDAO.getShardDAO().findByShardSet(shardSetName));
-                log.warn(prefix + " SUCCEEDED ON attempt " + attempt);
                 return;
 
             } catch (Exception e) {
