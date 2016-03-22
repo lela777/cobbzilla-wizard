@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.IdentifiableBase;
 import org.cobbzilla.wizard.model.ResultPage;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
@@ -288,4 +290,8 @@ public abstract class AbstractDAO<E> implements DAO<E> {
 
     protected String getFilterClause(String entityAlias, String filterParam) { return StringUtil.EMPTY; }
 
+    public static String[] toUuidArray(List<? extends Identifiable> entities) { return IdentifiableBase.toUuidArray(entities); }
+    public static List<String> toUuidList(List<? extends Identifiable> entities) { return IdentifiableBase.toUuidList(entities); }
+    public static String[] collectArray(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectArray(entities, field); }
+    public static List<String> collectList(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectList(entities, field); }
 }

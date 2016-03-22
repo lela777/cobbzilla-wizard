@@ -299,6 +299,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Object[] values) {
+        if (empty(values)) return new ArrayList<>();
         if (hashOn.equals(field)) {
             final List<E> found = new ArrayList<>();
             final Set<D> daos = new HashSet<>();
@@ -309,6 +310,12 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
         // have to search all shards for it
         return queryShardsList(new ShardFindByFieldInTask.Factory(field, values), "findByFieldIn");
+    }
+
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldIn(String field, Collection<?> values) {
+        if (empty(values)) return new ArrayList<>();
+        return findByFieldIn(field, values.toArray());
     }
 
     @Transactional(readOnly=true)

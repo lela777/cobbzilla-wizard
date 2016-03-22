@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
@@ -17,6 +18,9 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     @Autowired private RedisService redis;
 
+    @Getter(lazy=true) private final RedisService sessionRedis = initSessionRedis();
+    private RedisService initSessionRedis() { return redis.prefixNamespace(getClass().getSimpleName()); }
+
     // what are we storing?
     protected Class<T> getEntityClass() { return getFirstTypeParam(getClass(), Identifiable.class); }
 
@@ -29,7 +33,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     public T find(String uuid) {
         if (empty(uuid)) return null;
         try {
-            final String found = redis.get(uuid);
+            final String found = getSessionRedis().get(uuid);
             if (found == null) return null;
             return fromJson(found);
 
@@ -41,15 +45,15 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     public void invalidateAllSessions(String uuid) {
         String sessionId;
-        while ((sessionId = redis.lpop(uuid)) != null) {
+        while ((sessionId = getSessionRedis().lpop(uuid)) != null) {
             invalidate(sessionId);
         }
         invalidate(uuid);
     }
 
     private void set(String uuid, T thing, boolean shouldExist) {
-        redis.set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", TimeUnit.DAYS.toSeconds(30));
-        redis.lpush(thing.getUuid(), uuid);
+        getSessionRedis().set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", TimeUnit.DAYS.toSeconds(30));
+        getSessionRedis().lpush(thing.getUuid(), uuid);
     }
 
     // override these to keep the padding but do your own json I/O
@@ -58,7 +62,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     public void update(String uuid, T thing) { set(uuid, thing, true); }
 
-    public void invalidate(String uuid) { redis.del(uuid); }
+    public void invalidate(String uuid) { getSessionRedis().del(uuid); }
 
     public boolean isValid (String uuid) { return find(uuid) != null; }
 

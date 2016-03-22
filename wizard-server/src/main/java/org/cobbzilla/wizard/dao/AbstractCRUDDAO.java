@@ -18,13 +18,11 @@ import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.hibernate.criterion.Restrictions.*;
 
@@ -44,7 +42,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public E findByUuid(String uuid) { return uniqueResult(criteria().add(eq("uuid", uuid))); }
 
     @Transactional(readOnly=true)
-    public List<E> findByUuids(Collection<String> uuids) { return list(criteria().add(in("uuid", uuids))); }
+    public List<E> findByUuids(Collection<String> uuids) {
+        return empty(uuids) ? new ArrayList<E>() : list(criteria().add(in("uuid", uuids)));
+    }
 
     @Transactional(readOnly=true)
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
@@ -153,7 +153,12 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Object[] values) {
-        return list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+        return empty(values) ? new ArrayList<E>() : list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
+    @Override public List<E> findByFieldIn(String field, Collection<?> values) {
+        return empty(values) ? new ArrayList<E>() : list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
     }
 
     protected int getFinderMaxResults() { return 100; }

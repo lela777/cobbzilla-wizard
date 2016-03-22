@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
@@ -38,6 +39,7 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
     @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) { return notSupported(); }
     @Override public List<E> findByFieldNullAndFieldLike(String nullField, String likeField, String likeValue) { return notSupported(); }
     @Override public List<E> findByFieldIn(String field, Object[] values) { return notSupported(); }
+    @Override public List<E> findByFieldIn(String field, Collection<?> values) { return notSupported(); }
 
     @Override public List<E> findAll() { return notSupported(); }
 

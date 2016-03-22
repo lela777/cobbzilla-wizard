@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections.CollectionUtils;
+import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.hibernate.cfg.ImprovedNamingStrategy;
@@ -12,7 +14,11 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 
@@ -64,5 +70,34 @@ public class IdentifiableBase implements Identifiable {
     @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
+
+    public static String[] toUuidArray(List<? extends Identifiable> entities) {
+        return empty(entities)
+                ? StringUtil.EMPTY_ARRAY
+                : (String[]) CollectionUtils.collect(entities, FieldTransfomer.TO_UUID).toArray(new String[entities.size()]);
+    }
+
+    public static List<String> toUuidList(List<? extends Identifiable> entities) {
+        return (List<String>) (empty(entities)
+                        ? Collections.emptyList()
+                        : CollectionUtils.collect(entities, FieldTransfomer.TO_UUID));
+    }
+
+    private static final Map<String, FieldTransfomer> fieldTransformerCache = new ConcurrentHashMap<>();
+    protected static FieldTransfomer getFieldTransformer(String field) {
+        FieldTransfomer f = fieldTransformerCache.get(field);
+        if (f == null) {
+            f = new FieldTransfomer(field);
+            fieldTransformerCache.put(field, f);
+        }
+        return f;
+    }
+
+    public static String[] collectArray(List<? extends Identifiable> entities, String field) {
+        return (String[]) CollectionUtils.collect(entities, getFieldTransformer(field)).toArray(new String[entities.size()]);
+    }
+    public static List<String> collectList(List<? extends Identifiable> entities, String field) {
+        return (List<String>) CollectionUtils.collect(entities, getFieldTransformer(field));
+    }
 
 }
