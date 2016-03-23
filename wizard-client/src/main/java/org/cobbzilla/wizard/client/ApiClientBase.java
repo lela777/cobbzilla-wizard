@@ -182,6 +182,10 @@ public class ApiClientBase {
         return fromJson(post(path, toJson(request)).json, responseClass);
     }
 
+    public <T> T post(String path, T request) throws Exception {
+        return post(path, request, (Class<T>) request.getClass());
+    }
+
     public RestResponse post(String path, String json) throws Exception {
         return post(path, json, CONTENT_TYPE_JSON);
     }
@@ -206,6 +210,10 @@ public class ApiClientBase {
 
     public <T> T put(String path, Object request, Class<T> responseClass) throws Exception {
         return fromJson(put(path, toJson(request)).json, responseClass);
+    }
+
+    public <T> T put(String path, T request) throws Exception {
+        return put(path, request, (Class<T>) request.getClass());
     }
 
     public RestResponse put(String path, String json) throws Exception {
