@@ -19,6 +19,7 @@ import org.cobbzilla.wizard.model.shard.ShardIO;
 import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.ShardRange;
 import org.cobbzilla.wizard.model.shard.Shardable;
+import org.cobbzilla.wizard.resources.ResourceHttpException;
 import org.cobbzilla.wizard.server.ApplicationContextConfig;
 import org.cobbzilla.wizard.server.CustomBeanResolver;
 import org.cobbzilla.wizard.server.RestServer;
@@ -37,6 +38,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.http.HttpStatusCodes.GATEWAY_TIMEOUT;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
@@ -391,7 +393,12 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
             }
 
             // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
-            return awaitFirst(futures, getShardQueryTimeout(ctx));
+            try {
+                return awaitFirst(futures, getShardQueryTimeout(ctx));
+            } catch (TimeoutException e) {
+                log.warn("queryShardsUnique: timed out");
+                throw new ResourceHttpException(GATEWAY_TIMEOUT);
+            }
 
         } finally {
             factory.cancelTasks();
@@ -407,7 +414,12 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
             }
 
             // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
-            return awaitAndCollect(futures, MAX_QUERY_RESULTS, getShardQueryTimeout(ctx));
+            try {
+                return awaitAndCollect(futures, MAX_QUERY_RESULTS, getShardQueryTimeout(ctx));
+            } catch (TimeoutException e) {
+                log.warn("queryShardsList: timed out");
+                throw new ResourceHttpException(GATEWAY_TIMEOUT);
+            }
 
         } finally {
             for (ShardTask task : factory.getTasks()) task.cancel();
@@ -429,7 +441,12 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 }
 
                 // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
-                return search.sort(awaitAndCollect(futures, MAX_QUERY_RESULTS, timeout));
+                try {
+                    return search.sort(awaitAndCollect(futures, MAX_QUERY_RESULTS, timeout));
+                } catch (TimeoutException e) {
+                    log.warn("search: timed out");
+                    throw new ResourceHttpException(GATEWAY_TIMEOUT);
+                }
 
             } finally {
                 for (Object task : factory.getTasks()) ((ShardTask) task).cancel();

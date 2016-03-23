@@ -18,10 +18,14 @@ public class Await {
     public static final long DEFAULT_AWAIT_GET_SLEEP = 10;
     public static final long DEFAULT_AWAIT_RETRY_SLEEP = 100;
 
-    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout) { return awaitFirst(futures, timeout, DEFAULT_AWAIT_RETRY_SLEEP); }
-    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout, long retrySleep) { return awaitFirst(futures, timeout, retrySleep, DEFAULT_AWAIT_GET_SLEEP); }
+    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout) throws TimeoutException {
+        return awaitFirst(futures, timeout, DEFAULT_AWAIT_RETRY_SLEEP);
+    }
+    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout, long retrySleep) throws TimeoutException {
+        return awaitFirst(futures, timeout, retrySleep, DEFAULT_AWAIT_GET_SLEEP);
+    }
 
-    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout, long retrySleep, long getSleep) {
+    public static <E> E awaitFirst(Collection<Future<E>> futures, long timeout, long retrySleep, long getSleep) throws TimeoutException {
         long start = now();
         while (!futures.isEmpty() && now() - start < timeout) {
             for (Iterator<Future<E>> iter = futures.iterator(); iter.hasNext(); ) {
@@ -42,27 +46,27 @@ public class Await {
                 sleep(retrySleep);
             }
         }
-        if (now() - start > timeout) return die("await: timed out");
+        if (now() - start > timeout) throw new TimeoutException("await: timed out");
         return null; // all futures had a null result
     }
 
-    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout) {
+    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout) throws TimeoutException {
         return awaitAndCollect(futures, maxResults, timeout, DEFAULT_AWAIT_RETRY_SLEEP);
     }
 
-    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep) {
+    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep) throws TimeoutException {
         return awaitAndCollect(futures, maxResults, timeout, retrySleep, DEFAULT_AWAIT_GET_SLEEP);
     }
 
-    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep, long getSleep) {
+    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep, long getSleep) throws TimeoutException {
         return awaitAndCollect(futures, maxResults, timeout, retrySleep, getSleep, new ArrayList<E>());
     }
 
-    public static <R> List<R> awaitAndCollect(List<Future<List<R>>> futures, int maxQueryResults, long timeout, List results) {
+    public static <R> List<R> awaitAndCollect(List<Future<List<R>>> futures, int maxQueryResults, long timeout, List results) throws TimeoutException {
         return awaitAndCollect(futures, maxQueryResults, timeout, DEFAULT_AWAIT_RETRY_SLEEP, DEFAULT_AWAIT_GET_SLEEP, results);
     }
 
-    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep, long getSleep, List<E> results) {
+    public static <E> List<E> awaitAndCollect(Collection<Future<List<E>>> futures, int maxResults, long timeout, long retrySleep, long getSleep, List<E> results) throws TimeoutException {
         long start = now();
         int size = futures.size();
         while (!futures.isEmpty() && now() - start < timeout) {
@@ -84,7 +88,7 @@ public class Await {
                 sleep(retrySleep);
             }
         }
-        if (now() - start > timeout) die("await: timed out");
+        if (now() - start > timeout) throw new TimeoutException("await: timed out");
         return results;
     }
 
