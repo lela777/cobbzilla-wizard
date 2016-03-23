@@ -4,6 +4,7 @@ import java.security.Principal;
 
 public interface TokenPrincipal extends Principal {
 
-    public String getApiToken ();
-    public void setApiToken (String token);
+    String getApiToken ();
+    void setApiToken (String token);
+
 }

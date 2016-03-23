@@ -17,7 +17,6 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.cobbzilla.util.http.*;
-import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -28,10 +27,10 @@ import java.io.*;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.*;
+import static org.cobbzilla.util.json.JsonUtil.fromJson;
+import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
@@ -115,7 +114,7 @@ public class ApiClientBase {
         Object data = requestBean.getData();
         if (data == null) return null;
         if (data instanceof String) return (String) data;
-        return JsonUtil.toJson(data);
+        return toJson(data);
     }
 
     protected ApiException specializeApiException(ApiException e) {
@@ -150,6 +149,10 @@ public class ApiClientBase {
         return restResponse;
     }
 
+    public <T> T get(String path, Class<T> responseClass) throws Exception {
+        return fromJson(get(path).json, responseClass);
+    }
+
     protected <T> void setRequestEntity(HttpEntityEnclosingRequest entityRequest, T data, ContentType contentType) {
         if (data != null) {
             if (data instanceof InputStream) {
@@ -175,6 +178,10 @@ public class ApiClientBase {
         return getResponse(client, httpPost);
     }
 
+    public <T> T post(String path, Object request, Class<T> responseClass) throws Exception {
+        return fromJson(post(path, toJson(request)).json, responseClass);
+    }
+
     public RestResponse post(String path, String json) throws Exception {
         return post(path, json, CONTENT_TYPE_JSON);
     }
@@ -195,6 +202,10 @@ public class ApiClientBase {
         @Cleanup("releaseConnection") HttpPut httpPut = new HttpPut(url);
         setRequestEntity(httpPut, data, contentType);
         return getResponse(client, httpPut);
+    }
+
+    public <T> T put(String path, Object request, Class<T> responseClass) throws Exception {
+        return fromJson(put(path, toJson(request)).json, responseClass);
     }
 
     public RestResponse put(String path, String json) throws Exception {
