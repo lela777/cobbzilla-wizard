@@ -35,9 +35,7 @@ public class FormResourcesIT extends FormResourceITBase {
     @Test public void testCreateWithEmptyPayload () throws Exception {
         apiDocs.startRecording(DOC_TARGET, "with empty payload");
         final RestResponse response = doPost(FormApiEndpoints.FORMS_ENDPOINT, EMPTY_JSON);
-        assertExpectedViolations(response, new String[] {
-                ERR_FORM_TYPE_EMPTY, ERR_FORM_NAME_EMPTY, ERR_FORM_DEFAULT_NAME_EMPTY
-        });
+        assertExpectedViolations(response, ERR_FORM_TYPE_EMPTY, ERR_FORM_NAME_EMPTY, ERR_FORM_DEFAULT_NAME_EMPTY);
     }
 
     @Test public void testFormCrud () throws Exception {

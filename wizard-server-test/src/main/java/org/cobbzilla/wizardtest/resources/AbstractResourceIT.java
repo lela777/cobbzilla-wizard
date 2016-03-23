@@ -88,7 +88,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         return map;
     }
 
-    protected void assertExpectedViolations(RestResponse response, String[] violationMessages) throws Exception{
+    protected void assertExpectedViolations(RestResponse response, String... violationMessages) throws Exception{
         assertEquals(HttpStatusCodes.UNPROCESSABLE_ENTITY, response.status);
         final Map<String, ConstraintViolationBean> violations = mapViolations(response.json);
         assertEquals(violationMessages.length, violations.size());
