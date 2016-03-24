@@ -16,9 +16,7 @@ import java.util.List;
 public class Validator {
     private final ValidatorFactory factory;
 
-    public Validator() {
-        this(Validation.buildDefaultValidatorFactory());
-    }
+    public Validator() { this(Validation.buildDefaultValidatorFactory()); }
 
     public Validator(ValidatorFactory factory) {
         this.factory = factory;
@@ -31,9 +29,7 @@ public class Validator {
      * @param o      a potentially-valid object
      * @return a list of error messages, if any, regarding {@code o}'s validity
      */
-    public ValidationResult validate(Object o) {
-        return validate(o, Default.class);
-    }
+    public ValidationResult validate(Object o) { return validate(o, Default.class); }
 
     /**
      * Validates the given object, and returns a list of error messages, if any. If the returned
