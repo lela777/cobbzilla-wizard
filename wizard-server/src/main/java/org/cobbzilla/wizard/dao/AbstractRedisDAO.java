@@ -37,7 +37,6 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
     @Override public List<E> findByField(String field, Object value) { return notSupported(); }
     @Override public List<E> findByFieldLike(String field, String value) { return notSupported(); }
     @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) { return notSupported(); }
-    @Override public List<E> findByFieldNullAndFieldLike(String nullField, String likeField, String likeValue) { return notSupported(); }
     @Override public List<E> findByFieldIn(String field, Object[] values) { return notSupported(); }
     @Override public List<E> findByFieldIn(String field, Collection<?> values) { return notSupported(); }
 

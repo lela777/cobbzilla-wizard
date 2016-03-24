@@ -10,6 +10,7 @@ import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.FlushMode;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,16 +108,23 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
-    @Override public E findByUniqueField(String field, Object value) { return uniqueResult(eq(field, value)); }
+    @Override public E findByUniqueField(String field, Object value) {
+        return uniqueResult(value == null ? isNull(field) : eq(field, value));
+    }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
-        return uniqueResult(and(eq(f1, v1), eq(f2, v2)));
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        return uniqueResult(and(expr1, expr2));
     }
 
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        return uniqueResult(and(eq(f1, v1), eq(f2, v2), eq(f3, v3)));
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
+        return uniqueResult(and(expr1, expr2, expr3));
     }
 
     @Transactional(readOnly=true)
@@ -131,16 +139,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
+        final Criterion expr1 = eqValue == null ? isNull(eqField) : eq(eqField, eqValue);
         return list(criteria().add(and(
-                eq(eqField, eqValue),
-                like(likeField, likeValue)
-        )).addOrder(Order.asc(likeField)), 0, getFinderMaxResults());
-    }
-
-    @Transactional(readOnly=true)
-    @Override public List<E> findByFieldNullAndFieldLike(String nullField, String likeField, String likeValue) {
-        return list(criteria().add(and(
-                isNull(nullField),
+                expr1,
                 like(likeField, likeValue)
         )).addOrder(Order.asc(likeField)), 0, getFinderMaxResults());
     }
@@ -159,12 +160,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
-        return list(criteria().add(and(eq(f1, v1), eq(f2, v2))), 0, getFinderMaxResults());
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        return list(criteria().add(and(expr1, expr2)), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
     public List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3) {
-        return list(criteria().add(and(eq(f1, v1), eq(f2, v2), eq(f3, v3))), 0, getFinderMaxResults());
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
+        return list(criteria().add(and(expr1, expr2, expr3)), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)

@@ -22,7 +22,6 @@ public interface DAO<E> {
     List<E> findByField(String field, Object value);
     List<E> findByFieldLike(String field, String value);
     List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue);
-    List<E> findByFieldNullAndFieldLike(String nullField, String likeField, String likeValue);
     List<E> findByFieldIn(String field, Object[] values);
     List<E> findByFieldIn(String field, Collection<?> values);
 
