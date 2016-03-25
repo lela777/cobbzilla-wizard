@@ -83,6 +83,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Override public E update(@Valid E entity) {
+        entity.beforeUpdate();
         final Object ctx = preUpdate(entity);
         setFlushMode();
         entity = getHibernateTemplate().merge(checkNotNull(entity));

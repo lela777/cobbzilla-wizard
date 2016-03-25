@@ -44,6 +44,8 @@ public class IdentifiableBase implements Identifiable {
         initUuid();
     }
 
+    @Override public void beforeUpdate() { setMtime(); }
+
     public void initUuid() { setUuid(UUID.randomUUID().toString()); }
 
     public void update(Identifiable thing) { update(thing, null); }
@@ -63,11 +65,15 @@ public class IdentifiableBase implements Identifiable {
     }
 
     @Column(updatable=false, nullable=false)
-    @Getter @JsonIgnore
-    private long ctime = now();
+    @Getter @JsonIgnore private long ctime = now();
     public void setCtime (long time) { /*noop*/ }
-
     @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
+
+    @Column(nullable=false)
+    @Getter @JsonIgnore private long mtime = now();
+    public void setMtime (long time) { this.mtime = time; }
+    public void setMtime () { this.mtime = now(); }
+    @JsonIgnore @Transient public long getMtimeAge () { return now() - mtime; }
 
     @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
 

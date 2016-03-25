@@ -2,10 +2,11 @@ package org.cobbzilla.wizard.model;
 
 public interface Identifiable {
 
-    public static final int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
+    int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
 
-    public String getUuid();
-    public void setUuid(String uuid);
+    String getUuid();
+    void setUuid(String uuid);
 
-    public void beforeCreate();
+    void beforeCreate();
+    void beforeUpdate();
 }
