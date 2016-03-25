@@ -17,13 +17,14 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
 import org.junit.Before;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
@@ -79,9 +80,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    protected Map<String, ConstraintViolationBean> mapViolations(String json) throws Exception {
-        Map<String, ConstraintViolationBean> map = new HashMap<>();
-        ConstraintViolationBean[] violations = JsonUtil.FULL_MAPPER.readValue(json, ConstraintViolationBean[].class);
+    protected Map<String, ConstraintViolationBean> mapViolations(ConstraintViolationBean[] violations) {
+        final Map<String, ConstraintViolationBean> map = new HashMap<>(violations == null ? 1 : violations.length);
         for (ConstraintViolationBean violation : violations) {
             map.put(violation.getMessageTemplate(), violation);
         }
@@ -90,10 +90,19 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected void assertExpectedViolations(RestResponse response, String... violationMessages) throws Exception{
         assertEquals(HttpStatusCodes.UNPROCESSABLE_ENTITY, response.status);
-        final Map<String, ConstraintViolationBean> violations = mapViolations(response.json);
-        assertEquals(violationMessages.length, violations.size());
+        final ConstraintViolationBean[] violations = JsonUtil.FULL_MAPPER.readValue(response.json, ConstraintViolationBean[].class);
+        assertExpectedViolations(violations, violationMessages);
+    }
+
+    protected void assertExpectedViolations(Collection<ConstraintViolationBean> violations, String... violationMessages) {
+        assertExpectedViolations(violations.toArray(new ConstraintViolationBean[violations.size()]), violationMessages);
+    }
+
+    protected void assertExpectedViolations(ConstraintViolationBean[] violations, String... violationMessages) {
+        final Map<String, ConstraintViolationBean> map = mapViolations(violations);
+        assertEquals(violationMessages.length, map.size());
         for (String message : violationMessages) {
-            assertNotNull(violations.get(message));
+            assertNotNull(map.get(message));
         }
     }
 
