@@ -258,7 +258,7 @@ public class RedisService {
         try {
             final Long llen;
             synchronized (redis) {
-                llen = getRedis().llen(key);
+                llen = getRedis().llen(prefix(key));
             }
             if (llen == null) return null;
 
