@@ -7,7 +7,9 @@ import org.cobbzilla.wizard.model.shard.Shardable;
 
 public class ShardCacheableUniqueFieldFinder<E extends Shardable, D extends SingleShardDAO<E>> extends ShardCacheableFinder<E, D> {
 
-    public ShardCacheableUniqueFieldFinder(AbstractShardedDAO<E, D> shardedDAO, long timeout) { super(shardedDAO, timeout); }
+    public ShardCacheableUniqueFieldFinder(AbstractShardedDAO<E, D> shardedDAO, long timeout, boolean useCache) {
+        super(shardedDAO, timeout, useCache);
+    }
 
     @Override public E find(Object... args) {
         final String field = args[0].toString();

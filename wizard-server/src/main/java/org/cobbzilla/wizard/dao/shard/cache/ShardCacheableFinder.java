@@ -17,8 +17,12 @@ public abstract class ShardCacheableFinder<E extends Shardable, D extends Single
 
     protected AbstractShardedDAO<E, D> shardedDAO;
     @Getter protected long cacheTimeoutSeconds = TimeUnit.MINUTES.toSeconds(20);
+    protected boolean useCache = true;
+
+    public ShardCacheableFinder(AbstractShardedDAO<E, D> dao, long timeout) { this(dao, timeout, true); }
 
     public E get(String cacheKey, Object... args) {
+        if (!useCache) return (E) find(args);
         final String shardSetName = shardedDAO.getShardConfiguration().getName();
         cacheKey = shardSetName +":" + cacheKey;
         E entity = null;
@@ -27,7 +31,8 @@ public abstract class ShardCacheableFinder<E extends Shardable, D extends Single
             entity = (E) find(args);
             if (entity == null) {
                 shardedDAO.getShardCache().set(cacheKey, NULL_CACHE, "EX", getCacheTimeoutSeconds());
-                shardedDAO.getShardCache().lpush(shardedDAO.getCacheRefsKey(NULL_CACHE), cacheKey);
+                final String cacheRefsKey = shardedDAO.getCacheRefsKey(NULL_CACHE);
+                shardedDAO.getShardCache().lpush(cacheRefsKey, cacheKey);
             } else {
                 shardedDAO.getShardCache().set(cacheKey, toJsonOrDie(entity), "EX", getCacheTimeoutSeconds());
                 shardedDAO.getShardCache().lpush(shardedDAO.getCacheRefsKey(entity.getUuid()), cacheKey);
