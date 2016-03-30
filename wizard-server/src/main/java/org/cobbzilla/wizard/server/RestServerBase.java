@@ -83,8 +83,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return die("getPrimaryListenAddress: could not determine address");
     }
 
-    @Override
-    public String getClientUri() {
+    @Override public String getClientUri() {
         verifyPort();
         return buildURI(getPrimaryListenAddress()).toString();
     }
