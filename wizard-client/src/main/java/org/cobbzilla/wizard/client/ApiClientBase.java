@@ -270,10 +270,10 @@ public class ApiClientBase {
 
                 restResponse = new RestResponse(statusCode, responseJson, getLocationHeader(response));
                 if (statusCode != SERVER_UNAVAILABLE) return restResponse;
-                log.warn("getResponse(attempt="+i+"/"+numTries+") returned "+SERVER_UNAVAILABLE+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
+                log.warn("getResponse("+request.getMethod()+" "+request.getURI().toASCIIString()+", attempt="+i+"/"+numTries+") returned "+SERVER_UNAVAILABLE+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
 
             } catch (IOException e) {
-                log.warn("getResponse(attempt="+i+"/"+numTries+") threw exception "+e+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
+                log.warn("getResponse("+request.getMethod()+" "+request.getURI().toASCIIString()+", attempt="+i+"/"+numTries+") threw exception "+e+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
                 exception = e;
             }
         }
