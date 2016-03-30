@@ -59,7 +59,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public boolean shouldCacheServer () { return true; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || !shouldCacheServer()) {
+        if (serverHarness == null || server == null || !shouldCacheServer()) {
             if (server != null) server.stopServer();
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
