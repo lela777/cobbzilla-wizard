@@ -158,6 +158,17 @@ public abstract class AbstractDAO<E> implements DAO<E> {
         return results;
     }
 
+    /**
+     * Get the first results of a {@link Criteria} query.
+     * @param criteria the {@link Criteria} query to run
+     * @return the first query result, or null if no results
+     */
+    @SuppressWarnings("unchecked")
+    protected E first(DetachedCriteria criteria) throws HibernateException {
+        final List<E> found = (List<E>) getHibernateTemplate().findByCriteria(checkNotNull(criteria), 0, 1);
+        return found.isEmpty() ? null : found.get(0);
+    }
+
     public List query(String hsql, String[] paramNames, Object[] paramValues, int maxResults) {
         final HibernateCallbackImpl callback = new HibernateCallbackImpl(hsql, paramNames, paramValues, 0, maxResults);
         return (List) getHibernateTemplate().execute(callback);
