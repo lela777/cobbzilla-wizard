@@ -7,6 +7,9 @@ import org.cobbzilla.util.system.Sleep;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.string.StringUtil.formatDurationFrom;
+
 @AllArgsConstructor @Slf4j
 class DAOInitializer extends Thread {
 
@@ -18,6 +21,8 @@ class DAOInitializer extends Thread {
         int attempt = 1;
         final String prefix = "initAllDAOs(" + shardedDAO.getEntityClass().getSimpleName() + "): ";
         String shardSetName = null;
+        long start = now();
+        log.info(prefix+"starting");
         while (attempt <= MAX_INIT_DAO_ATTEMPTS) {
             Sleep.sleep(10000 + RandomUtils.nextLong(1000, 5000));
             try {
@@ -32,7 +37,7 @@ class DAOInitializer extends Thread {
                 final ShardMapDAO shardDAO = shardedDAO.getShardDAO();
                 if (shardDAO != null) {
                     shardedDAO.toDAOs(shardDAO.findByShardSet(shardSetName));
-                    log.info(prefix+"completed");
+                    log.info(prefix+"completed in "+formatDurationFrom(start));
                     return;
                 } else {
                     log.warn(prefix+"shardDAO was null: "+shardSetName);
