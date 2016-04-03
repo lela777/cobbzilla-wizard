@@ -16,7 +16,6 @@ import java.util.List;
 public class ShardSearch {
 
     @Getter @Setter protected String hash = null;
-
     public boolean hasHash() { return hash != null; }
 
     @Getter @Setter protected String hsql = null;

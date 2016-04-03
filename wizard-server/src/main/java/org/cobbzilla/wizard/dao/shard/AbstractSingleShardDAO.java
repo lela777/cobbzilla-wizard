@@ -1,8 +1,11 @@
 package org.cobbzilla.wizard.dao.shard;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.dao.shard.task.ShardSearchTask;
+import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.Shardable;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.hibernate.Query;
@@ -25,6 +28,8 @@ public abstract class AbstractSingleShardDAO<E extends Shardable>
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired private RestServerConfiguration configuration;
+
+    @Getter @Setter private ShardMap shard;
 
     @Override public <R> List<R> search(ShardSearch search) {
         return new ShardSearchTask(this, search).execTask();
@@ -63,7 +68,7 @@ public abstract class AbstractSingleShardDAO<E extends Shardable>
         }
     }
 
-    @Override public void initialize() {}
+    @Override public void initialize(ShardMap map) { setShard(map); }
 
     @Override public void cleanup() {
         try {

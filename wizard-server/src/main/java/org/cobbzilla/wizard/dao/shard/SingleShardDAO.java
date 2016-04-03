@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.dao.shard;
 
 import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.Shardable;
 import org.hibernate.Session;
 import org.springframework.orm.hibernate4.HibernateTemplate;
@@ -14,7 +15,9 @@ public interface SingleShardDAO<E extends Shardable> extends DAO<E> {
     List<E> findByFields(String f1, Object v1, String f2, Object v2);
     List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3);
 
-    void initialize();
+    void initialize(ShardMap map);
+    ShardMap getShard();
+
     void cleanup();
 
     List query(int maxResults, String hsql, Object... args);

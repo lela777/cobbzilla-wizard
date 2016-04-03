@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model.shard;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,5 +47,7 @@ public class ShardMap extends IdentifiableBase {
     }
 
     @Transient @Getter @Setter private boolean defaultShard = false;
+
+    @Transient @JsonIgnore public String getDbName() { return url == null || url.indexOf('/') == -1 ? url : url.substring(url.indexOf('/')+1); }
 
 }

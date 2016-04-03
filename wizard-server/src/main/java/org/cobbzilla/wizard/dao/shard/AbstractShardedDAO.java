@@ -225,7 +225,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                     final DatabaseConfiguration database = getMasterDbConfiguration().getShardDatabaseConfiguration(map);
                     final ApplicationContext ctx = getApplicationContext(database);
                     dao = autowire(ctx, instantiate(singleShardDaoClass));
-                    dao.initialize();
+                    dao.initialize(map);
                     shardCache.put(map, dao);
                     log.warn("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
                 } else {
