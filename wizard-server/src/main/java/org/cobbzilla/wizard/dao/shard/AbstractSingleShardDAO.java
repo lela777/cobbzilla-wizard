@@ -48,7 +48,7 @@ public abstract class AbstractSingleShardDAO<E extends Shardable>
             int i = 0;
             for (Object arg : args) {
                 if (arg == null) {
-                    die("query: null values no supported.");
+                    die("query: null values not supported");
                 } else if (arg instanceof String) {
                     query.setString(i++, arg.toString());
                 } else if (arg instanceof BigDecimal) {

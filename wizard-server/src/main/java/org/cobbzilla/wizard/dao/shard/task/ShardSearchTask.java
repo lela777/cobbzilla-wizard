@@ -18,7 +18,9 @@ import static org.cobbzilla.util.string.StringUtil.formatDurationFrom;
 public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, R> extends SimpleShardTask<E, D, List<R>> {
 
     @Override public List<R> execTask() {
+        final String prefix = "execTask(" + dao.getShard().getDbName() + "): ";
         long start = now();
+        log.info(prefix+"starting");
         final ResultCollector collector = search.getCollector();
         for (Object entity : dao.query(search.getMaxResultsPerShard(), search.getHsql(), search.getArgs())) {
              if (cancelled.get()) break;
@@ -27,7 +29,7 @@ public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, 
             }
         }
         final List<R> sorted = search.sort(collector.getResults());
-        log.info("execTask("+dao.getShard().getDbName()+"): completed in "+formatDurationFrom(start));
+        log.info(prefix + "completed in " + formatDurationFrom(start));
         return sorted;
     }
 
