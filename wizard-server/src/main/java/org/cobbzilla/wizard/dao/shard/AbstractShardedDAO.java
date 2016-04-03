@@ -190,7 +190,10 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     private D toDAO(ShardMap shardMap) {
-        if (now() - daosLastCleaned.get() > DAO_MAP_CLEAN_INTERVAL) cleanDaoMap();
+        if (now() - daosLastCleaned.get() > DAO_MAP_CLEAN_INTERVAL) {
+            cleanDaoMap();
+            daosLastCleaned.set(now());
+        }
         D dao = daos.get(shardMap);
         if (dao == null) {
             synchronized (daos) {

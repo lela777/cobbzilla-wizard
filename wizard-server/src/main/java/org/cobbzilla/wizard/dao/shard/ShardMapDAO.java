@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.dao.shard;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.util.collection.mappy.MappyList;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
@@ -21,7 +22,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 @Slf4j
 public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E> {
 
-    private static final long CACHE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
+    private static final long CACHE_TIMEOUT = TimeUnit.MINUTES.toMillis(60);
 
     private final AtomicReference<List<E>> flatCache = new AtomicReference<>();
     private final AtomicReference<MappyList<String, E>> readCache = new AtomicReference<>();
