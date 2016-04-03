@@ -110,8 +110,6 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         this.entityClass = getFirstTypeParam(getClass(), Shardable.class);
         this.hashOn = instantiate(this.entityClass).getHashToShardField();
         this.singleShardDaoClass = initShardDaoClass();
-        initAllDAOs();
-
     }
     protected Class<D> initShardDaoClass() { return getFirstTypeParam(getClass(), SingleShardDAO.class); }
 
@@ -177,7 +175,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         try {
             val = Long.valueOf(hash, 16);
         } catch (NumberFormatException e) {
-            log.warn("wtf");
+            log.warn("getLogicalShard: invalid hex value: "+hash+" (returning 0): "+e);
             return 0;
         }
         return (int) (Math.abs(val) % getShardConfiguration().getLogicalShards());
@@ -230,9 +228,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                     dao = autowire(ctx, instantiate(singleShardDaoClass));
                     dao.initialize(map);
                     shardCache.put(map, dao);
-                    log.warn("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
+                    log.info("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
                 } else {
-                    log.warn("buildDAO(" + map + "): using cached value for " + getEntityClass().getSimpleName());
+                    log.info("buildDAO(" + map + "): using cached value for " + getEntityClass().getSimpleName());
                 }
             }
         }

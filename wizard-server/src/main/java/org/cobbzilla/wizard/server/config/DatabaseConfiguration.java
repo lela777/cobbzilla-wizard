@@ -69,6 +69,8 @@ public class DatabaseConfiguration {
         return names;
     }
 
+    public boolean hasShards() { return !getShardSetNames().isEmpty(); }
+
     public int getLogicalShardCount(String shardSet) {
         for (ShardSetConfiguration config : shard) if (config.getName().equals(shardSet)) return config.getLogicalShards();
         return ShardSetConfiguration.DEFAULT_LOGICAL_SHARDS;
@@ -81,4 +83,5 @@ public class DatabaseConfiguration {
         }
         return null;
     }
+
 }

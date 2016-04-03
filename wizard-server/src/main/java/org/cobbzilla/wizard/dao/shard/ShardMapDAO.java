@@ -2,7 +2,6 @@ package org.cobbzilla.wizard.dao.shard;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.util.collection.mappy.MappyList;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
@@ -28,6 +27,7 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
     private final AtomicReference<MappyList<String, E>> readCache = new AtomicReference<>();
     private final AtomicReference<MappyList<String, E>> writeCache = new AtomicReference<>();
     private final AtomicLong lastRefresh = new AtomicLong(0);
+    private final AtomicReference<Thread> refresher = new AtomicReference<>();
 
     @Override public List<E> findAll() { return refreshCache(); }
 
@@ -35,35 +35,41 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
 
     public List<E> refreshCache(boolean force) {
         final List<E> all;
-        if (force || now() - lastRefresh.get() > CACHE_TIMEOUT) {
-            synchronized (lastRefresh) {
-                if (force || now() - lastRefresh.get() > CACHE_TIMEOUT) {
-                    final MappyList<String, E> newReadCache = new MappyList<>();
-                    final MappyList<String, E> newWriteCache = new MappyList<>();
-                    final List<E> newFlatCache = new ArrayList<>();
-                    all = super.findAll();
-                    for (E shardMap : all) {
+        if ((force || now() - lastRefresh.get() > CACHE_TIMEOUT) && refresher.get() == null) {
+            synchronized (refresher) {
+                if ((force || now() - lastRefresh.get() > CACHE_TIMEOUT) && refresher.get() == null) {
+                    try {
+                        refresher.set(Thread.currentThread());
+                        final MappyList<String, E> newReadCache = new MappyList<>();
+                        final MappyList<String, E> newWriteCache = new MappyList<>();
+                        final List<E> newFlatCache = new ArrayList<>();
+                        all = super.findAll();
+                        for (E shardMap : all) {
 
-                        final List<E> readShards = newReadCache.getAll(shardMap.getShardSet());
-                        if (shardMap.isAllowRead()) readShards.add(shardMap);
+                            final List<E> readShards = newReadCache.getAll(shardMap.getShardSet());
+                            if (shardMap.isAllowRead()) readShards.add(shardMap);
 
-                        final List<E> writeShards = newWriteCache.getAll(shardMap.getShardSet());
-                        if (shardMap.isAllowWrite()) writeShards.add(shardMap);
+                            final List<E> writeShards = newWriteCache.getAll(shardMap.getShardSet());
+                            if (shardMap.isAllowWrite()) writeShards.add(shardMap);
 
-                        newFlatCache.add(shardMap);
+                            newFlatCache.add(shardMap);
+                        }
+
+                        // validate
+                        for (String shardSet : toNames(newFlatCache)) {
+                            if (!validate(shardSet, newReadCache.getAll(shardSet))) log.warn("Invalid read-shard set for " + shardSet);
+                            if (!validate(shardSet, newWriteCache.getAll(shardSet))) log.warn("Invalid write-shard set for " + shardSet);
+                        }
+
+                        readCache.set(newReadCache);
+                        writeCache.set(newWriteCache);
+                        flatCache.set(newFlatCache);
+
+                        lastRefresh.set(now());
+
+                    } finally {
+                        refresher.set(null);
                     }
-
-                    // validate
-                    for (String shardSet : toNames(newFlatCache)) {
-                        if (!validate(shardSet, newReadCache.getAll(shardSet))) log.warn("Invalid read-shard set for "+shardSet);
-                        if (!validate(shardSet, newWriteCache.getAll(shardSet))) log.warn("Invalid write-shard set for "+shardSet);
-                    }
-
-                    readCache.set(newReadCache);
-                    writeCache.set(newWriteCache);
-                    flatCache.set(newFlatCache);
-
-                    lastRefresh.set(now());
                 } else {
                     all = flatCache.get();
                 }
@@ -156,16 +162,16 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         final List<E> readShards = findReadShards(shardSet);
         final List<E> writeShards = findWriteShards(shardSet);
         return new ShardSetStatus(shardSet,
-                                  readShards,  validate(shardSet, readShards),
-                                  writeShards, validate(shardSet, writeShards));
+                readShards,  validate(shardSet, readShards),
+                writeShards, validate(shardSet, writeShards));
     }
 
     public ShardSetStatus validate(String shardSet, E[] shards) {
         final List<E> readShards = findReadShards(shards);
         final List<E> writeShards = findWriteShards(shards);
         return new ShardSetStatus(shardSet,
-                                  readShards,  validate(shardSet, readShards),
-                                  writeShards, validate(shardSet, writeShards));
+                readShards,  validate(shardSet, readShards),
+                writeShards, validate(shardSet, writeShards));
     }
 
     public ShardSetStatus validateWithShardRemoved(String shardSet, E shard) {
@@ -174,8 +180,8 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         readShards.remove(shard);
         writeShards.remove(shard);
         return new ShardSetStatus(shardSet,
-                                  readShards,  validate(shardSet, readShards),
-                                  writeShards, validate(shardSet, writeShards));
+                readShards,  validate(shardSet, readShards),
+                writeShards, validate(shardSet, writeShards));
     }
 
     public boolean validate(String shardSet, List<E> list) {

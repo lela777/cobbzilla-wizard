@@ -16,7 +16,7 @@ class DAOInitializer extends Thread {
 
     @Override public void run() {
         int attempt = 1;
-        final String prefix = "initAllDAOs(" + shardedDAO.getEntityClass().getSimpleName() + ")";
+        final String prefix = "initAllDAOs(" + shardedDAO.getEntityClass().getSimpleName() + "): ";
         String shardSetName = null;
         while (attempt <= MAX_INIT_DAO_ATTEMPTS) {
             Sleep.sleep(10000 + RandomUtils.nextLong(1000, 5000));
@@ -29,11 +29,17 @@ class DAOInitializer extends Thread {
                     } catch (Exception ignored) {}
                     Sleep.sleep(200);
                 }
-                shardedDAO.toDAOs(shardedDAO.getShardDAO().findByShardSet(shardSetName));
-                return;
+                final ShardMapDAO shardDAO = shardedDAO.getShardDAO();
+                if (shardDAO != null) {
+                    shardedDAO.toDAOs(shardDAO.findByShardSet(shardSetName));
+                    log.info(prefix+"completed");
+                    return;
+                } else {
+                    log.warn(prefix+"shardDAO was null: "+shardSetName);
+                }
 
             } catch (Exception e) {
-                log.warn(prefix + " (attempt " + attempt + "): error initializing: " + e, e);
+                log.warn(prefix + "attempt " + attempt + ": error initializing: " + e, e);
             } finally {
                 attempt++;
             }

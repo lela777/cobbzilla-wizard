@@ -26,7 +26,7 @@ public class DaoMapCleaner<E extends Shardable, D extends SingleShardDAO<E>> imp
     }
 
     public void run() {
-        final List<ShardMap> all = shardMapDAO.refreshCache(true);
+        final List<ShardMap> all = shardMapDAO.refreshCache();
         final List<ShardMap> toRemove = new ArrayList<>();
         for (Map.Entry<ShardMap, D> entry : daos.entrySet()) {
             final ShardMap shardMap = entry.getKey();
