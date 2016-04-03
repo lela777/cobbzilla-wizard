@@ -228,9 +228,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                     dao = autowire(ctx, instantiate(singleShardDaoClass));
                     dao.initialize(map);
                     shardCache.put(map, dao);
-                    log.info("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
+                    log.debug("buildDAO(" + map + "): using new value for " + getEntityClass().getSimpleName());
                 } else {
-                    log.info("buildDAO(" + map + "): using cached value for " + getEntityClass().getSimpleName());
+                    log.debug("buildDAO(" + map + "): using cached value for " + getEntityClass().getSimpleName());
                 }
             }
         }

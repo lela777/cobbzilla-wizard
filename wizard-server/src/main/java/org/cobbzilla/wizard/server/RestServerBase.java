@@ -24,9 +24,6 @@ import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.server.handler.StaticAssetHandler;
 import org.cobbzilla.wizard.validation.Validator;
 import org.glassfish.grizzly.http.server.*;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.TypeConverter;
-import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -189,7 +186,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     protected ObjectMapper getObjectMapper() { return JsonUtil.NOTNULL_MAPPER; }
 
     @Override public ConfigurableApplicationContext buildSpringApplicationContext() {
-        return buildSpringApplicationContext(new ApplicationContextConfig<C>(configuration));
+        return buildSpringApplicationContext(new ApplicationContextConfig<>(configuration));
     }
 
     @Override public ConfigurableApplicationContext buildSpringApplicationContext(final ApplicationContextConfig ctxConfig) {
@@ -197,26 +194,10 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         final RestServer server = this;
 
         // Create a special factory that will always correctly resolve this specific configuration
-        final DefaultListableBeanFactory factory = new DefaultListableBeanFactory() {
-            @Override public Object doResolveDependency(DependencyDescriptor descriptor, String beanName, Set<String> autowiredBeanNames, TypeConverter typeConverter) throws BeansException {
-                if (descriptor.getDependencyType().isAssignableFrom(ctxConfig.getConfig().getClass())) return ctxConfig.getConfig();
-                if (RestServer.class.isAssignableFrom(descriptor.getDependencyType())) return server;
-                if (ctxConfig.hasResolvers()) {
-                    for (CustomBeanResolver resolver : ctxConfig.getResolvers()) {
-                        Object resolved = resolver.resolve(this, descriptor, beanName, autowiredBeanNames, typeConverter);
-                        if (resolved != null) return resolved;
-                    }
-                }
-                return super.doResolveDependency(descriptor, beanName, autowiredBeanNames, typeConverter);
-            }
-        };
+        final DefaultListableBeanFactory factory = new RestServerListableBeanFactory(server, ctxConfig);
 
         // Create a special context that uses the above factory
-        final ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext() {
-            @Override protected DefaultListableBeanFactory createBeanFactory() {
-                return factory;
-            }
-        };
+        final ClassPathXmlApplicationContext applicationContext = new RestServerClassPathXmlApplicationContext(factory);
 
         // create the full context, with the config bean now "predefined"
         applicationContext.setConfigLocation(ctxConfig.getSpringContextPath());
