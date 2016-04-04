@@ -27,8 +27,14 @@ public class ShardSearch {
     public ShardSearch (String hsql, List<Object> args) { this(hsql, args, null); }
     public ShardSearch (String hsql, List<Object> args, String hash) { this.hsql = hsql; this.args = args; this.hash = hash; }
 
+    @Getter private int maxResults = Integer.MAX_VALUE;
+    public ShardSearch setMaxResults (int max) {
+        this.maxResults = max;
+        collector.setMaxResults(max);
+        return this;
+    }
+
     @Getter @Setter private int maxResultsPerShard = Integer.MAX_VALUE;
-    public ShardSearch setMaxResults (int max) { collector.setMaxResults(max); return this; }
 
     @Getter @Setter private Long timeout;
     public boolean hasTimeout() { return timeout != null && timeout > 0; }

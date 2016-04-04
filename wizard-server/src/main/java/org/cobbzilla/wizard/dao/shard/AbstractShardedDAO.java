@@ -440,7 +440,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
                 // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
                 try {
-                    return search.sort(awaitAndCollect(futures, MAX_QUERY_RESULTS, timeout));
+                    return search.sort(awaitAndCollect(futures, search.getMaxResults(), timeout));
                 } catch (TimeoutException e) {
                     log.warn("search: timed out");
                     throw new ResourceHttpException(GATEWAY_TIMEOUT);
