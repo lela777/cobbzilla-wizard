@@ -23,8 +23,9 @@ public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, 
         log.info(prefix+"starting");
         final ResultCollector collector = search.getCollector();
         for (Object entity : dao.query(search.getMaxResultsPerShard(), search.getHsql(), search.getArgs())) {
-             if (cancelled.get()) break;
-             if (!collector.addResult(entity)) {
+            if (cancelled.get()) break;
+            if (!collector.addResult(entity)) {
+                log.info(prefix+"reached max results ("+collector.getMaxResults()+"), cancelling tasks and returning");
                 cancelTasks(); break;
             }
         }
