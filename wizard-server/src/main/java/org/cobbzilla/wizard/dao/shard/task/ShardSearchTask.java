@@ -23,25 +23,25 @@ public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, 
         log.info(prefix+"starting");
         final ResultCollector collector = search.getCollector();
         for (Object entity : dao.query(search.getMaxResultsPerShard(), search.getHsql(), search.getArgs())) {
-            if (cancelled.get()) break;
+            if (cancelled.get()) {
+                log.info(prefix+"cancelled from another thread, stopping search");
+                break;
+            }
             if (!collector.addResult(entity)) {
                 log.info(prefix+"reached max results ("+collector.getMaxResults()+"), cancelling tasks and returning");
-                cancelTasks(); break;
+                cancelTasks();
+                break;
             }
         }
         final List<R> sorted = search.sort(collector.getResults());
-        log.info(prefix + "completed in " + formatDurationFrom(start));
+        log.info(prefix + "completed with "+sorted.size()+" results in " + formatDurationFrom(start));
         return sorted;
     }
 
     @AllArgsConstructor
     public static class Factory extends ShardTaskFactoryBase {
-
         private ShardSearch search;
-
-        @Override public ShardTask newTask(SingleShardDAO dao) {
-            return new ShardSearchTask(dao, tasks, search);
-        }
+        @Override public ShardTask newTask(SingleShardDAO dao) { return new ShardSearchTask(dao, tasks, search); }
     }
 
     private ShardSearch search;
