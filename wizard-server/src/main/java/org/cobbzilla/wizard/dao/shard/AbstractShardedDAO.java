@@ -433,14 +433,14 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
             final ShardTaskFactory factory = new ShardSearchTask.Factory(search);
             try {
                 // Start iterator tasks on all DAOs
-                final List<Future<List<R>>> futures = new ArrayList<>();
+                final List<Future<List>> futures = new ArrayList<>();
                 for (D dao : getNonOverlappingDAOs()) {
                     futures.add(queryWorkerPool.submit(factory.newTask(dao)));
                 }
 
                 // Wait for all iterators to finish (or for enough to finish that the rest get cancelled)
                 try {
-                    return search.sort(awaitAndCollect(futures, search.getMaxResults(), timeout));
+                    return search.sort(search.getCollector().await(futures, timeout));
                 } catch (TimeoutException e) {
                     log.warn("search: timed out");
                     throw timeoutEx();

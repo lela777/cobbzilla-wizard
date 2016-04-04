@@ -3,6 +3,8 @@ package org.cobbzilla.wizard.util;
 import org.cobbzilla.wizard.dao.EntityFilter;
 
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 public interface ResultCollector {
 
@@ -18,5 +20,7 @@ public interface ResultCollector {
 
     int getMaxResults();
     ResultCollector setMaxResults(int max);
+
+    List await(List<Future<List>> futures, long timeout) throws TimeoutException;
 
 }

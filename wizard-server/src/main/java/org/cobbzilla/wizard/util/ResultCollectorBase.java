@@ -9,6 +9,10 @@ import org.cobbzilla.wizard.dao.EntityFilter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
+
+import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class ResultCollectorBase extends ArrayList implements ResultCollector {
@@ -28,6 +32,10 @@ public class ResultCollectorBase extends ArrayList implements ResultCollector {
             super.add(thing);
         }
         return true;
+    }
+
+    @Override public List await(List<Future<List>> futures, long timeout) throws TimeoutException {
+        return awaitAndCollect(futures, getMaxResults(), timeout);
     }
 
 }
