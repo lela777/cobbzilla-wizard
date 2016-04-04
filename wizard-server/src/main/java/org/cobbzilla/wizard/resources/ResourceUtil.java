@@ -105,6 +105,9 @@ public class ResourceUtil {
     public static Response timeout () { return status(HttpStatusCodes.GATEWAY_TIMEOUT); }
     public static ResourceHttpException timeoutEx () { return new ResourceHttpException(HttpStatusCodes.GATEWAY_TIMEOUT); }
 
+    public static Response unavailable() { return status(HttpStatusCodes.SERVER_UNAVAILABLE); }
+    public static ResourceHttpException unavailableEx() { return new ResourceHttpException(HttpStatusCodes.SERVER_UNAVAILABLE); }
+
     public static <T> T userPrincipal(HttpContext context) { return userPrincipal(context, true); }
 
     public static <T> T optionalUserPrincipal(HttpContext context) {
