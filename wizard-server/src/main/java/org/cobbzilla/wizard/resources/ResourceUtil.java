@@ -102,6 +102,9 @@ public class ResourceUtil {
         return new MultiViolationException(result.getViolationBeans());
     }
 
+    public static Response timeout () { return status(HttpStatusCodes.GATEWAY_TIMEOUT); }
+    public static ResourceHttpException timeoutEx () { return new ResourceHttpException(HttpStatusCodes.GATEWAY_TIMEOUT); }
+
     public static <T> T userPrincipal(HttpContext context) { return userPrincipal(context, true); }
 
     public static <T> T optionalUserPrincipal(HttpContext context) {

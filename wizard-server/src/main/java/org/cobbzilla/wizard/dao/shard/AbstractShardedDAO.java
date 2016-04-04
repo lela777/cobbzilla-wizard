@@ -19,7 +19,6 @@ import org.cobbzilla.wizard.model.shard.ShardIO;
 import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.ShardRange;
 import org.cobbzilla.wizard.model.shard.Shardable;
-import org.cobbzilla.wizard.resources.ResourceHttpException;
 import org.cobbzilla.wizard.server.ApplicationContextConfig;
 import org.cobbzilla.wizard.server.CustomBeanResolver;
 import org.cobbzilla.wizard.server.RestServer;
@@ -38,9 +37,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
-import static org.cobbzilla.util.http.HttpStatusCodes.GATEWAY_TIMEOUT;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
+import static org.cobbzilla.wizard.resources.ResourceUtil.timeoutEx;
 import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
 import static org.cobbzilla.wizard.util.Await.awaitFirst;
 import static org.cobbzilla.wizard.util.SpringUtil.autowire;
@@ -75,7 +74,8 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     private void cleanDaoMap() { new DaoMapCleaner<>(daos, getShardDAO()).start(); }
 
     public static final long DEFAULT_SHARD_QUERY_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
-    protected long getShardQueryTimeout (String method) { return DEFAULT_SHARD_QUERY_TIMEOUT; }
+    public long getShardQueryTimeout (String method) { return DEFAULT_SHARD_QUERY_TIMEOUT; }
+    public long getShardSearchTimeout () { return getShardQueryTimeout("search"); }
 
     public static final int DEFAULT_MAX_QUERY_THREADS = 100;
     protected int getMaxQueryThreads () { return DEFAULT_MAX_QUERY_THREADS; }
@@ -395,7 +395,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 return awaitFirst(futures, getShardQueryTimeout(ctx));
             } catch (TimeoutException e) {
                 log.warn("queryShardsUnique: timed out");
-                throw new ResourceHttpException(GATEWAY_TIMEOUT);
+                throw timeoutEx();
             }
 
         } finally {
@@ -416,7 +416,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                 return awaitAndCollect(futures, MAX_QUERY_RESULTS, getShardQueryTimeout(ctx));
             } catch (TimeoutException e) {
                 log.warn("queryShardsList: timed out");
-                throw new ResourceHttpException(GATEWAY_TIMEOUT);
+                throw timeoutEx();
             }
 
         } finally {
@@ -425,7 +425,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     public <R> List<R> search(ShardSearch search) {
-        long timeout = search.hasTimeout() ? search.getTimeout() : getShardQueryTimeout("search");
+        long timeout = search.hasTimeout() ? search.getTimeout() : getShardSearchTimeout();
         if (search.hasHash()) {
             final D dao = getDAO(search.getHash());
             return dao.search(search);
@@ -443,7 +443,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
                     return search.sort(awaitAndCollect(futures, search.getMaxResults(), timeout));
                 } catch (TimeoutException e) {
                     log.warn("search: timed out");
-                    throw new ResourceHttpException(GATEWAY_TIMEOUT);
+                    throw timeoutEx();
                 }
 
             } finally {
