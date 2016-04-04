@@ -262,7 +262,7 @@ public class ApiClientBase {
                 if (entity != null) {
                     try (InputStream in = entity.getContent()) {
                         responseJson = IOUtils.toString(in);
-                        log.info("read response callback server: " + responseJson);
+                        log.debug("response: " + responseJson);
                     }
                 } else {
                     responseJson = null;
