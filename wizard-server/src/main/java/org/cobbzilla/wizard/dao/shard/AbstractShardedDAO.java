@@ -406,7 +406,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     protected List<E> queryShardsList(ShardTaskFactory<E, D, List<E>> factory, String ctx) {
         try {
             // Start iterator tasks on all DAOs
-            final List<Future<List<E>>> futures = new ArrayList<>();
+            final List<Future<List>> futures = new ArrayList<>();
             for (D dao : getNonOverlappingDAOs()) {
                 futures.add(queryWorkerPool.submit(factory.newTask(dao)));
             }
