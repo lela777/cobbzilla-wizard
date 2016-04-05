@@ -331,10 +331,6 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldLike(String field, String value) {
-        if (hashOn.equals(field)) {
-            return getDAO(value).findByFieldLike(field, value);
-        }
-
         // have to search all shards for it
         return queryShardsList(new ShardFindByFieldLikeTask.Factory(field, value), "findByFieldLike");
     }
