@@ -2,6 +2,8 @@ package org.cobbzilla.wizard.dao.shard.cache;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.dao.shard.AbstractShardedDAO;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
@@ -12,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.wizard.dao.shard.AbstractShardedDAO.NULL_CACHE;
 
-@AllArgsConstructor
+@AllArgsConstructor @Accessors(chain=true)
 public abstract class ShardCacheableFinder<E extends Shardable, D extends SingleShardDAO<E>> implements CacheableFinder {
 
     protected AbstractShardedDAO<E, D> shardedDAO;
     @Getter protected long cacheTimeoutSeconds = TimeUnit.MINUTES.toSeconds(20);
-    protected boolean useCache = true;
+    @Getter @Setter protected boolean useCache = true;
 
     public ShardCacheableFinder(AbstractShardedDAO<E, D> dao, long timeout) { this(dao, timeout, true); }
 

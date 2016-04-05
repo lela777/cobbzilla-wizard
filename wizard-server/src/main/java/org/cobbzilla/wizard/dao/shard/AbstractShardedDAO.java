@@ -294,6 +294,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     @Override public E findByUuid(final String uuid) { return findByUniqueField("uuid", uuid); }
 
     @Transactional(readOnly=true)
+    public E findByUuid(final String uuid, boolean useCache) { return findByUniqueField("uuid", uuid, useCache); }
+
+    @Transactional(readOnly=true)
     @Override public E findByUniqueField(String field, Object value) { return findByUniqueField(field, value, true); }
 
     @Transactional(readOnly=true)
@@ -304,6 +307,11 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     @Transactional(readOnly=true)
     public E findByUniqueFields(String f1, Object v1, String f2, Object v2) {
         return new ShardCacheableFindByUnique2FieldFinder<>(this, getCacheTimeoutSeconds()).get("unique-fields2:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2);
+    }
+
+    @Transactional(readOnly=true)
+    public E findByUniqueFieldsNoCache(String f1, Object v1, String f2, Object v2) {
+        return new ShardCacheableFindByUnique2FieldFinder<>(this, getCacheTimeoutSeconds(), false).get("unique-fields2:"+f1+":"+v1+":"+f2+":"+v2, f1, v1, f2, v2);
     }
 
     @Transactional(readOnly=true)
