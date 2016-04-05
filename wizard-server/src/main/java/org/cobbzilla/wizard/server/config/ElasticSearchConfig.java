@@ -11,7 +11,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class ElasticSearchConfig {
 
-    public static final String DEFAULT_ES_URL = "http://127.0.0.1:9200";
+    public static final String DEFAULT_ES_URL = "http://127.0.0.1:9300";
     public static final SingletonList<String> DEFAULT_ES_LIST = new SingletonList<>(DEFAULT_ES_URL);
 
     @Getter @Setter private String cluster = "elasticsearch";
@@ -24,7 +24,7 @@ public class ElasticSearchConfig {
             final String server = iter.next();
             if (empty(server)) iter.remove();
         }
-        return servers;
+        return empty(servers) ? DEFAULT_ES_LIST : servers;
     }
 
 }
