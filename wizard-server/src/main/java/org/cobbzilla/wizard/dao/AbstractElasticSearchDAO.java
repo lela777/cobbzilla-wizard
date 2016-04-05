@@ -26,6 +26,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -58,7 +59,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     @Getter(lazy=true) private final Class<E> entityType = initEntityType();
     private Class<E> initEntityType() { return getFirstTypeParam(getClass(), Identifiable.class); }
 
-    private ObjectPool<ESClientReference> clientPool = new GenericObjectPool<>(new BasePooledObjectFactory<ESClientReference>() {
+    private final ObjectPool<ESClientReference> clientPool = new GenericObjectPool<>(new BasePooledObjectFactory<ESClientReference>() {
         @Override public ESClientReference create() throws Exception { return new ESClientReference(); }
         @Override public PooledObject<ESClientReference> wrap(ESClientReference esClientReference) { return new DefaultPooledObject<>(esClientReference); }
         @Override public void destroyObject(PooledObject<ESClientReference> p) throws Exception {
@@ -79,10 +80,10 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     protected int getSearchPoolSize() { return 10; }
 
     protected Client getClient () {
-        try {
-            return clientPool.borrowObject().get();
-        } catch (Exception e) {
-            return die("getClient: "+e, e);
+        synchronized (clientPool) {
+            try { return clientPool.borrowObject().get(); } catch (Exception e) {
+                return die("getClient: " + e, e);
+            }
         }
     }
 
@@ -139,9 +140,9 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     }
 
     protected boolean isEmptyQuery(Q searchQuery) { return false; }
-
-    protected abstract SearchRequestBuilder prepareSearch(Q searchQuery, SearchRequestBuilder searchRequestBuilder);
-
+    protected abstract QueryBuilder getQuery(Q searchQuery);
+    protected abstract QueryBuilder getPostFilter(Q searchQuery);
+    protected abstract R toSearchResult(E entity);
     protected abstract Comparator<? super R> getComparator(Q searchQuery);
 
     public SearchResults<R> search(Q searchQuery) {
@@ -152,7 +153,9 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         final SearchResults<R> results = new SearchResults<>();
         final SearchResponse response;
         try (Client client = getClient()) {
-            final SearchRequestBuilder requestBuilder = prepareSearch(searchQuery, prepareSearch(client))
+            final SearchRequestBuilder requestBuilder = prepareSearch(client)
+                    .setQuery(getQuery(searchQuery))
+                    .setPostFilter(getPostFilter(searchQuery))
                     .setFrom(0).setSize(getMaxResults());
 
             response = requestBuilder.execute().actionGet();
@@ -168,8 +171,6 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         Collections.sort(results.getResults(), getComparator(searchQuery));
         return results;
     }
-
-    protected abstract R toSearchResult(E entity);
 
     @AllArgsConstructor
     private class ESIndexJob implements Runnable {
@@ -204,10 +205,10 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         @Override public long getTimeout() { return getClientRefreshInterval(); }
 
         @Override public void close() throws IOException {
-            try {
-                clientPool.returnObject(this);
-            } catch (Exception e) {
-                die("close: error returning client to pool: "+e, e);
+            synchronized (clientPool) {
+                try { clientPool.returnObject(this); } catch (Exception e) {
+                    die("close: error returning client to pool: " + e, e);
+                }
             }
         }
     }
