@@ -213,6 +213,13 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <version>${jedis.version}</version>
         </dependency>
 
+        <!-- ElasticSearch -->
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+
         <!-- API docs -->
         <dependency>
             <groupId>com.qmino</groupId>
