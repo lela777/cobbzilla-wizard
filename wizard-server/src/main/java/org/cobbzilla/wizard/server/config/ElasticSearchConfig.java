@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.server.config;
 
-import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.collection.SingletonList;
 
@@ -13,8 +12,11 @@ public class ElasticSearchConfig {
 
     public static final String DEFAULT_ES_URL = "http://127.0.0.1:9300";
     public static final SingletonList<String> DEFAULT_ES_LIST = new SingletonList<>(DEFAULT_ES_URL);
+    public static final String DEFAULT_CLUSTER = "elasticsearch";
 
-    @Getter @Setter private String cluster = "elasticsearch";
+    @Setter private String cluster = DEFAULT_CLUSTER;
+    public String getCluster() { return empty(cluster) ? DEFAULT_CLUSTER : cluster; }
+
     @Setter private List<String> servers;
 
     public List<String> getServers () {
