@@ -31,7 +31,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
@@ -79,32 +78,16 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
 
     protected int getSearchPoolSize() { return 10; }
 
-    protected Client getClient () {
+    protected ESClientReference getClient () {
         synchronized (clientPool) {
-            try { return clientPool.borrowObject().get(); } catch (Exception e) {
+            try {
+                final ESClientReference clientRef = clientPool.borrowObject();
+                log.info("getClient: borrowing client #"+clientRef.hashCode());
+                return clientRef;
+            } catch (Exception e) {
                 return die("getClient: " + e, e);
             }
         }
-    }
-
-    private Client initClient() {
-
-        final ElasticSearchConfig config = getConfiguration();
-        final Settings settings = Settings.settingsBuilder().put("cluster.name", config.getCluster()).build();
-
-        TransportClient c = TransportClient.builder().settings(settings).build();
-        for (String uri : config.getServers()) c = c.addTransportAddress(toTransportAddress(uri));
-
-        try {
-            final IndicesAdminClient indices = c.admin().indices();
-            if (!indices.exists(new IndicesExistsRequest(getIndexName())).actionGet().isExists()) {
-                indices.create(new CreateIndexRequest(getIndexName()).mapping(getTypeName(), getTypeMappingJson())).actionGet();
-            }
-        } catch (Exception e) {
-            die("initClient: error setting up mappings: "+e, e);
-        }
-
-        return c;
     }
 
     protected TransportAddress toTransportAddress(String uri) {
@@ -129,8 +112,8 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     }
 
     public boolean delete (String id) {
-        try (Client client = getClient()) {
-            return client.prepareDelete(getIndexName(), getTypeName(), id).get().isFound();
+        try (ESClientReference client = getClient()) {
+            return client.get().prepareDelete(getIndexName(), getTypeName(), id).get().isFound();
         }
     }
     public boolean delete (E entity) { return delete(getSearchId(entity)); }
@@ -152,8 +135,8 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
 
         final SearchResults<R> results = new SearchResults<>();
         final SearchResponse response;
-        try (Client client = getClient()) {
-            final SearchRequestBuilder requestBuilder = prepareSearch(client)
+        try (ESClientReference client = getClient()) {
+            final SearchRequestBuilder requestBuilder = prepareSearch(client.get())
                     .setQuery(getQuery(searchQuery))
                     .setPostFilter(getPostFilter(searchQuery))
                     .setFrom(0).setSize(getMaxResults());
@@ -177,7 +160,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         private final E entity;
 
         @Override public void run() {
-            try (Client client = getClient()) {
+            try (ESClientReference client = getClient()) {
                 final String json = toJson(entity);
 
                 final String searchId = getSearchId(entity);
@@ -185,7 +168,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
                 final UpdateRequest updateRequest = new UpdateRequest(getIndexName(), getTypeName(), searchId)
                         .doc(json)
                         .upsert(indexRequest);
-                final UpdateResponse response = client.update(updateRequest).get();
+                final UpdateResponse response = client.get().update(updateRequest).get();
 
                 if (response.getShardInfo().getSuccessful() == 0 && response.getShardInfo().getFailed() > 0) {
                     log.warn("Error indexing: "+toJsonOrErr(response));
@@ -201,12 +184,33 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
 
     private class ESClientReference extends AutoRefreshingReference<Client> implements Closeable {
 
-        @Override public Client refresh() { return initClient(); }
+        @Override public Client refresh() {
+            final ElasticSearchConfig config = getConfiguration();
+            final Settings settings = Settings.settingsBuilder().put("cluster.name", config.getCluster()).build();
+
+            TransportClient c = TransportClient.builder().settings(settings).build();
+            for (String uri : config.getServers()) c = c.addTransportAddress(toTransportAddress(uri));
+
+            try {
+                final IndicesAdminClient indices = c.admin().indices();
+                if (!indices.exists(new IndicesExistsRequest(getIndexName())).actionGet().isExists()) {
+                    indices.create(new CreateIndexRequest(getIndexName()).mapping(getTypeName(), getTypeMappingJson())).actionGet();
+                }
+            } catch (Exception e) {
+                die("initClient: error setting up mappings: "+e, e);
+            }
+
+            return c;
+        }
+
         @Override public long getTimeout() { return getClientRefreshInterval(); }
 
-        @Override public void close() throws IOException {
+        @Override public void close() {
             synchronized (clientPool) {
-                try { clientPool.returnObject(this); } catch (Exception e) {
+                try {
+                    clientPool.returnObject(this);
+                    log.debug("close: returning client #"+this.hashCode());
+                } catch (Exception e) {
                     die("close: error returning client to pool: " + e, e);
                 }
             }
