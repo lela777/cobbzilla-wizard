@@ -518,6 +518,13 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         flushShardCache(uuid);
     }
 
+    public void deleteAll (String hashField, String value) {
+        if (!hashOn.equals(hashField)) die("deleteAll: field was "+hashField+", expected "+hashOn);
+        for (D dao : getAllDAOs(value)) {
+            dao.getHibernateTemplate().bulkUpdate("DELETE "+dao.getEntityClass().getSimpleName()+" WHERE "+hashField+" = ?", value);
+        }
+    }
+
     public void flushShardCache(String uuid) {
         flushCacheRefs(getCacheRefsKey(uuid));
         flushCacheRefs(getCacheRefsKey(NULL_CACHE));
