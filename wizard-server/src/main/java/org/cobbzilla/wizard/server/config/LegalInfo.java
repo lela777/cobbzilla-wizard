@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.chop;
+import static org.cobbzilla.util.string.StringUtil.trimQuotes;
 
 @Slf4j
 public class LegalInfo {
@@ -25,7 +26,8 @@ public class LegalInfo {
     public static final String DOC_COMMUNITY = "community";
     public static final String DOC_LICENSES = "licenses";
 
-    @Getter @Setter private String base;
+    @Setter private String base;
+    public String getBase() { return trimQuotes(base); }
 
     @Getter @Setter private String termsOfService = "terms.md";
     @Getter @Setter private String privacyPolicy = "privacy.md";
@@ -59,7 +61,7 @@ public class LegalInfo {
     private String load(String type) {
         String value = type;
         if (empty(value)) return "";
-        if (!empty(base)) value = chop(base, "/") + "/" + value;
+        if (!empty(getBase())) value = chop(getBase(), "/") + "/" + value;
 
         if (value.startsWith("http://") || value.startsWith("https://")) {
             try {
