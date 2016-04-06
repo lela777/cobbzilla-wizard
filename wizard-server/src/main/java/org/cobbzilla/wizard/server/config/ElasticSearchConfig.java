@@ -19,7 +19,7 @@ public class ElasticSearchConfig {
 
     @Setter private List<String> servers;
 
-    public List<String> getServers () {
+    public synchronized List<String> getServers () {
         if (empty(servers)) return DEFAULT_ES_LIST;
         for (Iterator<String> iter = servers.iterator(); iter.hasNext(); ) {
             // it's ok if a name is empty, we just skip it
