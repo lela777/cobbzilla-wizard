@@ -143,6 +143,12 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return toDAOs(shards);
     }
 
+    protected List<D> getAllDAOs() {
+        final List shards = getShardDAO().findAllShards(getShardConfiguration().getName());
+        if (shards.isEmpty()) shards.add(getDefaultShardMap());
+        return toDAOs(shards);
+    }
+
     protected List<D> getAllDAOs(E entity) { return getAllDAOs((Serializable) getIdToHash(entity)); }
 
     protected List<D> getDAOs(Serializable id, ShardIO shardIO) {
@@ -267,8 +273,9 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         return toDAOs(shards);
     }
 
-    public List<ShardMap> getReadShards() { return getShardDAO().findReadShards(getShardConfiguration().getName()); }
+    public List<ShardMap> getReadShards()  { return getShardDAO().findReadShards(getShardConfiguration().getName()); }
     public List<ShardMap> getWriteShards() { return getShardDAO().findWriteShards(getShardConfiguration().getName()); }
+    public List<ShardMap> getAllShards()   { return getShardDAO().findAllShards(getShardConfiguration().getName()); }
 
     @Transactional(readOnly=true) // todo
     @Override public SearchResults<E> search(ResultPage resultPage) { return notSupported(); }
@@ -519,10 +526,19 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     public void deleteAll (String hashField, String value) {
-        if (!hashOn.equals(hashField)) die("deleteAll: field was "+hashField+", expected "+hashOn);
-        for (D dao : getAllDAOs(value)) {
-            dao.getHibernateTemplate().bulkUpdate("DELETE "+dao.getEntityClass().getSimpleName()+" WHERE "+hashField+" = ?", value);
+        if (hashOn.equals(hashField)) {
+            for (D dao : getAllDAOs(value)) {
+                dao.getHibernateTemplate().bulkUpdate(bulkDelete(hashField), value);
+            }
+        } else {
+            for (D dao : getAllDAOs()) {
+                dao.getHibernateTemplate().bulkUpdate(bulkDelete(hashField), value);
+            }
         }
+    }
+
+    protected String bulkDelete(String hashField) {
+        return "DELETE " + getEntityClass().getSimpleName() + " x WHERE x." + hashField + " = ?";
     }
 
     public void flushShardCache(String uuid) {

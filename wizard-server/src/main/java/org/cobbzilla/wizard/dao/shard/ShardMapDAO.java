@@ -136,6 +136,14 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         return writeCache.get().getAll(shardSet);
     }
 
+    public List<E> findAllShards(String shardSet) {
+        refreshCache();
+        final Set<E> shards = new HashSet<>();
+        shards.addAll(readCache.get().getAll(shardSet));
+        shards.addAll(writeCache.get().getAll(shardSet));
+        return new ArrayList<>(shards);
+    }
+
     private List<E> findReadShards(E[] shards) {
         final List<E> list = new ArrayList<>();
         for (E shard : shards) if (shard.isAllowRead()) list.add(shard);
