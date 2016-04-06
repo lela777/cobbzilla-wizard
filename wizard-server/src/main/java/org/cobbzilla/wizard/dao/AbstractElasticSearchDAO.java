@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.AllArgsConstructor;
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -38,6 +39,7 @@ import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.*;
@@ -135,7 +137,9 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
 
         final SearchResults<R> results = new SearchResults<>();
         final SearchResponse response;
-        try (ESClientReference client = getClient()) {
+
+        @Cleanup final ESClientReference client = getClient();
+        synchronized (client.get()) {
             final SearchRequestBuilder requestBuilder = prepareSearch(client.get())
                     .setQuery(getQuery(searchQuery))
                     .setPostFilter(getPostFilter(searchQuery))
@@ -143,7 +147,6 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
 
             response = requestBuilder.execute().actionGet();
         }
-
         final SearchHits hits = response.getHits();
 
         for (SearchHit hit : hits) {
@@ -160,27 +163,32 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         private final E entity;
 
         @Override public void run() {
-            try (ESClientReference client = getClient()) {
-                final String json = toJson(entity);
+            @Cleanup final ESClientReference client = getClient();
+            synchronized (client.get()) {
+                try {
+                    final String json = toJson(entity);
 
-                final String searchId = getSearchId(entity);
-                final IndexRequest indexRequest = new IndexRequest(getIndexName(), getTypeName(), searchId).source(json);
-                final UpdateRequest updateRequest = new UpdateRequest(getIndexName(), getTypeName(), searchId)
-                        .doc(json)
-                        .upsert(indexRequest);
-                final UpdateResponse response = client.get().update(updateRequest).get();
+                    final String searchId = getSearchId(entity);
+                    final IndexRequest indexRequest = new IndexRequest(getIndexName(), getTypeName(), searchId).source(json);
+                    final UpdateRequest updateRequest = new UpdateRequest(getIndexName(), getTypeName(), searchId)
+                            .doc(json)
+                            .upsert(indexRequest);
+                    final UpdateResponse response = client.get().update(updateRequest).get();
 
-                if (response.getShardInfo().getSuccessful() == 0 && response.getShardInfo().getFailed() > 0) {
-                    log.warn("Error indexing: "+toJsonOrErr(response));
+                    if (response.getShardInfo().getSuccessful() == 0 && response.getShardInfo().getFailed() > 0) {
+                        log.warn("Error indexing: " + toJsonOrErr(response));
+                    }
+
+                } catch (Exception e) {
+                    final String msg = "index: " + e;
+                    log.error(msg, e);
+                    die(msg, e);
                 }
-
-            } catch (Exception e) {
-                final String msg = "index: " + e;
-                log.error(msg, e);
-                die(msg, e);
             }
         }
     }
+
+    private static final AtomicBoolean checkedIndex = new AtomicBoolean(false);
 
     private class ESClientReference extends AutoRefreshingReference<Client> implements Closeable {
 
@@ -191,13 +199,20 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
             TransportClient c = TransportClient.builder().settings(settings).build();
             for (String uri : config.getServers()) c = c.addTransportAddress(toTransportAddress(uri));
 
-            try {
-                final IndicesAdminClient indices = c.admin().indices();
-                if (!indices.exists(new IndicesExistsRequest(getIndexName())).actionGet().isExists()) {
-                    indices.create(new CreateIndexRequest(getIndexName()).mapping(getTypeName(), getTypeMappingJson())).actionGet();
+            if (!checkedIndex.get()) {
+                synchronized (checkedIndex) {
+                    if (!checkedIndex.get()) {
+                        checkedIndex.set(true);
+                        try {
+                            final IndicesAdminClient indices = c.admin().indices();
+                            if (!indices.exists(new IndicesExistsRequest(getIndexName())).actionGet().isExists()) {
+                                indices.create(new CreateIndexRequest(getIndexName()).mapping(getTypeName(), getTypeMappingJson())).actionGet();
+                            }
+                        } catch (Exception e) {
+                            die("initClient: error setting up mappings: " + e, e);
+                        }
+                    }
                 }
-            } catch (Exception e) {
-                die("initClient: error setting up mappings: "+e, e);
             }
 
             return c;
