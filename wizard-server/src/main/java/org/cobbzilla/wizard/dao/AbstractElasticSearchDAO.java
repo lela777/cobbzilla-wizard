@@ -82,7 +82,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         synchronized (clientPool) {
             try {
                 final ESClientReference clientRef = clientPool.borrowObject();
-                log.info("getClient: borrowing client #"+clientRef.hashCode());
+                log.debug("getClient: borrowing client #"+clientRef.hashCode());
                 return clientRef;
             } catch (Exception e) {
                 return die("getClient: " + e, e);
