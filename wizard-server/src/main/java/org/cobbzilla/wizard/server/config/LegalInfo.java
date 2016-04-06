@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.server.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,33 +32,33 @@ public class LegalInfo {
     @Getter @Setter private String communityGuidelines = "community.md";
     @Getter @Setter private String licenses = "licenses.md";
 
-    public String getDocument (String type) { return getLoaders().get(type).get(); }
+    public String getDocument (String type) { return loaders.get().get(type); }
 
     public String getTermsOfServiceDocument () { return getDocument(DOC_TERMS); }
     public String getPrivacyPolicyDocument () { return getDocument(DOC_PRIVACY); }
     public String getCommunityGuidelinesDocument () { return getDocument(DOC_COMMUNITY); }
     public String getLicensesDocument () { return getDocument(DOC_LICENSES); }
 
-    @Getter(lazy=true) private final Map<String, AutoRefreshingReference<String>> loaders = initLoaders();
-    private ConcurrentHashMap<String, AutoRefreshingReference<String>> initLoaders() {
-        final ConcurrentHashMap<String, AutoRefreshingReference<String>> map = new ConcurrentHashMap<>();
-        map.put(DOC_TERMS,     new LegaleseLoader(getTermsOfService()));
-        map.put(DOC_PRIVACY,   new LegaleseLoader(getPrivacyPolicy()));
-        map.put(DOC_COMMUNITY, new LegaleseLoader(getCommunityGuidelines()));
-        map.put(DOC_LICENSES,  new LegaleseLoader(getLicenses()));
+    private final AutoRefreshingReference<Map<String, String>> loaders = new AutoRefreshingReference<Map<String, String>>() {
+        @Override public Map<String, String> refresh() { return initLoaders(); }
+        @Override public long getTimeout() { return TimeUnit.DAYS.toMillis(30); }
+    };
+
+    @SuppressWarnings("ConstantConditions")
+    private ConcurrentHashMap<String, String> initLoaders() {
+        final ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+        map.put(DOC_TERMS,     load(getTermsOfService()));
+        map.put(DOC_PRIVACY,   load(getPrivacyPolicy()));
+        map.put(DOC_COMMUNITY, load(getCommunityGuidelines()));
+        map.put(DOC_LICENSES,  load(getLicenses()));
         return map;
     }
 
-    @AllArgsConstructor
-    private class LegaleseLoader extends AutoRefreshingReference<String> {
-        private String type;
-        @Override public String refresh() { return load(type); }
-        @Override public long getTimeout() { return TimeUnit.DAYS.toMillis(1); }
-    }
+    public void refresh() { loaders.set(null); }
 
     private String load(String type) {
         String value = type;
-        if (empty(value)) return null;
+        if (empty(value)) return "";
         if (!empty(base)) value = chop(base, "/") + "/" + value;
 
         if (value.startsWith("http://") || value.startsWith("https://")) {
@@ -67,7 +66,7 @@ public class LegalInfo {
                 return HttpUtil.getResponse(value).getEntityString();
             } catch (IOException e) {
                 log.error("load("+type+"): "+value+": "+e);
-                return null;
+                return "";
             }
 
         } else if (value.startsWith("/") && new File(value).exists()) {
@@ -75,14 +74,14 @@ public class LegalInfo {
                 return FileUtil.toString(value);
             } catch (Exception e) {
                 log.error("load("+type+"): "+value+": "+e);
-                return null;
+                return "";
             }
         } else {
             try {
                 return StreamUtil.loadResourceAsString(value);
             } catch (Exception e) {
                 log.error("load(" + type + ") unable to load from filesystem or classpath: " + value);
-                return null;
+                return "";
             }
         }
     }
