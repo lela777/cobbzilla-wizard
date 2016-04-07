@@ -210,14 +210,15 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
 
     private static final Map<String, Map<ShardMap, SingleShardDAO>> globalCache = new ConcurrentHashMap<>();
     private D buildDAO(ShardMap map, Class<D> singleShardDaoClass) {
-        Map<ShardMap, SingleShardDAO> shardCache;
-        shardCache = globalCache.get(singleShardDaoClass.getName());
+
+        final String shardClass = singleShardDaoClass.getName();
+        Map<ShardMap, SingleShardDAO> shardCache = globalCache.get(shardClass);
         if (shardCache == null) {
             synchronized (globalCache) {
-                shardCache = globalCache.get(singleShardDaoClass.getName());
+                shardCache = globalCache.get(shardClass);
                 if (shardCache == null) {
                     shardCache = new ConcurrentHashMap<>();
-                    globalCache.put(singleShardDaoClass.getName(), shardCache);
+                    globalCache.put(shardClass, shardCache);
                 }
             }
         }

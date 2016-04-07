@@ -146,6 +146,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
                     .setPostFilter(getPostFilter(searchQuery))
                     .setFrom(0).setSize(getMaxResults());
 
+            log.info("search: sending to ES:\n"+requestBuilder.toString()+"\n---END JSON\n");
             response = requestBuilder.execute().actionGet();
         }
         final SearchHits hits = response.getHits();
