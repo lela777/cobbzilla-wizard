@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Slf4j
 public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R extends Identifiable> {
@@ -125,8 +126,8 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     }
 
     protected boolean isEmptyQuery(Q searchQuery) { return false; }
-    protected abstract QueryBuilder getQuery(Q searchQuery);
-    protected abstract QueryBuilder getPostFilter(Q searchQuery);
+    protected QueryBuilder getQuery(Q searchQuery) { return matchAllQuery(); }
+    protected QueryBuilder getPostFilter(Q searchQuery) { return matchAllQuery(); }
     protected abstract R toSearchResult(E entity);
     protected abstract Comparator<? super R> getComparator(Q searchQuery);
 
