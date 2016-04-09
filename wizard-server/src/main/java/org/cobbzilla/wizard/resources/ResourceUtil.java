@@ -119,7 +119,7 @@ public class ResourceUtil {
         try {
             user = (T) context.getRequest().getUserPrincipal();
         } catch (UnsupportedOperationException e) {
-            log.warn("userPrincipal: "+e);
+            log.debug("userPrincipal: "+e);
             user = null;
         }
         if (required && user == null) die("userPrincipal: no user");
