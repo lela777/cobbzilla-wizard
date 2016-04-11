@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Slf4j
@@ -160,6 +161,36 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
         return results;
     }
 
+    public SearchResponse debugSearch(DebugSearchQuery query) {
+//        final List<R> results = new ArrayList<>();
+        final SearchResponse response;
+        @Cleanup final ESClientReference client = getClient();
+        synchronized (client.get()) {
+            final SearchRequestBuilder requestBuilder;
+            if (query.hasSearchPreparer()) {
+                final SearchPreparer preparer = instantiate(query.getSearchPreparer());
+                requestBuilder = preparer.prepare(client.get());
+            } else {
+                requestBuilder = prepareSearch(client.get());
+            }
+            if (query.hasSource()) {
+                requestBuilder.setSource(query.getSource());
+            } else {
+                requestBuilder
+                        .setQuery(query.getQuery())
+                        .setPostFilter(query.getFilter())
+                        .setFrom(query.getFrom()).setSize(query.getMaxResults());
+            }
+
+            log.info("search: sending to ES:\n"+requestBuilder.toString()+"\n---END JSON\n");
+            response = requestBuilder.execute().actionGet();
+        }
+//        for (SearchHit hit : response) {
+//
+//        }
+        return response;
+    }
+
     @AllArgsConstructor
     private class ESIndexJob implements Runnable {
         private final E entity;
@@ -233,4 +264,5 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
             }
         }
     }
+
 }
