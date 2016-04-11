@@ -15,6 +15,9 @@ public class EntityConfig {
     @Setter private String displayName;
     @Setter private String pluralDisplayName;
 
+    @Getter @Setter private String listUri;
+    @Getter @Setter private List<String> listFields;
+
     public String getDisplayName() { return !empty(displayName) ? displayName : name; }
 
     public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : StringUtil.pluralize(getDisplayName()); }
@@ -28,6 +31,10 @@ public class EntityConfig {
     @Getter @Setter private List<String> updateFields;
     @Getter @Setter private String updateMethod = "POST";
     @Getter @Setter private String updateUri;
+
+    @Getter @Setter private String deleteMethod = "DELETE";
+    @Setter private String deleteUri;
+    public String getDeleteUri() { return !empty(deleteUri) ? deleteUri : getUpdateUri(); }
 
     public void addParent(EntityConfig parentConfig) {
         for (Map.Entry<String, EntityFieldConfig> fieldConfig : parentConfig.getFields().entrySet()) {
