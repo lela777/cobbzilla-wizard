@@ -4,6 +4,7 @@ import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
+import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -84,11 +85,28 @@ public abstract class AbstractEntityConfigsResource {
                     parent = parent.getSuperclass();
                 }
 
+                // set names on fields, allows default displayName to work properly
+                for (Map.Entry<String, EntityFieldConfig> fieldConfig : entityConfig.getFields().entrySet()) {
+                    fieldConfig.getValue().setName(fieldConfig.getKey());
+                }
+
+                // set names on child entity configs
+                setChildNames(entityConfig.getChildren());
+
                 return entityConfig;
 
             } catch (Exception e) {
                 log.warn("toEntityConfig("+clazz.getName()+"): "+e);
                 return null;
+            }
+        }
+
+        private void setChildNames(Map<String, EntityConfig> children) {
+            for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
+                childConfig.getValue().setName(childConfig.getKey());
+                if (childConfig.getValue().hasChildren()) {
+                    setChildNames(childConfig.getValue().getChildren());
+                }
             }
         }
 

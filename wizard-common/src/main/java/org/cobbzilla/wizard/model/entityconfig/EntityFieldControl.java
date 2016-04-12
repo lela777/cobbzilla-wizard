@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum EntityFieldControl {
 
-    text, textarea, checkbox, select, multi_select;
+    text, textarea, checkbox, select, multi_select, autocomplete;
 
     @JsonCreator public static EntityFieldControl create (String val) { return valueOf(val.toLowerCase()); }
 

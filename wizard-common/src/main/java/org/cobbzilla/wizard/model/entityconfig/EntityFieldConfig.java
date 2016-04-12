@@ -3,11 +3,19 @@ package org.cobbzilla.wizard.model.entityconfig;
 import lombok.Getter;
 import lombok.Setter;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
+
 public class EntityFieldConfig {
 
-    @Getter @Setter private String displayName;
+    @Getter @Setter private String name;
+
+    @Setter private String displayName;
+    public String getDisplayName() { return !empty(displayName) ? displayName : camelCaseToString(name); }
+
     @Getter @Setter private EntityFieldMode mode = EntityFieldMode.standard;
     @Getter @Setter private EntityFieldType type = EntityFieldType.string;
+    @Getter @Setter private Integer length = null;
 
     @Setter private EntityFieldControl control;
     public EntityFieldControl getControl() {
@@ -16,7 +24,8 @@ public class EntityFieldConfig {
         return EntityFieldControl.text;
     }
 
+    @Getter @Setter private String options;
+
     @Getter @Setter private EntityFieldReference reference = null;
-    @Getter @Setter private Integer length = null;
 
 }
