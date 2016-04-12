@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.string.StringUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,12 +24,13 @@ public class EntityConfig {
     public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : StringUtil.pluralize(getDisplayName()); }
 
     @Getter @Setter private Map<String, EntityFieldConfig> fields;
+    @Setter private List<String> fieldNames;
 
-    @Getter @Setter private List<String> createFields;
+    public List<String> getFieldNames() { return !empty(fieldNames) ? fieldNames : new ArrayList<>(getFields().keySet()); }
+
     @Getter @Setter private String createMethod = "PUT";
     @Getter @Setter private String createUri;
 
-    @Getter @Setter private List<String> updateFields;
     @Getter @Setter private String updateMethod = "POST";
     @Getter @Setter private String updateUri;
 

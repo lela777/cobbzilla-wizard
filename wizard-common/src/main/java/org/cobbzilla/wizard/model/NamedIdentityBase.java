@@ -30,15 +30,13 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
     @Size(min=2, max=NAME_MAXLEN, message="err.name.length")
     @Getter @Setter protected String name;
 
-    @Override public String getUuid() { return getName(); }
+    @Override @Transient public String getUuid() { return getName(); }
     @Override public void setUuid(String uuid) { setName(uuid); }
 
     @Column(updatable=false, nullable=false)
-    @Getter @JsonIgnore
-    private long ctime = now();
+    @Getter @JsonIgnore private long ctime = now();
     public void setCtime (long time) { /*noop*/ }
-    @JsonIgnore @Transient
-    public long getCtimeAge () { return now() - ctime; }
+    @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
 
     @Column(nullable=false)
     @Getter @JsonIgnore private long mtime = now();
