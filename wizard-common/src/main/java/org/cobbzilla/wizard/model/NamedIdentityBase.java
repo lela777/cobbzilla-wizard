@@ -13,6 +13,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
+import java.util.Comparator;
+
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
 @MappedSuperclass @EqualsAndHashCode(of="name")
@@ -20,6 +22,12 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 public class NamedIdentityBase implements NamedEntity, Identifiable {
 
     public static final int NAME_MAXLEN = UniquelyNamedEntity.NAME_MAXLEN;
+
+    public static final Comparator<? extends NamedIdentityBase> NAME_COMPARATOR = new Comparator<NamedIdentityBase>() {
+        @Override public int compare(NamedIdentityBase o1, NamedIdentityBase o2) {
+            return o1.getName().compareToIgnoreCase(o2.getName());
+        }
+    };
 
     public NamedIdentityBase (String name) { setName(name); }
 
