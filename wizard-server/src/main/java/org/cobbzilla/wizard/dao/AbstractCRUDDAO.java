@@ -102,10 +102,12 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public void delete(String uuid) {
         final E found = get(checkNotNull(uuid));
         setFlushMode();
-        final AuditLog auditLog = auditingEnabled() ? audit_delete(found) : null;
-        if (found != null) getHibernateTemplate().delete(found);
-        getHibernateTemplate().flush();
-        if (auditLog != null) commit_audit_delete(auditLog);
+        if (found != null) {
+            final AuditLog auditLog = auditingEnabled() ? audit_delete(found) : null;
+            getHibernateTemplate().delete(found);
+            getHibernateTemplate().flush();
+            if (auditLog != null) commit_audit_delete(auditLog);
+        }
     }
 
     @Transactional(readOnly=true)

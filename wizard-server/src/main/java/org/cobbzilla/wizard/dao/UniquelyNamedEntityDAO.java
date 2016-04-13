@@ -1,17 +1,19 @@
 package org.cobbzilla.wizard.dao;
 
-import lombok.Getter;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.collection.FieldTransfomer;
 import org.cobbzilla.util.collection.MapBuilder;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 import org.cobbzilla.wizard.validation.UniqueValidatorDaoHelper;
 
+import java.io.Serializable;
 import java.util.Map;
 
 public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> extends AbstractUniqueCRUDDAO<E> {
 
     public static final Transformer TO_NAME = new FieldTransfomer("name");
+
+    @Override public E get(Serializable id) { return findByName(id.toString()); }
 
     public boolean forceLowercase () { return getEntityProto().forceLowercase(); }
 
