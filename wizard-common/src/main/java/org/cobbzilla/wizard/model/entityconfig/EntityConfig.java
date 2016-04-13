@@ -20,12 +20,19 @@ public class EntityConfig {
     public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : StringUtil.pluralize(getDisplayName()); }
 
     @Getter @Setter private String listUri;
-    @Getter @Setter private List<String> listFields;
+    @Setter private List<String> listFields;
+    public List<String> getListFields() { return !empty(listFields) ? listFields : getFieldNames(); }
 
     @Getter @Setter private Map<String, EntityFieldConfig> fields = new LinkedHashMap<>();
     @Setter private List<String> fieldNames;
-
     public List<String> getFieldNames() { return !empty(fieldNames) ? fieldNames : new ArrayList<>(getFields().keySet()); }
+
+    public EntityFieldConfig getParentField () {
+        for (EntityFieldConfig fieldConfig : fields.values()) {
+            if (fieldConfig.isParentReference()) return fieldConfig;
+        }
+        return null;
+    }
 
     @Getter @Setter private String createMethod = "PUT";
     @Getter @Setter private String createUri;

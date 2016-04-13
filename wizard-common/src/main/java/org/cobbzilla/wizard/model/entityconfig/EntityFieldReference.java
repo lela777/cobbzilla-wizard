@@ -5,7 +5,10 @@ import lombok.Setter;
 
 public class EntityFieldReference {
 
+    public static final String REF_PARENT = ":parent";
+
     @Getter @Setter private String entity;
     @Getter @Setter private String field;
+    @Getter @Setter private String displayField;
 
 }

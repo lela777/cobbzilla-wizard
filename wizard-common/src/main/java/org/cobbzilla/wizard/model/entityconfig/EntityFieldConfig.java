@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,4 +29,7 @@ public class EntityFieldConfig {
 
     @Getter @Setter private EntityFieldReference reference = null;
 
+    @JsonIgnore public boolean isParentReference () {
+        return getType() == EntityFieldType.reference && getReference().getEntity().equals(EntityFieldReference.REF_PARENT);
+    }
 }

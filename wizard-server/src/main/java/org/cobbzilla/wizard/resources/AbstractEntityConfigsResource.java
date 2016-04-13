@@ -91,7 +91,7 @@ public abstract class AbstractEntityConfigsResource {
                 }
 
                 // set names on child entity configs
-                setChildNames(entityConfig.getChildren());
+                setChildNames(entityConfig);
 
                 return entityConfig;
 
@@ -101,12 +101,12 @@ public abstract class AbstractEntityConfigsResource {
             }
         }
 
-        private void setChildNames(Map<String, EntityConfig> children) {
+        private void setChildNames(EntityConfig parent) {
+            final Map<String, EntityConfig> children = parent.getChildren();
             for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
-                childConfig.getValue().setName(childConfig.getKey());
-                if (childConfig.getValue().hasChildren()) {
-                    setChildNames(childConfig.getValue().getChildren());
-                }
+                final EntityConfig child = childConfig.getValue();
+                child.setName(childConfig.getKey());
+                if (child.hasChildren()) setChildNames(child);
             }
         }
 
