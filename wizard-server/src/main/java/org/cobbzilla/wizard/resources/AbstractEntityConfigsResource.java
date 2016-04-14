@@ -1,6 +1,8 @@
 package org.cobbzilla.wizard.resources;
 
 import com.sun.jersey.api.core.HttpContext;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
@@ -15,19 +17,19 @@ import javax.persistence.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.capitalize;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.packagePath;
-import static org.cobbzilla.wizard.resources.ResourceUtil.forbidden;
-import static org.cobbzilla.wizard.resources.ResourceUtil.notFound;
-import static org.cobbzilla.wizard.resources.ResourceUtil.ok;
+import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -42,7 +44,45 @@ public abstract class AbstractEntityConfigsResource {
     protected long getConfigRefreshInterval() { return TimeUnit.DAYS.toMillis(30); }
     protected abstract boolean authorized(HttpContext ctx);
 
-    private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new AutoRefreshingReference<Map<String, EntityConfig>>() {
+    @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
+
+    protected EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
+        final InputStream in;
+        try {
+            in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
+        } catch (Exception e) {
+            log.warn("getEntityConfig("+clazz.getName()+"): "+e);
+            return null;
+        }
+        try {
+            return fromJson(in, EntityConfig.class);
+        } catch (Exception e) {
+            return die("getEntityConfig: "+e, e);
+        }
+    }
+
+    @GET
+    @Path("/{name}")
+    public Response getConfig (@Context HttpContext ctx,
+                               @PathParam("name") String name,
+                               @QueryParam("refresh") boolean refresh) {
+
+        if (!authorized(ctx)) return forbidden();
+
+        if (refresh) {
+            log.info("getConfig: refreshing");
+            configs.set(null);
+        }
+
+        final EntityConfig config;
+        synchronized (configs) {
+            config = configs.get().get(capitalize(name));
+        }
+
+        return config == null ? notFound(name) : ok(config);
+    }
+
+    public class EntityConfigsMap extends AutoRefreshingReference<Map<String, EntityConfig>> {
 
         @Override public Map<String, EntityConfig> refresh() {
             final Map<String, EntityConfig> configMap = new HashMap<>();
@@ -85,13 +125,7 @@ public abstract class AbstractEntityConfigsResource {
                     parent = parent.getSuperclass();
                 }
 
-                // set names on fields, allows default displayName to work properly
-                for (Map.Entry<String, EntityFieldConfig> fieldConfig : entityConfig.getFields().entrySet()) {
-                    fieldConfig.getValue().setName(fieldConfig.getKey());
-                }
-
-                // set names on child entity configs
-                setChildNames(entityConfig);
+                setNames(entityConfig);
 
                 return entityConfig;
 
@@ -101,39 +135,21 @@ public abstract class AbstractEntityConfigsResource {
             }
         }
 
-        private void setChildNames(EntityConfig parent) {
-            final Map<String, EntityConfig> children = parent.getChildren();
-            for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
-                final EntityConfig child = childConfig.getValue();
-                child.setName(childConfig.getKey());
-                if (child.hasChildren()) setChildNames(child);
+        private void setNames(EntityConfig config) {
+            for (Map.Entry<String, EntityFieldConfig> fieldConfig : config.getFields().entrySet()) {
+                fieldConfig.getValue().setName(fieldConfig.getKey());
             }
-        }
 
-        private EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
-            try {
-                return fromJson(loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json"), EntityConfig.class);
-            } catch (Exception e) {
-                log.warn("getEntityConfig("+clazz.getName()+"): "+e, e);
-                return null;
+            if (config.hasChildren()) {
+                final Map<String, EntityConfig> children = config.getChildren();
+                for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
+                    final EntityConfig child = childConfig.getValue();
+                    child.setName(childConfig.getKey());
+                    setNames(child);
+                }
             }
         }
 
         @Override public long getTimeout() { return getConfigRefreshInterval(); }
-    };
-
-    @GET
-    @Path("/{name}")
-    public Response getConfig (@Context HttpContext ctx,
-                               @PathParam("name") String name) {
-
-        if (!authorized(ctx)) return forbidden();
-
-        final EntityConfig config;
-        synchronized (configs) {
-            config = configs.get().get(capitalize(name));
-        }
-
-        return config == null ? notFound(name) : ok(config);
     }
 }

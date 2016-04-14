@@ -13,7 +13,10 @@ public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> exte
 
     public static final Transformer TO_NAME = new FieldTransfomer("name");
 
-    @Override public E get(Serializable id) { return findByName(id.toString()); }
+    @Override public E get(Serializable id) {
+        E found = findByUuid(id.toString());
+        return found != null ? found : findByName(id.toString());
+    }
 
     public boolean forceLowercase () { return getEntityProto().forceLowercase(); }
 

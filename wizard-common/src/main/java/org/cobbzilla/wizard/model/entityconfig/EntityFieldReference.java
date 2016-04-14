@@ -10,5 +10,6 @@ public class EntityFieldReference {
     @Getter @Setter private String entity;
     @Getter @Setter private String field;
     @Getter @Setter private String displayField;
+    @Getter @Setter private String finder;
 
 }
