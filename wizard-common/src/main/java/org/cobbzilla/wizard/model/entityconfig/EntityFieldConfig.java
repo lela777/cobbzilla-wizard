@@ -28,8 +28,9 @@ public class EntityFieldConfig {
     @Getter @Setter private String options;
 
     @Getter @Setter private EntityFieldReference reference = null;
-
     @JsonIgnore public boolean isParentReference () {
         return getType() == EntityFieldType.reference && getReference().getEntity().equals(EntityFieldReference.REF_PARENT);
     }
+
+    @Getter @Setter private String objectType;
 }
