@@ -13,6 +13,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -88,6 +89,7 @@ public abstract class AbstractEntityConfigsResource {
             final Map<String, EntityConfig> configMap = new HashMap<>();
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+            scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
             for (String pkg : configuration.getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
