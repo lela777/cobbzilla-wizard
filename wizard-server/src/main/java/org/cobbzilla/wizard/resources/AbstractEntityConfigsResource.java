@@ -8,7 +8,6 @@ import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -18,6 +17,7 @@ import javax.persistence.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
@@ -39,11 +40,11 @@ public abstract class AbstractEntityConfigsResource {
 
     public static final String ENTITY_CONFIG_BASE = "entity-config";
 
-    @SuppressWarnings("SpringJavaAutowiredMembersInspection")
-    @Autowired private HasDatabaseConfiguration configuration;
+    protected abstract HasDatabaseConfiguration getConfiguration();
 
     protected long getConfigRefreshInterval() { return TimeUnit.DAYS.toMillis(30); }
     protected abstract boolean authorized(HttpContext ctx);
+    protected File getLocalConfig(EntityConfig name) { return null; }
 
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
 
@@ -56,7 +57,9 @@ public abstract class AbstractEntityConfigsResource {
             return null;
         }
         try {
-            return fromJson(in, EntityConfig.class);
+            final EntityConfig entityConfig = fromJson(in, EntityConfig.class);
+            entityConfig.setClassName(clazz.getName());
+            return entityConfig;
         } catch (Exception e) {
             return die("getEntityConfig: "+e, e);
         }
@@ -66,11 +69,12 @@ public abstract class AbstractEntityConfigsResource {
     @Path("/{name}")
     public Response getConfig (@Context HttpContext ctx,
                                @PathParam("name") String name,
+                               @QueryParam("debug") boolean debug,
                                @QueryParam("refresh") boolean refresh) {
 
         if (!authorized(ctx)) return forbidden();
 
-        if (refresh) {
+        if (debug || refresh) {
             log.info("getConfig: refreshing");
             configs.set(null);
         }
@@ -78,6 +82,18 @@ public abstract class AbstractEntityConfigsResource {
         final EntityConfig config;
         synchronized (configs) {
             config = configs.get().get(capitalize(name));
+        }
+
+        if (debug) {
+            // is it on the filesystem?
+            final File localConfig = getLocalConfig(config);
+            if (localConfig != null && localConfig.exists()) {
+                try {
+                    return ok(fromJson(localConfig, EntityConfig.class));
+                } catch (Exception e) {
+                    log.warn("getConfig("+name+"): debug enabled and local config exists ("+abs(localConfig)+"), but error loading: "+e);
+                }
+            }
         }
 
         return config == null ? notFound(name) : ok(config);
@@ -90,7 +106,7 @@ public abstract class AbstractEntityConfigsResource {
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
             scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
-            for (String pkg : configuration.getDatabase().getHibernate().getEntityPackages()) {
+            for (String pkg : getConfiguration().getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
                     final EntityConfig config = toEntityConfig(clazz);

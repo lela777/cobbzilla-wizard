@@ -11,6 +11,7 @@ import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
 public class EntityConfig {
 
+    @Getter @Setter private String className;
     @Getter @Setter private String name;
 
     @Setter private String displayName;
