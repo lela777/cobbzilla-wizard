@@ -48,23 +48,6 @@ public abstract class AbstractEntityConfigsResource {
 
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
 
-    protected EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
-        final InputStream in;
-        try {
-            in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
-        } catch (Exception e) {
-            log.warn("getEntityConfig("+clazz.getName()+"): "+e);
-            return null;
-        }
-        try {
-            final EntityConfig entityConfig = fromJson(in, EntityConfig.class);
-            entityConfig.setClassName(clazz.getName());
-            return entityConfig;
-        } catch (Exception e) {
-            return die("getEntityConfig: "+e, e);
-        }
-    }
-
     @GET
     @Path("/{name}")
     public Response getConfig (@Context HttpContext ctx,
@@ -86,12 +69,16 @@ public abstract class AbstractEntityConfigsResource {
 
         if (debug) {
             // is it on the filesystem?
-            final File localConfig = getLocalConfig(config);
-            if (localConfig != null && localConfig.exists()) {
+            final File localFile = getLocalConfig(config);
+            if (localFile != null && localFile.exists()) {
                 try {
-                    return ok(fromJson(localConfig, EntityConfig.class));
+                    final EntityConfig localConfig = fromJson(localFile, EntityConfig.class);
+                    if (localConfig != null) {
+                        setNames(localConfig);
+                        return ok(localConfig);
+                    }
                 } catch (Exception e) {
-                    log.warn("getConfig("+name+"): debug enabled and local config exists ("+abs(localConfig)+"), but error loading: "+e);
+                    log.warn("getConfig("+name+"): debug enabled and local config exists ("+abs(localFile)+"), but error loading: "+e);
                 }
             }
         }
@@ -128,46 +115,63 @@ public abstract class AbstractEntityConfigsResource {
             return configs.get();
         }
 
-        // todo: default information can come from parsing the javax.persistence and javax.validation annotations
-        private EntityConfig toEntityConfig(Class<?> clazz) {
-
-            final EntityConfig entityConfig;
-            try {
-                entityConfig = getEntityConfig(clazz);
-                if (entityConfig == null) return null;
-
-                Class<?> parent = clazz.getSuperclass();
-                while (!parent.getName().equals(Object.class.getName())) {
-                    EntityConfig parentConfig = getEntityConfig(clazz.getSuperclass());
-                    if (parentConfig != null) entityConfig.addParent(parentConfig);
-                    parent = parent.getSuperclass();
-                }
-
-                setNames(entityConfig);
-
-                return entityConfig;
-
-            } catch (Exception e) {
-                log.warn("toEntityConfig("+clazz.getName()+"): "+e);
-                return null;
-            }
-        }
-
-        private void setNames(EntityConfig config) {
-            for (Map.Entry<String, EntityFieldConfig> fieldConfig : config.getFields().entrySet()) {
-                fieldConfig.getValue().setName(fieldConfig.getKey());
-            }
-
-            if (config.hasChildren()) {
-                final Map<String, EntityConfig> children = config.getChildren();
-                for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
-                    final EntityConfig child = childConfig.getValue();
-                    child.setName(childConfig.getKey());
-                    setNames(child);
-                }
-            }
-        }
-
         @Override public long getTimeout() { return getConfigRefreshInterval(); }
+    }
+
+    protected EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
+        final InputStream in;
+        try {
+            in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
+        } catch (Exception e) {
+            log.warn("getEntityConfig("+clazz.getName()+"): "+e);
+            return null;
+        }
+        try {
+            final EntityConfig entityConfig = fromJson(in, EntityConfig.class);
+            entityConfig.setClassName(clazz.getName());
+            return entityConfig;
+        } catch (Exception e) {
+            return die("getEntityConfig: "+e, e);
+        }
+    }
+
+    // todo: default information can come from parsing the javax.persistence and javax.validation annotations
+    protected EntityConfig toEntityConfig(Class<?> clazz) {
+
+        final EntityConfig entityConfig;
+        try {
+            entityConfig = getEntityConfig(clazz);
+            if (entityConfig == null) return null;
+
+            Class<?> parent = clazz.getSuperclass();
+            while (!parent.getName().equals(Object.class.getName())) {
+                EntityConfig parentConfig = getEntityConfig(clazz.getSuperclass());
+                if (parentConfig != null) entityConfig.addParent(parentConfig);
+                parent = parent.getSuperclass();
+            }
+
+            setNames(entityConfig);
+
+            return entityConfig;
+
+        } catch (Exception e) {
+            log.warn("toEntityConfig("+clazz.getName()+"): "+e);
+            return null;
+        }
+    }
+
+    protected void setNames(EntityConfig config) {
+        for (Map.Entry<String, EntityFieldConfig> fieldConfig : config.getFields().entrySet()) {
+            fieldConfig.getValue().setName(fieldConfig.getKey());
+        }
+
+        if (config.hasChildren()) {
+            final Map<String, EntityConfig> children = config.getChildren();
+            for (Map.Entry<String, EntityConfig> childConfig : children.entrySet()) {
+                final EntityConfig child = childConfig.getValue();
+                child.setName(childConfig.getKey());
+                setNames(child);
+            }
+        }
     }
 }
