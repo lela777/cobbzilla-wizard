@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.cobbzilla.util.string.StringUtil;
 
 import java.util.*;
@@ -9,6 +10,7 @@ import java.util.*;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
+@ToString(of="name")
 public class EntityConfig {
 
     @Getter @Setter private String className;

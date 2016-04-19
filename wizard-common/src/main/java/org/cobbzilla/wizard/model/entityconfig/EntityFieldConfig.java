@@ -26,6 +26,7 @@ public class EntityFieldConfig {
     }
 
     @Getter @Setter private String options;
+    @Getter @Setter private String emptyDisplayValue;
 
     @Getter @Setter private EntityFieldReference reference = null;
     @JsonIgnore public boolean isParentReference () {

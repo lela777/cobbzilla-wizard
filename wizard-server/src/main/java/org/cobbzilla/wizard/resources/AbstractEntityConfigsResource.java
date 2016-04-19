@@ -67,7 +67,7 @@ public abstract class AbstractEntityConfigsResource {
             config = configs.get().get(capitalize(name));
         }
 
-        if (debug) {
+        if (debug && config != null) {
             // is it on the filesystem?
             final File localFile = getLocalConfig(config);
             if (localFile != null && localFile.exists()) {
@@ -131,7 +131,7 @@ public abstract class AbstractEntityConfigsResource {
             entityConfig.setClassName(clazz.getName());
             return entityConfig;
         } catch (Exception e) {
-            return die("getEntityConfig: "+e, e);
+            return die("getEntityConfig("+clazz.getName()+"): "+e, e);
         }
     }
 
