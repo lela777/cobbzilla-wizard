@@ -30,7 +30,9 @@ public class EntityConfig {
     @Setter private List<String> fieldNames;
     public List<String> getFieldNames() { return !empty(fieldNames) ? fieldNames : new ArrayList<>(getFields().keySet()); }
 
+    @Setter private EntityFieldConfig parentField;
     public EntityFieldConfig getParentField () {
+        if (parentField != null) return parentField;
         for (EntityFieldConfig fieldConfig : fields.values()) {
             if (fieldConfig.isParentReference()) return fieldConfig;
         }
