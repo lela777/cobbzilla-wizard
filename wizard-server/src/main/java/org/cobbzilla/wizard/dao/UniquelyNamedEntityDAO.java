@@ -29,4 +29,9 @@ public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> exte
             {"name", new UniqueValidatorDaoHelper.Finder<E>() { @Override public E find(Object query) { return findByName(query.toString()); } }}
         });
     }
+
+    public E findByUuidOrName(String id) {
+        final E found = findByUuid(id);
+        return found != null ? found : findByName(id);
+    }
 }
