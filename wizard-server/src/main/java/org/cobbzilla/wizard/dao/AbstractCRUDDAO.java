@@ -219,7 +219,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                 .setEntityType(getEntityClass().getName())
                 .setEntityUuid(found.getUuid())
                 .setOperation(CrudOperation.delete)
-                .setPrevState(toJsonOrDie(found))
+                .setPrevState(toJsonOrDie(toMap(found)))
                 .setNewState(null);
 
         return getAuditLogDAO().create(auditLog);
