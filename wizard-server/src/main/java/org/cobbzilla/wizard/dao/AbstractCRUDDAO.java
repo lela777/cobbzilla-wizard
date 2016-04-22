@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
+import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
 import static org.hibernate.criterion.Restrictions.*;
 
 @Transactional @Slf4j
@@ -195,8 +196,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                 .setEntityType(getEntityClass().getName())
                 .setEntityUuid(newEntity.getUuid())
                 .setOperation(operation)
-                .setPrevState(prevEntity == null ? null : toJsonOrDie(prevEntity))
-                .setNewState(toJsonOrDie(newEntity));
+                .setPrevState(prevEntity == null ? null : toJsonOrDie(toMap(prevEntity)))
+                .setNewState(toJsonOrDie(toMap(newEntity)));
 
         auditLog = getAuditLogDAO().create(auditLog);
 
