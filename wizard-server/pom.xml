@@ -164,13 +164,6 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <version>${morphia.version}</version>
         </dependency>
 
-        <!-- For PSQLExceptionMapper -->
-        <dependency>
-            <groupId>${jdbcDriver.postgres.groupId}</groupId>
-            <artifactId>${jdbcDriver.postgres.artifactId}</artifactId>
-            <version>${jdbcDriver.postgres.version}</version>
-        </dependency>
-
         <!-- For database population -->
         <dependency>
             <groupId>org.dbunit</groupId>
