@@ -51,7 +51,13 @@ public class HibernateCallbackImpl<T> implements HibernateCallback<List<T>> {
 
     @Override public List<T> doInHibernate(Session session) throws HibernateException {
 
-        final Query query = session.createQuery(queryString);
+        boolean isSql = false;
+        if (queryString.startsWith(DAO.SQL_QUERY)) {
+            isSql = true;
+            queryString = queryString.substring(DAO.SQL_QUERY.length());
+        }
+
+        final Query query = isSql ? session.createSQLQuery(queryString) : session.createQuery(queryString);
         query.setFirstResult(firstResult);
         query.setMaxResults(maxResults);
 

@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface DAO<E> {
 
+    String SQL_QUERY = "SQL:";
+
     Class<E> getEntityClass();
 
     SearchResults<E> search(ResultPage resultPage);

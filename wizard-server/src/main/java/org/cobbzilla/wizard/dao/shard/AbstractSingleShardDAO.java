@@ -3,10 +3,13 @@ package org.cobbzilla.wizard.dao.shard;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.dao.shard.task.ShardSearchTask;
+import org.cobbzilla.wizard.dao.sql.ObjectSQLQuery;
 import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.Shardable;
+import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
@@ -14,6 +17,7 @@ import org.hibernate.StatelessSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.AbstractApplicationContext;
 
+import java.io.Closeable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -40,12 +44,24 @@ public abstract class AbstractSingleShardDAO<E extends Shardable>
     }
 
     @Override public List query(int maxResults, String hsql, List<Object> args) {
+        boolean isSql = false;
+        if (hsql.startsWith(SQL_QUERY)) {
+            isSql = true;
+            hsql = hsql.substring(SQL_QUERY.length());
+        }
         final SessionFactory factory = getHibernateTemplate().getSessionFactory();
         StatelessSession session = null;
+        Query query = null;
         try {
             session = factory.openStatelessSession();
-            final Query query = session.createQuery(hsql).setMaxResults(maxResults);
-            int i = 0;
+            if (isSql) {
+                final HasDatabaseConfiguration dbconfig = (HasDatabaseConfiguration) this.configuration;
+                query = new ObjectSQLQuery<>(dbconfig.getDatabase(), hsql, getEntityClass());
+            } else {
+                query = session.createQuery(hsql);
+            }
+            query.setMaxResults(maxResults);
+            int i = isSql ? 1 : 0;
             for (Object arg : args) {
                 if (arg == null) {
                     die("query: null values not supported");
@@ -60,10 +76,11 @@ public abstract class AbstractSingleShardDAO<E extends Shardable>
                 } else {
                     die("query: unsupported argument type: " + arg);
                 }
-
             }
             return query.list();
+
         } finally {
+            if (query != null && query instanceof Closeable) ReflectionUtil.closeQuietly(query);
             if (session != null) session.close();
         }
     }
