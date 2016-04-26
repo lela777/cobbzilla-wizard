@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
+import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.util.security.CryptoUtil.string_decrypt;
 import static org.cobbzilla.util.security.CryptoUtil.string_encrypt;
 import static org.cobbzilla.util.system.Sleep.sleep;
@@ -87,6 +89,11 @@ public class RedisService {
 
     public boolean exists(String key) { return __exists(key, 0, MAX_RETRIES); }
 
+    public <T> T getObject(String key, Class<T> clazz) {
+        final String json = get(key);
+        return empty(json) ? null : fromJsonOrDie(json, clazz);
+    }
+
     public String get(String key) { return decrypt(__get(key, 0, MAX_RETRIES)); }
 
     public String get_plaintext(String key) { return __get(key, 0, MAX_RETRIES); }
@@ -103,6 +110,8 @@ public class RedisService {
     }
 
     public void set(String key, String value) { __set(key, value, 0, MAX_RETRIES); }
+
+    public <T> void setObject(String key, T thing) { __set(key, toJsonOrDie(thing), 0, MAX_RETRIES); }
 
     public void lpush(String key, String value) { __lpush(key, value, 0, MAX_RETRIES); }
 
