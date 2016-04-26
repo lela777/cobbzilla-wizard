@@ -84,7 +84,7 @@ This code is available under the Apache License, version 2: http://www.apache.or
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>${httpcomponents.version}</version>
+            <version>${httpclient.version}</version>
         </dependency>
 
         <!-- transparent data encryption -->
