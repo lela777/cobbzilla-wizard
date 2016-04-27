@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.validation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
@@ -26,7 +27,7 @@ public class ValidationResult {
         this.violations.addAll(violations);
     }
 
-    public List<ConstraintViolation> getViolations() { return violations; }
+    @JsonIgnore public List<ConstraintViolation> getViolations() { return violations; }
 
     public void addViolation(ConstraintViolation violation) { violations.add(violation); }
     public void addViolation(ConstraintViolationBean violation) { beans.add(violation); }
@@ -50,8 +51,11 @@ public class ValidationResult {
         beanList.addAll(beans);
         return beanList;
     }
+    public void setViolationBeans (List<ConstraintViolationBean> beans) {
+        this.beans = beans;
+    }
 
-    public boolean isEmpty () { return violations.isEmpty() && beans.isEmpty(); }
+    @JsonIgnore public boolean isEmpty () { return violations.isEmpty() && beans.isEmpty(); }
 
     @Override public String toString() { return violations.toString() + (beans.isEmpty() ? "" : ", "+beans.toString()); }
 
