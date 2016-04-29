@@ -38,6 +38,7 @@ public class EntityConfig {
         }
         return null;
     }
+    public boolean hasParentField () { return getParentField() != null; }
 
     @Getter @Setter private String createMethod = "PUT";
     @Getter @Setter private String createUri;
