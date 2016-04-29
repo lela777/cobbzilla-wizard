@@ -32,6 +32,8 @@ public class DatabaseConfiguration {
 
     @Getter @Setter private HibernateConfiguration hibernate;
 
+    @JsonIgnore public String getDatabaseName() { return getUrl().substring(getUrl().lastIndexOf('/')+1); }
+
     @JsonIgnore public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
