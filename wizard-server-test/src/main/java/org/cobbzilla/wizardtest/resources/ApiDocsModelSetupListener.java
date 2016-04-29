@@ -7,11 +7,11 @@ import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
 import org.cobbzilla.wizard.model.entityconfig.ModelSetupListenerBase;
 
 @AllArgsConstructor
-public class ApiDocsModelSetupListenerBase extends ModelSetupListenerBase {
+public class ApiDocsModelSetupListener extends ModelSetupListenerBase {
 
     private TemplateCaptureTarget apiDocs;
 
-    private void note(String s) { apiDocs.addNote(s); }
+    protected void note(String s) { if (apiDocs != null) apiDocs.addNote(s); }
 
     @Override public void preCreate (EntityConfig entityConfig, Identifiable entity) { note("Create " + entityConfig.getName()); }
     @Override public void preEntityConfig (String entityType) { note("Lookup EntityConfig for " + entityType); }
