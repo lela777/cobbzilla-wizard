@@ -15,6 +15,7 @@ import org.cobbzilla.wizard.validation.ValidEnum;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @Accessors(chain=true) @ToString
@@ -126,7 +127,10 @@ public class ResultPage {
 
     @Setter private String sortField = DEFAULT_SORT_FIELD;
     public String getSortField() {
-        // only return the first several chars, to thwart a hypothetical injection attack.
+        if (sortField.contains(";")) die("invalid sort: "+sortField);
+
+        // only return the first several chars, to thwart a hypothetical injection attack
+        // more sophisticated than the classic 'add a semi-colon then do something nefarious'
         final String sort = empty(sortField) ? DEFAULT_SORT_FIELD : sortField;
         return StringUtil.prefix(sort, MAX_SORTFIELD_LENGTH);
     }

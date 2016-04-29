@@ -8,10 +8,7 @@ import org.cobbzilla.util.system.Bytes;
 import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.validation.HasValue;
 
-import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
@@ -58,6 +55,9 @@ public class AuditLog extends StrongIdentifiableBase {
     @Size(max=100, message="err.recordHash.length")
     @Column(length=100, nullable=false, updatable=false)
     @Getter @Setter private String recordHash;
+
+    @Transient public long getCreateTime () { return getCtime(); }
+    public void setCreateTime () {} // noop
 
     public <E extends AuditLog> E encrypt(String key) {
         setKeyHash(sha256_hex(key));
