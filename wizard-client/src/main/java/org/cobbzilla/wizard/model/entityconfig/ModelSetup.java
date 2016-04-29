@@ -18,6 +18,7 @@ import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.string.StringUtil.urlEncode;
 
 @Slf4j
 public class ModelSetup {
@@ -155,7 +156,7 @@ public class ModelSetup {
                     die("create: could not find parent (type=" + parentEntityType + ", field=" + parentFieldName + ") of entity (" + entity.getClass().getSimpleName() + "): " + entity);
                 }
             } else {
-                log.info("no parentFieldName found for "+entity.getClass().getSimpleName()+", not setting");
+                log.info("no parentFieldName found for " + entity.getClass().getSimpleName() + ", not setting");
             }
         }
 
@@ -175,16 +176,16 @@ public class ModelSetup {
         for (Map.Entry<String, Identifiable> entry : ctx.entrySet()) {
             Map<String, Object> ctxEntryProps = ReflectionUtil.toMap(entry.getValue());
             for (String name : ctxEntryProps.keySet()) {
-                uri = uri.replace("{" + entry.getKey() + "." + name + "}", ctxEntryProps.get(name).toString());
+                uri = uri.replace("{" + entry.getKey() + "." + name + "}", urlEncode(ctxEntryProps.get(name).toString()));
             }
         }
         final Map<String, Object> entityProps = ReflectionUtil.toMap(entity);
         for (String name : entityProps.keySet()) {
-            uri = uri.replace("{" + name + "}", entityProps.get(name).toString());
+            uri = uri.replace("{" + name + "}", urlEncode(entityProps.get(name).toString()));
         }
         // if a {uuid} remains, try putting in the name, if we have one
         if (uri.contains("{uuid}") && entityProps.containsKey("name")) {
-            uri = uri.replace("{uuid}", entityProps.get("name").toString());
+            uri = uri.replace("{uuid}", urlEncode(entityProps.get("name").toString()));
         }
         if (uri.contains("{uuid}")) {
             log.warn("Could not replace {uuid} found in URL, returning null: "+uri);
