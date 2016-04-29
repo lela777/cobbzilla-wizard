@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
@@ -20,6 +21,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
+@Slf4j
 public class RestServerConfiguration {
 
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
@@ -77,10 +79,12 @@ public class RestServerConfiguration {
 
         if (isQuery) {
             @Cleanup ResultSet rs = ps.executeQuery();
+            log.info("execSql (query): "+sql);
             return new ResultSetBean(rs);
         }
 
         ps.executeUpdate();
+        log.info("execSql (update): "+sql);
         return ResultSetBean.EMPTY;
     }
 
