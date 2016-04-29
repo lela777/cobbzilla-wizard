@@ -9,10 +9,8 @@ import org.cobbzilla.wizard.util.RestResponse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
@@ -135,8 +133,6 @@ public class ModelSetup {
 
         // pre-processing...
 
-        // some entities have an activeStart. if the request has not set it, or it is zero, set it for them
-        setActiveStart(entity);
 
         // if the entity has a parent, it will want that parent's UUID in that field
         if (entityConfig.hasParentField()) {
@@ -175,13 +171,6 @@ public class ModelSetup {
         }
         if (listener != null) listener.postCreate(entityConfig, entity, created);
         return created;
-    }
-
-    private static void setActiveStart(Object entity) {
-        try {
-            Long val = (Long) ReflectionUtil.get(entity, "activeStart");
-            if (val == null || val == 0) ReflectionUtil.set(entity, "activeStart", now() + TimeUnit.HOURS.toMillis(1));
-        } catch (Exception ignored) {}
     }
 
     private static String processUri(LinkedHashMap<String, Identifiable> ctx, Identifiable entity, String uri) {
