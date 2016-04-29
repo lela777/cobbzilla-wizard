@@ -80,6 +80,6 @@ public class AuditLog extends StrongIdentifiableBase {
     }
 
     public String toString() {
-        return getUuid()+":"+operation.name()+":"+entityType+ ":" +entityUuid+":"+prevState+":"+newState+":"+keyHash;
+        return getUuid()+":"+getCtime()+":"+operation.name()+":"+entityType+ ":" +entityUuid+":"+prevState+":"+newState+":"+keyHash;
     }
 }
