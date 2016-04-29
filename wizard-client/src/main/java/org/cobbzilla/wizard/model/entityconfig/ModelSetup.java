@@ -26,7 +26,7 @@ public class ModelSetup {
         final String[] models = json(stream2string(prefix + "manifest.json"), String[].class);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
         for (int i=0; i<models.length; i++) {
-            modelJson.put(models[i], stream2string(prefix + models[i]));
+            modelJson.put(models[i], stream2string(prefix + models[i] + ".json"));
         }
         return setupModel(api, entityConfigsEndpoint, modelJson, listener);
     }
@@ -130,9 +130,6 @@ public class ModelSetup {
                                                        T entity,
                                                        ModelSetupListener listener) throws Exception {
         final String uri = processUri(ctx, entity, entityConfig.getCreateUri());
-
-        // pre-processing...
-
 
         // if the entity has a parent, it will want that parent's UUID in that field
         if (entityConfig.hasParentField()) {
