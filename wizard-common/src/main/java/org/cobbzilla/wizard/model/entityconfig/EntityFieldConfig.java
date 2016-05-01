@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
 public class EntityFieldConfig {
@@ -27,6 +28,8 @@ public class EntityFieldConfig {
 
     @Getter @Setter private String options;
     @Getter @Setter private String emptyDisplayValue;
+
+    public void setOptionsList(EntityFieldOption[] options) { this.options = json(options); }
 
     @Getter @Setter private EntityFieldReference reference = null;
     @JsonIgnore public boolean isParentReference () {
