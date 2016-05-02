@@ -16,6 +16,7 @@ import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
@@ -45,7 +46,7 @@ public class ModelSetup {
             if (listener != null) listener.postEntityConfig(entityType, entityConfig);
 
             final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
-            final Identifiable[] entities = (Identifiable[]) json(model.getValue(), arrayClass(entityClass));
+            final Identifiable[] entities = (Identifiable[]) jsonWithComments(model.getValue(), arrayClass(entityClass));
             for (Identifiable entity : entities) {
                 final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
                 createEntity(api, entityConfig, entity, context, listener);
