@@ -12,4 +12,6 @@ public class EntityFieldOption {
     @Getter @Setter private String value;
     @Getter @Setter private String displayValue;
 
+    public EntityFieldOption(String value) { this(value, value); }
+
 }
