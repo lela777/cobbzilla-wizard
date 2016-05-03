@@ -57,6 +57,14 @@ public class ValidationResult {
 
     @JsonIgnore public boolean isEmpty () { return violations.isEmpty() && beans.isEmpty(); }
 
+    public boolean hasFieldError(String name) {
+        for (ConstraintViolationBean bean : getViolationBeans()) {
+            final String field = ConstraintViolationBean.getField(bean.getMessageTemplate());
+            if (field != null && name.equals(field)) return true;
+        }
+        return false;
+    }
+
     @Override public String toString() { return violations.toString() + (beans.isEmpty() ? "" : ", "+beans.toString()); }
 
 }

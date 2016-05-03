@@ -1,7 +1,7 @@
 package org.cobbzilla.wizard.validation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.json.JsonUtil;
 
 import javax.validation.ConstraintViolation;
@@ -45,4 +45,11 @@ public class ConstraintViolationBean {
                 : Arrays.asList(JsonUtil.fromJsonOrDie(json, ConstraintViolationBean[].class));
     }
 
+    @JsonIgnore public String getField () { return getField(messageTemplate); }
+
+    public static String getField (String messageTemplate) {
+        final int firstDot = messageTemplate.indexOf('.');
+        final int lastDot = messageTemplate.lastIndexOf('.');
+        return (firstDot != -1 && lastDot != -1) ? messageTemplate.substring(firstDot+1, lastDot) : null;
+    }
 }
