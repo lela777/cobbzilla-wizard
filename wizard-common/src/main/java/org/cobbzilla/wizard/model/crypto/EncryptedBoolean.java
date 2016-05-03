@@ -29,8 +29,8 @@ public class EncryptedBoolean {
     public static final String TRUE_SUFFIX = "_true";
     public static final String FALSE_SUFFIX = "_false";
 
-    public EncryptedBoolean setTrue  () { flag = randomAlphanumeric(10) + TRUE_SUFFIX;  return this; }
-    public EncryptedBoolean setFalse () { flag = randomAlphanumeric(10) + FALSE_SUFFIX; return this; }
+    public EncryptedBoolean setTrue  () { return setFlag(randomAlphanumeric(10) + TRUE_SUFFIX); }
+    public EncryptedBoolean setFalse () { return setFlag(randomAlphanumeric(10) + FALSE_SUFFIX); }
 
     @Transient public boolean isTrue () { return flag != null && flag.endsWith(TRUE_SUFFIX); }
 
