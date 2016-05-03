@@ -3,18 +3,18 @@ package org.cobbzilla.wizard.model.entityconfig;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
+@Slf4j
 public class EntityFieldConfig {
 
-    public static final EntityFieldOption[] EMPTY_OPTIONS_ARRAY = new EntityFieldOption[0];
     @Getter @Setter private String name;
 
     @Setter private String displayName;
@@ -44,11 +44,14 @@ public class EntityFieldConfig {
     // this is a special option that indicates no selection has been made
     @Getter @Setter private String emptyDisplayValue;
 
-    // Not exposed in JSON, since 'options' should be represented as a String when writing JSON
-    @JsonIgnore public EntityFieldOption[] getOptionsArray() {
+    public EntityFieldOption[] getOptionsList() {
 
-        if (empty(options)) return EMPTY_OPTIONS_ARRAY;
-        if (options.startsWith("uri:"))  die("getOptionsArray: cannot convert uri-style options to array: "+options);
+        if (empty(options)) return null;
+
+        if (options.startsWith("uri:")) {
+            log.warn("getOptionsArray: cannot convert uri-style options to array: "+options);
+            return null;
+        }
 
         if (options.trim().startsWith("[")) {
             return json(options, EntityFieldOption[].class);
@@ -59,8 +62,6 @@ public class EntityFieldConfig {
         }
     }
 
-    // We do allow inbound-JSON to set options using a JSON array
-    // Much nicer than nesting JSON-in-JSON, which would otherwise be required
     public void setOptionsList(EntityFieldOption[] options) { this.options = json(options); }
 
     @Getter @Setter private EntityFieldReference reference = null;

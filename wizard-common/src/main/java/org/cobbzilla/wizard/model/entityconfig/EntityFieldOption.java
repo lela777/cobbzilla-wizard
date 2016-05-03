@@ -6,11 +6,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class EntityFieldOption {
 
     @Getter @Setter private String value;
-    @Getter @Setter private String displayValue;
+    @Setter private String displayValue;
+
+    public String getDisplayValue() { return empty(displayValue) ? value : displayValue; }
 
     public EntityFieldOption(String value) { this(value, value); }
 
