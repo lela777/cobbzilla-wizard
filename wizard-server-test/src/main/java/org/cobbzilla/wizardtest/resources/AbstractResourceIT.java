@@ -24,7 +24,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
@@ -102,7 +102,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         final Map<String, ConstraintViolationBean> map = mapViolations(violations);
         assertEquals(violationMessages.length, map.size());
         for (String message : violationMessages) {
-            assertNotNull(map.get(message));
+            assertTrue("assertExpectedViolations: key "+message+" not found in map: "+map, map.containsKey(message));
         }
     }
 
