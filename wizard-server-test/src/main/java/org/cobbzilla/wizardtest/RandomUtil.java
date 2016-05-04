@@ -16,7 +16,7 @@ public class RandomUtil {
 
     public static String randomName() { return randomName(20); }
 
-    public static String randomName(String prefix) { return prefix + "-" + randomName(20); }
+    public static String randomName(String prefix) { return prefix + "_" + randomName(20); }
 
     public static String randomName(int length) { return RandomStringUtils.randomAlphanumeric(length); }
 
