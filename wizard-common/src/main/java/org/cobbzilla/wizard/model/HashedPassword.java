@@ -47,7 +47,7 @@ public class HashedPassword {
 
     @Getter @Setter private Long resetTokenCtime;
 
-    @Transient
+    @Transient @JsonIgnore
     public long getResetTokenAge () { return resetTokenCtime == null ? 0 : now() - resetTokenCtime; }
 
     @Transient
