@@ -14,9 +14,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
-import static org.cobbzilla.util.json.JsonUtil.fromJson;
-import static org.cobbzilla.util.json.JsonUtil.json;
-import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
@@ -164,8 +162,8 @@ public class ModelSetup {
         if (listener != null) listener.preCreate(entityConfig, entity);
         final T created;
         switch (entityConfig.getCreateMethod().toLowerCase()) {
-            case "put":  created = (T) api.put(uri, entity, entity.getClass()); break;
-            case "post": created = (T) api.post(uri, entity, entity.getClass()); break;
+            case "put":  created = api.put(uri, entity); break;
+            case "post": created = api.post(uri, entity); break;
             default: return die("invalid create method: "+entityConfig.getCreateMethod());
         }
         if (listener != null) listener.postCreate(entityConfig, entity, created);
