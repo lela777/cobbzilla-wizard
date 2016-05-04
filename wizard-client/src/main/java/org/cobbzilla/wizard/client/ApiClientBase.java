@@ -179,6 +179,7 @@ public class ApiClientBase {
     }
 
     public <T> T post(String path, Object request, Class<T> responseClass) throws Exception {
+        if (request instanceof String) return post(path, request, responseClass);
         return fromJson(post(path, toJson(request)).json, responseClass);
     }
 
@@ -214,6 +215,12 @@ public class ApiClientBase {
 
     public <T> T put(String path, T request) throws Exception {
         return put(path, request, (Class<T>) request.getClass());
+    }
+
+    public <T> T put(String path, String json, Class<T> responseClass) throws Exception {
+        final RestResponse response = put(path, json);
+        if (!response.isSuccess()) throw specializeApiException(response);
+        return fromJson(response.json, responseClass);
     }
 
     public RestResponse put(String path, String json) throws Exception {
