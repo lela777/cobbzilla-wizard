@@ -16,4 +16,6 @@ public interface ApiRunnerListener {
     void sessionIdNotFound(ApiScript script, RestResponse restResponse);
 
     void scriptCompleted(ApiScript script);
+
+    void unexpectedResponse(ApiScript script, RestResponse restResponse);
 }

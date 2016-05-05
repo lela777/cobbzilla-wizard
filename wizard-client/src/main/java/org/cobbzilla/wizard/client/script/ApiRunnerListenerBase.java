@@ -26,4 +26,8 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
 
     @Override public void scriptCompleted(ApiScript script) {}
 
+    @Override public void unexpectedResponse(ApiScript script, RestResponse restResponse) {
+        die("unexpectedResponse: script="+script+", restResponse="+restResponse);
+    }
+
 }

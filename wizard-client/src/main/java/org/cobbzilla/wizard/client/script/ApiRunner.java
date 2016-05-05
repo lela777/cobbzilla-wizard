@@ -134,6 +134,9 @@ public class ApiRunner {
                     }
                 }
             }
+
+        } else if (restResponse.status != HttpStatusCodes.OK) {
+            if (listener != null) listener.unexpectedResponse(script, restResponse);
         }
 
         if (listener != null) listener.scriptCompleted(script);
