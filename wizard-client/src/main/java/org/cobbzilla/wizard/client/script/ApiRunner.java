@@ -36,9 +36,9 @@ public class ApiRunner {
     private ApiClientBase api;
     private ApiRunnerListener listener;
 
-    private final Map<String, Object> ctx = new HashMap<>();
-    private final Handlebars handlebars = new Handlebars(new StringTemplateLoader("api-runner("+api+")"));
-    private final Map<String, Class> storeTypes = new HashMap<>();
+    protected final Map<String, Object> ctx = new HashMap<>();
+    protected final Handlebars handlebars = new Handlebars(new StringTemplateLoader("api-runner("+api+")"));
+    protected final Map<String, Class> storeTypes = new HashMap<>();
 
     public void run(String script) throws Exception {
         run(json(script, ApiScript[].class));
@@ -144,11 +144,15 @@ public class ApiRunner {
     }
 
     protected String subst(ApiScriptRequest request) {
-        String json = request.getJsonEntity(ctx);
+        String json = requestEntityJson(request);
         if (json != null) {
             while (json.contains(RAND)) json = json.replaceFirst(RAND, randomAlphanumeric(10));
         }
         return json;
+    }
+
+    protected String requestEntityJson(ApiScriptRequest request) {
+        return request.getJsonEntity(ctx);
     }
 
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
