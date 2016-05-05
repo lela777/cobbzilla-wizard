@@ -23,6 +23,7 @@ import java.util.Map;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
@@ -40,8 +41,14 @@ public class ApiRunner {
     protected final Handlebars handlebars = new Handlebars(new StringTemplateLoader("api-runner("+api+")"));
     protected final Map<String, Class> storeTypes = new HashMap<>();
 
+    public void reset () {
+        ctx.clear();
+        storeTypes.clear();
+        api.logout();
+    }
+
     public void run(String script) throws Exception {
-        run(json(script, ApiScript[].class));
+        run(json(script, ApiScript[].class, FULL_MAPPER_ALLOW_COMMENTS));
     }
 
     public void run(ApiScript[] scripts) throws Exception {
