@@ -27,7 +27,7 @@ public class EntityFieldConfig {
     @Setter private EntityFieldControl control;
     public EntityFieldControl getControl() {
         if (control != null) return control;
-        if (type == EntityFieldType.flag) return EntityFieldControl.checkbox;
+        if (type == EntityFieldType.flag) return EntityFieldControl.flag;
         return EntityFieldControl.text;
     }
 

@@ -25,4 +25,6 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
 
     @AfterClass public static void finalizeDocCapture () throws Exception { if (docsEnabled) apiDocs.close(); }
 
+    public static final ApiDocsApiRunnerListener apiDocsRunnerListener = new ApiDocsApiRunnerListener(apiDocs);
+
 }

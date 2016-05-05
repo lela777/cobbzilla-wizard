@@ -1,9 +1,6 @@
 package org.cobbzilla.wizard.client;
 
-import lombok.Cleanup;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -34,7 +31,7 @@ import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
-@Slf4j @NoArgsConstructor
+@Slf4j @NoArgsConstructor @ToString(of={"connectionInfo"})
 public class ApiClientBase {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
