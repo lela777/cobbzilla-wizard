@@ -18,8 +18,8 @@ public class ApiScriptResponse {
     @Getter @Setter private String store;
     public boolean hasStore() { return !empty(store); }
 
-    @Getter @Setter private String storeType;
-    public boolean hasStoreType() { return !empty(storeType); }
+    @Getter @Setter private String type;
+    public boolean hasType() { return !empty(type); }
 
     @Getter @Setter private ApiScriptResponseCheck[] check;
     public boolean hasChecks() { return !empty(check); }

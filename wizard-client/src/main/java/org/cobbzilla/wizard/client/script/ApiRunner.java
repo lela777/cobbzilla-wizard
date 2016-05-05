@@ -94,17 +94,16 @@ public class ApiRunner {
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
                 responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
             } else {
-                if (response.hasStore()) {
-                    final Class<?> storeClass;
-                    if (response.hasStoreType()) {
-                        storeClass = forName(response.getStoreType());
-                        storeTypes.put(response.getStore(), storeClass);
-                    } else {
-                        storeClass = storeTypes.get(response.getStore());
-                    }
-                    if (storeClass != null) responseObject = fromJsonOrDie(responseEntity, storeClass);
-                    ctx.put(response.getStore(), responseObject);
+                final Class<?> storeClass;
+                if (response.hasType()) {
+                    storeClass = forName(response.getType());
+                    storeTypes.put(response.getStore(), storeClass);
+                } else {
+                    storeClass = storeTypes.get(response.getStore());
                 }
+                if (storeClass != null) responseObject = fromJsonOrDie(responseEntity, storeClass);
+
+                if (response.hasStore()) ctx.put(response.getStore(), responseObject);
 
                 if (response.hasSession()) {
                     final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
