@@ -7,16 +7,20 @@ import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.StringTemplateLoader;
 import org.cobbzilla.util.http.HttpMethods;
+import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.JsEngine;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
+import org.cobbzilla.wizard.validation.ConstraintViolationBean;
+import org.cobbzilla.wizard.validation.ConstraintViolationList;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
@@ -25,6 +29,9 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 @AllArgsConstructor @Slf4j
 public class ApiRunner {
+
+    public static final String CTX_JSON = "json";
+    public static final String RAND = "@@@";
 
     private ApiClientBase api;
     private ApiRunnerListener listener;
@@ -58,11 +65,11 @@ public class ApiRunner {
                 break;
 
             case HttpMethods.PUT:
-                restResponse = api.doPut(uri, request.getJsonEntity(ctx));
+                restResponse = api.doPut(uri, subst(request));
                 break;
 
             case HttpMethods.POST:
-                restResponse = api.doPost(uri, request.getJsonEntity(ctx));
+                restResponse = api.doPost(uri, subst(request));
                 break;
 
             case HttpMethods.DELETE:
@@ -78,35 +85,41 @@ public class ApiRunner {
             final ApiScriptResponse response = script.getResponse();
 
             if (response.getStatus() != restResponse.status) {
-                if (listener != null) listener.statusCheckFailed(response.getStatus(), restResponse.status);
+                if (listener != null) listener.statusCheckFailed(script, restResponse);
             }
 
             final JsonNode responseEntity = empty(restResponse.json) ? null : json(restResponse.json, JsonNode.class);
             Object responseObject = responseEntity;
-            if (response.hasStore()) {
-                final Class<?> storeClass;
-                if (response.hasStoreType()) {
-                    storeClass = forName(response.getStoreType());
-                    storeTypes.put(response.getStore(), storeClass);
-                } else {
-                    storeClass = storeTypes.get(response.getStore());
+
+            if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
+                responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
+            } else {
+                if (response.hasStore()) {
+                    final Class<?> storeClass;
+                    if (response.hasStoreType()) {
+                        storeClass = forName(response.getStoreType());
+                        storeTypes.put(response.getStore(), storeClass);
+                    } else {
+                        storeClass = storeTypes.get(response.getStore());
+                    }
+                    if (storeClass != null) responseObject = fromJsonOrDie(responseEntity, storeClass);
+                    ctx.put(response.getStore(), responseObject);
                 }
-                if (storeClass != null) responseObject = fromJsonOrDie(responseEntity, storeClass);
-                ctx.put(response.getStore(), responseObject);
-            }
-            if (response.hasSession()) {
-                final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
-                if (sessionIdNode == null) {
-                    if (listener != null) listener.sessionIdNotFound(response, restResponse);
-                } else {
-                    api.pushToken(sessionIdNode.textValue());
+
+                if (response.hasSession()) {
+                    final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
+                    if (sessionIdNode == null) {
+                        if (listener != null) listener.sessionIdNotFound(script, restResponse);
+                    } else {
+                        api.pushToken(sessionIdNode.textValue());
+                    }
                 }
             }
 
             if (response.hasChecks()) {
                 final Map<String, Object> localCtx = new HashMap<>();
                 localCtx.putAll(ctx);
-                localCtx.put("json", responseObject);
+                localCtx.put(CTX_JSON, responseObject);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
                     final String condition = check.getCondition();
@@ -117,7 +130,7 @@ public class ApiRunner {
                         log.warn("run("+script+"): script execution failed: "+e);
                     }
                     if (result == null || !result) {
-                        if (listener != null) listener.conditionCheckFailed(check);
+                        if (listener != null) listener.conditionCheckFailed(script, restResponse, check);
                     }
                 }
             }
@@ -125,6 +138,14 @@ public class ApiRunner {
 
         if (listener != null) listener.scriptCompleted(script);
         return true;
+    }
+
+    protected String subst(ApiScriptRequest request) {
+        String json = request.getJsonEntity(ctx);
+        if (json != null) {
+            while (json.contains(RAND)) json = json.replaceFirst(RAND, randomAlphanumeric(10));
+        }
+        return json;
     }
 
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }

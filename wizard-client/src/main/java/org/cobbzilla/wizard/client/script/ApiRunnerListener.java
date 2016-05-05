@@ -10,10 +10,10 @@ public interface ApiRunnerListener {
 
     void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response);
 
-    void statusCheckFailed(int expected, int actual);
-    void conditionCheckFailed(ApiScriptResponseCheck check);
+    void statusCheckFailed(ApiScript script, RestResponse restResponse);
+    void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check);
 
-    void sessionIdNotFound(ApiScriptResponse response, RestResponse restResponse);
+    void sessionIdNotFound(ApiScript script, RestResponse restResponse);
 
     void scriptCompleted(ApiScript script);
 }

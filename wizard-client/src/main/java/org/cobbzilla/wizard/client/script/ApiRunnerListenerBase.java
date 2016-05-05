@@ -12,16 +12,16 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
 
     @Override public void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response) {}
 
-    @Override public void statusCheckFailed(int expected, int actual) {
-        die("statusCheckFailed: expected "+expected+" but was "+actual);
+    @Override public void statusCheckFailed(ApiScript script, RestResponse restResponse) {
+        die("statusCheckFailed: expected "+script.getResponse().getStatus()+" but was "+restResponse.status);
     }
 
-    @Override public void conditionCheckFailed(ApiScriptResponseCheck check) {
+    @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check) {
         die("conditionCheckFailed: "+check);
     }
 
-    @Override public void sessionIdNotFound(ApiScriptResponse response, RestResponse restResponse) {
-        die("sessionIdNotFound: expected "+response.getSession()+", response was: "+restResponse);
+    @Override public void sessionIdNotFound(ApiScript script, RestResponse restResponse) {
+        die("sessionIdNotFound: expected "+script.getResponse().getSession()+", response was: "+restResponse);
     }
 
     @Override public void scriptCompleted(ApiScript script) {}
