@@ -17,7 +17,7 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
     }
 
     @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check) {
-        die("conditionCheckFailed: "+check);
+        die("conditionCheckFailed("+script+"): "+check);
     }
 
     @Override public void sessionIdNotFound(ApiScript script, RestResponse restResponse) {
