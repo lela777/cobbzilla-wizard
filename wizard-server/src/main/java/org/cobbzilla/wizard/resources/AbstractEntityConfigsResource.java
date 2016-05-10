@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
+import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.packagePath;
@@ -72,7 +73,7 @@ public abstract class AbstractEntityConfigsResource {
             final File localFile = getLocalConfig(config);
             if (localFile != null && localFile.exists()) {
                 try {
-                    final EntityConfig localConfig = fromJson(localFile, EntityConfig.class);
+                    final EntityConfig localConfig = fromJson(localFile, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
                     if (localConfig != null) {
                         setNames(localConfig);
                         return ok(localConfig);
