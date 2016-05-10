@@ -128,7 +128,7 @@ public abstract class AbstractEntityConfigsResource {
             return null;
         }
         try {
-            final EntityConfig entityConfig = fromJson(in, EntityConfig.class);
+            final EntityConfig entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
             entityConfig.setClassName(clazz.getName());
             return entityConfig;
         } catch (Exception e) {
