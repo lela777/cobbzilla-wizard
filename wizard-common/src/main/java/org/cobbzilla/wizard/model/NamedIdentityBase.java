@@ -1,10 +1,7 @@
 package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import javax.persistence.Column;
@@ -15,7 +12,7 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
-@MappedSuperclass @EqualsAndHashCode(of="name")
+@MappedSuperclass @EqualsAndHashCode(of="name") @ToString(of={"name"})
 @NoArgsConstructor @Accessors(chain=true)
 public class NamedIdentityBase implements NamedEntity, Identifiable {
 
