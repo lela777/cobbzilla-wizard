@@ -3,7 +3,6 @@ package org.cobbzilla.wizard.client.script;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
 import lombok.AllArgsConstructor;
-import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.StringTemplateLoader;
 import org.cobbzilla.util.http.HttpMethods;
@@ -16,7 +15,6 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ConstraintViolationList;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -164,9 +162,7 @@ public class ApiRunner {
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
 
     protected String handlebars(String value, Map<String, Object> ctx) throws IOException {
-        @Cleanup final StringWriter writer = new StringWriter(value.length());
-        handlebars.compile(value).apply(ctx, writer);
-        return writer.toString();
+        return StringTemplateLoader.apply(handlebars, value, ctx);
     }
 
 }
