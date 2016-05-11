@@ -16,6 +16,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -34,6 +35,23 @@ public class ResourceUtil {
     public static Response ok(Object o) { return Response.ok(o).build(); }
 
     public static Response ok_empty() { return Response.ok(Collections.emptyMap()).build(); }
+
+    public static Response send(SendableResource resource) {
+        return send(resource.getOut(), resource.getName(), resource.getContentType(), resource.getContentLength(), resource.getForceDownload());
+    }
+
+    public static Response send(StreamingOutput out, String name, String contentType, Long contentLength, Boolean forceDownload) {
+        Response.ResponseBuilder builder = Response.ok(out).header(HttpHeaders.CONTENT_TYPE, contentType);
+        if (name != null) {
+            if (forceDownload == null || !forceDownload) {
+                builder = builder.header("Content-Disposition", "inline; filename=\"" + name + "\"");
+            } else {
+                builder = builder.header("Content-Disposition", "attachment; filename=\"" + name + "\"");
+            }
+        }
+        if (contentLength != null) builder = builder.header(HttpHeaders.CONTENT_LENGTH, contentLength);
+        return builder.build();
+    }
 
     public static Response accepted() { return Response.status(HttpStatusCodes.ACCEPTED).build(); }
 
