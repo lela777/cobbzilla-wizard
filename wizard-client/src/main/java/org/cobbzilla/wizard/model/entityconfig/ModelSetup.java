@@ -155,7 +155,7 @@ public class ModelSetup {
                     die("create: could not find parent (type=" + parentEntityType + ", field=" + parentFieldName + ") of entity (" + entity.getClass().getSimpleName() + "): " + entity);
                 }
             } else {
-                log.info("no parentFieldName found for " + entity.getClass().getSimpleName() + ", not setting");
+                log.debug("no parentFieldName found for " + entity.getClass().getSimpleName() + ", not setting");
             }
         }
 
@@ -187,7 +187,7 @@ public class ModelSetup {
             uri = uri.replace("{uuid}", urlEncode(entityProps.get("name").toString()));
         }
         if (uri.contains("{uuid}")) {
-            log.warn("Could not replace {uuid} found in URL, returning null: "+uri);
+            log.debug("Could not replace {uuid} found in URL, returning null: "+uri);
             return null;
         }
         if (uri.contains("{")) die("Could not replace all variables in URL: "+uri);

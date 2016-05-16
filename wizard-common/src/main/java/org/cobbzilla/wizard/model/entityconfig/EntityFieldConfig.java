@@ -49,7 +49,7 @@ public class EntityFieldConfig {
         if (empty(options)) return null;
 
         if (options.startsWith("uri:")) {
-            log.warn("getOptionsArray: cannot convert uri-style options to array: "+options);
+            log.debug("getOptionsArray: cannot convert uri-style options to array: "+options);
             return null;
         }
 
