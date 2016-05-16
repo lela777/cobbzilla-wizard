@@ -17,17 +17,17 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
     }
 
     @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check) {
-        die("conditionCheckFailed("+script+"): "+check);
+        die("conditionCheckFailed("+script+"): "+check+", server response="+restResponse);
     }
 
     @Override public void sessionIdNotFound(ApiScript script, RestResponse restResponse) {
-        die("sessionIdNotFound: expected "+script.getResponse().getSession()+", response was: "+restResponse);
+        die("sessionIdNotFound: expected "+script.getResponse().getSession()+", server response="+restResponse);
     }
 
     @Override public void scriptCompleted(ApiScript script) {}
 
     @Override public void unexpectedResponse(ApiScript script, RestResponse restResponse) {
-        die("unexpectedResponse: script="+script+", restResponse="+restResponse);
+        die("unexpectedResponse: script="+script+", server response="+restResponse);
     }
 
 }
