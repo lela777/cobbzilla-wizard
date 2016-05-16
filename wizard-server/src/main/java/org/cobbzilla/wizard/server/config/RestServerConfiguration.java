@@ -5,7 +5,6 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
@@ -20,6 +19,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.http.URIUtil.getHost;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 @Slf4j
@@ -96,8 +96,12 @@ public class RestServerConfiguration {
         final HasDatabaseConfiguration config = validatePgConfig("pgCommand("+command+")");
         final String dbUser = config.getDatabase().getUser();
         final String dbUrl = config.getDatabase().getUrl();
+
+        // here we assume URL is in the form 'jdbc:{driver}://{host}:{port}/{db_name}'
+        final String host = getHost(dbUrl.substring(dbUrl.indexOf(":" + 1)));
         final String dbName = dbUrl.substring(dbUrl.lastIndexOf('/')+1);
-        return command + " -h " + URIUtil.getHost(dbUrl) +" -U " + dbUser + " " + dbName;
+
+        return command + " -h " + host +" -U " + dbUser + " " + dbName;
     }
 
     public Map<String, String> pgEnv() {
