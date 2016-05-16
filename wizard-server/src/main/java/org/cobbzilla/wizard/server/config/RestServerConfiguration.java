@@ -5,6 +5,7 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.http.URIUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
@@ -36,6 +37,7 @@ public class RestServerConfiguration {
     @Getter @Setter private JerseyConfiguration jersey;
 
     @JsonIgnore @Getter @Setter private ApplicationContext applicationContext;
+
     public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }
     public <T> T getBean (Class<T> clazz) { return SpringUtil.getBean(applicationContext, clazz); }
     public <T> T getBean (String clazz) { return (T) SpringUtil.getBean(applicationContext, forName(clazz)); }
@@ -56,10 +58,10 @@ public class RestServerConfiguration {
 
     public ResultSetBean execSql(String sql, Object[] args) throws SQLException {
 
-        if (!(this instanceof HasDatabaseConfiguration)) die("execSql: "+getClass().getName()+" is not an instance of HasDatabaseConfiguration");
-
+        final HasDatabaseConfiguration config = validatePgConfig("execSql");
         final boolean isQuery = sql.toLowerCase().trim().startsWith("select");
-        @Cleanup Connection conn = ((HasDatabaseConfiguration) this).getDatabase().getConnection();
+
+        @Cleanup Connection conn = config.getDatabase().getConnection();
         @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
         int i = 1;
         for (Object o : args) {
@@ -86,6 +88,40 @@ public class RestServerConfiguration {
         ps.executeUpdate();
         log.info("execSql (update): "+sql);
         return ResultSetBean.EMPTY;
+    }
+
+    public String pgCommand() { return pgCommand("psql"); }
+
+    public String pgCommand(String command) {
+        final HasDatabaseConfiguration config = validatePgConfig("pgCommand("+command+")");
+        final String dbUser = config.getDatabase().getUser();
+        final String dbUrl = config.getDatabase().getUrl();
+        final String dbName = dbUrl.substring(dbUrl.lastIndexOf('/')+1);
+        return command + " -h " + URIUtil.getHost(dbUrl) +" -U " + dbUser + " " + dbName;
+    }
+
+    public Map<String, String> pgEnv() {
+        final HasDatabaseConfiguration config = validatePgConfig("pgEnv");
+        String dbPass = config.getDatabase().getPassword();
+        if (empty(dbPass)) dbPass = "";
+
+        final Map<String, String> env = new HashMap<>();
+        env.putAll(config.getEnvironment());
+        env.put("PGPASSWORD", dbPass);
+        String path = env.get("PATH");
+        if (path == null) {
+            path = "/bin:/usr/bin:/usr/local/bin";
+        } else {
+            path += ":/usr/local/bin";
+        }
+        env.put("PATH", path);
+
+        return env;
+    }
+
+    private HasDatabaseConfiguration validatePgConfig(String method) {
+        if (!(this instanceof HasDatabaseConfiguration)) die(method+": "+getClass().getName()+" is not an instance of HasDatabaseConfiguration");
+        return (HasDatabaseConfiguration) this;
     }
 
 }
