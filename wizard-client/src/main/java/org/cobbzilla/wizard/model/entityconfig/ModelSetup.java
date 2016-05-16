@@ -133,9 +133,6 @@ public class ModelSetup {
 
         // if the entity has a parent, it will want that parent's UUID in that field
         if (entityConfig.hasParentField()) {
-            if (entityConfig.getName().equals("CarrierProductQuestion")) {
-                log.info("ok");
-            }
             final EntityFieldConfig parentField = entityConfig.getParentField();
 
             String parentFieldName = parentField.getName();
