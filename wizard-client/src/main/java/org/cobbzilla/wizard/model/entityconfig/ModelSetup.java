@@ -62,6 +62,7 @@ public class ModelSetup {
         Identifiable entity = request;
 
         // does it already exist?
+        final String entityType = entity.getClass().getSimpleName();
         if (!entityConfig.getUpdateUri().equals(":notSupported")) {
             final String getUri = processUri(context, entity, entityConfig.getUpdateUri());
             if (getUri != null) {
@@ -70,15 +71,15 @@ public class ModelSetup {
                 if (listener != null) listener.postLookup(entity, request, response);
                 switch (response.status) {
                     case OK:
-                        log.info("createEntity: already exists");
+                        log.info("createEntity: "+entityType+" already exists");
                         entity = json(response.json, request.getClass());
                         break;
                     case NOT_FOUND:
-                        log.info("createEntity: creating " + entity.getClass().getSimpleName());
+                        log.info("createEntity: creating " + entityType);
                         entity = create(api, context, entityConfig, entity, listener);
                         break;
                     default:
-                        die("createEntity: error creating " + entity.getClass().getSimpleName() + ": " + response);
+                        die("createEntity: error creating " + entityType + ": " + response);
                 }
             } else {
                 entity = create(api, context, entityConfig, entity, listener);
@@ -93,7 +94,7 @@ public class ModelSetup {
         }
 
         // create and add to context
-        context.put(entity.getClass().getSimpleName(), entity);
+        context.put(entityType, entity);
 
         // check for child objects
         if (entity instanceof ParentEntity) {
