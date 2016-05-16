@@ -27,8 +27,11 @@ public class EntityFieldConfig {
     @Setter private EntityFieldControl control;
     public EntityFieldControl getControl() {
         if (control != null) return control;
-        if (type == EntityFieldType.flag) return EntityFieldControl.flag;
-        return EntityFieldControl.text;
+        switch (type) {
+            case flag:                  return EntityFieldControl.flag;
+            case epoch_time: case date: return EntityFieldControl.date;
+            default:                    return EntityFieldControl.text;
+        }
     }
 
     // value of 'options' may be:
