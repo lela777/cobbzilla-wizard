@@ -98,7 +98,7 @@ public class RestServerConfiguration {
         final String dbUrl = config.getDatabase().getUrl();
 
         // here we assume URL is in the form 'jdbc:{driver}://{host}:{port}/{db_name}'
-        final String host = getHost(dbUrl.substring(dbUrl.indexOf(":" + 1)));
+        final String host = getHost(dbUrl.substring(dbUrl.indexOf(":")+1));
         final String dbName = dbUrl.substring(dbUrl.lastIndexOf('/')+1);
 
         return command + " -h " + host +" -U " + dbUser + " " + dbName;
