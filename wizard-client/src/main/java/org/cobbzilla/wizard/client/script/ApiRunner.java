@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.handlebars.StringTemplateLoader;
+import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.JsEngine;
@@ -36,7 +36,7 @@ public class ApiRunner {
     private ApiRunnerListener listener;
 
     protected final Map<String, Object> ctx = new HashMap<>();
-    protected final Handlebars handlebars = new Handlebars(new StringTemplateLoader("api-runner("+api+")"));
+    protected final Handlebars handlebars = new Handlebars(new HandlebarsUtil("api-runner("+api+")"));
     protected final Map<String, Class> storeTypes = new HashMap<>();
 
     public void reset () {
@@ -162,7 +162,7 @@ public class ApiRunner {
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
 
     protected String handlebars(String value, Map<String, Object> ctx) throws IOException {
-        return StringTemplateLoader.apply(handlebars, value, ctx);
+        return HandlebarsUtil.apply(handlebars, value, ctx);
     }
 
 }

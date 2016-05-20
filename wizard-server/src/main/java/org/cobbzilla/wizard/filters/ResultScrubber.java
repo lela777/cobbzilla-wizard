@@ -18,45 +18,53 @@ public abstract class ResultScrubber implements ContainerResponseFilter {
 
     @Override public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
         final Object entity = response.getEntity();
-        scrub(entity, getFieldsToScrub(entity));
+        final ScrubbableField[] fieldsToScrub = getFieldsToScrub(entity);
+        if (fieldsToScrub != null && fieldsToScrub.length > 0) scrub(entity, fieldsToScrub);
         return response;
     }
 
     public static void scrub(Object entity, ScrubbableField[] fieldsToScrub) {
-        for (ScrubbableField field : fieldsToScrub) {
-            if (entity != null && field.targetType.isAssignableFrom(entity.getClass())) {
-                try {
-                    if (entity instanceof CustomScrubbage) {
-                        ((CustomScrubbage)entity).scrub(entity, field);
-                    } else {
-                        boolean recurse = field.name.endsWith(".*");
-                        final String fieldName = recurse ? field.name.substring(0, field.name.length()-".*".length()) : field.name;
-                        final Object thing = ReflectionUtil.get(entity, fieldName);
-                        if (thing == null) continue;
-                        if (!field.type.isAssignableFrom(thing.getClass())) die("scrub: incompatible types: "+thing.getClass().getName()+", "+field.type.getName());
-                        if (recurse) {
-                            if (thing instanceof Collection) {
-                                for (Object subThing : (Collection) thing) {
-                                    if (subThing instanceof Scrubbable) {
-                                        scrub(subThing, ((Scrubbable)subThing).fieldsToScrub());
-                                    }
-                                }
-                            } else if (thing.getClass().isArray()) {
-                                for (Object subThing : (Object[]) thing) {
-                                    if (subThing instanceof Scrubbable) {
-                                        scrub(subThing, ((Scrubbable)subThing).fieldsToScrub());
-                                    }
-                                }
-
-                            } else {
-                                die("scrub: neither collection nor array: "+fieldName+" (was "+thing.getClass()+")");
-                            }
+        if (entity instanceof Collection) {
+            for (Scrubbable s : (Collection<Scrubbable>) entity) scrub(s, fieldsToScrub);
+        } else if (Scrubbable[].class.isAssignableFrom(entity.getClass())) {
+            for (Scrubbable s : (Scrubbable[]) entity) scrub(s, fieldsToScrub);
+        } else {
+            for (ScrubbableField field : fieldsToScrub) {
+                if (entity != null && field.targetType.isAssignableFrom(entity.getClass())) {
+                    try {
+                        if (entity instanceof CustomScrubbage) {
+                            ((CustomScrubbage) entity).scrub(entity, field);
                         } else {
-                            setNull(entity, field.name, field.type);
+                            boolean recurse = field.name.endsWith(".*");
+                            final String fieldName = recurse ? field.name.substring(0, field.name.length() - ".*".length()) : field.name;
+                            final Object thing = ReflectionUtil.get(entity, fieldName);
+                            if (thing == null) continue;
+                            if (!field.type.isAssignableFrom(thing.getClass()))
+                                die("scrub: incompatible types: " + thing.getClass().getName() + ", " + field.type.getName());
+                            if (recurse) {
+                                if (thing instanceof Collection) {
+                                    for (Object subThing : (Collection) thing) {
+                                        if (subThing instanceof Scrubbable) {
+                                            scrub(subThing, ((Scrubbable) subThing).fieldsToScrub());
+                                        }
+                                    }
+                                } else if (thing.getClass().isArray()) {
+                                    for (Object subThing : (Object[]) thing) {
+                                        if (subThing instanceof Scrubbable) {
+                                            scrub(subThing, ((Scrubbable) subThing).fieldsToScrub());
+                                        }
+                                    }
+
+                                } else {
+                                    die("scrub: neither collection nor array: " + fieldName + " (was " + thing.getClass() + ")");
+                                }
+                            } else {
+                                setNull(entity, field.name, field.type);
+                            }
                         }
+                    } catch (Exception e) {
+                        log.warn("filter: Error calling ReflectionUtil.setNull(" + entity + ", " + field.name + ", " + field.type.getName() + "): " + e);
                     }
-                } catch (Exception e) {
-                    log.warn("filter: Error calling ReflectionUtil.setNull("+entity+", "+field.name+", "+field.type.getName()+"): "+e);
                 }
             }
         }
