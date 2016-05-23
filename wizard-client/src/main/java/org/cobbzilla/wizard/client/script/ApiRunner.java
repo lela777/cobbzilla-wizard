@@ -14,16 +14,13 @@ import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ConstraintViolationList;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
-import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
-import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 @AllArgsConstructor @Slf4j
@@ -156,12 +153,12 @@ public class ApiRunner {
     }
 
     protected String requestEntityJson(ApiScriptRequest request) {
-        return request.getJsonEntity(ctx);
+        return handlebars(request.getJsonEntity(ctx), ctx);
     }
 
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
 
-    protected String handlebars(String value, Map<String, Object> ctx) throws IOException {
+    protected String handlebars(String value, Map<String, Object> ctx) {
         return HandlebarsUtil.apply(handlebars, value, ctx);
     }
 
