@@ -19,19 +19,23 @@ public class EncryptedBoolean {
 
     public static final int COLUMN_MAXLEN = 20 + ENC_PAD;
 
-    public EncryptedBoolean (boolean val) { set(val); }
+    public EncryptedBoolean (Boolean val) { set(val); }
 
-    private EncryptedBoolean set(boolean val) { return val ? setTrue() : setFalse(); }
-
-    @Type(type=ENCRYPTED_STRING) @Column(columnDefinition="varchar("+ COLUMN_MAXLEN +") NOT NULL")
-    @Getter @Setter private String flag;
+    private EncryptedBoolean set(Boolean val) { return val == null ? setNull() : val ? setTrue() : setFalse(); }
 
     public static final String TRUE_SUFFIX = "_true";
     public static final String FALSE_SUFFIX = "_false";
+    public static final String NULL_SUFFIX = "_null";
+
+    @Type(type=ENCRYPTED_STRING) @Column(columnDefinition="varchar("+ COLUMN_MAXLEN +") NOT NULL")
+    @Getter @Setter private String flag = randomAlphanumeric(10) + NULL_SUFFIX;
 
     public EncryptedBoolean setTrue  () { return setFlag(randomAlphanumeric(10) + TRUE_SUFFIX); }
     public EncryptedBoolean setFalse () { return setFlag(randomAlphanumeric(10) + FALSE_SUFFIX); }
+    public EncryptedBoolean setNull  () { return setFlag(randomAlphanumeric(10) + NULL_SUFFIX); }
 
     @Transient public boolean isTrue () { return flag != null && flag.endsWith(TRUE_SUFFIX); }
+    @Transient public boolean isFalse () { return flag != null && flag.endsWith(FALSE_SUFFIX); }
+    @Transient public boolean isNull () { return !isTrue() && !isFalse(); }
 
 }
