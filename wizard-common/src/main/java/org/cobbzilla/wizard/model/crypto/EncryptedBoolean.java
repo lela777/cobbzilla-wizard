@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model.crypto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,8 +35,8 @@ public class EncryptedBoolean {
     public EncryptedBoolean setFalse () { return setFlag(randomAlphanumeric(10) + FALSE_SUFFIX); }
     public EncryptedBoolean setNull  () { return setFlag(randomAlphanumeric(10) + NULL_SUFFIX); }
 
-    @Transient public boolean isTrue () { return flag != null && flag.endsWith(TRUE_SUFFIX); }
-    @Transient public boolean isFalse () { return flag != null && flag.endsWith(FALSE_SUFFIX); }
-    @Transient public boolean isNull () { return !isTrue() && !isFalse(); }
+    @Transient @JsonIgnore public boolean isTrue () { return flag != null && flag.endsWith(TRUE_SUFFIX); }
+    @Transient @JsonIgnore public boolean isFalse () { return flag != null && flag.endsWith(FALSE_SUFFIX); }
+    @Transient @JsonIgnore public boolean isNull () { return !isTrue() && !isFalse(); }
 
 }
