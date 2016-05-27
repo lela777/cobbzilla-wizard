@@ -2,13 +2,18 @@ package org.cobbzilla.wizard.client.script;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Helper;
+import com.github.jknack.handlebars.Options;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.JsEngine;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
@@ -20,6 +25,7 @@ import java.util.Map;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
@@ -33,7 +39,21 @@ public class ApiRunner {
     private ApiRunnerListener listener;
 
     protected final Map<String, Object> ctx = new HashMap<>();
-    protected final Handlebars handlebars = new Handlebars(new HandlebarsUtil("api-runner("+api+")"));
+
+    @Getter(lazy=true, value=AccessLevel.PROTECTED) private final Handlebars handlebars = initHandlebars();
+    private Handlebars initHandlebars() {
+        final Handlebars hb = new Handlebars(new HandlebarsUtil("api-runner(" + api + ")"));
+        hb.registerHelper("sha256", new Helper<Object>() {
+            public CharSequence apply(Object src, Options options) {
+                if (empty(src)) return "";
+                src = handlebars(src.toString(), (Map<String, Object>) options.context.model());
+                src = ShaUtil.sha256_hex(src.toString());
+                return new Handlebars.SafeString(src.toString());
+            }
+        });
+        return hb;
+    }
+
     protected final Map<String, Class> storeTypes = new HashMap<>();
 
     public void reset () {
@@ -54,6 +74,7 @@ public class ApiRunner {
 
         final ApiScriptRequest request = script.getRequest();
         final String method = request.getMethod().toUpperCase();
+        ctx.put("now", now());
 
         String uri = handlebars(request.getUri(), ctx);
         if (!uri.startsWith("/")) uri = "/" + uri;
@@ -123,7 +144,7 @@ public class ApiRunner {
                 localCtx.put(CTX_JSON, responseObject);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
-                    final String condition = check.getCondition();
+                    final String condition = handlebars(check.getCondition(), localCtx);
                     Boolean result = null;
                     try {
                         result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
@@ -159,7 +180,7 @@ public class ApiRunner {
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
 
     protected String handlebars(String value, Map<String, Object> ctx) {
-        return HandlebarsUtil.apply(handlebars, value, ctx);
+        return HandlebarsUtil.apply(getHandlebars(), value, ctx);
     }
 
 }
