@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -12,17 +13,21 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
-@Slf4j
+@Slf4j @Accessors(chain=true)
 public class EntityFieldConfig {
+
+    public static EntityFieldConfig field(String name) { return new EntityFieldConfig().setName(name); } // convenience method
 
     @Getter @Setter private String name;
 
     @Setter private String displayName;
+
     public String getDisplayName() { return !empty(displayName) ? displayName : camelCaseToString(name); }
 
     @Getter @Setter private EntityFieldMode mode = EntityFieldMode.standard;
     @Getter @Setter private EntityFieldType type = EntityFieldType.string;
     @Getter @Setter private Integer length = null;
+    public boolean hasLength () { return length != null; }
 
     @Setter private EntityFieldControl control;
     public EntityFieldControl getControl() {

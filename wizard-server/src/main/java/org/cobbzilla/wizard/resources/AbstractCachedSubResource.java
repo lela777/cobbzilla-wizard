@@ -2,6 +2,9 @@ package org.cobbzilla.wizard.resources;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.springframework.context.ApplicationContext;
@@ -11,6 +14,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
+/**
+ * Allows forever-reuse of subresources, each instantiated with a particular set of immutable uuids.
+ * @param <R> the type of resource we are, and that will be cached, so method calls can be typesafe.
+ */
+@Slf4j
 public abstract class AbstractCachedSubResource<R extends AbstractCachedSubResource> {
 
     @Getter(AccessLevel.PROTECTED) private final AtomicReference<Map<String, R>> cacheRef = new AtomicReference<>(getCacheMap());
@@ -24,6 +32,8 @@ public abstract class AbstractCachedSubResource<R extends AbstractCachedSubResou
         for (Object o : args) {
             if (o instanceof Identifiable) {
                 cacheKey.append(((Identifiable) o).getUuid()).append(":");
+            } else if (!(o instanceof DAO)) {
+                log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
             }
         }
         synchronized (cacheRef) {
