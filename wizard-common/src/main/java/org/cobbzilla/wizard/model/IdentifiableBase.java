@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
-import org.cobbzilla.util.collection.FieldTransfomer;
+import org.cobbzilla.util.collection.FieldTransformer;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.hibernate.cfg.ImprovedNamingStrategy;
@@ -80,29 +80,31 @@ public class IdentifiableBase implements Identifiable {
     public static String[] toUuidArray(List<? extends Identifiable> entities) {
         return empty(entities)
                 ? StringUtil.EMPTY_ARRAY
-                : (String[]) CollectionUtils.collect(entities, FieldTransfomer.TO_UUID).toArray(new String[entities.size()]);
+                : (String[]) collectArray(entities, "uuid");
     }
 
     public static List<String> toUuidList(List<? extends Identifiable> entities) {
-        return (List<String>) (empty(entities)
-                        ? Collections.emptyList()
-                        : CollectionUtils.collect(entities, FieldTransfomer.TO_UUID));
+        if (empty(entities)) return Collections.emptyList();
+        return collectList(entities, "uuid");
     }
 
-    private static final Map<String, FieldTransfomer> fieldTransformerCache = new ConcurrentHashMap<>();
-    protected static FieldTransfomer getFieldTransformer(String field) {
-        FieldTransfomer f = fieldTransformerCache.get(field);
+    private static final Map<String, FieldTransformer> fieldTransformerCache = new ConcurrentHashMap<>();
+    protected static FieldTransformer getFieldTransformer(String field) {
+        FieldTransformer f = fieldTransformerCache.get(field);
         if (f == null) {
-            f = new FieldTransfomer(field);
+            f = new FieldTransformer(field);
             fieldTransformerCache.put(field, f);
         }
         return f;
     }
 
-    public static String[] collectArray(List<? extends Identifiable> entities, String field) {
-        return (String[]) CollectionUtils.collect(entities, getFieldTransformer(field)).toArray(new String[entities.size()]);
+    public static <T> T[] collectArray(List<? extends Identifiable> entities, String field) {
+        return (T[]) CollectionUtils.collect(entities, getFieldTransformer(field)).toArray(new String[entities.size()]);
     }
-    public static List<String> collectList(List<? extends Identifiable> entities, String field) {
+    public static <T> List<T> collectList(List<? extends Identifiable> entities, String field) {
+        return (List<T>) CollectionUtils.collect(entities, getFieldTransformer(field));
+    }
+    public static List<String> collectStringList(List<? extends Identifiable> entities, String field) {
         return (List<String>) CollectionUtils.collect(entities, getFieldTransformer(field));
     }
 
