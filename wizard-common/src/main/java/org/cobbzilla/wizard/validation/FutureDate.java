@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface FutureDate {
 
-    long min () default 0L;
+    String min () default "";
 
     String format () default "";
     boolean emptyOk () default false;
