@@ -303,6 +303,6 @@ public abstract class AbstractDAO<E> implements DAO<E> {
 
     public static String[] toUuidArray(List<? extends Identifiable> entities) { return IdentifiableBase.toUuidArray(entities); }
     public static List<String> toUuidList(List<? extends Identifiable> entities) { return IdentifiableBase.toUuidList(entities); }
-    public static String[] collectArray(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectArray(entities, field); }
-    public static List<String> collectList(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectList(entities, field); }
+    public static <T> T[] collectArray(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectArray(entities, field); }
+    public static <T> List<T> collectList(List<? extends Identifiable> entities, String field) { return IdentifiableBase.collectList(entities, field); }
 }

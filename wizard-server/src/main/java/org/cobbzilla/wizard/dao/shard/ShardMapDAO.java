@@ -2,7 +2,7 @@ package org.cobbzilla.wizard.dao.shard;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.cobbzilla.util.collection.FieldTransfomer;
+import org.cobbzilla.util.collection.FieldTransformer;
 import org.cobbzilla.util.collection.mappy.MappyList;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.cobbzilla.wizard.model.shard.ShardIO;
@@ -95,7 +95,7 @@ public abstract class ShardMapDAO<E extends ShardMap> extends AbstractCRUDDAO<E>
         refreshCache(true);
     }
 
-    public static final FieldTransfomer TO_SHARD_SET = new FieldTransfomer("shardSet");
+    public static final FieldTransformer TO_SHARD_SET = new FieldTransformer("shardSet");
     private Set<String> toNames(List<E> flatCache) {
         return new HashSet<>(CollectionUtils.collect(flatCache, TO_SHARD_SET));
     }
