@@ -8,7 +8,7 @@ import java.util.Set;
 public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerRequestFilter {
 
     protected abstract String getAuthTokenHeader();
-    protected String getUserSessionTokenHeader() { return null; }
+    protected String getSubUserHeader() { return null; }
     protected abstract Set<String> getSkipAuthPaths();
     protected abstract Set<String> getSkipAuthPrefixes();
 
@@ -39,12 +39,12 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
     }
 
     protected SimpleSecurityContext getSecurityContext(ContainerRequest request, T principal) {
-        final String userSessionTokenHeader = getUserSessionTokenHeader();
-        if (userSessionTokenHeader != null) {
-            final String userSessionToken = request.getHeaderValue(userSessionTokenHeader);
-            if (userSessionToken != null) {
+        final String subUserHeader = getSubUserHeader();
+        if (subUserHeader != null) {
+            final String subUserId = request.getHeaderValue(subUserHeader);
+            if (subUserId != null) {
                 if (principal instanceof UserSessionTokenPrincipal) {
-                    ((UserSessionTokenPrincipal)principal).setUserSessionToken(userSessionToken);
+                    ((UserSessionTokenPrincipal)principal).setSubUser(subUserId);
                 }
             }
         }
