@@ -63,19 +63,21 @@ public class RestServerConfiguration {
 
         @Cleanup Connection conn = config.getDatabase().getConnection();
         @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
-        int i = 1;
-        for (Object o : args) {
-            if (o == null) {
-                die("null arguments not supported. null value at parameter index="+i+", sql="+sql);
-            }
-            if (o instanceof String) {
-                ps.setString(i++, (String) o);
-            } else if (o instanceof Long) {
-                ps.setLong(i++, (Long) o);
-            } else if (o instanceof Integer) {
-                ps.setInt(i++, (Integer) o);
-            } else {
-                die("unsupported argument type: "+o.getClass().getName());
+        if (args != null) {
+            int i = 1;
+            for (Object o : args) {
+                if (o == null) {
+                    die("null arguments not supported. null value at parameter index=" + i + ", sql=" + sql);
+                }
+                if (o instanceof String) {
+                    ps.setString(i++, (String) o);
+                } else if (o instanceof Long) {
+                    ps.setLong(i++, (Long) o);
+                } else if (o instanceof Integer) {
+                    ps.setInt(i++, (Integer) o);
+                } else {
+                    die("unsupported argument type: " + o.getClass().getName());
+                }
             }
         }
 
