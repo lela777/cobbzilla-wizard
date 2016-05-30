@@ -75,7 +75,7 @@ public class IdentifiableBase implements Identifiable {
     public void setMtime () { this.mtime = now(); }
     @JsonIgnore @Transient public long getMtimeAge () { return now() - mtime; }
 
-    @Override public String toString() { return getClass().getSimpleName()+"{uuid=" + uuid + "}"; }
+    @Override public String toString() { return simpleName()+"{uuid=" + uuid + "}"; }
 
     public static String[] toUuidArray(List<? extends Identifiable> entities) {
         return empty(entities)
