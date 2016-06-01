@@ -76,6 +76,7 @@ public class ApiRunner {
         script.setStart(now());
         do {
             if (runOnce(script)) return true;
+            sleep(Math.min(script.getTimeoutMillis()/10, 1000), "waiting to retry script: "+script);
         } while (!script.isTimedOut());
         if (listener != null) listener.scriptTimedOut(script);
         return false;
