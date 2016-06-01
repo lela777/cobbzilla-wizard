@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -23,7 +24,7 @@ import static org.cobbzilla.util.string.StringUtil.urlEncode;
 public class ModelSetup {
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, String prefix, ModelSetupListener listener) throws Exception {
-        final String[] models = json(stream2string(prefix + "manifest.json"), String[].class);
+        final String[] models = json(stream2string(prefix + "manifest.json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
         for (int i=0; i<models.length; i++) {
             modelJson.put(models[i], stream2string(prefix + models[i] + ".json"));
