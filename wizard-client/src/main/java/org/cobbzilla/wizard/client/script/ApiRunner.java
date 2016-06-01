@@ -73,13 +73,23 @@ public class ApiRunner {
 
     public boolean run(ApiScript script) throws Exception {
 
+        script.setStart(now());
+        do {
+            if (runOnce(script)) return true;
+        } while (!script.isTimedOut());
+        if (listener != null) listener.scriptTimedOut(script);
+        return false;
+    }
+
+    public boolean runOnce(ApiScript script) throws Exception {
         final ApiScriptRequest request = script.getRequest();
         final String method = request.getMethod().toUpperCase();
-        ctx.put("now", now());
+        ctx.put("now", script.getStart());
 
         String uri = handlebars(request.getUri(), ctx);
         if (!uri.startsWith("/")) uri = "/" + uri;
 
+        boolean success = true;
         final RestResponse restResponse;
 
         if (listener != null) listener.beforeCall(script, ctx);
@@ -148,7 +158,7 @@ public class ApiRunner {
                     final String condition = handlebars(check.getCondition(), localCtx);
                     Boolean result = null;
                     long timeout = check.getTimeoutMillis();
-                    long start = now();
+                    long checkStart = now();
                     do {
                         try {
                             result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
@@ -157,20 +167,22 @@ public class ApiRunner {
                             log.warn("run(" + script + "): script execution failed: " + e);
                         }
                         sleep(Math.min(timeout/10, 1000), "waiting to retry condition: "+condition);
-                    } while (now() - start < timeout);
+                    } while (now() - checkStart < timeout);
 
                     if (result == null || !result) {
+                        success = false;
                         if (listener != null) listener.conditionCheckFailed(script, restResponse, check);
                     }
                 }
             }
 
         } else if (restResponse.status != HttpStatusCodes.OK) {
+            success = false;
             if (listener != null) listener.unexpectedResponse(script, restResponse);
         }
 
         if (listener != null) listener.scriptCompleted(script);
-        return true;
+        return success;
     }
 
     protected String subst(ApiScriptRequest request) {

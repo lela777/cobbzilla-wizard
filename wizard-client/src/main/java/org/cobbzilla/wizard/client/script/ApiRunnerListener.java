@@ -17,5 +17,7 @@ public interface ApiRunnerListener {
 
     void scriptCompleted(ApiScript script);
 
+    void scriptTimedOut(ApiScript script);
+
     void unexpectedResponse(ApiScript script, RestResponse restResponse);
 }

@@ -10,8 +10,8 @@ import static org.cobbzilla.util.string.StringUtil.parseDuration;
 public class ApiScriptResponseCheck {
 
     @Getter @Setter private String condition;
-    @Getter @Setter private String timeout;
 
+    @Getter @Setter private String timeout;
     public long getTimeoutMillis () { return parseDuration(timeout); }
 
 }
