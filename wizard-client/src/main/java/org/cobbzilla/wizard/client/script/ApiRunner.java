@@ -156,7 +156,7 @@ public class ApiRunner {
                         } catch (Exception e) {
                             log.warn("run(" + script + "): script execution failed: " + e);
                         }
-                        sleep(50, "waiting to retry condition: "+condition);
+                        sleep(Math.min(timeout/10, 1000), "waiting to retry condition: "+condition);
                     } while (now() - start < timeout);
 
                     if (result == null || !result) {
