@@ -28,6 +28,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 @AllArgsConstructor @Slf4j
 public class ApiRunner {
@@ -146,10 +147,16 @@ public class ApiRunner {
                 for (ApiScriptResponseCheck check : response.getCheck()) {
                     final String condition = handlebars(check.getCondition(), localCtx);
                     Boolean result = null;
-                    try {
-                        result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
-                    } catch (Exception e) {
-                        log.warn("run("+script+"): script execution failed: "+e);
+                    long timeout = check.getTimeoutMillis();
+                    long start = now();
+                    while (true) {
+                        try {
+                            result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
+                        } catch (Exception e) {
+                            log.warn("run(" + script + "): script execution failed: " + e);
+                        }
+                        if (result != null || now() - start > timeout) break;
+                        sleep(50, "waiting to retry condition: "+condition);
                     }
                     if (result == null || !result) {
                         if (listener != null) listener.conditionCheckFailed(script, restResponse, check);
