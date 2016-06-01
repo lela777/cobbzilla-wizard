@@ -149,15 +149,16 @@ public class ApiRunner {
                     Boolean result = null;
                     long timeout = check.getTimeoutMillis();
                     long start = now();
-                    while (true) {
+                    do {
                         try {
                             result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
+                            if (result != null && result) break;
                         } catch (Exception e) {
                             log.warn("run(" + script + "): script execution failed: " + e);
                         }
-                        if (result != null || now() - start > timeout) break;
                         sleep(50, "waiting to retry condition: "+condition);
-                    }
+                    } while (now() - start < timeout);
+
                     if (result == null || !result) {
                         if (listener != null) listener.conditionCheckFailed(script, restResponse, check);
                     }
