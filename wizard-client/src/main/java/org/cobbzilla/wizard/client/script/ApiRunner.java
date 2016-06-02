@@ -73,6 +73,7 @@ public class ApiRunner {
 
     public boolean run(ApiScript script) throws Exception {
 
+        if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: "+script);
         script.setStart(now());
         do {
             if (runOnce(script)) return true;

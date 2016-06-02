@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.string.StringUtil.parseDuration;
 
@@ -11,6 +12,10 @@ import static org.cobbzilla.util.string.StringUtil.parseDuration;
 public class ApiScript {
 
     @Getter @Setter private String comment;
+
+    @Getter @Setter private String delay;
+    public boolean hasDelay () { return !empty(delay); }
+    public long getDelayMillis () { return parseDuration(delay); }
 
     @Getter @Setter private String timeout;
     public long getTimeoutMillis () { return parseDuration(timeout); }
