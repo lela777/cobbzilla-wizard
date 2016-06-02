@@ -64,8 +64,9 @@ public class ModelSetup {
 
         // does it already exist?
         final String entityType = entity.getClass().getSimpleName();
-        if (!entityConfig.getUpdateUri().equals(":notSupported")) {
-            final String getUri = processUri(context, entity, entityConfig.getUpdateUri());
+        final String updateUri = entityConfig.getUpdateUri();
+        if (updateUri != null && !updateUri.equals(":notSupported")) {
+            final String getUri = processUri(context, entity, updateUri);
             if (getUri != null) {
                 if (listener != null) listener.preLookup(entity);
                 final RestResponse response = api.doGet(getUri);
