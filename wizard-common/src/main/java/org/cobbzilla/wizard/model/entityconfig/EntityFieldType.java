@@ -4,7 +4,30 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum EntityFieldType {
 
-    string, integer, decimal, flag, date, epoch_time, reference, embedded;
+    /** a string of characters */
+    string,
 
+    /** an integer-valued number */
+    integer,
+
+    /** a real number */
+    decimal,
+
+    /** a boolean value */
+    flag,
+
+    /** a date value */
+    date,
+
+    /** a date or date/time value, represented as milliseconds since 1/1/1970 */
+    epoch_time,
+
+    /** a reference to another EntityConfig instance */
+    reference,
+
+    /** an embedded sub-object */
+    embedded;
+
+    /** Jackson-hook to create a new instance based on a string, case-insensitively */
     @JsonCreator public static EntityFieldType create (String val) { return valueOf(val.toLowerCase()); }
 }
