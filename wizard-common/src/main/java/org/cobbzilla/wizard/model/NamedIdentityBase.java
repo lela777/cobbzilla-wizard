@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.Accessors;
+import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -20,9 +21,12 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
 
     public NamedIdentityBase (String name) { setName(name); }
 
+    public NamedIdentityBase update(NamedIdentityBase other) { return setName(other.getName()); }
+
     @Override public void beforeCreate() {}
     @Override public void beforeUpdate() { setMtime(); }
 
+    @HasValue(message="err.name.empty")
     @Id @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)
     @Size(min=2, max=NAME_MAXLEN, message="err.name.length")
     @Getter @Setter protected String name;

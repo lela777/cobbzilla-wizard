@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 /**
- * Allows forever-reuse of subresources, each instantiated with a particular set of immutable uuids.
+ * Allows forever-reuse of subresources, each instantiated with a particular set of immutable objects.
  * @param <R> the type of resource we are, and that will be cached, so method calls can be typesafe.
  */
 @Slf4j
