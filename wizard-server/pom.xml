@@ -219,6 +219,14 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <artifactId>miredot-annotations</artifactId>
             <version>1.3.1</version>
         </dependency>
+
+        <!-- support for traditional webapps in Jersey -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

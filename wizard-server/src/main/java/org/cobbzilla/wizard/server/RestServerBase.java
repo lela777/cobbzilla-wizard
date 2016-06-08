@@ -11,6 +11,7 @@ import com.sun.jersey.core.impl.provider.entity.StringProvider;
 import com.sun.jersey.core.spi.component.ioc.IoCComponentProviderFactory;
 import com.sun.jersey.spi.spring.container.SpringComponentProviderFactory;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
@@ -33,15 +34,23 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.Boolean.TRUE;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
 
-@Slf4j
+@NoArgsConstructor @Slf4j
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
+
+    public RestServerBase (RestServer<C> other) {
+        copy(this, other, new String[]{"httpServer", "configuration", "applicationContext"});
+    }
 
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
@@ -108,26 +117,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     }
 
     public HttpServer buildServer(String serverName) throws IOException {
-        final JerseyConfiguration jerseyConfiguration = configuration.getJersey();
-        final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
 
-        rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, TRUE);
-        rc.getFeatures().put(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, TRUE);
-        rc.getFeatures().put(ResourceConfig.FEATURE_NORMALIZE_URI, TRUE);
-
-        if (jerseyConfiguration.hasRequestFilters()) {
-            rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
-                    Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
-        }
-        if (jerseyConfiguration.hasResponseFilters()) {
-            rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters",
-                    Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
-        }
-
-        configuration.setValidator(new Validator());
-        rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), configuration.getValidator()));
-        rc.getSingletons().add(new StreamingOutputProvider());
-        rc.getSingletons().add(new StringProvider());
+        final ResourceConfig rc = getJerseyResourceConfig(configuration.getJersey());
 
         BCryptUtil.setBcryptRounds(configuration.getBcryptRounds());
 
@@ -148,12 +139,20 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         final ServerConfiguration serverConfig = httpServer.getServerConfiguration();
 
-        // add handlers -- first the REST/Jersey handler
+        // add handlers -- first the optional webapps
+        if (configuration.hasWebapps()) {
+            for (WebappConfiguration config : configuration.getWebapps()) {
+//                config.build(applicationContext).deploy(httpServer);
+                config.build(applicationContext).deploy(httpServer);
+            }
+        }
+
+        // then the REST/Jersey handler
         final HttpHandler processor = ContainerFactory.createContainer(HttpHandler.class, rc, factory);
         final String restBase = configuration.getHttp().getBaseUri();
         serverConfig.addHttpHandler(processor, restBase);
 
-        // optional static asset handler
+        // then optional static asset handler
         if (configuration.hasStaticAssets()) {
             final StaticHttpConfiguration staticAssets = configuration.getStaticAssets();
             final String staticBase = staticAssets.getBaseUri();
@@ -164,14 +163,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             serverConfig.addHttpHandler(staticHandler, staticBase);
         }
 
-        // optional additional http handlers
+        // then any other optional additional http handlers
         if (configuration.hasHandlers()) {
             for (HttpHandlerConfiguration config : configuration.getHandlers()) {
 
                 // which bean will handle this?
                 final HttpHandler bean = getBean(config.getBean());
 
-                final HttpHandlerRegistration handlerRegistration = HttpHandlerRegistration.bulder()
+                final HttpHandlerRegistration handlerRegistration = HttpHandlerRegistration.builder()
                         .contextPath(config.contextPath())
                         .urlPattern("/*")
                         .build();
@@ -181,6 +180,29 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         }
 
         return httpServer;
+    }
+
+    protected ResourceConfig getJerseyResourceConfig(JerseyConfiguration jerseyConfiguration) {
+        final ResourceConfig rc = new PackagesResourceConfig(jerseyConfiguration.getResourcePackages());
+
+        rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_CANONICALIZE_URI_PATH, TRUE);
+        rc.getFeatures().put(ResourceConfig.FEATURE_NORMALIZE_URI, TRUE);
+
+        if (jerseyConfiguration.hasRequestFilters()) {
+            rc.getProperties().put("com.sun.jersey.spi.container.ContainerRequestFilters",
+                    Lists.newArrayList(jerseyConfiguration.getRequestFilters()));
+        }
+        if (jerseyConfiguration.hasResponseFilters()) {
+            rc.getProperties().put("com.sun.jersey.spi.container.ContainerResponseFilters",
+                    Lists.newArrayList(jerseyConfiguration.getResponseFilters()));
+        }
+
+        configuration.setValidator(new Validator());
+        rc.getSingletons().add(new JacksonMessageBodyProvider(getObjectMapper(), configuration.getValidator()));
+        rc.getSingletons().add(new StreamingOutputProvider());
+        rc.getSingletons().add(new StringProvider());
+        return rc;
     }
 
     protected ObjectMapper getObjectMapper() { return JsonUtil.NOTNULL_MAPPER; }

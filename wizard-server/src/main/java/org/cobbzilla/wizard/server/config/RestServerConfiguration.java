@@ -48,6 +48,9 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpHandlerConfiguration[] handlers;
     public boolean hasHandlers () { return !empty(handlers); }
 
+    @Getter @Setter private WebappConfiguration[] webapps;
+    public boolean hasWebapps () { return !empty(webapps); }
+
     @JsonIgnore @Getter @Setter private Validator validator;
 
     @Getter @Setter private ThriftConfiguration[] thrift;
