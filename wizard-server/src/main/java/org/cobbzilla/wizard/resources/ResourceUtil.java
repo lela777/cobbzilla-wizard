@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.HttpStatusCodes.UNPROCESSABLE_ENTITY;
 
@@ -140,7 +139,7 @@ public class ResourceUtil {
             log.debug("userPrincipal: "+e);
             user = null;
         }
-        if (required && user == null) die("userPrincipal: no user");
+        if (required && user == null) throw forbiddenEx();
         return user;
     }
 
