@@ -30,6 +30,10 @@ public abstract class AbstractCachedSubResource<R extends AbstractCachedSubResou
     public R forContext(ApplicationContext ctx, Object... args) {
         final StringBuilder cacheKey = new StringBuilder();
         for (Object o : args) {
+            if (o == null) {
+                log.warn("forContext("+ArrayUtils.toString(args)+"): null arg");
+                continue;
+            }
             if (o instanceof Identifiable) {
                 cacheKey.append(((Identifiable) o).getUuid()).append(":");
             } else if (!(o instanceof DAO)) {
