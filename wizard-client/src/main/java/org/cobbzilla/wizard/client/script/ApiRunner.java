@@ -182,8 +182,9 @@ public class ApiRunner {
                         try {
                             result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
                             if (result != null && result) break;
+                            log.warn("run("+script+"): condition check ("+condition+") returned false");
                         } catch (Exception e) {
-                            log.warn("run(" + script + "): script execution failed: " + e);
+                            log.warn("run(" + script + "): condition check ("+condition+") failed: " + e);
                         }
                         sleep(Math.min(timeout/10, 1000), "waiting to retry condition: "+condition);
                     } while (now() - checkStart < timeout);
