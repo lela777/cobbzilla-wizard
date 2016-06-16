@@ -8,4 +8,6 @@ public enum CrudOperation {
 
     @JsonCreator public CrudOperation create(String s) { return valueOf(s.toLowerCase()); }
 
+    public boolean isRead() { return this == read; }
+
 }
