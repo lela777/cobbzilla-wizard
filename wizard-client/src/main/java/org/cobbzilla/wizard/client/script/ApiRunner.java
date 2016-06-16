@@ -35,6 +35,8 @@ public class ApiRunner {
 
     public static final String CTX_JSON = "json";
     public static final String RAND = "@@@";
+    public static final String DEFAULT_SESSION_NAME = "default";
+    public static final String NEW_SESSION = "new";
 
     private ApiClientBase api;
     private ApiRunnerListener listener;
@@ -56,6 +58,7 @@ public class ApiRunner {
     }
 
     protected final Map<String, Class> storeTypes = new HashMap<>();
+    protected final Map<String, String> namedSessions = new HashMap<>();
 
     public void reset () {
         ctx.clear();
@@ -87,6 +90,16 @@ public class ApiRunner {
         final ApiScriptRequest request = script.getRequest();
         final String method = request.getMethod().toUpperCase();
         ctx.put("now", script.getStart());
+
+        if (request.hasSession()) {
+            if (request.getSession().equals(NEW_SESSION)) {
+                api.logout();
+            } else {
+                final String sessionId = namedSessions.get(request.getSession());
+                if (sessionId == null) die("Session named " + request.getSession() + " is not defined (" + namedSessions + ")");
+                api.setToken(sessionId);
+            }
+        }
 
         String uri = handlebars(request.getUri(), ctx);
         if (!uri.startsWith("/")) uri = "/" + uri;
@@ -146,7 +159,11 @@ public class ApiRunner {
                     if (sessionIdNode == null) {
                         if (listener != null) listener.sessionIdNotFound(script, restResponse);
                     } else {
-                        api.pushToken(sessionIdNode.textValue());
+                        final String sessionId = sessionIdNode.textValue();
+                        if (empty(sessionId)) die("empty sessionId: "+restResponse);
+                        final String sessionName = response.hasSessionName() ? response.getSessionName() : DEFAULT_SESSION_NAME;
+                        namedSessions.put(sessionName, sessionId);
+                        api.setToken(sessionId);
                     }
                 }
             }

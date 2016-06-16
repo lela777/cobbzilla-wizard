@@ -15,6 +15,9 @@ public class ApiScriptResponse {
     @Getter @Setter private String session;
     public boolean hasSession() { return !empty(session); }
 
+    @Getter @Setter private String sessionName;
+    public boolean hasSessionName() { return !empty(sessionName); }
+
     @Getter @Setter private String store;
     public boolean hasStore() { return !empty(store); }
 

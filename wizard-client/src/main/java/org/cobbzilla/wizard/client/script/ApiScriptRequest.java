@@ -23,6 +23,9 @@ public class ApiScriptRequest {
     @Getter @Setter private JsonNode entity;
     public boolean hasEntity () { return !empty(entity); }
 
+    @Getter @Setter private String session;
+    public boolean hasSession () { return !empty(session); }
+
     @Setter private String method;
 
     public String getMethod() {
