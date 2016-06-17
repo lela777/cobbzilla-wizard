@@ -150,7 +150,14 @@ public class ApiRunner {
                 } else {
                     storeClass = storeTypes.get(response.getStore());
                 }
-                if (storeClass != null) responseObject = fromJsonOrDie(responseEntity, storeClass);
+                if (storeClass != null) {
+                    try {
+                        responseObject = fromJsonOrDie(responseEntity, storeClass);
+                    } catch (IllegalStateException e) {
+                        log.warn("runOnce: unparseable entity, storing as JsonNode: "+responseEntity);
+                        responseObject = responseEntity;
+                    }
+                }
 
                 if (response.hasStore()) ctx.put(response.getStore(), responseObject);
 
