@@ -110,6 +110,11 @@ public class EntityConfig {
     /** The API endpoint to use when updating an entity. Default value: none */
     @Getter @Setter private String updateUri;
 
+    /** The HTTP method to use when searching entities. Default value: `POST` */
+    @Getter @Setter private String searchMethod = "POST";
+    /** The API endpoint to use when searching entities. Default value: none */
+    @Getter @Setter private String searchUri;
+
     /** The HTTP method to use when deleting an entity. Default value: `DELETE` */
     @Getter @Setter private String deleteMethod = "DELETE";
     @Setter private String deleteUri;
