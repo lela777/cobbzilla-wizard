@@ -39,7 +39,7 @@ public class IdentifiableBase implements Identifiable {
     public boolean hasUuid () { return !empty(uuid); }
 
     public static final int DEFAULT_SHORT_ID_LENGTH = 8;
-    public int getShortIdLength () { return DEFAULT_SHORT_ID_LENGTH; }
+    @Transient @JsonIgnore public int getShortIdLength () { return DEFAULT_SHORT_ID_LENGTH; }
     @Transient public String getShortId () { return !hasUuid() ? null : getUuid().length() < getShortIdLength() ? getUuid() : getUuid().substring(0, getShortIdLength()); }
     public void setShortId (String id) {} // noop
 
