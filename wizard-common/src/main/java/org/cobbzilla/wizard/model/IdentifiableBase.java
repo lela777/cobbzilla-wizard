@@ -38,8 +38,9 @@ public class IdentifiableBase implements Identifiable {
     @Getter @Setter private volatile String uuid = null;
     public boolean hasUuid () { return !empty(uuid); }
 
-    public static final int SHORT_ID_LENGTH = 8;
-    @Transient public String getShortId () { return !hasUuid() ? null : getUuid().length() < SHORT_ID_LENGTH ? getUuid() : getUuid().substring(0, SHORT_ID_LENGTH); }
+    public static final int DEFAULT_SHORT_ID_LENGTH = 8;
+    public int getShortIdLength () { return DEFAULT_SHORT_ID_LENGTH; }
+    @Transient public String getShortId () { return !hasUuid() ? null : getUuid().length() < getShortIdLength() ? getUuid() : getUuid().substring(0, getShortIdLength()); }
     public void setShortId (String id) {} // noop
 
     public void beforeCreate() {
