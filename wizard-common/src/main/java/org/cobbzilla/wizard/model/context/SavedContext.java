@@ -11,10 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
@@ -32,6 +29,14 @@ public class SavedContext {
 
     public SavedContext(Map<String, Object> context) { setContext(context); }
 
+    public boolean containsKey (String key) { return getContext().containsKey(key); }
+
+    public void put (String key, Object object) {
+        final Map<String, Object> ctx = new HashMap<>(getContext());
+        ctx.put(key, object);
+        setContext(ctx);
+    }
+
     @Transient public Map<String, Object> getContext () {
         final ContextEntry[] entries = json(contextJson, ContextEntry[].class);
         final Map<String, Object> map = new LinkedHashMap<>();
@@ -44,7 +49,14 @@ public class SavedContext {
         final List<ContextEntry> entries = new ArrayList<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             final Object thing = entry.getValue();
-            entries.add(new ContextEntry(entry.getKey(), thing.getClass().getName(), json(thing)));
+            final String className;
+            if (thing instanceof Collection) {
+                final Collection c = (Collection) thing;
+                className = c.isEmpty() ? c.getClass().getName() : c.iterator().next().getClass().getName()+"[]";
+            } else {
+                className = thing.getClass().getName();
+            }
+            entries.add(new ContextEntry(entry.getKey(), className, json(thing)));
         }
         contextJson = json(entries);
     }
