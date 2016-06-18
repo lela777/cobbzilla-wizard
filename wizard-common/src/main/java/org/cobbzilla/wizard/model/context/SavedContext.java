@@ -61,4 +61,13 @@ public class SavedContext {
         contextJson = json(entries);
     }
 
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SavedContext that = (SavedContext) o;
+        return getContextJson().equals(that.getContextJson());
+    }
+
+    @Override public int hashCode() { return getContextJson().hashCode(); }
+
 }
