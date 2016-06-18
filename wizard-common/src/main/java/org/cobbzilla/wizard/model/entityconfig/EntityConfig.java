@@ -115,6 +115,15 @@ public class EntityConfig {
     /** The API endpoint to use when searching entities. Default value: none */
     @Getter @Setter private String searchUri;
 
+    /**
+     * After using the `searchUri` to obtain some entities, the `searchFields` tells which fields should be
+     * "columns" in the resulting data table. Fields not listed in `searchFields` will not be shown.
+     * Default value: the same as listFields
+     * @return a List of field names (keys found in the `fields` map) to use when displaying a list of entities.
+     */
+    @Setter private List<String> searchFields;
+    public List<String> getSearchFields() { return !empty(searchFields) ? searchFields : getListFields(); }
+
     /** The HTTP method to use when deleting an entity. Default value: `DELETE` */
     @Getter @Setter private String deleteMethod = "DELETE";
     @Setter private String deleteUri;
