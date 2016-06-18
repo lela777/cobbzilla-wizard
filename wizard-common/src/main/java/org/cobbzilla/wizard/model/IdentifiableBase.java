@@ -36,8 +36,11 @@ public class IdentifiableBase implements Identifiable {
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
-
     public boolean hasUuid () { return !empty(uuid); }
+
+    public static final int SHORT_ID_LENGTH = 8;
+    @Transient public String getShortId () { return !hasUuid() ? null : getUuid().length() < SHORT_ID_LENGTH ? getUuid() : getUuid().substring(0, SHORT_ID_LENGTH); }
+    public void setShortId (String id) {} // noop
 
     public void beforeCreate() {
         if (uuid != null) die("uuid already initialized on "+getClass().getName());
