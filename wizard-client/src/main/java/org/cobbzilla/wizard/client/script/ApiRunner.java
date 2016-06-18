@@ -23,9 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.system.Sleep.sleep;
@@ -143,20 +141,25 @@ public class ApiRunner {
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
                 responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
             } else {
-                final Class<?> storeClass;
+                Class<?> storeClass;
                 if (response.hasType()) {
                     storeClass = forName(response.getType());
                     storeTypes.put(response.getStore(), storeClass);
                 } else {
                     storeClass = storeTypes.get(response.getStore());
                 }
-                if (storeClass != null) {
-                    try {
-                        responseObject = fromJsonOrDie(responseEntity, storeClass);
-                    } catch (IllegalStateException e) {
-                        log.warn("runOnce: unparseable entity, storing as JsonNode: "+responseEntity);
-                        responseObject = responseEntity;
+                if (storeClass == null) {
+                    if (responseEntity.isArray()) {
+                        storeClass = Map[].class;
+                    } else {
+                        storeClass = Map.class;
                     }
+                }
+                try {
+                    responseObject = fromJsonOrDie(responseEntity, storeClass);
+                } catch (IllegalStateException e) {
+                    log.warn("runOnce: error parsing JSON: "+e);
+                    responseObject = responseEntity;
                 }
 
                 if (response.hasStore()) ctx.put(response.getStore(), responseObject);
