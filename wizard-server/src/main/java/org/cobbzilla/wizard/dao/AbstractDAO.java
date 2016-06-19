@@ -296,7 +296,8 @@ public abstract class AbstractDAO<E> implements DAO<E> {
     private static final String ESC_PCT = "[%]";
     public static String getFilterString(String value) {
         // escape any embedded '%' chars, and then add '%' as the first and last chars
-        return PCT + value.toLowerCase().replace(PCT, ESC_PCT) + PCT;
+        // also replace any embedded single-quote characters with '%', this helps prevent SQL injection attacks
+        return PCT + value.toLowerCase().replace(PCT, ESC_PCT).replace("'", PCT) + PCT;
     }
 
     protected String getFilterClause(String entityAlias, String filterParam) { return StringUtil.EMPTY; }
