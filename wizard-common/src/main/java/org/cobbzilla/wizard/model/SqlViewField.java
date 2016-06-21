@@ -24,15 +24,17 @@ public class SqlViewField {
     public SqlViewField(Class<? extends Identifiable> type, String name, boolean encrypted) { this(type, name, snakeCaseToCamelCase(name), encrypted); }
 
     public String getEntity () {
+        if (type == null) return null;
         final int dotPos = property.indexOf('.');
-        return dotPos == -1 ? null : property.substring(0, dotPos-1);
+        return dotPos == -1 ? null : property.substring(0, dotPos);
     }
 
     public boolean hasEntity () { return getEntity() != null; }
 
     public String getEntityProperty () {
+        if (type == null) return property;
         final int dotPos = property.indexOf('.');
-        return dotPos == -1 ? property : property.substring(dotPos);
+        return dotPos == -1 ? property : property.substring(dotPos+1);
     }
 
 }
