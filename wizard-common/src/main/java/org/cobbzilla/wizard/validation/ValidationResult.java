@@ -55,6 +55,8 @@ public class ValidationResult {
         this.beans = beans;
     }
 
+    @JsonIgnore public boolean isValid () { return isEmpty(); }
+    @JsonIgnore public boolean isInvalid () { return !isEmpty(); }
     @JsonIgnore public boolean isEmpty () { return violations.isEmpty() && beans.isEmpty(); }
 
     public boolean hasFieldError(String name) {
