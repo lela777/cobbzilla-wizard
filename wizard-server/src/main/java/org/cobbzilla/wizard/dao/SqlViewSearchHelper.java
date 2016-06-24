@@ -79,7 +79,12 @@ public class SqlViewSearchHelper {
                 if (!field.hasEntity()) die("populate: type was "+type.getName()+" but entity was null: "+field); // sanity check, should never happen
                 target = thing.getRelated().entity(type, field.getEntity());
             }
-            ReflectionUtil.set(target, field.getEntityProperty(), getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted()));
+            final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
+            if (field.hasSetter()) {
+                field.getSetter().set(target, field.getEntityProperty(), value);
+            } else {
+                ReflectionUtil.set(target, field.getEntityProperty(), value);
+            }
         }
         return thing;
     }

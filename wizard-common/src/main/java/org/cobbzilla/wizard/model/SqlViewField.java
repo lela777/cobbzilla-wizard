@@ -15,13 +15,24 @@ public class SqlViewField {
     @Getter @Setter private String property;
     @Getter @Setter private boolean encrypted;
 
-    public SqlViewField(String name)                    { this(null, name, snakeCaseToCamelCase(name), false); }
-    public SqlViewField(String name, String property)   { this(null, name, property, false); }
-    public SqlViewField(String name, boolean encrypted) { this(null, name, snakeCaseToCamelCase(name), encrypted); }
-    public SqlViewField(String name, String property, boolean encrypted) { this(null, name, property, encrypted); }
+    @Getter @Setter private SqlViewFieldSetter setter;
+    public boolean hasSetter () { return setter != null; }
 
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property)   { this(type, name, property, false); }
-    public SqlViewField(Class<? extends Identifiable> type, String name, boolean encrypted) { this(type, name, snakeCaseToCamelCase(name), encrypted); }
+    public SqlViewField(String name)                    { this(null, name, snakeCaseToCamelCase(name), false, null); }
+    public SqlViewField(String name, String property)   { this(null, name, property, false, null); }
+    public SqlViewField(String name, SqlViewFieldSetter setter)   { this(null, name, snakeCaseToCamelCase(name), false, setter); }
+    public SqlViewField(String name, boolean encrypted) { this(null, name, snakeCaseToCamelCase(name), encrypted, null); }
+    public SqlViewField(String name, String property, boolean encrypted) { this(null, name, property, encrypted, null); }
+
+    public SqlViewField(Class<? extends Identifiable> type, String name, String property) {
+        this(type, name, property, false, null);
+    }
+    public SqlViewField(Class<? extends Identifiable> type, String name, boolean encrypted) {
+        this(type, name, snakeCaseToCamelCase(name), encrypted, null);
+    }
+    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted) {
+        this(type, name, property, encrypted, null);
+    }
 
     public String getEntity () {
         if (type == null) return null;
