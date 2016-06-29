@@ -153,22 +153,23 @@ public class ApiRunner {
                 } else if (response.hasStore()) {
                     storeClass = storeTypes.get(response.getStore());
                 }
-                if (storeClass == null) {
-                    if (responseEntity.isArray()) {
-                        storeClass = Map[].class;
-                    } else {
-                        storeClass = Map.class;
+                if (!response.isRaw()) {
+                    if (storeClass == null) {
+                        if (responseEntity.isArray()) {
+                            storeClass = Map[].class;
+                        } else {
+                            storeClass = Map.class;
+                        }
                     }
-                }
-                try {
-                    responseObject = fromJsonOrDie(responseEntity, storeClass);
-                } catch (IllegalStateException e) {
-                    log.warn("runOnce: error parsing JSON: "+e);
-                    responseObject = responseEntity;
-                }
+                    try {
+                        responseObject = fromJsonOrDie(responseEntity, storeClass);
+                    } catch (IllegalStateException e) {
+                        log.warn("runOnce: error parsing JSON: " + e);
+                        responseObject = responseEntity;
+                    }
 
-                if (response.hasStore()) ctx.put(response.getStore(), responseObject);
-
+                    if (response.hasStore()) ctx.put(response.getStore(), responseObject);
+                }
                 if (response.hasSession()) {
                     final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
                     if (sessionIdNode == null) {
