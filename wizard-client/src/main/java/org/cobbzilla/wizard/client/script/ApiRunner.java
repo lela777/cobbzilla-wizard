@@ -32,6 +32,7 @@ import static org.cobbzilla.util.system.Sleep.sleep;
 public class ApiRunner {
 
     public static final String CTX_JSON = "json";
+    public static final String CTX_RESPONSE = "response";
     public static final String RAND = "@@@";
     public static final String DEFAULT_SESSION_NAME = "default";
     public static final String NEW_SESSION = "new";
@@ -182,6 +183,7 @@ public class ApiRunner {
                 final Map<String, Object> localCtx = new HashMap<>();
                 localCtx.putAll(ctx);
                 localCtx.put(CTX_JSON, responseObject);
+                localCtx.put(CTX_RESPONSE, restResponse);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
                     final String condition = handlebars(check.getCondition(), localCtx);

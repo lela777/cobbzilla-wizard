@@ -43,6 +43,8 @@ public class ApiClientBase {
     @Getter @Setter protected int numTries = 5;
     @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(1);
 
+    @Getter @Setter protected boolean captureHeaders = false;
+
     public void setToken(String token) {
         this.token = token;
         this.tokenCtime = empty(token) ? 0 : now();
@@ -273,6 +275,11 @@ public class ApiClientBase {
                 }
 
                 restResponse = new RestResponse(statusCode, responseJson, getLocationHeader(response));
+                if (isCaptureHeaders()) {
+                    for (Header header : response.getAllHeaders()) {
+                        restResponse.addHeader(header.getName(), header.getValue());
+                    }
+                }
                 if (statusCode != SERVER_UNAVAILABLE) return restResponse;
                 log.warn("getResponse("+request.getMethod()+" "+request.getURI().toASCIIString()+", attempt="+i+"/"+numTries+") returned "+SERVER_UNAVAILABLE+", will " + ((i+1)>=numTries ? "NOT":"sleep for "+formatDuration(retryDelay)+" then") + " retry the request");
 
