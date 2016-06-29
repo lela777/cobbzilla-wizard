@@ -136,17 +136,21 @@ public class ApiRunner {
                 if (listener != null) listener.statusCheckFailed(script, restResponse);
             }
 
-            final JsonNode responseEntity = empty(restResponse.json) ? null : json(restResponse.json, JsonNode.class);
+            final JsonNode responseEntity = empty(restResponse.json) || response.isRaw() ? null : json(restResponse.json, JsonNode.class);
             Object responseObject = responseEntity;
+
+            if (response.isRaw()) {
+                log.info("handling raw response");
+            }
 
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
                 responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
             } else {
-                Class<?> storeClass;
+                Class<?> storeClass = null;
                 if (response.hasType()) {
                     storeClass = forName(response.getType());
                     storeTypes.put(response.getStore(), storeClass);
-                } else {
+                } else if (response.hasStore()) {
                     storeClass = storeTypes.get(response.getStore());
                 }
                 if (storeClass == null) {

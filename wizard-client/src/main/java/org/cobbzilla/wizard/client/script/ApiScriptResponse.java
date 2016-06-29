@@ -27,4 +27,6 @@ public class ApiScriptResponse {
     @Getter @Setter private ApiScriptResponseCheck[] check;
     public boolean hasChecks() { return !empty(check); }
 
+    @Getter @Setter private boolean raw;
+
 }
