@@ -153,7 +153,7 @@ public class ApiRunner {
                 } else if (response.hasStore()) {
                     storeClass = storeTypes.get(response.getStore());
                 }
-                if (!response.isRaw()) {
+                if (!response.isRaw() && responseEntity != null) {
                     if (storeClass == null) {
                         if (responseEntity.isArray()) {
                             storeClass = Map[].class;
