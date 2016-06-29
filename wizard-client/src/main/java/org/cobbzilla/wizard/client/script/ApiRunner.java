@@ -169,17 +169,18 @@ public class ApiRunner {
                     }
 
                     if (response.hasStore()) ctx.put(response.getStore(), responseObject);
-                }
-                if (response.hasSession()) {
-                    final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
-                    if (sessionIdNode == null) {
-                        if (listener != null) listener.sessionIdNotFound(script, restResponse);
-                    } else {
-                        final String sessionId = sessionIdNode.textValue();
-                        if (empty(sessionId)) die("empty sessionId: "+restResponse);
-                        final String sessionName = response.hasSessionName() ? response.getSessionName() : DEFAULT_SESSION_NAME;
-                        namedSessions.put(sessionName, sessionId);
-                        api.setToken(sessionId);
+
+                    if (response.hasSession()) {
+                        final JsonNode sessionIdNode = JsonUtil.findNode(responseEntity, response.getSession());
+                        if (sessionIdNode == null) {
+                            if (listener != null) listener.sessionIdNotFound(script, restResponse);
+                        } else {
+                            final String sessionId = sessionIdNode.textValue();
+                            if (empty(sessionId)) die("empty sessionId: "+restResponse);
+                            final String sessionName = response.hasSessionName() ? response.getSessionName() : DEFAULT_SESSION_NAME;
+                            namedSessions.put(sessionName, sessionId);
+                            api.setToken(sessionId);
+                        }
                     }
                 }
             }
