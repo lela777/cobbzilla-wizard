@@ -69,5 +69,6 @@ public class TestNames {
 
     public static String safeAnimal() { return animal()+"-"+RandomStringUtils.randomAlphanumeric(10); }
     public static String safeFruit() { return fruit()+"-"+RandomStringUtils.randomAlphanumeric(10); }
+    public static String safeNationality() { return nationality()+"-"+RandomStringUtils.randomAlphanumeric(10); }
 
 }
