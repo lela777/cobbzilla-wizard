@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.network.NetworkUtil;
 import org.cobbzilla.util.network.PortPicker;
@@ -289,6 +290,14 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
          final RestServerLifecycleListener listener,
          List<ConfigurationSource> configSources,
          Map<String, String> env) throws Exception {
+        return main(args, mainClass, new SingletonList<>(listener), configSources, env);
+    }
+
+    public static <S extends RestServer<C>, C extends RestServerConfiguration> S
+    main(String[] args, Class<S> mainClass,
+         List<RestServerLifecycleListener> listeners,
+         List<ConfigurationSource> configSources,
+         Map<String, String> env) throws Exception {
 
         final Thread mainThread = Thread.currentThread();
 
@@ -304,7 +313,9 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         serverHarness.init(env != null ? env : System.getenv());
 
         final S server = serverHarness.getServer();
-        if (listener != null) server.addLifecycleListener(listener);
+        if (listeners != null) {
+            for (RestServerLifecycleListener listener : listeners) server.addLifecycleListener(listener);
+        }
         server.startServer();
 
         final String serverName = server.getConfiguration().getServerName();
