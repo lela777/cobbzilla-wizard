@@ -14,7 +14,7 @@ public class TestNames {
         "Grapefruit", "Guava", "Huckleberry", "Lemon", "Lime", "Lychee", "Mango", "Melon", "Cantaloupe",
         "Honeydew", "Watermelon", "Mulberry", "Nectarine", "Olive", "Orange", "Clementine", "Tangerine",
         "Papaya", "Passionfruit", "Peach", "Pear", "Persimmon", "Plum", "Pineapple", "Pomegranate",
-        "Pomelo", "Raspberry", "Strawberry",
+        "Pomelo", "Raspberry", "Strawberry", "Banana", "Avocado"
     };
 
     public static final String[] NATIONALITIES = {
@@ -42,13 +42,13 @@ public class TestNames {
     public static final String[] ANIMALS = {
         "Elephant", "Alligator", "Kestrel", "Condor", "Arctic_Fox", "Bald_Eagle", "Black_Swan", "Duck", "Burrowing_Owl",
         "Sea_Lion", "Chinchilla", "Collared_Peccary", "Rabbit", "Snake", "Hedgehog", "Owl", "Bear", "Leopard", "Shark",
-        "Panda", "Lynx", "Llama", "Marine_Toad", "Mouflon", "Musk_Ox", "Arrow_Frogs", "Porcupine", "Tortoise", "Red_Panda",
+        "Panda", "Lynx", "Llama", "Marine_Toad", "Mouflon", "Musk_Ox", "Arrow_Frog", "Porcupine", "Tortoise", "Red_Panda",
         "Lemur", "Hawk", "Rhea", "Reindeer", "Siberian_Tiger", "Snow_Leopard", "Snowy_Owl", "Whites_Tree_Frog", "Wild_Boar",
-        "Invertebrates", "Centipedes", "Crustaceans", "Hermit_Crabs", "Wood_Louse", "Bullet_Ant", "Carpenter_Bee",
-        "Honey_Pot_Ant", "Honeybee", "Snails", "Spiders", "Scorpions", "Fish", "Zebra", "Tiger", "Crocodiles", "Lizards",
-        "Snakes", "King_Cobra", "Turtles", "Birds", "Penguins", "Bats", "Cheetah", "Mongoose", "Jaguar", "Kinkajou",
+        "Invertebrate", "Centipede", "Crustacean", "Hermit_Crab", "Wood_Louse", "Bullet_Ant", "Carpenter_Bee",
+        "Honey_Pot_Ant", "Honeybee", "Snail", "Spider", "Scorpion", "Fish", "Zebra", "Tiger", "Crocodile", "Lizard",
+        "Snake", "King_Cobra", "Turtle", "Bird", "Penguin", "Bat", "Cheetah", "Mongoose", "Jaguar", "Kinkajou",
         "Lion", "Otter", "Polar_Bear", "Puma", "Red_Panda", "Sand_Cat", "Slender", "Hyena", "Rhinoceros", "Gazelle",
-        "Goat", "Hippopotamus", "Okapi", "Pig", "Warthog", "Hyraxes", "Lemurs", "Monkey", "Ape", "Chimpanzee", "Gorilla",
+        "Goat", "Hippopotamus", "Okapi", "Pig", "Warthog", "Hyrax", "Lemur", "Monkey", "Ape", "Chimpanzee", "Gorilla",
         "Kangaroo", "Opossum", "Giraffe", "Killer_Whale", "Horse", "Wolf", "Mole", "Dingo", "Deer", "Emu", "Crocodile",
         "Bobcat", "Lion", "Squirrel"
     };
@@ -68,5 +68,6 @@ public class TestNames {
     public static String animal() { return ANIMALS[rand.nextInt(ANIMALS.length)]; }
 
     public static String safeAnimal() { return animal()+"-"+RandomStringUtils.randomAlphanumeric(10); }
+    public static String safeFruit() { return fruit()+"-"+RandomStringUtils.randomAlphanumeric(10); }
 
 }
