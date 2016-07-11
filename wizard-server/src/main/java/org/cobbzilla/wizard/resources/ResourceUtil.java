@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.resources;
 import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.http.HttpContentTypes;
 import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.wizard.api.ApiException;
@@ -42,6 +43,8 @@ public class ResourceUtil {
     public static Response send(StreamingOutput out, String name, String contentType, Long contentLength, Boolean forceDownload) {
         Response.ResponseBuilder builder = Response.ok(out).header(HttpHeaders.CONTENT_TYPE, contentType);
         if (name != null) {
+            final String ext = HttpContentTypes.fileExt(contentType);
+            if (!name.endsWith(ext)) name += ext;
             if (forceDownload == null || !forceDownload) {
                 builder = builder.header("Content-Disposition", "inline; filename=\"" + name + "\"");
             } else {
