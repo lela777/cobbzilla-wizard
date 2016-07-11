@@ -139,10 +139,6 @@ public class ApiRunner {
             final JsonNode responseEntity = empty(restResponse.json) || response.isRaw() ? null : json(restResponse.json, JsonNode.class);
             Object responseObject = responseEntity;
 
-            if (response.isRaw()) {
-                log.info("handling raw response");
-            }
-
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
                 responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
             } else {
