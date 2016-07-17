@@ -25,6 +25,9 @@ public enum EntityFieldType {
     /** a reference to another EntityConfig instance */
     reference,
 
+    /** a base64-encoded PNG image  */
+    base64_png,
+
     /** an embedded sub-object */
     embedded;
 
