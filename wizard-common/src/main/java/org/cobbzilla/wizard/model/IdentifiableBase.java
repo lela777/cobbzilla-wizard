@@ -14,10 +14,7 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -33,6 +30,13 @@ public class IdentifiableBase implements Identifiable {
 
     public String columnName () { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName()); }
     public String columnName (String propName) { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName); }
+
+    public static final Comparator<IdentifiableBase> CTIME_DESC = new Comparator<IdentifiableBase>() {
+        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) { return Long.compare(o1.getCtime(), o2.getCtime()); }
+    };
+    public static final Comparator<IdentifiableBase> CTIME_ASC = new Comparator<IdentifiableBase>() {
+        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) { return Long.compare(o2.getCtime(), o1.getCtime()); }
+    };
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
