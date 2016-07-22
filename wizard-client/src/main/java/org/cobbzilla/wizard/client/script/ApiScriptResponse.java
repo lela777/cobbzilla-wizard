@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.cobbzilla.util.http.HttpStatusCodes;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.string.StringUtil.parseDuration;
 
 @ToString
 public class ApiScriptResponse {
@@ -28,5 +29,9 @@ public class ApiScriptResponse {
     public boolean hasChecks() { return !empty(check); }
 
     @Getter @Setter private boolean raw;
+
+    @Getter @Setter private String delay;
+    public boolean hasDelay () { return !empty(delay); }
+    public long getDelayMillis () { return parseDuration(delay); }
 
 }

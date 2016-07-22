@@ -172,7 +172,7 @@ public class ApiRunner {
                             if (listener != null) listener.sessionIdNotFound(script, restResponse);
                         } else {
                             final String sessionId = sessionIdNode.textValue();
-                            if (empty(sessionId)) die("empty sessionId: "+restResponse);
+                            if (empty(sessionId)) die("runOnce: empty sessionId: "+restResponse);
                             final String sessionName = response.hasSessionName() ? response.getSessionName() : DEFAULT_SESSION_NAME;
                             namedSessions.put(sessionName, sessionId);
                             api.setToken(sessionId);
@@ -182,6 +182,8 @@ public class ApiRunner {
             }
 
             if (response.hasChecks()) {
+                if (response.hasDelay()) sleep(response.getDelayMillis(), "runOnce: delaying "+response.getDelay()+" before checking response conditions");
+
                 final Map<String, Object> localCtx = new HashMap<>();
                 localCtx.putAll(ctx);
                 localCtx.put(CTX_JSON, responseObject);
@@ -196,9 +198,9 @@ public class ApiRunner {
                         try {
                             result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
                             if (result != null && result) break;
-                            log.warn("run("+script+"): condition check ("+condition+") returned false");
+                            log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
                         } catch (Exception e) {
-                            log.warn("run(" + script + "): condition check ("+condition+") failed: " + e);
+                            log.warn("runOnce("+script+"): condition check ("+condition+") failed: " + e);
                         }
                         sleep(Math.min(timeout/10, 1000), "waiting to retry condition: "+condition);
                     } while (now() - checkStart < timeout);
