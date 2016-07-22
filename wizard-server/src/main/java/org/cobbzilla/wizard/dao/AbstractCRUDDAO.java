@@ -197,7 +197,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                 .setEntityUuid(newEntity.getUuid())
                 .setOperation(operation)
                 .setPrevState(prevEntity == null ? null : toJsonOrDie(toMap(prevEntity)))
-                .setNewState(toJsonOrDie(toMap(newEntity)));
+                .setNewState(toJsonOrDie(toMap(newEntity, getAuditFields(), getAuditExcludeFields())));
 
         auditLog = getAuditLogDAO().create(auditLog);
 
@@ -205,6 +205,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         ctx.put(PROP_AUDIT_LOG, auditLog);
         return ctx;
     }
+
+    protected String[] getAuditFields() { return null; }
+    protected String[] getAuditExcludeFields() { return null; }
 
     private E commit_audit(E entity, Object context) {
         final Map<String, Object> ctx = (Map<String, Object>) context;
