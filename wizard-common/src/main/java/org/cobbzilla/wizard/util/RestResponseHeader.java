@@ -1,12 +1,9 @@
 package org.cobbzilla.wizard.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
-@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
+@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true) @ToString
 public class RestResponseHeader {
 
     @Getter @Setter private String name;
