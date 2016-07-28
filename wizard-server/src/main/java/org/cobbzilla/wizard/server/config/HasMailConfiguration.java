@@ -4,6 +4,6 @@ import org.cobbzilla.mail.TemplatedMailConfiguration;
 
 public interface HasMailConfiguration {
 
-    public TemplatedMailConfiguration getMail();
+    TemplatedMailConfiguration getMail();
 
 }
