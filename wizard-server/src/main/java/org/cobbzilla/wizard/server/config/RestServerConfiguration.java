@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
@@ -133,4 +134,13 @@ public class RestServerConfiguration {
         return (HasDatabaseConfiguration) this;
     }
 
+    public void execSqlCommands(String sqlCommands) {
+        for (String sql : StringUtil.split(sqlCommands, ";")) {
+            try {
+                execSql(sql, StringUtil.EMPTY_ARRAY);
+            } catch (Exception e) {
+                log.warn("onStart: "+e);
+            }
+        }
+    }
 }
