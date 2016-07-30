@@ -6,7 +6,7 @@ public enum CrudOperation {
 
     create, read, update, delete;
 
-    @JsonCreator public CrudOperation create(String s) { return valueOf(s.toLowerCase()); }
+    @JsonCreator public CrudOperation fromString (String s) { return valueOf(s.toLowerCase()); }
 
     public boolean isRead() { return this == read; }
 
