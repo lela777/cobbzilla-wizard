@@ -20,4 +20,11 @@ public interface ApiRunnerListener {
     void scriptTimedOut(ApiScript script);
 
     void unexpectedResponse(ApiScript script, RestResponse restResponse);
+
+    void setBeforeHandler(ApiRunnerListener beforeHandler);
+    void handleBefore(String before) throws Exception;
+
+    void setAfterHandler(ApiRunnerListener afterHandler);
+    void handleAfter(String after) throws Exception;
+
 }

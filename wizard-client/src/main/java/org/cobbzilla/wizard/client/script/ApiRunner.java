@@ -76,13 +76,19 @@ public class ApiRunner {
     public boolean run(ApiScript script) throws Exception {
 
         if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: "+script);
-        script.setStart(now());
-        do {
-            if (runOnce(script)) return true;
-            sleep(Math.min(script.getTimeoutMillis()/10, 1000), "waiting to retry script: "+script);
-        } while (!script.isTimedOut());
-        if (listener != null) listener.scriptTimedOut(script);
-        return false;
+        if (script.hasBefore() && listener != null) listener.handleBefore(script.getBefore());
+        try {
+            script.setStart(now());
+            do {
+                if (runOnce(script)) return true;
+                sleep(Math.min(script.getTimeoutMillis() / 10, 1000), "waiting to retry script: " + script);
+            } while (!script.isTimedOut());
+            if (listener != null) listener.scriptTimedOut(script);
+            return false;
+
+        } finally {
+            if (script.hasAfter() && listener != null) listener.handleAfter(script.getAfter());
+        }
     }
 
     public boolean runOnce(ApiScript script) throws Exception {

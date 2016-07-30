@@ -17,6 +17,12 @@ public class ApiScript {
     public boolean hasDelay () { return !empty(delay); }
     public long getDelayMillis () { return parseDuration(delay); }
 
+    @Getter @Setter private String before;
+    public boolean hasBefore () { return !empty(before); }
+
+    @Getter @Setter private String after;
+    public boolean hasAfter () { return !empty(after); }
+
     @Getter @Setter private String timeout;
     public long getTimeoutMillis () { return parseDuration(timeout); }
 
