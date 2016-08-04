@@ -21,7 +21,7 @@ import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENC_PAD;
 @Embeddable @NoArgsConstructor @Accessors(chain=true)
 public class SavedContext {
 
-    public static final int CONTEXT_JSON_MAXLEN = 100_000;
+    public static final int CONTEXT_JSON_MAXLEN = 1_000_000;
 
     @Size(max=CONTEXT_JSON_MAXLEN, message="err.contextJson.length")
     @Column(columnDefinition="varchar("+(CONTEXT_JSON_MAXLEN+ENC_PAD)+") NOT NULL")
