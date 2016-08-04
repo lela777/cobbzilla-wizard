@@ -103,8 +103,12 @@ public class ResourceUtil {
     public static Response invalid(String messageTemplate) { return invalid(messageTemplate, null); }
 
     public static Response invalid(String messageTemplate, String invalidValue) {
+        return invalid(messageTemplate, ValidationMessages.translateMessage(messageTemplate), invalidValue);
+    }
+
+    public static Response invalid(String messageTemplate, String message, String invalidValue) {
         List<ConstraintViolationBean> violations = new ArrayList<>();
-        violations.add(new ConstraintViolationBean(messageTemplate, ValidationMessages.translateMessage(messageTemplate), invalidValue));
+        violations.add(new ConstraintViolationBean(messageTemplate, message, invalidValue));
         return invalid(violations);
     }
 
