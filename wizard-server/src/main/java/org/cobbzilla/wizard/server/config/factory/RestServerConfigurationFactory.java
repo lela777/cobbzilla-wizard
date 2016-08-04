@@ -26,15 +26,16 @@ public class RestServerConfigurationFactory<C extends RestServerConfiguration> {
 
     public C build(List<? extends ConfigurationSource> configurations, Map<String, String> env) {
 
-        YmlMerger ymlMerger = new YmlMerger(env);
+        final YmlMerger ymlMerger = new YmlMerger(env);
 
-        List<String> configFiles = new ArrayList<>(configurations.size());
+        final List<String> configFiles = new ArrayList<>(configurations.size());
         try {
             for (ConfigurationSource source : configurations) {
                 configFiles.add(abs(source.getFile()));
             }
 
-            return yaml.loadAs(ymlMerger.mergeToString(configFiles), configurationClass);
+            final String yaml = ymlMerger.mergeToString(configFiles);
+            return this.yaml.loadAs(yaml, configurationClass);
 
         } catch (Exception e) {
             return die("build: "+e, e);
