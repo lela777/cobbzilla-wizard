@@ -22,9 +22,9 @@ public interface ApiRunnerListener {
     void unexpectedResponse(ApiScript script, RestResponse restResponse);
 
     void setBeforeHandler(ApiRunnerListener beforeHandler);
-    void handleBefore(String before) throws Exception;
+    void handleBefore(String before, Map<String, Object> ctx) throws Exception;
 
     void setAfterHandler(ApiRunnerListener afterHandler);
-    void handleAfter(String after) throws Exception;
+    void handleAfter(String after, Map<String, Object> ctx) throws Exception;
 
 }

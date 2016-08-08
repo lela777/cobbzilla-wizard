@@ -7,7 +7,6 @@ import org.cobbzilla.wizard.util.RestResponse;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 
 public class ApiRunnerListenerBase implements ApiRunnerListener {
 
@@ -42,14 +41,12 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
         if (script.isTimedOut()) die("unexpectedResponse: script="+script+", server response="+restResponse);
     }
 
-    @Override public void handleBefore(String before) throws Exception {
-        if (beforeHandler == null) notSupported("handleBefore("+before+")");
-        beforeHandler.handleBefore(before);
+    @Override public void handleBefore(String before, Map<String, Object> ctx) throws Exception {
+        if (beforeHandler != null) beforeHandler.handleBefore(before, ctx);
     }
 
-    @Override public void handleAfter(String after) throws Exception {
-        if (afterHandler == null) notSupported("handleAfter("+after+")");
-        afterHandler.handleAfter(after);
+    @Override public void handleAfter(String after, Map<String, Object> ctx) throws Exception {
+        if (afterHandler != null) afterHandler.handleAfter(after, ctx);
     }
 
 }
