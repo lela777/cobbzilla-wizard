@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
@@ -18,7 +19,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENCRYPTED_STRING;
 import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENC_PAD;
 
-@Embeddable @NoArgsConstructor @Accessors(chain=true)
+@Embeddable @NoArgsConstructor @Accessors(chain=true) @Slf4j
 public class SavedContext {
 
     public static final int CONTEXT_JSON_MAXLEN = 1_000_000;
@@ -48,15 +49,20 @@ public class SavedContext {
     public void setContext(Map<String, Object> map) {
         final List<ContextEntry> entries = new ArrayList<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
+            final String key = entry.getKey();
             final Object thing = entry.getValue();
             final String className;
-            if (thing instanceof Collection) {
-                final Collection c = (Collection) thing;
-                className = c.isEmpty() ? c.getClass().getName() : c.iterator().next().getClass().getName()+"[]";
+            if (thing != null) {
+                if (thing instanceof Collection) {
+                    final Collection c = (Collection) thing;
+                    className = c.isEmpty() ? c.getClass().getName() : c.iterator().next().getClass().getName() + "[]";
+                } else {
+                    className = thing.getClass().getName();
+                }
+                entries.add(new ContextEntry(key, className, json(thing)));
             } else {
-                className = thing.getClass().getName();
+                log.warn("setContext: skipping key '"+ key +"' because value was null");
             }
-            entries.add(new ContextEntry(entry.getKey(), className, json(thing)));
         }
         contextJson = json(entries);
     }
