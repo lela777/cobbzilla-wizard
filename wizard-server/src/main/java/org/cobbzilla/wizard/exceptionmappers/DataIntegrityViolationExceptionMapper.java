@@ -14,13 +14,9 @@ public class DataIntegrityViolationExceptionMapper
         extends AbstractConstraintViolationExceptionMapper<DataIntegrityViolationException>
         implements ExceptionMapper<DataIntegrityViolationException> {
 
-    @Override
-    public Response toResponse(DataIntegrityViolationException exception) {
-        return buildResponse(exception);
-    }
+    @Override public Response toResponse(DataIntegrityViolationException exception) { return buildResponse(exception); }
 
-    @Override
-    protected List<ConstraintViolationBean> exception2json(DataIntegrityViolationException e) {
+    @Override protected List<ConstraintViolationBean> exception2json(DataIntegrityViolationException e) {
         final String messageTemplate = "db.integrity." + e.getMessage().replaceAll("\\W", "_");
         final ConstraintViolationBean bean = new ConstraintViolationBean(messageTemplate, e.getLocalizedMessage(), "");
         return Collections.singletonList(bean);
