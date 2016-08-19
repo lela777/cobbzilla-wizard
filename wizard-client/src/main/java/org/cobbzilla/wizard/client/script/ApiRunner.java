@@ -37,6 +37,15 @@ public class ApiRunner {
     public static final String DEFAULT_SESSION_NAME = "default";
     public static final String NEW_SESSION = "new";
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
+    @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
+    public static void setScriptForThread(ApiScript script) { currentScripts.put(Thread.currentThread().getName(), script); }
+
+    // be careful - if you have multiple ApiRunners in the same classloader, these methods will not be useful
+    // intended for convenience in the common case of a single ApiRunner
+    public static ApiScript script() { return currentScripts.isEmpty() ? null : currentScripts.values().iterator().next(); }
+    public static String comment() { return currentScripts.isEmpty() ? null : currentScripts.values().iterator().next().getComment(); }
+
     private ApiClientBase api;
     private ApiRunnerListener listener;
 
@@ -74,7 +83,7 @@ public class ApiRunner {
     }
 
     public boolean run(ApiScript script) throws Exception {
-
+        setScriptForThread(script);
         if (listener != null) listener.handleBefore(script.getBefore(), ctx);
         if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: "+script);
         try {
