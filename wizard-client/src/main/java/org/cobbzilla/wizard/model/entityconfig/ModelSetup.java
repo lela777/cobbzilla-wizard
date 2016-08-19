@@ -2,18 +2,21 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.RestResponse;
 
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
@@ -23,6 +26,15 @@ import static org.cobbzilla.util.string.StringUtil.urlEncode;
 @Slf4j
 public class ModelSetup {
 
+    public static LinkedHashMap<String, String> buildModel(File manifest) {
+        final String[] models = json(FileUtil.toStringOrDie(manifest), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
+        final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
+        for (String model : models) {
+            modelJson.put(model, FileUtil.toStringOrDie(abs(manifest.getParentFile()) + "/" + model + ".json"));
+        }
+        return modelJson;
+    }
+
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, String prefix, ModelSetupListener listener) throws Exception {
         return setupModel(api, entityConfigsEndpoint, prefix, "manifest", listener);
     }
@@ -30,8 +42,8 @@ public class ModelSetup {
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, String prefix, String manifest, ModelSetupListener listener) throws Exception {
         final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
-        for (int i=0; i<models.length; i++) {
-            modelJson.put(models[i], stream2string(prefix + models[i] + ".json"));
+        for (String model : models) {
+            modelJson.put(model, stream2string(prefix + model + ".json"));
         }
         return setupModel(api, entityConfigsEndpoint, modelJson, listener);
     }
