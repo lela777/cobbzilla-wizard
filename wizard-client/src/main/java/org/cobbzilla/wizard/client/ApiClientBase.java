@@ -116,22 +116,20 @@ public class ApiClientBase {
         return toJson(data);
     }
 
-    protected ApiException specializeApiException(ApiException e) {
-        return specializeApiException(e.getResponse());
-    }
+    protected ApiException specializeApiException(ApiException e) { return specializeApiException(null, e.getResponse()); }
 
-    protected ApiException specializeApiException(RestResponse response) {
+    protected ApiException specializeApiException(HttpRequestBean request, RestResponse response) {
         if (response.isSuccess()) {
             die("specializeApiException: cannot specialize exception for a successful response: "+response);
         }
         switch (response.status) {
             case NOT_FOUND:
-                return new NotFoundException(response);
+                return new NotFoundException(request, response);
             case FORBIDDEN:
-                return new ForbiddenException(response);
+                return new ForbiddenException(request, response);
             case UNPROCESSABLE_ENTITY:
-                return new ValidationException(response);
-            default: return new ApiException(response);
+                return new ValidationException(request, response);
+            default: return new ApiException(request, response);
         }
     }
 
@@ -144,7 +142,7 @@ public class ApiClientBase {
 
     public RestResponse get(String path) throws Exception {
         final RestResponse restResponse = doGet(path);
-        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        if (!restResponse.isSuccess()) throw specializeApiException(HttpRequestBean.get(path), restResponse);
         return restResponse;
     }
 
@@ -192,7 +190,7 @@ public class ApiClientBase {
 
     public RestResponse post(String path, String data, ContentType contentType) throws Exception {
         final RestResponse restResponse = doPost(path, data, contentType);
-        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        if (!restResponse.isSuccess()) throw specializeApiException(HttpRequestBean.post(path, data), restResponse);
         return restResponse;
     }
 
@@ -218,13 +216,13 @@ public class ApiClientBase {
 
     public <T> T put(String path, String json, Class<T> responseClass) throws Exception {
         final RestResponse response = put(path, json);
-        if (!response.isSuccess()) throw specializeApiException(response);
+        if (!response.isSuccess()) throw specializeApiException(HttpRequestBean.put(path, json), response);
         return fromJson(response.json, responseClass);
     }
 
     public RestResponse put(String path, String json) throws Exception {
         final RestResponse restResponse = doPut(path, json);
-        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        if (!restResponse.isSuccess()) throw specializeApiException(HttpRequestBean.put(path, json), restResponse);
         return restResponse;
     }
 
@@ -237,7 +235,7 @@ public class ApiClientBase {
 
     public RestResponse delete(String path) throws Exception {
         final RestResponse restResponse = doDelete(path);
-        if (!restResponse.isSuccess()) throw specializeApiException(restResponse);
+        if (!restResponse.isSuccess()) throw specializeApiException(HttpRequestBean.delete(path), restResponse);
         return restResponse;
     }
 

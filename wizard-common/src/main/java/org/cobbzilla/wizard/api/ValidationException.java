@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.api;
 
 import lombok.Getter;
+import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
@@ -13,8 +14,10 @@ public class ValidationException extends ApiException {
 
     @Getter private Map<String, ConstraintViolationBean> violations;
 
-    public ValidationException (RestResponse response) {
-        super(response);
+    public ValidationException (RestResponse response) { this(null, response); }
+
+    public ValidationException (HttpRequestBean request, RestResponse response) {
+        super(request, response);
         this.violations = mapViolations(response.json);
     }
 
