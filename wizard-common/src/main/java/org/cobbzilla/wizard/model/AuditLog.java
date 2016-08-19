@@ -21,7 +21,7 @@ import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 public class AuditLog extends StrongIdentifiableBase {
 
     private static final int ENC_PAD = 1000;
-    public static final int STATE_MAXLEN = (int) (10 * Bytes.MB);
+    public static final int STATE_MAXLEN = (int) (8 * Bytes.MB);
 
     @HasValue(message="err.entityType.empty")
     @Column(length=200+ENC_PAD, nullable=false, updatable=false)
