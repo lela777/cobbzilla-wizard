@@ -51,10 +51,7 @@ public class ModelSetup {
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, LinkedHashMap<String, String> models, ModelSetupListener listener) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
 
-            String entityType = model.getKey();
-
-            // strip off anything after the first underscore
-            if (entityType.contains("_")) entityType = entityType.substring(0, entityType.indexOf("_"));
+            final String entityType = getEntityTypeFromString(model.getKey());
 
             if (listener != null) listener.preEntityConfig(entityType);
             final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
@@ -68,6 +65,13 @@ public class ModelSetup {
             }
         }
         return models;
+    }
+
+    // strip off anything after the first underscore (or period, in case a ".json" file is given)
+    public static String getEntityTypeFromString(String entityType) {
+        if (entityType.contains("_")) return entityType.substring(0, entityType.indexOf("_"));
+        if (entityType.contains(".")) return entityType.substring(0, entityType.indexOf("."));
+        return entityType;
     }
 
     protected static void createEntity(ApiClientBase api,
