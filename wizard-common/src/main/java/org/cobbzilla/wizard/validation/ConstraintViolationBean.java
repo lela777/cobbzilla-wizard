@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 
 import javax.validation.ConstraintViolation;
@@ -13,7 +14,7 @@ import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@XmlRootElement @AllArgsConstructor @NoArgsConstructor @ToString
+@XmlRootElement @AllArgsConstructor @NoArgsConstructor @ToString @Slf4j
 public class ConstraintViolationBean {
 
     @XmlElement @Getter @Setter private String messageTemplate;
@@ -50,6 +51,11 @@ public class ConstraintViolationBean {
     public static String getField (String messageTemplate) {
         final int firstDot = messageTemplate.indexOf('.');
         final int lastDot = messageTemplate.lastIndexOf('.');
-        return (firstDot != -1 && lastDot != -1 && lastDot <= messageTemplate.length()) ? messageTemplate.substring(firstDot+1, lastDot) : null;
+        try {
+            return (firstDot != -1 && lastDot != -1 && lastDot <= messageTemplate.length()) ? messageTemplate.substring(firstDot + 1, lastDot) : null;
+        } catch (Exception e) {
+            log.warn("getField("+messageTemplate+"): "+e, e);
+            return null;
+        }
     }
 }
