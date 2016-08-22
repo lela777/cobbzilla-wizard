@@ -89,10 +89,10 @@ public class SqlViewSearchHelper {
         return thing;
     }
 
-    protected static Object getValue(Map<String, Object> row,
-                                     String field,
-                                     HibernatePBEStringEncryptor hibernateEncryptor,
-                                     boolean encrypted) {
+    public static Object getValue(Map<String, Object> row,
+                                  String field,
+                                  HibernatePBEStringEncryptor hibernateEncryptor,
+                                  boolean encrypted) {
         final Object value = row.get(field);
         return value == null || !encrypted ? value : hibernateEncryptor.decrypt(value.toString());
     }
