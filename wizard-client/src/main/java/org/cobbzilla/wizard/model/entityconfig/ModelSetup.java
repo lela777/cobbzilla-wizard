@@ -54,7 +54,7 @@ public class ModelSetup {
             final String json = model.getValue();
             final String entityType = getEntityTypeFromString(modelName);
 
-            setupJson(api, entityConfigsEndpoint, json, entityType, listener);
+            setupJson(api, entityConfigsEndpoint, entityType, json, listener);
         }
         return models;
     }
