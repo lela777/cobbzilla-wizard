@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.spring.config.rdbms;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.PoisonProxy;
 import org.cobbzilla.wizard.model.crypto.EncryptedTypes;
@@ -28,7 +29,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 public class RdbmsConfigCommon {
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
-    @Autowired protected HasDatabaseConfiguration configuration;
+    @Autowired @Setter protected HasDatabaseConfiguration configuration;
     protected HasDatabaseConfiguration configuration () { return configuration; }
 
     public DataSource dataSource() {
