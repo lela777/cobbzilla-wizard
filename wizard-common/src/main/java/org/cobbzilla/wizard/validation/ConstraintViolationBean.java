@@ -50,6 +50,6 @@ public class ConstraintViolationBean {
     public static String getField (String messageTemplate) {
         final int firstDot = messageTemplate.indexOf('.');
         final int lastDot = messageTemplate.lastIndexOf('.');
-        return (firstDot != -1 && lastDot != -1) ? messageTemplate.substring(firstDot+1, lastDot) : null;
+        return (firstDot != -1 && lastDot != -1 && lastDot < messageTemplate.length()) ? messageTemplate.substring(firstDot+1, lastDot) : null;
     }
 }
