@@ -63,9 +63,12 @@ public class RestServerConfiguration {
     public ResultSetBean execSql(String sql, Object[] args) throws SQLException {
 
         final HasDatabaseConfiguration config = validatePgConfig("execSql");
-        final boolean isQuery = sql.toLowerCase().trim().startsWith("select");
 
         @Cleanup Connection conn = config.getDatabase().getConnection();
+        return execSql(conn, sql, args);
+    }
+
+    public ResultSetBean execSql(Connection conn, String sql, Object[] args) throws SQLException {
         @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
         if (args != null) {
             int i = 1;
@@ -85,6 +88,7 @@ public class RestServerConfiguration {
             }
         }
 
+        final boolean isQuery = sql.toLowerCase().trim().startsWith("select");
         if (isQuery) {
             @Cleanup ResultSet rs = ps.executeQuery();
             log.info("execSql (query): "+sql);
