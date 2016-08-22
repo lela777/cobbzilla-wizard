@@ -50,21 +50,26 @@ public class ModelSetup {
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, LinkedHashMap<String, String> models, ModelSetupListener listener) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
+            final String modelName = model.getKey();
+            final String json = model.getValue();
+            final String entityType = getEntityTypeFromString(modelName);
 
-            final String entityType = getEntityTypeFromString(model.getKey());
-
-            if (listener != null) listener.preEntityConfig(entityType);
-            final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
-            if (listener != null) listener.postEntityConfig(entityType, entityConfig);
-
-            final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
-            final Identifiable[] entities = (Identifiable[]) jsonWithComments(model.getValue(), arrayClass(entityClass));
-            for (Identifiable entity : entities) {
-                final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
-                createEntity(api, entityConfig, entity, context, listener);
-            }
+            setupJson(api, entityConfigsEndpoint, json, entityType, listener);
         }
         return models;
+    }
+
+    public static void setupJson(ApiClientBase api, String entityConfigsEndpoint, String entityType, String json, ModelSetupListener listener) throws Exception {
+        if (listener != null) listener.preEntityConfig(entityType);
+        final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
+        if (listener != null) listener.postEntityConfig(entityType, entityConfig);
+
+        final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
+        final Identifiable[] entities = (Identifiable[]) jsonWithComments(json, arrayClass(entityClass));
+        for (Identifiable entity : entities) {
+            final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
+            createEntity(api, entityConfig, entity, context, listener);
+        }
     }
 
     // strip off anything after the first underscore (or period, in case a ".json" file is given)
