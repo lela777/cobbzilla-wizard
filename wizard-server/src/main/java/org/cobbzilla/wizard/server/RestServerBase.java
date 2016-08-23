@@ -342,11 +342,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return server;
     }
 
-    protected static List<ConfigurationSource> getConfigurationSources(String[] args) {
+    public static List<ConfigurationSource> getConfigurationSources(String[] args) {
         return getFileConfigurationSources(args);
     }
 
-    protected static List<ConfigurationSource> getFileConfigurationSources(String[] args) {
+    public static List<ConfigurationSource> getFileConfigurationSources(String[] args) {
         final List<ConfigurationSource> sources = new ArrayList<>();
         for (String arg : args) {
             sources.add(new FileConfigurationSource(new File(arg)));
@@ -354,7 +354,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return sources;
     }
 
-    protected static List<ConfigurationSource> getStreamConfigurationSources(Class clazz, String[] args) {
+    public static List<ConfigurationSource> getStreamConfigurationSources(Class clazz, String[] args) {
         return StreamConfigurationSource.fromResources(clazz, args);
     }
 

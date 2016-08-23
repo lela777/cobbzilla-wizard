@@ -1,12 +1,33 @@
-package org.cobbzilla.wizardtest;
+package org.cobbzilla.wizard.util;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.Random;
 
+import static java.lang.Math.abs;
+import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.safeFunctionName;
 
 public class TestNames {
+
+    public static final String[] COLORS = {
+        "Aliceblue", "Antiquewhite", "Aqua", "Aquamarine", "Azure", "Beige", "Bisque", "Black", "Blanchedalmond", "Blue",
+        "Blueviolet", "Brown", "Burlywood", "Cadetblue", "Chartreuse", "Chocolate", "Coral", "Cornflowerblue", "Cornsilk",
+        "Crimson", "Cyan", "Darkblue", "Darkcyan", "Darkgoldenrod", "Darkgray", "Darkgreen", "Darkkhaki", "Darkmagenta",
+        "Darkolivegreen", "Darkorange", "Darkorchid", "Darkred", "Darksalmon", "Darkseagreen", "Darkslateblue", "Darkslategray",
+        "Darkturquoise", "Darkviolet", "Deeppink", "Deepskyblue", "Dimgray", "Dodgerblue", "Firebrick", "Floralwhite",
+        "Forestgreen", "Fuchsia", "Gainsboro", "Ghostwhite", "Gold", "Goldenrod", "Gray", "Green", "Greenyellow", "Honeydew",
+        "Hotpink", "Indianred", "Indigo", "Ivory", "Khaki", "Lavender", "Lavenderblush", "Lawngreen", "Lemonchiffon", "Lightblue",
+        "Lightcoral", "Lightcyan", "Lightgoldenrodyellow", "Lightgreen", "Lightgrey", "Lightpink", "Lightsalmon", "Lightseagreen",
+        "Lightskyblue", "Lightslategray", "Lightsteelblue", "Lightyellow", "Lime", "Limegreen", "Linen", "Magenta", "Maroon",
+        "Mediumauqamarine", "Mediumblue", "Mediumorchid", "Mediumpurple", "Mediumseagreen", "Mediumslateblue", "Mediumspringgreen",
+        "Mediumturquoise", "Mediumvioletred", "Midnightblue", "Mintcream", "Mistyrose", "Moccasin", "Navajowhite", "Navy",
+        "Oldlace", "Olive", "Olivedrab", "Orange", "Orangered", "Orchid", "Palegoldenrod", "Palegreen", "Paleturquoise",
+        "Palevioletred", "Papayawhip", "Peachpuff", "Peru", "Pink", "Plum", "Powderblue", "Purple", "Red", "Rosybrown", "Royalblue",
+        "Saddlebrown", "Salmon", "Sandybrown", "Seagreen", "Seashell", "Sienna", "Silver", "Skyblue", "Slateblue", "Slategray",
+        "Snow", "Springgreen", "Steelblue", "Tan", "Teal", "Thistle", "Tomato", "Turquoise", "Violet", "Wheat", "White",
+        "Whitesmoke", "Yellow", "YellowGreen"
+    };
 
     public static final String[] FRUITS = {
         "Apple", "Apricot", "Bilberry", "Blackberry", "Blueberry", "Boysenberry", "Cantaloupe", "Cherry",
@@ -61,14 +82,24 @@ public class TestNames {
 
     public static String name() { return nationality() + " " + fruit(); }
 
+    public static String color() { return COLORS[rand.nextInt(COLORS.length)]; }
     public static String fruit() { return FRUITS[rand.nextInt(FRUITS.length)]; }
-
     public static String nationality() { return NATIONALITIES[rand.nextInt(NATIONALITIES.length)]; }
-
     public static String animal() { return ANIMALS[rand.nextInt(ANIMALS.length)]; }
 
+    public static String color(String val) { return COLORS[abs(val.hashCode()) % COLORS.length]; }
+    public static String fruit(String val) { return FRUITS[abs(val.hashCode()) % FRUITS.length]; }
+    public static String nationality(String val) { return NATIONALITIES[abs(val.hashCode()) % NATIONALITIES.length]; }
+    public static String animal(String val) { return ANIMALS[abs(val.hashCode()) % ANIMALS.length]; }
+
+    public static String safeColor() { return color()+"-"+RandomStringUtils.randomAlphanumeric(10); }
     public static String safeAnimal() { return animal()+"-"+RandomStringUtils.randomAlphanumeric(10); }
     public static String safeFruit() { return fruit()+"-"+RandomStringUtils.randomAlphanumeric(10); }
     public static String safeNationality() { return nationality()+"-"+RandomStringUtils.randomAlphanumeric(10); }
+
+    public static String safeColor(String val) { return color(val)+"-"+sha256_hex(val).substring(0, 8); }
+    public static String safeAnimal(String val) { return animal(val)+"-"+sha256_hex(val).substring(0, 8); }
+    public static String safeFruit(String val) { return fruit(val)+"-"+sha256_hex(val).substring(0, 8); }
+    public static String safeNationality(String val) { return nationality(val)+"-"+sha256_hex(val).substring(0, 8); }
 
 }

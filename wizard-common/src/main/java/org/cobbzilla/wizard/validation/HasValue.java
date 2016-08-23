@@ -16,11 +16,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface HasValue {
 
-    public abstract String message() default "{org.cobbzilla.validator.constraints.HasValue.message}";
+    String message() default "{org.cobbzilla.validator.constraints.HasValue.message}";
 
-    public abstract Class<?>[] groups() default { };
+    Class<?>[] groups() default { };
 
-    public abstract Class<? extends Payload>[] payload() default { };
+    Class<? extends Payload>[] payload() default { };
 
     /**
      * Defines several {@code @HasValue} annotations on the same element.
@@ -28,7 +28,7 @@ public @interface HasValue {
     @Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER })
     @Retention(RUNTIME)
     @Documented
-    public @interface List {
+    @interface List {
         HasValue[] value();
     }
 
