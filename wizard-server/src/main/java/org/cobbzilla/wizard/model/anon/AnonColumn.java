@@ -53,7 +53,7 @@ public class AnonColumn {
     }
 
     private String transformJson(String value) throws Exception {
-        ObjectNode node = JsonUtil.json(value, ObjectNode.class);
+        final ObjectNode node = JsonUtil.json(value, ObjectNode.class);
         for (AnonJsonPath jsonPath : json) {
             final JsonNode toReplace = findNode(node, jsonPath.getPath());
             if (toReplace != null) {
