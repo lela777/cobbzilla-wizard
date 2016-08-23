@@ -10,6 +10,7 @@ public class AnonTable {
 
     @Getter @Setter private String table;
     @Getter @Setter private AnonColumn[] columns;
+    @Getter @Setter private boolean truncate = false;
 
     public static AnonTable table(String table, AnonColumn... columns) {
         return new AnonTable().setTable(table).setColumns(columns);
@@ -25,12 +26,17 @@ public class AnonTable {
     }
 
     public String sqlUpdate() {
-        final StringBuilder b = new StringBuilder();
-        for (AnonColumn col : columns) {
-            if (b.length() > 0) b.append(", ");
-            b.append(col.getName()).append(" = ?");
+        if (isTruncate()) {
+            return "TRUNCATE TABLE "+table;
+
+        } else {
+            final StringBuilder b = new StringBuilder();
+            for (AnonColumn col : columns) {
+                if (b.length() > 0) b.append(", ");
+                b.append(col.getName()).append(" = ?");
+            }
+            return "UPDATE " + table + " SET " + b.toString() + " WHERE uuid = ?";
         }
-        return "UPDATE " + table + " SET " + b.toString() + " WHERE uuid = ?";
     }
 
 }

@@ -33,28 +33,34 @@ public class AnonScrubber {
             @Cleanup final Connection connection = configuration.getDatabase().getConnection();
             for (AnonTable table : tables) {
                 log.info("anonymize: "+table);
-                @Cleanup final PreparedStatement s = connection.prepareStatement(table.sqlSelect());
-                @Cleanup final ResultSet rs = s.executeQuery();
-                final ResultSetMetaData rsMetaData = rs.getMetaData();
-                final int numColumns = rsMetaData.getColumnCount();
-                while (rs.next()) {
-                    final Map<String, Object> row = row2map(rs, rsMetaData, numColumns);
-                    @Cleanup final PreparedStatement update = connection.prepareCall(table.sqlUpdate());
-                    final AnonColumn[] columns = table.getColumns();
-                    for (int i = 0; i<columns.length; i++) {
-                        final AnonColumn col = columns[i];
-                        final Object value = row.get(col.getName());
-                        col.setParam(update, encryptor, i+1, value == null ? null : value.toString());
-                    }
-                    update.setString(columns.length+1, row.get("uuid").toString());
-                    if (update.executeUpdate() != 1) {
-                        die("scrub: error updating");
+                if (table.isTruncate()) {
+                    @Cleanup final PreparedStatement s = connection.prepareStatement(table.sqlUpdate());
+                    s.execute();
+
+                } else {
+                    @Cleanup final PreparedStatement s = connection.prepareStatement(table.sqlSelect());
+                    @Cleanup final ResultSet rs = s.executeQuery();
+                    final ResultSetMetaData rsMetaData = rs.getMetaData();
+                    final int numColumns = rsMetaData.getColumnCount();
+                    while (rs.next()) {
+                        final Map<String, Object> row = row2map(rs, rsMetaData, numColumns);
+                        @Cleanup final PreparedStatement update = connection.prepareCall(table.sqlUpdate());
+                        final AnonColumn[] columns = table.getColumns();
+                        for (int i = 0; i < columns.length; i++) {
+                            final AnonColumn col = columns[i];
+                            final Object value = row.get(col.getName());
+                            col.setParam(update, encryptor, i + 1, value == null ? null : value.toString());
+                        }
+                        update.setString(columns.length + 1, row.get("uuid").toString());
+                        if (update.executeUpdate() != 1) {
+                            die("anonymize: error updating");
+                        }
                     }
                 }
             }
 
         } catch (Exception e) {
-            die("scrub: error scrubbing: "+e, e);
+            die("anonymize: error scrubbing: "+e, e);
         }
     }
 
