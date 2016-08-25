@@ -3,31 +3,31 @@ package org.cobbzilla.wizard.model.anon;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.cobbzilla.util.security.ShaUtil;
-import org.cobbzilla.wizard.util.TestNames;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
+import static org.cobbzilla.wizard.util.TestNames.*;
 
 @AllArgsConstructor
 public enum AnonType {
 
     name(new SqlTransform() {
         @Override public String transform(String value) {
-            return TestNames.safeColor(value) + " " + TestNames.safeNationality(value);
+            return safeColor(value) + " " + safeNationality(value);
         }
     }),
 
     address(new SqlTransform() {
         @Override public String transform(String value) {
-            return (Long.parseLong(ShaUtil.sha256_hex(value).substring(0, 4), 16) % 10000) +  " " + TestNames.safeFruit(value) + " Street";
+            return (Long.parseLong(sha256_hex(value).substring(0, 4), 16) % 10000) +  " " + safeFruit(value) + " Street";
         }
     }),
 
     email(new SqlTransform() {
         @Override public String transform(String value) {
-            if (value.endsWith("@example.com") || AnonAllowedEmailDomains.isAllowed(value)) return value;
-            return TestNames.safeAnimal(value)+"@example.com";
+            if (value.endsWith("@example.com")) return value;
+            return safeAnimal(value)+"@example.com";
         }
     }),
 
@@ -35,12 +35,12 @@ public enum AnonType {
 
     license(new SqlTransform() { @Override public String transform(String value) { return "111222333"; } }),
 
-    text50(new SqlTransform() { @Override public String transform(String value) { return RandomStringUtils.randomAlphanumeric(50); } }),
+    text50(new SqlTransform() { @Override public String transform(String value) { return randomAlphanumeric(50); } }),
 
     initials(new SqlTransform() {
         @Override public String transform(String value) {
-            return "" + ((char) ('A'+Integer.parseInt(ShaUtil.sha256_hex(value).substring(0, 4), 16) % 26))
-                      + ((char) ('A'+Integer.parseInt(ShaUtil.sha256_hex(value).substring(4, 8), 16) % 26));
+            return "" + ((char) ('A'+Integer.parseInt(sha256_hex(value).substring(0, 4), 16) % 26))
+                      + ((char) ('A'+Integer.parseInt(sha256_hex(value).substring(4, 8), 16) % 26));
         }
     }),
 

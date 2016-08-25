@@ -11,6 +11,7 @@ import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.util.regex.Pattern;
 
 import static org.cobbzilla.util.json.JsonUtil.findNode;
 import static org.cobbzilla.util.json.JsonUtil.replaceNode;
@@ -23,6 +24,7 @@ public class AnonColumn {
     @Getter @Setter private boolean encrypted = false;
     @Getter @Setter private String value;
     @Getter @Setter private AnonJsonPath[] json;
+    @Getter @Setter private String[] skip;
     @Setter private AnonType type;
     public AnonType getType() { return type != null ? type : AnonType.guessType(getName()); }
 
@@ -32,13 +34,15 @@ public class AnonColumn {
         } else {
             if (encrypted) value = encryptor.decrypt(value);
 
-            if (this.value != null) {
-                value = this.value;
-            } else {
-                if (json == null) {
-                    value = getType().transform(value);
+            if (!shouldSkip(value)) {
+                if (this.value != null) {
+                    value = this.value;
                 } else {
-                    value = transformJson(value);
+                    if (json == null) {
+                        value = getType().transform(value);
+                    } else {
+                        value = transformJson(value);
+                    }
                 }
             }
 
@@ -62,6 +66,21 @@ public class AnonColumn {
             }
         }
         return toJson(node);
+    }
+
+    @Getter(lazy=true) private final Pattern[] skipPatterns = initSkipPatterns();
+    private Pattern[] initSkipPatterns() {
+        final Pattern[] patterns = new Pattern[skip == null ? 0 : skip.length];
+        for (int i=0; i<skip.length; i++) patterns[i] = Pattern.compile(skip[i]);
+        return patterns;
+    }
+
+    private boolean shouldSkip(String value) {
+        if (skip == null || skip.length == 0) return true;
+        for (Pattern p : getSkipPatterns()) {
+            if (p.matcher(value).find()) return true;
+        }
+        return false;
     }
 
 }
