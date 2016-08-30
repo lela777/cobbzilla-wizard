@@ -6,11 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.system.CommandShell;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor @Slf4j
 public class ErrorApiConfiguration {
 
     @Getter @Setter private String url;
@@ -26,6 +27,8 @@ public class ErrorApiConfiguration {
 
     public void report(Exception e) {
         final AirbrakeNoticeBuilder builder = new AirbrakeNoticeBuilder(getKey(), e, getEnv());
-        getNotifier().notify(builder.newNotice());
+        final int responseCode = getNotifier().notify(builder.newNotice());
+        if (responseCode != 200) log.warn("report("+e+"): notifier API returned "+responseCode);
     }
+
 }
