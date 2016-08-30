@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
+import org.cobbzilla.wizard.server.RestServerBase;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -14,7 +15,10 @@ public class DataIntegrityViolationExceptionMapper
         extends AbstractConstraintViolationExceptionMapper<DataIntegrityViolationException>
         implements ExceptionMapper<DataIntegrityViolationException> {
 
-    @Override public Response toResponse(DataIntegrityViolationException exception) { return buildResponse(exception); }
+    @Override public Response toResponse(DataIntegrityViolationException exception) {
+        RestServerBase.report(exception);
+        return buildResponse(exception);
+    }
 
     @Override protected List<ConstraintViolationBean> exception2json(DataIntegrityViolationException e) {
         final String messageTemplate = "db.integrity." + e.getMessage().replaceAll("\\W", "_");

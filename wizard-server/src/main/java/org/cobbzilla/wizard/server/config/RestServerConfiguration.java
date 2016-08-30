@@ -37,6 +37,9 @@ public class RestServerConfiguration {
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
 
+    @Getter @Setter private ErrorApiConfiguration errorApi;
+    public boolean hasErrorApi () { return errorApi != null && errorApi.isValid(); }
+
     @JsonIgnore @Getter @Setter private ApplicationContext applicationContext;
 
     public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }

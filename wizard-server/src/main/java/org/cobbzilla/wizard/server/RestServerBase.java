@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.network.NetworkUtil;
@@ -52,6 +53,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public RestServerBase (RestServer<C> other) {
         copy(this, other, new String[]{"httpServer", "configuration", "applicationContext"});
     }
+
+    @Getter @Setter private volatile static ErrorApi errorApi;
 
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
@@ -361,5 +364,16 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public <T> T getBean(String beanName) { return (T) getApplicationContext().getBean(beanName); }
 
     public <T> T getBean(Class<T> beanClass) { return getApplicationContext().getBean(beanClass); }
+
+    public static void report(Exception e) {
+        if (errorApi != null) {
+            try {
+                errorApi.report(e);
+            } catch (Exception e2) {
+                log.error("report: error reporting exception ("+e+"): "+e2, e2);
+            }
+        }
+        System.err.println("report: "+e+"\n"+ExceptionUtils.getStackTrace(e));
+    }
 
 }
