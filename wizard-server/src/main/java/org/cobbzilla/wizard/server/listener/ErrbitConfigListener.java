@@ -2,7 +2,8 @@ package org.cobbzilla.wizard.server.listener;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.wizard.server.ErrorApi;
+import org.cobbzilla.util.daemon.ErrorApi;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerBase;
 import org.cobbzilla.wizard.server.RestServerLifecycleListenerBase;
@@ -11,7 +12,9 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 public class ErrbitConfigListener extends RestServerLifecycleListenerBase {
 
     @Override public void onStart(RestServer server) {
-        RestServerBase.setErrorApi(new ErrbitApi(server.getConfiguration()));
+        final ErrbitApi errorApi = new ErrbitApi(server.getConfiguration());
+        RestServerBase.setErrorApi(errorApi);
+        ZillaRuntime.setErrorApi(errorApi);
     }
 
     @AllArgsConstructor @Slf4j

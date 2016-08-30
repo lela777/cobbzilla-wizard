@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.exceptionmappers;
 
 import org.cobbzilla.wizard.resources.ResourceHttpException;
+import org.cobbzilla.wizard.server.RestServerBase;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -13,6 +14,9 @@ public class HttpResponseExceptionMapper
         extends AbstractConstraintViolationExceptionMapper<ResourceHttpException>
         implements ExceptionMapper<ResourceHttpException> {
 
-    @Override public Response toResponse(ResourceHttpException e) { return status(e.getStatus(), e.getEntity()); }
+    @Override public Response toResponse(ResourceHttpException e) {
+        if (e.getStatusClass() == 5) RestServerBase.report(e);
+        return status(e.getStatus(), e.getEntity());
+    }
 
 }

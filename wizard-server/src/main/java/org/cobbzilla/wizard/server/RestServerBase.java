@@ -16,6 +16,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.cobbzilla.util.collection.SingletonList;
+import org.cobbzilla.util.daemon.ErrorApi;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.network.NetworkUtil;
 import org.cobbzilla.util.network.PortPicker;

@@ -21,4 +21,6 @@ public class ResourceHttpException extends RuntimeException {
         setEntity(response.getEntity());
     }
 
+    public int getStatusClass () { return status / 100; }
+
 }
