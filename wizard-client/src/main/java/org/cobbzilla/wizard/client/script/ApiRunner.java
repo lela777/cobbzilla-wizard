@@ -209,6 +209,7 @@ public class ApiRunner {
                 localCtx.put(CTX_RESPONSE, restResponse);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
+                    if (listener != null && listener.skipCheck(script, check)) continue;
                     final String condition = handlebars(check.getCondition(), localCtx);
                     Boolean result = null;
                     long timeout = check.getTimeoutMillis();

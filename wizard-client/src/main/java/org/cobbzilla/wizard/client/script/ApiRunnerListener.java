@@ -27,4 +27,6 @@ public interface ApiRunnerListener {
     void setAfterHandler(ApiRunnerListener afterHandler);
     void handleAfter(String after, Map<String, Object> ctx) throws Exception;
 
+    boolean skipCheck(ApiScript script, ApiScriptResponseCheck check);
+
 }

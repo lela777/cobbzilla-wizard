@@ -49,4 +49,6 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
         if (afterHandler != null) afterHandler.handleAfter(after, ctx);
     }
 
+    @Override public boolean skipCheck(ApiScript script, ApiScriptResponseCheck check) { return false; }
+
 }
