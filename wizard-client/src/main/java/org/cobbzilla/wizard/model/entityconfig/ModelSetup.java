@@ -21,6 +21,7 @@ import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
 
 @Slf4j
@@ -57,6 +58,15 @@ public class ModelSetup {
             setupJson(api, entityConfigsEndpoint, entityType, json, listener);
         }
         return models;
+    }
+
+    public static String modelHash(String prefix, String manifest) throws Exception {
+        final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
+        StringBuilder b = new StringBuilder();
+        for (String model : models) {
+            b.append(stream2string(prefix + model + ".json"));
+        }
+        return sha256_hex(b.toString());
     }
 
     public static void setupJson(ApiClientBase api, String entityConfigsEndpoint, String entityType, String json, ModelSetupListener listener) throws Exception {
