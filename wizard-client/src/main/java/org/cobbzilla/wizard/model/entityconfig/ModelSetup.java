@@ -60,7 +60,7 @@ public class ModelSetup {
         return models;
     }
 
-    public static String modelHash(String prefix, String manifest) throws Exception {
+    public static String modelHash(String prefix, String manifest) {
         final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         StringBuilder b = new StringBuilder();
         for (String model : models) {
