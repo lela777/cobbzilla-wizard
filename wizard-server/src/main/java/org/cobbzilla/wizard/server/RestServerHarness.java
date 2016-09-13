@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.server;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +11,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;

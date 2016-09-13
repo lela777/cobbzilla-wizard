@@ -106,13 +106,13 @@ public class IdentifiableBase implements Identifiable {
         return f;
     }
 
-    public static <T> T[] collectArray(List<? extends Identifiable> entities, String field) {
+    public static <T> T[] collectArray(Collection<? extends Identifiable> entities, String field) {
         return (T[]) CollectionUtils.collect(entities, getFieldTransformer(field)).toArray(new String[entities.size()]);
     }
-    public static <T> List<T> collectList(List<? extends Identifiable> entities, String field) {
+    public static <T> List<T> collectList(Collection<? extends Identifiable> entities, String field) {
         return (List<T>) CollectionUtils.collect(entities, getFieldTransformer(field));
     }
-    public static List<String> collectStringList(List<? extends Identifiable> entities, String field) {
+    public static List<String> collectStringList(Collection<? extends Identifiable> entities, String field) {
         return (List<String>) CollectionUtils.collect(entities, getFieldTransformer(field));
     }
 
