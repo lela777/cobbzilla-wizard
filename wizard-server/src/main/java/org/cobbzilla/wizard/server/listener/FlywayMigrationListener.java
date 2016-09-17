@@ -12,7 +12,10 @@ import org.flywaydb.core.api.FlywayException;
 @Slf4j
 public class FlywayMigrationListener<C extends RestServerConfiguration> extends RestServerLifecycleListenerBase<C> {
 
+    protected RestServer server;
+
     @Override public void beforeStart(RestServer server) {
+        this.server = server;
         HasDatabaseConfiguration configuration = (HasDatabaseConfiguration) server.getConfiguration();
         migrate(configuration.getDatabase());
         super.beforeStart(server);
