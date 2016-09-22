@@ -132,6 +132,15 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
+    public E findByUniqueFields(String f1, Object v1, String f2, Object v2, String f3, Object v3, String f4, Object v4) {
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
+        final Criterion expr4 = v4 == null ? isNull(f4) : eq(f4, v4);
+        return uniqueResult(and(expr1, expr2, expr3, expr4));
+    }
+
+    @Transactional(readOnly=true)
     @Override public List<E> findByField(String field, Object value) {
         return list(criteria().add(eq(field, value)), 0, getFinderMaxResults());
     }
@@ -175,6 +184,15 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
         final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
         return list(criteria().add(and(expr1, expr2, expr3)), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
+    public List<E> findByFields(String f1, Object v1, String f2, Object v2, String f3, Object v3, String f4, Object v4) {
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
+        final Criterion expr4 = v4 == null ? isNull(f4) : eq(f4, v4);
+        return list(criteria().add(and(expr1, expr2, expr3, expr4)), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
