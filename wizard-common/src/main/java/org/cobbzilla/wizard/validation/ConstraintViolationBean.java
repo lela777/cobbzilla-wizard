@@ -20,6 +20,7 @@ public class ConstraintViolationBean {
     @XmlElement @Getter @Setter private String messageTemplate;
     @XmlElement @Getter @Setter private String message;
     @XmlElement @Getter @Setter private String invalidValue;
+    public boolean hasInvalidValue () { return !empty(invalidValue); }
 
     public ConstraintViolationBean(String messageTemplate) {
         this(messageTemplate, messageTemplate, null);
