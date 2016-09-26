@@ -490,7 +490,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     @Override public E createOrUpdate(@Valid E entity) {
-        return getDAO(entity).createOrUpdate(entity);
+        return (entity.getUuid() == null) ? create(entity) : update(entity);
     }
 
     @Override public E postCreate(E entity, Object context) {

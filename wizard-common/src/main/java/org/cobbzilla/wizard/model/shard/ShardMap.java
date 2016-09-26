@@ -17,7 +17,7 @@ import java.util.Comparator;
 @MappedSuperclass @Accessors(chain=true) @EqualsAndHashCode(of={"shardSet","url","range"}, callSuper=false)
 public class ShardMap extends IdentifiableBase {
 
-    @Size(max=1024, message="err.url.length")
+    @Size(max=1024, message="err.shardSet.length")
     @Getter @Setter private String shardSet;
 
     @Valid
