@@ -506,6 +506,7 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         for (D dao : getDAOs(entity, ShardIO.write)) {
             if (ctx == null) {
                 ctx = preUpdate(entity);
+                if (ctx == null) ctx = new Object();
             }
             E updated = dao.update(entity);
             if (rval == null) {
