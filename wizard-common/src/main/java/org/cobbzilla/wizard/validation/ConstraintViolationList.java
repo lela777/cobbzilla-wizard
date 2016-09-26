@@ -21,4 +21,20 @@ public class ConstraintViolationList {
         return false;
     }
 
+    public boolean hasError (String messageTemplate, String invalidValue) {
+        if (!empty(violations)) {
+            for (ConstraintViolationBean violation : violations) {
+                if (violation.getMessageTemplate().equals(messageTemplate)
+                        && violation.hasInvalidValue() && violation.getInvalidValue().equals(invalidValue)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // convenience methods
+    public boolean hasValidationError (String messageTemplate) { return hasError(messageTemplate); }
+    public boolean hasValidationError (String messageTemplate, String invalidValue) { return hasError(messageTemplate, invalidValue); }
+
 }
