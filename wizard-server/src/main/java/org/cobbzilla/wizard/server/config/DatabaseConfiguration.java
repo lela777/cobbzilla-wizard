@@ -32,6 +32,10 @@ public class DatabaseConfiguration {
 
     @Getter @Setter private HibernateConfiguration hibernate;
 
+    // migration is always enabled, unless its value is "false"
+    @Getter @Setter private String migrationEnabled;
+    public boolean migrationEnabled () { return empty(migrationEnabled) || !migrationEnabled.equalsIgnoreCase("false"); }
+
     @JsonIgnore public String getDatabaseName() { return getUrl().substring(getUrl().lastIndexOf('/')+1); }
 
     @JsonIgnore public Connection getConnection() throws SQLException {

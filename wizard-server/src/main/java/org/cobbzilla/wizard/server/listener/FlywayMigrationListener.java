@@ -17,7 +17,9 @@ public class FlywayMigrationListener<C extends RestServerConfiguration> extends 
     @Override public void beforeStart(RestServer server) {
         this.server = server;
         final HasDatabaseConfiguration configuration = (HasDatabaseConfiguration) server.getConfiguration();
-        migrate(configuration.getDatabase());
+        if (configuration.getDatabase().migrationEnabled()) {
+            migrate(configuration.getDatabase());
+        }
         super.beforeStart(server);
     }
 
