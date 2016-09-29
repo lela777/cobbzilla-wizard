@@ -44,6 +44,7 @@ public class EntityFieldConfig {
      * The data type of the field.
      */
     @Getter @Setter private EntityFieldType type = EntityFieldType.string;
+    public boolean hasType() { return !empty(type); }
 
     /**
      * For data types like 'string', this is the length of the field.
@@ -117,4 +118,5 @@ public class EntityFieldConfig {
      * When the value of 'type' is 'embedded', this is the name of the EntityConfig to use when working with the embedded object.
      */
     @Getter @Setter private String objectType;
+
 }

@@ -33,4 +33,17 @@ public enum EntityFieldType {
 
     /** Jackson-hook to create a new instance based on a string, case-insensitively */
     @JsonCreator public static EntityFieldType create (String val) { return valueOf(val.toLowerCase()); }
+
+    public Object toObject(String value) {
+        switch (this) {
+            case decimal: return Double.parseDouble(value);
+
+            case integer: case epoch_time: return Long.parseLong(value);
+
+            case flag: return Boolean.valueOf(value);
+
+            case string: case date: case reference: case base64_png: case embedded:
+            default: return value;
+        }
+    }
 }
