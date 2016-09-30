@@ -10,6 +10,7 @@ import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -60,13 +61,21 @@ public class ModelSetup {
         return models;
     }
 
+    private static Map<String, String> modelHashCache = new HashMap<>();
+
     public static String modelHash(String prefix, String manifest) {
-        final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
-        StringBuilder b = new StringBuilder();
-        for (String model : models) {
-            b.append(stream2string(prefix + model + ".json"));
+        final String cacheKey = prefix + "/" + manifest;
+        String hash = modelHashCache.get(cacheKey);
+        if (hash == null) {
+            final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
+            StringBuilder b = new StringBuilder();
+            for (String model : models) {
+                b.append(stream2string(prefix + model + ".json"));
+            }
+            hash = sha256_hex(b.toString());
+            modelHashCache.put(cacheKey, hash);
         }
-        return sha256_hex(b.toString());
+        return hash;
     }
 
     public static void setupJson(ApiClientBase api, String entityConfigsEndpoint, String entityType, String json, ModelSetupListener listener) throws Exception {
