@@ -9,6 +9,8 @@ import org.cobbzilla.wizard.validation.UniqueValidatorDaoHelper;
 import java.io.Serializable;
 import java.util.Map;
 
+import static org.cobbzilla.util.string.StringUtil.urlDecode;
+
 public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> extends AbstractUniqueCRUDDAO<E> {
 
     public static final Transformer TO_NAME = new FieldTransformer("name");
@@ -31,7 +33,10 @@ public abstract class UniquelyNamedEntityDAO<E extends UniquelyNamedEntity> exte
     }
 
     public E findByUuidOrName(String id) {
-        final E found = findByUuid(id);
-        return found != null ? found : findByName(id);
+        E found = findByUuid(id);
+        if (found == null) found = findByName(id);
+        if (found == null) found = findByName(urlDecode(id));
+        return found;
     }
+
 }
