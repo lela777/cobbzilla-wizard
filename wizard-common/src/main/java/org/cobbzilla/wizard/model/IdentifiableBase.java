@@ -91,7 +91,7 @@ public class IdentifiableBase implements Identifiable {
                 : (String[]) collectArray(entities, "uuid");
     }
 
-    public static List<String> toUuidList(List<? extends Identifiable> entities) {
+    public static List<String> toUuidList(Collection<? extends Identifiable> entities) {
         if (empty(entities)) return Collections.emptyList();
         return collectList(entities, "uuid");
     }
