@@ -22,7 +22,8 @@ public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, 
         long start = now();
         log.info(prefix+"starting");
         final ResultCollector collector = search.getCollector();
-        for (Object entity : dao.query(search.getMaxResultsPerShard(), search.getHsql(), search.getArgs())) {
+        final List results = dao.query(search.getMaxResultsPerShard(), search.getHsql(), search.getArgs());
+        for (Object entity : results) {
             if (cancelled.get()) {
                 log.info(prefix+"cancelled from another thread, stopping search");
                 break;
