@@ -523,19 +523,15 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
     }
 
     @Override public void delete(String uuid) {
-        for (D dao : getAllDAOs(uuid)) dao.delete(uuid);
+        final List<D> daos = hashOn.equals("uuid") ? getAllDAOs(uuid) : getAllDAOs();
+        for (D dao : daos) dao.delete(uuid);
         flushShardCache(uuid);
     }
 
     public void deleteAll (String hashField, String value) {
-        if (hashOn.equals(hashField)) {
-            for (D dao : getAllDAOs(value)) {
-                dao.getHibernateTemplate().bulkUpdate(bulkDelete(hashField), value);
-            }
-        } else {
-            for (D dao : getAllDAOs()) {
-                dao.getHibernateTemplate().bulkUpdate(bulkDelete(hashField), value);
-            }
+        final List<D> daos = hashOn.equals(hashField) ? getAllDAOs(value) : getAllDAOs();
+        for (D dao : daos) {
+            dao.getHibernateTemplate().bulkUpdate(bulkDelete(hashField), value);
         }
     }
 
