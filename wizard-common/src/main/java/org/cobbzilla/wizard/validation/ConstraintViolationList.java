@@ -12,6 +12,8 @@ public class ConstraintViolationList {
 
     @Getter @Setter private ConstraintViolationBean[] violations;
 
+    public int size () { return empty(violations) ? 0 : violations.length; }
+
     public boolean hasError (String messageTemplate) {
         if (!empty(violations)) {
             for (ConstraintViolationBean violation : violations) {
