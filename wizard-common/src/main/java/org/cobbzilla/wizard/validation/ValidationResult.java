@@ -67,6 +67,13 @@ public class ValidationResult {
         return false;
     }
 
+    public boolean hasInvalidValue (String value) {
+        for (ConstraintViolationBean bean : getViolationBeans()) {
+            if (bean.hasInvalidValue() && bean.getInvalidValue().equals(value)) return true;
+        }
+        return false;
+    }
+
     @Override public String toString() { return violations.toString() + (beans.isEmpty() ? "" : ", "+beans.toString()); }
 
 }
