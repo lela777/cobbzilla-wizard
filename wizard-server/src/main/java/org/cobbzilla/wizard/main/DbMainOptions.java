@@ -18,11 +18,11 @@ import static org.cobbzilla.wizard.server.RestServerBase.getStreamConfigurationS
 
 public abstract class DbMainOptions extends BaseMainOptions {
 
-    public static final String USAGE_ENV_FILE = "Environment file. Default is ~/.qbis.env";
+    public static final String USAGE_ENV_FILE = "Environment file";
     public static final String OPT_ENV_FILE = "-e";
     public static final String LONGOPT_ENV_FILE= "--env-file";
-    @Option(name=OPT_ENV_FILE, aliases=LONGOPT_ENV_FILE, usage=USAGE_ENV_FILE)
-    @Getter @Setter private File envFile = new File(System.getProperty("user.home"), ".qbis.env");
+    @Option(name=OPT_ENV_FILE, aliases=LONGOPT_ENV_FILE, usage=USAGE_ENV_FILE, required=true)
+    @Getter @Setter private File envFile;
 
     public abstract String getServerClass();
     public abstract String[] getConfigPaths();
