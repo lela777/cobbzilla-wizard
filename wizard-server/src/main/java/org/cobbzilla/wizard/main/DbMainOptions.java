@@ -18,11 +18,13 @@ import static org.cobbzilla.wizard.server.RestServerBase.getStreamConfigurationS
 
 public abstract class DbMainOptions extends BaseMainOptions {
 
-    public static final String USAGE_ENV_FILE = "Environment file";
+    public static final File DEFAULT_ENV_FILE = new File(System.getProperty("user.home"), ".db.env");
+
+    public static final String USAGE_ENV_FILE = "Environment file. Default is ~/db.env";
     public static final String OPT_ENV_FILE = "-e";
     public static final String LONGOPT_ENV_FILE= "--env-file";
-    @Option(name=OPT_ENV_FILE, aliases=LONGOPT_ENV_FILE, usage=USAGE_ENV_FILE, required=true)
-    @Getter @Setter private File envFile;
+    @Option(name=OPT_ENV_FILE, aliases=LONGOPT_ENV_FILE, usage=USAGE_ENV_FILE)
+    @Getter @Setter private File envFile = DEFAULT_ENV_FILE;
 
     public abstract String getServerClass();
     public abstract String[] getConfigPaths();
