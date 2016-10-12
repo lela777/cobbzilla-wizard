@@ -227,7 +227,7 @@ public class ApiRunner {
 
                     if (result == null || !result) {
                         success = false;
-                        if (listener != null) listener.conditionCheckFailed(script, restResponse, check);
+                        if (listener != null) listener.conditionCheckFailed(script, restResponse, check, localCtx);
                     }
                 }
             }

@@ -23,9 +23,9 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
         }
     }
 
-    @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check) {
+    @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check, Map<String, Object> ctx) {
         if (script.isTimedOut()) {
-            die("conditionCheckFailed("+script+"):\nfailed condition="+check+"\nserver response="+restResponse);
+            die("conditionCheckFailed("+script+"):\nfailed condition="+check+"\nserver response="+restResponse+"\nctx="+ctx);
         }
     }
 
