@@ -10,7 +10,7 @@ public class AnonScrubMain<OPT extends AnonScrubOptions> extends BaseMain<OPT> {
         final AnonScrubber scrubber = new AnonScrubber().setTables(options.getScrubs());
         scrubber.anonymize(options.getDatabaseReadConfiguration(),
                            options.getDatabaseWriteConfiguration(),
-                           options.isIgnoreUnknownColumns());
+                           options.isIgnoreUnknown());
     }
 
 }

@@ -29,7 +29,7 @@ public class AnonScrubber {
 
     public void anonymize(HasDatabaseConfiguration readConfig,
                           HasDatabaseConfiguration writeConfig,
-                          boolean ignoreUnknownColumns) {
+                          boolean ignoreUnknown) {
 
         final HibernatePBEStringEncryptor decryptor = getCryptor(readConfig);
         final HibernatePBEStringEncryptor encryptor = getCryptor(writeConfig);
@@ -43,30 +43,44 @@ public class AnonScrubber {
                     s.execute();
 
                 } else {
-                    if (ignoreUnknownColumns) {
+                    if (ignoreUnknown) {
                         // We need to know which columns to ignore
 
                         // Find all columns in the DB
-                        @Cleanup final PreparedStatement s = connection.prepareStatement("select * from "+table.getTable());
+                        final String tableName = table.getTable();
+                        @Cleanup final PreparedStatement s = connection.prepareStatement("select * from "+ tableName);
                         s.setMaxRows(1);
-                        @Cleanup final ResultSet rs = s.executeQuery();
-                        final Set<String> dbColumns = new CaseInsensitiveStringSet(ResultSetBean.getColumns(rs, rs.getMetaData()));
-                        if (empty(dbColumns)) die("no columns in table "+table.getTable());
+                        try {
+                            @Cleanup final ResultSet rs = s.executeQuery();
+                            final Set<String> dbColumns = new CaseInsensitiveStringSet(ResultSetBean.getColumns(rs, rs.getMetaData()));
+                            if (empty(dbColumns)) die("no columns in table " + tableName);
 
-                        // Only keep columns that exist in the DB
-                        final Set<String> requestedColumns = new CaseInsensitiveStringSet(table.getColumnNames());
-                        requestedColumns.retainAll(dbColumns);
-                        table.retainColumns(requestedColumns);
+                            // Only keep columns that exist in the DB
+                            final Set<String> requestedColumns = new CaseInsensitiveStringSet(table.getColumnNames());
+                            requestedColumns.retainAll(dbColumns);
+                            table.retainColumns(requestedColumns);
+                            if (table.getColumns().length == 0) {
+                                log.warn("no valid columns to work with for table " + tableName);
+                                continue;
+                            }
+                        } catch (Exception e) {
+                            if (e.getMessage().contains("does not exist")) {
+                                log.warn("table does not exist, skipping: "+ tableName + ": "+e);
+                            } else {
+                                log.warn("error ascertaining columns from table " + tableName + ": " + e);
+                            }
+                            continue;
+                        }
                     }
                     @Cleanup final PreparedStatement s = connection.prepareStatement(table.sqlSelect());
                     @Cleanup final ResultSet rs = s.executeQuery();
                     final ResultSetMetaData rsMetaData = rs.getMetaData();
                     final int numColumns = rsMetaData.getColumnCount();
+                    final AnonColumn[] columns = table.getColumns();
                     while (rs.next()) {
                         final Map<String, Object> row = row2map(rs, rsMetaData, numColumns);
                         @Cleanup final PreparedStatement update = connection.prepareStatement(table.sqlUpdate());
-                        final AnonColumn[] columns = table.getColumns();
-                        for (int i = 0; i < columns.length; i++) {
+                        for (int i=0; i <columns.length; i++) {
                             final AnonColumn col = columns[i];
                             final Object value = row.get(col.getName());
                             try {

@@ -51,11 +51,11 @@ public abstract class DbMainOptions extends BaseMainOptions {
     @Option(name=OPT_ENCRYPT_ENV_VAR, aliases=LONGOPT_ENCRYPT_ENV_VAR, usage=USAGE_ENCRYPT_ENV_VAR)
     @Getter @Setter private String encryptKeyEnvVar = null;
 
-    public static final String USAGE_IGNORE_UNKNOWN_COLS = "If false, refuse to run if columns in scrub file do not exist in database. Default is true.";
-    public static final String OPT_IGNORE_UNKNOWN_COLS = "-I";
-    public static final String LONGOPT_IGNORE_UNKNOWN_COLS= "--ignore-unknown-columns";
-    @Option(name=OPT_IGNORE_UNKNOWN_COLS, aliases=LONGOPT_IGNORE_UNKNOWN_COLS, usage=USAGE_IGNORE_UNKNOWN_COLS)
-    @Getter @Setter private boolean ignoreUnknownColumns = true;
+    public static final String USAGE_IGNORE_UNKNOWN = "If false, refuse to run if tables or columns in scrub file do not exist in database. Default is true, in which case they are skipped.";
+    public static final String OPT_IGNORE_UNKNOWN = "-I";
+    public static final String LONGOPT_IGNORE_UNKNOWN= "--ignore-unknown";
+    @Option(name=OPT_IGNORE_UNKNOWN, aliases=LONGOPT_IGNORE_UNKNOWN, usage=USAGE_IGNORE_UNKNOWN)
+    @Getter @Setter private boolean ignoreUnknown = true;
 
     public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDatabaseConfiguration() {
         final String[] paths = getConfigPaths();
