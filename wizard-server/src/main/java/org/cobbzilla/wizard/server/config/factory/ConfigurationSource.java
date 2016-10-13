@@ -5,6 +5,6 @@ import java.io.IOException;
 
 public interface ConfigurationSource {
 
-    public File getFile() throws IOException;
+    File getFile() throws IOException;
 
 }

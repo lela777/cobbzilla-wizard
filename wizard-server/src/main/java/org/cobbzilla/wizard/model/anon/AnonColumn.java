@@ -28,11 +28,14 @@ public class AnonColumn {
     @Setter private AnonType type;
     public AnonType getType() { return type != null ? type : AnonType.guessType(getName()); }
 
-    public void setParam(PreparedStatement ps, HibernatePBEStringEncryptor encryptor, int index, String value) throws Exception {
+    public void setParam(PreparedStatement ps,
+                         HibernatePBEStringEncryptor decryptor,
+                         HibernatePBEStringEncryptor encryptor,
+                         int index, String value) throws Exception {
         if (value == null) {
             ps.setNull(index, Types.VARCHAR);
         } else {
-            if (encrypted) value = encryptor.decrypt(value);
+            if (encrypted) value = decryptor.decrypt(value);
 
             if (!shouldSkip(value)) {
                 if (this.value != null) {

@@ -29,16 +29,21 @@ public abstract class DbMainOptions extends BaseMainOptions {
     public abstract String getServerClass();
     public abstract String[] getConfigPaths();
 
-    public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDbConfig() {
+    public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDatabaseConfiguration() {
+        final String[] paths = getConfigPaths();
+        return getDatabaseConfiguration(paths);
+    }
+
+    public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDatabaseConfiguration(String[] paths) {
         final Class<S> serverClass = (Class<S>) forName(getServerClass());
         final RestServerHarness<C, S> harness = new RestServerHarness<>(serverClass);
 
-        harness.addConfigurations(getStreamConfigurationSources(serverClass, getConfigPaths()));
+        harness.addConfigurations(getStreamConfigurationSources(serverClass, paths));
         harness.init(loadShellExportsOrDie(getEnvFile()));
 
         return (HasDatabaseConfiguration) harness.getConfiguration();
     }
 
-    public DatabaseConfiguration getDatabase() { return getDbConfig().getDatabase(); }
+    public DatabaseConfiguration getDatabase() { return getDatabaseConfiguration().getDatabase(); }
 
 }

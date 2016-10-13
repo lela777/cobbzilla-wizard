@@ -23,14 +23,13 @@ public class AnonScrubber {
 
     @Getter @Setter private AnonTable[] tables;
 
-    public void anonymize(HasDatabaseConfiguration configuration) {
+    public void anonymize(HasDatabaseConfiguration readConfig, HasDatabaseConfiguration writeConfig) {
 
-        final RdbmsConfig config = new RdbmsConfig();
-        config.setConfiguration(configuration);
-        final HibernatePBEStringEncryptor encryptor = config.hibernateEncryptor();
+        final HibernatePBEStringEncryptor decryptor = getCryptor(readConfig);
+        final HibernatePBEStringEncryptor encryptor = getCryptor(writeConfig);
 
         try {
-            @Cleanup final Connection connection = configuration.getDatabase().getConnection();
+            @Cleanup final Connection connection = readConfig.getDatabase().getConnection();
             for (AnonTable table : tables) {
                 log.info("anonymize: "+table);
                 if (table.isTruncate()) {
@@ -44,12 +43,12 @@ public class AnonScrubber {
                     final int numColumns = rsMetaData.getColumnCount();
                     while (rs.next()) {
                         final Map<String, Object> row = row2map(rs, rsMetaData, numColumns);
-                        @Cleanup final PreparedStatement update = connection.prepareCall(table.sqlUpdate());
+                        @Cleanup final PreparedStatement update = connection.prepareStatement(table.sqlUpdate());
                         final AnonColumn[] columns = table.getColumns();
                         for (int i = 0; i < columns.length; i++) {
                             final AnonColumn col = columns[i];
                             final Object value = row.get(col.getName());
-                            col.setParam(update, encryptor, i + 1, value == null ? null : value.toString());
+                            col.setParam(update, decryptor, encryptor, i + 1, value == null ? null : value.toString());
                         }
                         update.setString(columns.length + 1, row.get("uuid").toString());
                         if (update.executeUpdate() != 1) {
@@ -62,6 +61,12 @@ public class AnonScrubber {
         } catch (Exception e) {
             die("anonymize: error scrubbing: "+e, e);
         }
+    }
+
+    public HibernatePBEStringEncryptor getCryptor(HasDatabaseConfiguration readConfig) {
+        final RdbmsConfig config = new RdbmsConfig();
+        config.setConfiguration(readConfig);
+        return config.hibernateEncryptor();
     }
 
 }

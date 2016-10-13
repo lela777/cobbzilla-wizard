@@ -8,7 +8,7 @@ public class AnonScrubMain<OPT extends AnonScrubOptions> extends BaseMain<OPT> {
     @Override protected void run() throws Exception {
         final OPT options = getOptions();
         final AnonScrubber scrubber = new AnonScrubber().setTables(options.getScrubs());
-        scrubber.anonymize(options.getDbConfig());
+        scrubber.anonymize(options.getDatabaseConfiguration(), options.getDatabaseWriteConfiguration());
     }
 
 }
