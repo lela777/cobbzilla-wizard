@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
@@ -13,11 +14,12 @@ import java.sql.PreparedStatement;
 import java.sql.Types;
 import java.util.regex.Pattern;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.json.JsonUtil.findNode;
 import static org.cobbzilla.util.json.JsonUtil.replaceNode;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 
-@Accessors(chain = true) @ToString(of="name")
+@Accessors(chain = true) @ToString(of="name") @Slf4j
 public class AnonColumn {
 
     @Getter @Setter private String name;
@@ -31,11 +33,22 @@ public class AnonColumn {
     public void setParam(PreparedStatement ps,
                          HibernatePBEStringEncryptor decryptor,
                          HibernatePBEStringEncryptor encryptor,
-                         int index, String value) throws Exception {
+                         int index, Object val) throws Exception {
+        String value = (val == null) ? null : val.toString();
         if (value == null) {
             ps.setNull(index, Types.VARCHAR);
         } else {
-            if (encrypted) value = decryptor.decrypt(value);
+            if (encrypted) {
+                try {
+                    value = decryptor.decrypt(value);
+                } catch (Exception e) {
+                    if (value.endsWith("==")) {
+                        die("setParam: error decrypting "+name+": "+value);
+                    } else {
+                        log.warn("setParam: error decrypting "+name+" (handling as plaintext): "+value);
+                    }
+                }
+            }
 
             if (!shouldSkip(value)) {
                 if (this.value != null) {
@@ -53,6 +66,10 @@ public class AnonColumn {
 
             if (value == null) {
                 ps.setNull(index, Types.VARCHAR);
+            } else if (val instanceof Long){
+                ps.setLong(index, Long.parseLong(value));
+            } else if (val instanceof Integer){
+                ps.setInt(index, Integer.parseInt(value));
             } else {
                 ps.setString(index, value);
             }
@@ -79,7 +96,7 @@ public class AnonColumn {
     }
 
     private boolean shouldSkip(String value) {
-        if (skip == null || skip.length == 0) return true;
+        if (skip == null || skip.length == 0) return false;
         for (Pattern p : getSkipPatterns()) {
             if (p.matcher(value).find()) return true;
         }

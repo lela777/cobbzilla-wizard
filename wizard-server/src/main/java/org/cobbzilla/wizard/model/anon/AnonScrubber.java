@@ -48,7 +48,12 @@ public class AnonScrubber {
                         for (int i = 0; i < columns.length; i++) {
                             final AnonColumn col = columns[i];
                             final Object value = row.get(col.getName());
-                            col.setParam(update, decryptor, encryptor, i + 1, value == null ? null : value.toString());
+                            try {
+                                col.setParam(update, decryptor, encryptor, i + 1, value == null ? null : value);
+                            } catch (Exception e) {
+                                final String errColumn = table + "." + col;
+                                die("anonymize: error handling table.column: " + errColumn);
+                            }
                         }
                         update.setString(columns.length + 1, row.get("uuid").toString());
                         if (update.executeUpdate() != 1) {

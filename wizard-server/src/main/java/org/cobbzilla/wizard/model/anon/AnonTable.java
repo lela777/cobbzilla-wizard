@@ -9,6 +9,7 @@ import lombok.experimental.Accessors;
 public class AnonTable {
 
     @Getter @Setter private String table;
+    @Getter @Setter private String id = "uuid";
     @Getter @Setter private AnonColumn[] columns;
     @Getter @Setter private boolean truncate = false;
 
@@ -22,7 +23,7 @@ public class AnonTable {
             if (b.length() > 0) b.append(", ");
             b.append(col.getName());
         }
-        return "SELECT uuid, " + b.toString() + " FROM " + table;
+        return "SELECT "+ getId()+", " + b.toString() + " FROM " + table;
     }
 
     public String sqlUpdate() {
@@ -35,7 +36,7 @@ public class AnonTable {
                 if (b.length() > 0) b.append(", ");
                 b.append(col.getName()).append(" = ?");
             }
-            return "UPDATE " + table + " SET " + b.toString() + " WHERE uuid = ?";
+            return "UPDATE " + table + " SET " + b.toString() + " WHERE "+ getId()+" = ?";
         }
     }
 

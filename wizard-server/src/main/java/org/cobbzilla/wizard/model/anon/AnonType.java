@@ -3,14 +3,20 @@ package org.cobbzilla.wizard.model.anon;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.RandomUtils;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.wizard.util.TestNames.*;
 
 @AllArgsConstructor
 public enum AnonType {
+
+    passthru(new SqlTransform() { @Override public String transform(String value) { return value; } }),
 
     name(new SqlTransform() {
         @Override public String transform(String value) {
@@ -51,7 +57,13 @@ public enum AnonType {
         }
     }),
 
-    fein(new SqlTransform() { @Override public String transform(String value) { return "123456789"; } });
+    fein(new SqlTransform() { @Override public String transform(String value) { return "123456789"; } }),
+
+    expiration(new SqlTransform() {
+        @Override public String transform(String value) {
+            return empty(value) ? value : String.valueOf(Long.parseLong(value) + RandomUtils.nextLong(TimeUnit.DAYS.toMillis(10), TimeUnit.DAYS.toMillis(1000)));
+        }
+    });
 
     @Getter private final SqlTransform transformer;
 
