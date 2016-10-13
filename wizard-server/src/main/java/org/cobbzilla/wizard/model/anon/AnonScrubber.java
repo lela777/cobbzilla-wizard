@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.CaseInsensitiveStringSet;
+import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
@@ -14,8 +16,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Map;
+import java.util.Set;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.jdbc.ResultSetBean.row2map;
 
 @Accessors(chain=true) @Slf4j
@@ -23,7 +27,9 @@ public class AnonScrubber {
 
     @Getter @Setter private AnonTable[] tables;
 
-    public void anonymize(HasDatabaseConfiguration readConfig, HasDatabaseConfiguration writeConfig) {
+    public void anonymize(HasDatabaseConfiguration readConfig,
+                          HasDatabaseConfiguration writeConfig,
+                          boolean ignoreUnknownColumns) {
 
         final HibernatePBEStringEncryptor decryptor = getCryptor(readConfig);
         final HibernatePBEStringEncryptor encryptor = getCryptor(writeConfig);
@@ -37,6 +43,21 @@ public class AnonScrubber {
                     s.execute();
 
                 } else {
+                    if (ignoreUnknownColumns) {
+                        // We need to know which columns to ignore
+
+                        // Find all columns in the DB
+                        @Cleanup final PreparedStatement s = connection.prepareStatement("select * from "+table.getTable());
+                        s.setMaxRows(1);
+                        @Cleanup final ResultSet rs = s.executeQuery();
+                        final Set<String> dbColumns = new CaseInsensitiveStringSet(ResultSetBean.getColumns(rs, rs.getMetaData()));
+                        if (empty(dbColumns)) die("no columns in table "+table.getTable());
+
+                        // Only keep columns that exist in the DB
+                        final Set<String> requestedColumns = new CaseInsensitiveStringSet(table.getColumnNames());
+                        requestedColumns.retainAll(dbColumns);
+                        table.retainColumns(requestedColumns);
+                    }
                     @Cleanup final PreparedStatement s = connection.prepareStatement(table.sqlSelect());
                     @Cleanup final ResultSet rs = s.executeQuery();
                     final ResultSetMetaData rsMetaData = rs.getMetaData();
