@@ -44,7 +44,7 @@ public class AnonScrubber {
 
                 } else {
                     if (ignoreUnknown) {
-                        // We need to know which columns to ignore
+                        // In order to know which columns to ignore, we need to know all columns that currently exist
 
                         // Find all columns in the DB
                         final String tableName = table.getTable();
