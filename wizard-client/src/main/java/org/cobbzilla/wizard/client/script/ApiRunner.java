@@ -250,7 +250,8 @@ public class ApiRunner {
     }
 
     protected String requestEntityJson(ApiScriptRequest request) {
-        return handlebars(request.getJsonEntity(ctx), ctx);
+        final String json = request.getJsonEntity(ctx);
+        return request.isHandlebarsEnabled() ? handlebars(json, ctx) : json;
     }
 
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }

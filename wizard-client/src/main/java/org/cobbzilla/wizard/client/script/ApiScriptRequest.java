@@ -20,6 +20,8 @@ public class ApiScriptRequest {
     @Getter @Setter private String data;
     public boolean hasData () { return !empty(data); }
 
+    @Getter @Setter private boolean handlebarsEnabled = true;
+
     @Getter @Setter private JsonNode entity;
     public boolean hasEntity () { return !empty(entity); }
 
