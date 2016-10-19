@@ -39,7 +39,10 @@ public class ApiRunner {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
-    public static void setScriptForThread(ApiScript script) { currentScripts.put(Thread.currentThread().getName(), script); }
+    public static void setScriptForThread(ApiScript script) {
+        log.info(script.getComment());
+        currentScripts.put(Thread.currentThread().getName(), script);
+    }
 
     // be careful - if you have multiple ApiRunners in the same classloader, these methods will not be useful
     // intended for convenience in the common case of a single ApiRunner
