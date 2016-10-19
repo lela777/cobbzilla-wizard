@@ -186,7 +186,7 @@ public class ApiClientBase {
         if (request instanceof ModelEntity) {
             return (T) post(path, ((ModelEntity) request).getEntity(), ((ModelEntity) request).getEntity().getClass());
         } else {
-            return post(path, request, (Class<T>) ((ModelEntity) request).getEntity().getClass());
+            return post(path, request, (Class<T>) request.getClass());
         }
     }
 
