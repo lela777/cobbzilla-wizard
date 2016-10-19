@@ -148,7 +148,7 @@ public class ModelSetup {
         Identifiable entity = request;
 
         // does it already exist?
-        final String entityType = entity.getClass().getSimpleName();
+        final String entityType = getRawClass(entity.getClass().getSimpleName());
         final String updateUri = entityConfig.getUpdateUri();
         if (updateUri != null && !updateUri.equals(":notSupported")) {
             final String getUri = processUri(context, entity, updateUri);
@@ -308,8 +308,7 @@ public class ModelSetup {
         if (entity instanceof ModelEntity) entity = ((ModelEntity) entity).getEntity();
 
         for (Map.Entry<String, Identifiable> entry : ctx.entrySet()) {
-            final String rawClass = entry.getKey();
-            final String type = rawClass.contains("$$") ? rawClass.substring(0, rawClass.indexOf("$$")) : rawClass;
+            final String type = getRawClass(entry.getKey());
             final Identifiable value = entry.getValue();
             final Map<String, Object> ctxEntryProps = ReflectionUtil.toMap(value instanceof ModelEntity ? ((ModelEntity) value).getEntity() : value);
             for (String name : ctxEntryProps.keySet()) {
@@ -331,6 +330,10 @@ public class ModelSetup {
         }
         if (uri.contains("{")) die("Could not replace all variables in URL: "+uri);
         return uri.startsWith("/") ? uri : "/" + uri;
+    }
+
+    private static String getRawClass(String className) {
+        return className.contains("$$") ? className.substring(0, className.indexOf("$$")) : className;
     }
 
     private static class ModelEntityInvocationHandler implements InvocationHandler {
