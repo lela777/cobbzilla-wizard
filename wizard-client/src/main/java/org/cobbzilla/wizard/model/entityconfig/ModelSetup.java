@@ -1,7 +1,11 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.InvocationHandler;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -10,6 +14,7 @@ import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,14 +24,18 @@ import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
-import static org.cobbzilla.util.json.JsonUtil.*;
-import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
+import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
 
 @Slf4j
 public class ModelSetup {
+
+    public static final String ALLOW_UPDATE_PROPERTY = "_update";
+
+    public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
 
     public static LinkedHashMap<String, String> buildModel(File manifest) {
         final String[] models = json(FileUtil.toStringOrDie(manifest), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
@@ -37,11 +46,18 @@ public class ModelSetup {
         return modelJson;
     }
 
-    public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, String prefix, ModelSetupListener listener) throws Exception {
+    public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
+                                                           String entityConfigsEndpoint,
+                                                           String prefix,
+                                                           ModelSetupListener listener) throws Exception {
         return setupModel(api, entityConfigsEndpoint, prefix, "manifest", listener);
     }
 
-    public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, String prefix, String manifest, ModelSetupListener listener) throws Exception {
+    public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
+                                                           String entityConfigsEndpoint,
+                                                           String prefix,
+                                                           String manifest,
+                                                           ModelSetupListener listener) throws Exception {
         final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
         for (String model : models) {
@@ -50,9 +66,12 @@ public class ModelSetup {
         return setupModel(api, entityConfigsEndpoint, modelJson, listener);
     }
 
-    public static LinkedHashMap<String, String> setupModel(ApiClientBase api, String entityConfigsEndpoint, LinkedHashMap<String, String> models, ModelSetupListener listener) throws Exception {
+    public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
+                                                           String entityConfigsEndpoint,
+                                                           LinkedHashMap<String, String> models,
+                                                           ModelSetupListener listener) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
-            final String modelName = model.getKey();
+            String modelName = model.getKey();
             final String json = model.getValue();
             final String entityType = getEntityTypeFromString(modelName);
 
@@ -78,17 +97,39 @@ public class ModelSetup {
         return hash;
     }
 
-    public static void setupJson(ApiClientBase api, String entityConfigsEndpoint, String entityType, String json, ModelSetupListener listener) throws Exception {
+    public static void setupJson(ApiClientBase api,
+                                 String entityConfigsEndpoint,
+                                 String entityType,
+                                 String json,
+                                 ModelSetupListener listener) throws Exception {
         if (listener != null) listener.preEntityConfig(entityType);
         final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
         if (listener != null) listener.postEntityConfig(entityType, entityConfig);
 
         final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
-        final Identifiable[] entities = (Identifiable[]) jsonWithComments(json, arrayClass(entityClass));
-        for (Identifiable entity : entities) {
+        final ModelEntity[] entities = parseEntities(json, entityClass);
+        for (ModelEntity entity : entities) {
             final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
             createEntity(api, entityConfig, entity, context, listener);
         }
+    }
+
+    public static ModelEntity[] parseEntities(String json, Class<? extends Identifiable> entityClass) {
+        final JsonNode[] nodes = jsonWithComments(json, JsonNode[].class);
+        final ModelEntity[] entities = new ModelEntity[nodes.length];
+        for (int i=0; i<nodes.length; i++) {
+            final JsonNode node = nodes[i];
+            entities[i] = getModelEntity(node, entityClass);
+        }
+        return entities;
+    }
+
+    public static ModelEntity getModelEntity(JsonNode node, Class<? extends Identifiable> entityClass) {
+        final Enhancer enhancer = new Enhancer();
+        enhancer.setInterfaces(new Class[]{ModelEntity.class});
+        enhancer.setSuperclass(entityClass);
+        enhancer.setCallback(new ModelEntityInvocationHandler(node, entityClass));
+        return (ModelEntity) enhancer.create();
     }
 
     // strip off anything after the first underscore (or period, in case a ".json" file is given)
@@ -100,7 +141,7 @@ public class ModelSetup {
 
     protected static void createEntity(ApiClientBase api,
                                        EntityConfig entityConfig,
-                                       Identifiable request,
+                                       ModelEntity request,
                                        LinkedHashMap<String, Identifiable> context,
                                        ModelSetupListener listener) throws Exception {
 
@@ -117,8 +158,15 @@ public class ModelSetup {
                 if (listener != null) listener.postLookup(entity, request, response);
                 switch (response.status) {
                     case OK:
-                        log.info("createEntity: "+entityType+" already exists");
-                        entity = json(response.json, request.getClass());
+                        if (request.allowUpdate()) {
+                            final Identifiable existing = getCached(api, entity);
+                            if (existing != null) ReflectionUtil.copy(existing, entity);
+                            log.info("createEntity: "+entityType+" already exists, updating");
+                            entity = update(api, context, entityConfig, entity, listener);
+                        } else {
+                            log.info("createEntity: "+entityType+" already exists");
+                            entity = json(response.json, request.getEntity().getClass());
+                        }
                         break;
                     case NOT_FOUND:
                         log.info("createEntity: creating " + entityType);
@@ -133,6 +181,7 @@ public class ModelSetup {
         } else {
             entity = create(api, context, entityConfig, entity, listener);
         }
+        addToCache(api, entity);
 
         // copy children if present in request (they wouldn't be in object returned from server)
         if (entity instanceof ParentEntity) {
@@ -164,11 +213,25 @@ public class ModelSetup {
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
                     for (JsonNode child : children) {
-                        createEntity(api, childConfig, fromJson(child, childClass), context, listener);
+                        createEntity(api, childConfig, getModelEntity(child, childClass), context, listener);
                     }
                 }
             }
         }
+    }
+
+    private static void addToCache(ApiClientBase api, Identifiable entity) {
+        Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
+        if (cache == null) {
+            cache = new HashMap<>();
+            entityCache.put(api.hashCode(), cache);
+        }
+        cache.put(entity, entity);
+    }
+
+    private static Identifiable getCached(ApiClientBase api, Identifiable entity) {
+        final Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
+        return cache == null ? null : cache.get(entity);
     }
 
     protected static <T extends Identifiable> T create(ApiClientBase api,
@@ -178,6 +241,42 @@ public class ModelSetup {
                                                        ModelSetupListener listener) throws Exception {
         final String uri = processUri(ctx, entity, entityConfig.getCreateUri());
 
+        // if the entity has a parent, it will want that parent's UUID in that field
+        setParentFields(ctx, entityConfig, (T) entity);
+
+        if (listener != null) listener.preCreate(entityConfig, entity);
+        final T created;
+        switch (entityConfig.getCreateMethod().toLowerCase()) {
+            case "put":  created = api.put(uri, entity); break;
+            case "post": created = api.post(uri, entity); break;
+            default: return die("invalid create method: "+entityConfig.getCreateMethod());
+        }
+        if (listener != null) listener.postCreate(entityConfig, entity, created);
+        return created;
+    }
+
+    protected static <T extends Identifiable> T update(ApiClientBase api,
+                                                       LinkedHashMap<String, Identifiable> ctx,
+                                                       EntityConfig entityConfig,
+                                                       T entity,
+                                                       ModelSetupListener listener) throws Exception {
+        final String uri = processUri(ctx, entity, entityConfig.getUpdateUri());
+
+        // if the entity has a parent, it will want that parent's UUID in that field
+        setParentFields(ctx, entityConfig, entity);
+
+        if (listener != null) listener.preUpdate(entityConfig, entity);
+        final T updated;
+        switch (entityConfig.getUpdateMethod().toLowerCase()) {
+            case "put":  updated = api.put(uri, entity); break;
+            case "post": updated = api.post(uri, entity); break;
+            default: return die("invalid update method: "+entityConfig.getCreateMethod());
+        }
+        if (listener != null) listener.postUpdate(entityConfig, entity, updated);
+        return updated;
+    }
+
+    private static <T extends Identifiable> void setParentFields(LinkedHashMap<String, Identifiable> ctx, EntityConfig entityConfig, T entity) {
         // if the entity has a parent, it will want that parent's UUID in that field
         if (entityConfig.hasParentField()) {
             final EntityFieldConfig parentField = entityConfig.getParentField();
@@ -202,28 +301,24 @@ public class ModelSetup {
                 log.debug("no parentFieldName found for " + entity.getClass().getSimpleName() + ", not setting");
             }
         }
-
-        if (listener != null) listener.preCreate(entityConfig, entity);
-        final T created;
-        switch (entityConfig.getCreateMethod().toLowerCase()) {
-            case "put":  created = api.put(uri, entity); break;
-            case "post": created = api.post(uri, entity); break;
-            default: return die("invalid create method: "+entityConfig.getCreateMethod());
-        }
-        if (listener != null) listener.postCreate(entityConfig, entity, created);
-        return created;
     }
 
     private static String processUri(LinkedHashMap<String, Identifiable> ctx, Identifiable entity, String uri) {
 
+        if (entity instanceof ModelEntity) entity = ((ModelEntity) entity).getEntity();
+
         for (Map.Entry<String, Identifiable> entry : ctx.entrySet()) {
-            Map<String, Object> ctxEntryProps = ReflectionUtil.toMap(entry.getValue());
+            final String rawClass = entry.getKey();
+            final String type = rawClass.contains("$$") ? rawClass.substring(0, rawClass.indexOf("$$")) : rawClass;
+            final Identifiable value = entry.getValue();
+            final Map<String, Object> ctxEntryProps = ReflectionUtil.toMap(value instanceof ModelEntity ? ((ModelEntity) value).getEntity() : value);
             for (String name : ctxEntryProps.keySet()) {
-                uri = uri.replace("{" + entry.getKey() + "." + name + "}", urlEncode(ctxEntryProps.get(name).toString()));
+                uri = uri.replace("{" + type + "." + name + "}", urlEncode(ctxEntryProps.get(name).toString()));
             }
         }
         final Map<String, Object> entityProps = ReflectionUtil.toMap(entity);
         for (String name : entityProps.keySet()) {
+            if (name.contains("$$")) name = name.substring(0, name.indexOf("$$"));
             uri = uri.replace("{" + name + "}", urlEncode(entityProps.get(name).toString()));
         }
         // if a {uuid} remains, try putting in the name, if we have one
@@ -236,5 +331,25 @@ public class ModelSetup {
         }
         if (uri.contains("{")) die("Could not replace all variables in URL: "+uri);
         return uri.startsWith("/") ? uri : "/" + uri;
+    }
+
+    private static class ModelEntityInvocationHandler implements InvocationHandler {
+
+        private final boolean update;
+        @Getter private final Identifiable entity;
+
+        public ModelEntityInvocationHandler(JsonNode node, Class<? extends Identifiable> entityClass) {
+            this.update = node.has(ALLOW_UPDATE_PROPERTY) && node.get(ALLOW_UPDATE_PROPERTY).booleanValue();
+            ((ObjectNode) node).remove(ALLOW_UPDATE_PROPERTY);
+            this.entity = json(node, entityClass);
+        }
+
+        @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            switch (method.getName()) {
+                case "allowUpdate": return update;
+                case "getEntity": return entity;
+                default: return method.invoke(entity, args);
+            }
+        }
     }
 }

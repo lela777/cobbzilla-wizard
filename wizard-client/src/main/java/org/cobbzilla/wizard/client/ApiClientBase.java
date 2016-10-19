@@ -18,6 +18,7 @@ import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
+import org.cobbzilla.wizard.model.entityconfig.ModelEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.*;
@@ -177,11 +178,16 @@ public class ApiClientBase {
 
     public <T> T post(String path, Object request, Class<T> responseClass) throws Exception {
         if (request instanceof String) return post(path, request, responseClass);
+        if (request instanceof ModelEntity) return post(path, ((ModelEntity) request).getEntity(), responseClass);
         return fromJson(post(path, toJson(request)).json, responseClass);
     }
 
     public <T> T post(String path, T request) throws Exception {
-        return post(path, request, (Class<T>) request.getClass());
+        if (request instanceof ModelEntity) {
+            return (T) post(path, ((ModelEntity) request).getEntity(), ((ModelEntity) request).getEntity().getClass());
+        } else {
+            return post(path, request, (Class<T>) ((ModelEntity) request).getEntity().getClass());
+        }
     }
 
     public RestResponse post(String path, String json) throws Exception {
@@ -211,7 +217,11 @@ public class ApiClientBase {
     }
 
     public <T> T put(String path, T request) throws Exception {
-        return put(path, request, (Class<T>) request.getClass());
+        if (request instanceof ModelEntity) {
+            return (T) put(path, ((ModelEntity) request).getEntity(), ((ModelEntity) request).getEntity().getClass());
+        } else {
+            return put(path, request, (Class<T>) request.getClass());
+        }
     }
 
     public <T> T put(String path, String json, Class<T> responseClass) throws Exception {
