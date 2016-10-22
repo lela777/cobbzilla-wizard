@@ -53,6 +53,7 @@ public class ApiRunner {
     private ApiRunnerListener listener;
 
     protected final Map<String, Object> ctx = new HashMap<>();
+    public Map<String, Object> getContext () { return ctx; }
 
     @Getter(lazy=true, value=AccessLevel.PROTECTED) private final Handlebars handlebars = initHandlebars();
     private Handlebars initHandlebars() {
