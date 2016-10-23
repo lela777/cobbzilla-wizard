@@ -26,6 +26,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.string.StringUtil.urlEncode;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
 @AllArgsConstructor @Slf4j
@@ -63,6 +64,14 @@ public class ApiRunner {
                 if (empty(src)) return "";
                 src = handlebars(src.toString(), (Map<String, Object>) options.context.model());
                 src = ShaUtil.sha256_hex(src.toString());
+                return new Handlebars.SafeString(src.toString());
+            }
+        });
+        hb.registerHelper("urlEncode", new Helper<Object>() {
+            public CharSequence apply(Object src, Options options) {
+                if (empty(src)) return "";
+                src = handlebars(src.toString(), (Map<String, Object>) options.context.model());
+                src = urlEncode(src.toString());
                 return new Handlebars.SafeString(src.toString());
             }
         });
