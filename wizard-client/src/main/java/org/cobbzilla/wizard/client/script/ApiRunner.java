@@ -229,7 +229,7 @@ public class ApiRunner {
                     long checkStart = now();
                     do {
                         try {
-                            result = JsEngine.evaluate(condition, scriptName(script, condition), localCtx, Boolean.class);
+                            result = JsEngine.evaluate(condition, localCtx, scriptName(script, condition), Boolean.class);
                             if (result != null && result) break;
                             log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
                         } catch (Exception e) {
