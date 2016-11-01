@@ -3,10 +3,6 @@ package org.cobbzilla.wizard.util;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScheme;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -33,26 +29,9 @@ public class ProxyHttpClient implements Closeable {
     }
 
     public ProxyHttpClient(HttpRequestBean requestBean, CookieJar cookieJar) {
-
         if (cookieJar == null) cookieJar = new CookieJar();
         this.cookieJar = cookieJar;
-        final HttpClientBuilder clientBuilder = HttpClients.custom().setDefaultCookieStore(cookieJar);
-
-        if (requestBean.hasAuth()) {
-            localContext = HttpClientContext.create();
-            credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(
-                    new AuthScope(requestBean.getHost(), requestBean.getPort()),
-                    new UsernamePasswordCredentials(requestBean.getAuthUsername(), requestBean.getAuthPassword()));
-
-            final AuthCache authCache = new BasicAuthCache();
-            final AuthScheme authScheme = requestBean.getAuthType().newScheme();
-            authCache.put(requestBean.getHttpHost(), authScheme);
-
-            localContext.setAuthCache(authCache);
-            clientBuilder.setDefaultCredentialsProvider(credsProvider);
-        }
-
+        final HttpClientBuilder clientBuilder = requestBean.initClientBuilder(HttpClients.custom().setDefaultCookieStore(cookieJar));
         httpClient = clientBuilder.build();
     }
 
