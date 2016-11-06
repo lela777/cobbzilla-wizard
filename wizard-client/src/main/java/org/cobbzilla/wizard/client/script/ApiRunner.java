@@ -4,14 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
-import org.cobbzilla.util.javascript.JsEngine;
+import org.cobbzilla.util.javascript.StandardJsEngine;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
@@ -56,7 +55,7 @@ public class ApiRunner {
     protected final Map<String, Object> ctx = new HashMap<>();
     public Map<String, Object> getContext () { return ctx; }
 
-    @Getter(lazy=true, value=AccessLevel.PROTECTED) private final Handlebars handlebars = initHandlebars();
+    @Getter(lazy=true) private final Handlebars handlebars = initHandlebars();
     private Handlebars initHandlebars() {
         final Handlebars hb = new Handlebars(new HandlebarsUtil("api-runner(" + api + ")"));
         hb.registerHelper("sha256", new Helper<Object>() {
@@ -229,7 +228,7 @@ public class ApiRunner {
                     long checkStart = now();
                     do {
                         try {
-                            result = JsEngine.evaluate(condition, localCtx, scriptName(script, condition), Boolean.class);
+                            result = StandardJsEngine.evaluate(condition, localCtx, Boolean.class);
                             if (result != null && result) break;
                             log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
                         } catch (Exception e) {
