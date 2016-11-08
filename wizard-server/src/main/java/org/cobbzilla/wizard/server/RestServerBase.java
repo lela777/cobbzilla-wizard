@@ -366,7 +366,26 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public <T> T getBean(Class<T> beanClass) { return getApplicationContext().getBean(beanClass); }
 
-    public static void report(Exception e) {
+    /**
+     * Send error to external error reporting system, like Errbit or Airbrake
+     * @param s the message
+     */
+    public static void reportError(String s) {
+        if (errorApi != null) {
+            try {
+                errorApi.report(s);
+            } catch (Exception e2) {
+                log.error("report: error reporting exception ("+s+"): "+e2, e2);
+            }
+        }
+        System.err.println("report: "+s+"\n");
+    }
+
+    /**
+     * Send error to external error reporting system, like Errbit or Airbrake
+     * @param e the exception
+     */
+    public static void reportError(Exception e) {
         if (errorApi != null) {
             try {
                 errorApi.report(e);

@@ -31,4 +31,10 @@ public class ErrorApiConfiguration {
         if (responseCode != 200) log.warn("report("+e+"): notifier API returned "+responseCode);
     }
 
+    public void report(String s) {
+        final AirbrakeNoticeBuilder builder = new AirbrakeNoticeBuilder(getKey(), s, getEnv());
+        final int responseCode = getNotifier().notify(builder.newNotice());
+        if (responseCode != 200) log.warn("report("+s+"): notifier API returned "+responseCode);
+    }
+
 }

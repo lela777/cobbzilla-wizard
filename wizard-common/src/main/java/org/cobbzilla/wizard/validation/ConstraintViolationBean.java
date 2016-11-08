@@ -55,7 +55,7 @@ public class ConstraintViolationBean {
         try {
             return (firstDot != -1 && lastDot != -1 && lastDot <= messageTemplate.length()) ? messageTemplate.substring(firstDot + 1, lastDot) : null;
         } catch (Exception e) {
-            log.warn("getField("+messageTemplate+"): "+e);
+            log.info("getField("+messageTemplate+"): "+e);
             return null;
         }
     }
