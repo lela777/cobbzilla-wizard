@@ -6,6 +6,7 @@ import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
@@ -24,11 +25,12 @@ import java.util.Map;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
-@AllArgsConstructor @Slf4j
+@NoArgsConstructor @AllArgsConstructor @Slf4j
 public class ApiRunner {
 
     public static final String CTX_JSON = "json";
@@ -39,6 +41,9 @@ public class ApiRunner {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
+
+    public ApiRunner(ApiRunner other) { copy(this, other); }
+
     public static void setScriptForThread(ApiScript script) {
         log.info(script.getComment());
         currentScripts.put(Thread.currentThread().getName(), script);
