@@ -22,6 +22,9 @@ public class ApiMultiScriptDriver extends MultiResultDriverBase {
     @Getter private Map<String, Object> context;
     @Override public void setContext(Map<String, Object> context) { this.context = context; }
 
+    @Getter @Setter private int maxConcurrent;
+    @Getter @Setter private long timeout;
+
     @Override public void before() { apiRunner.reset(); }
 
     protected String getTestName(Object task) { return ReflectionUtil.get(task, "name", ""+task.hashCode()); }
