@@ -33,9 +33,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
 
-    @Getter private ApiClientBase api = new ApiClientBase() {
-        @Override public synchronized String getBaseUri() { return server.getClientUri(); }
-    };
+    @Getter private final ApiClientBase api = new BasicTestApiClient();
 
     public void setToken(String sessionId) { getApi().setToken(sessionId); }
     public void pushToken(String sessionId) { getApi().pushToken(sessionId); }
@@ -134,5 +132,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected ResultSetBean execSql(String sql, Object... args) throws Exception {
         return getConfiguration().execSql(sql, args);
+    }
+
+    public static class BasicTestApiClient extends ApiClientBase {
+        @Override public synchronized String getBaseUri() { return server.getClientUri(); }
     }
 }

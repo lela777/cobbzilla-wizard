@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.apache.http.client.HttpClient;
 import org.cobbzilla.restex.RestexClientConnectionManager;
 import org.cobbzilla.restex.targets.TemplateCaptureTarget;
+import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.junit.After;
@@ -16,10 +17,8 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
 
     protected static TemplateCaptureTarget apiDocs = new TemplateCaptureTarget("target/api-examples");
 
-    @Getter(lazy=true) private final HttpClient httpClient = initHttpClient();
-    protected HttpClient initHttpClient() {
-        return docsEnabled ? new RestexClientConnectionManager(apiDocs).getHttpClient() : super.getApi().getHttpClient();
-    }
+    @Getter(lazy=true) private final ApiClientBase api = initDocsApi();
+    protected ApiClientBase initDocsApi() { return new ApiDocsApiClient(super.getApi()); }
 
     @After public void commitDocCapture () throws Exception { if (docsEnabled) apiDocs.commit(); }
 
@@ -31,4 +30,21 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
         return new ApiDocsApiRunnerListener(apiDocs);
     }
 
+    public static class ApiDocsApiClient extends ApiClientBase {
+
+        @Getter(lazy=true) private final HttpClient httpClient = initHttpClient();
+
+        private final ApiClientBase api;
+
+        public ApiDocsApiClient(ApiClientBase api) {
+            super(api.getBaseUri());
+            this.api = api;
+        }
+
+        protected HttpClient initHttpClient() {
+            return docsEnabled ? new RestexClientConnectionManager(apiDocs).getHttpClient() : api.getHttpClient();
+        }
+
+        @Override public String getBaseUri() { return api.getBaseUri(); }
+    }
 }

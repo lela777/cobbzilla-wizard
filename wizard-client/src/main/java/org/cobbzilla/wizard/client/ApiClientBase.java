@@ -377,6 +377,6 @@ public class ApiClientBase {
         return header == null ? null : header.getValue();
     }
 
-    public ApiClientBase copy() { return instantiate(getClass()); }
+    public ApiClientBase copy() { return instantiate(getClass(), this); }
 
 }
