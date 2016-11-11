@@ -134,7 +134,4 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         return getConfiguration().execSql(sql, args);
     }
 
-    public static class BasicTestApiClient extends ApiClientBase {
-        @Override public synchronized String getBaseUri() { return server.getClientUri(); }
-    }
 }

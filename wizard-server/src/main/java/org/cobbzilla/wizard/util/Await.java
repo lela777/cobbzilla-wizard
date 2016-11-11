@@ -130,4 +130,21 @@ public class Await {
         if (now() - start > timeout) throw new TimeoutException("await: timed out");
         return results;
     }
+
+    public static void awaitAll(Collection<Future> futures, long timeout) throws TimeoutException {
+        boolean allDone;
+        long start = now();
+        while (now() - start < timeout) {
+            allDone = true;
+            for (Future f : futures) {
+                if (!f.isDone()) {
+                    allDone = false;
+                    break;
+                }
+            }
+            if (allDone) break;
+            sleep(200);
+        }
+        if (now() - start >= timeout) throw new TimeoutException();
+    }
 }

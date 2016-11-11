@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.HttpClient;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
@@ -42,9 +43,10 @@ public class ApiRunner {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
 
-    public ApiRunner(ApiRunner other) {
+    public ApiRunner(ApiRunner other, HttpClient httpClient) {
         copy(this, other);
         this.api = other.api.copy();
+        this.api.setHttpClient(httpClient);
         this.listener = copy(other.listener);
         this.ctx.putAll(other.ctx);
     }
