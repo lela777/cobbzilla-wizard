@@ -1,5 +1,6 @@
 package org.cobbzilla.wizardtest.resources;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.jdbc.ResultSetBean;
@@ -26,9 +27,34 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+// todo: this should not inherit from ApiClientBase. instead, it should *have* an ApiClientBase, and a method to
+// initialize a new one. parallel tests should share the same server, but user a different api client.
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
-        extends ApiClientBase implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
+        implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
+
+    @Getter(lazy=true) private final ApiClientBase api = initApi();
+    protected ApiClientBase initApi() {
+        return new ApiClientBase() {
+            @Override public synchronized String getBaseUri() { return server.getClientUri(); }
+        };
+    }
+    public void setToken(String sessionId) { getApi().setToken(sessionId); }
+    public void pushToken(String sessionId) { getApi().pushToken(sessionId); }
+
+    public RestResponse get(String url) throws Exception { return getApi().get(url); }
+    public RestResponse doGet(String url) throws Exception { return getApi().doGet(url); }
+
+    public RestResponse put(String url, String json) throws Exception { return getApi().put(url, json); }
+    <T> T put(String path, Object request, Class<T> responseClass) throws Exception { return getApi().put(path, request, responseClass); }
+    public RestResponse doPut(String uri, String json) throws Exception { return getApi().doPut(uri, json); }
+
+    public RestResponse post(String url, String json) throws Exception { return getApi().post(url, json); }
+    <T> T post(String path, Object request, Class<T> responseClass) throws Exception { return getApi().post(path, request, responseClass); }
+    public RestResponse doPost(String uri, String json) throws Exception { return getApi().doPost(uri, json); }
+
+    public RestResponse delete(String url) throws Exception { return getApi().delete(url); }
+    public RestResponse doDelete(String url) throws Exception { return getApi().doDelete(url); }
 
     protected abstract List<ConfigurationSource> getConfigurations();
     protected List<ConfigurationSource> getConfigurationSources(String... paths) {
@@ -51,8 +77,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static volatile RestServer server = null;
 
     protected static <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
-
-    @Override public synchronized String getBaseUri() { return server.getClientUri(); }
 
     protected C getConfiguration () { return (C) server.getConfiguration(); }
 

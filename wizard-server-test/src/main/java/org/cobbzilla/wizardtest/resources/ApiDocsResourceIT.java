@@ -18,7 +18,7 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
 
     @Getter(lazy=true) private final HttpClient httpClient = initHttpClient();
     protected HttpClient initHttpClient() {
-        return docsEnabled ? new RestexClientConnectionManager(apiDocs).getHttpClient() : super.getHttpClient();
+        return docsEnabled ? new RestexClientConnectionManager(apiDocs).getHttpClient() : super.getApi().getHttpClient();
     }
 
     @After public void commitDocCapture () throws Exception { if (docsEnabled) apiDocs.commit(); }

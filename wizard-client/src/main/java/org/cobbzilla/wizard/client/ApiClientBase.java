@@ -29,6 +29,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.*;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
@@ -57,6 +58,7 @@ public class ApiClientBase {
 
     public void logout () { setToken(null); }
 
+    public ApiClientBase (ApiClientBase other) { this.connectionInfo = other.getConnectionInfo(); }
     public ApiClientBase (ApiConnectionInfo connectionInfo) { this.connectionInfo = connectionInfo; }
     public ApiClientBase (String baseUri) { connectionInfo = new ApiConnectionInfo(baseUri); }
 
@@ -374,5 +376,7 @@ public class ApiClientBase {
         final Header header = response.getFirstHeader(LOCATION_HEADER);
         return header == null ? null : header.getValue();
     }
+
+    public ApiClientBase copy() { return instantiate(getClass()); }
 
 }

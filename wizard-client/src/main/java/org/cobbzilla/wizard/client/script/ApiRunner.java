@@ -44,7 +44,7 @@ public class ApiRunner {
 
     public ApiRunner(ApiRunner other) {
         copy(this, other);
-        this.api = copy(other.api);
+        this.api = other.api.copy();
         this.listener = copy(other.listener);
         this.ctx.putAll(other.ctx);
     }
