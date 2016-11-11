@@ -13,6 +13,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HttpContext;
 import org.cobbzilla.util.http.*;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
@@ -46,6 +47,7 @@ public class ApiClientBase {
     @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(1);
 
     @Getter @Setter protected boolean captureHeaders = false;
+    @Getter @Setter private HttpContext httpContext = null;
 
     public void setToken(String token) {
         this.token = token;
@@ -74,7 +76,9 @@ public class ApiClientBase {
 
     public String getBaseUri () { return connectionInfo.getBaseUri(); }
 
-    @Getter @Setter private HttpClient httpClient = new DefaultHttpClient();
+    protected HttpClient httpClient = new DefaultHttpClient();
+    public HttpClient getHttpClient() { return httpClient; }
+    public void setHttpClient(HttpClient httpClient) { this.httpClient = httpClient; }
 
     public RestResponse process(HttpRequestBean requestBean) throws Exception {
         switch (requestBean.getMethod()) {
@@ -171,7 +175,7 @@ public class ApiClientBase {
     }
 
     public <T> RestResponse doPost(String path, T data, ContentType contentType) throws Exception {
-        HttpClient client = getHttpClient();
+        final HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpPost httpPost = new HttpPost(url);
         setRequestEntity(httpPost, data, contentType);
@@ -271,7 +275,7 @@ public class ApiClientBase {
                 retryDelay *= 2;
             }
             try {
-                final HttpResponse response = client.execute(request);
+                final HttpResponse response = client.execute(request, httpContext);
                 final int statusCode = response.getStatusLine().getStatusCode();
                 final String responseJson;
                 final HttpEntity entity = response.getEntity();
