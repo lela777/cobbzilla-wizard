@@ -42,7 +42,12 @@ public class ApiRunner {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
 
-    public ApiRunner(ApiRunner other) { copy(this, other); }
+    public ApiRunner(ApiRunner other) {
+        copy(this, other);
+        this.api = copy(other.api);
+        this.listener = copy(other.listener);
+        this.ctx.putAll(other.ctx);
+    }
 
     public static void setScriptForThread(ApiScript script) {
         log.info(script.getComment());
@@ -61,7 +66,7 @@ public class ApiRunner {
     public Map<String, Object> getContext () { return ctx; }
 
     @Getter(lazy=true) private final Handlebars handlebars = initHandlebars();
-    private Handlebars initHandlebars() {
+    protected Handlebars initHandlebars() {
         final Handlebars hb = new Handlebars(new HandlebarsUtil("api-runner(" + api + ")"));
         hb.registerHelper("sha256", new Helper<Object>() {
             public CharSequence apply(Object src, Options options) {
