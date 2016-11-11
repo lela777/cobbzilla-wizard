@@ -33,24 +33,26 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
 
-    @Getter(lazy=true) private final ApiClientBase api = initApi();
-    protected ApiClientBase initApi() {
-        return new ApiClientBase() {
-            @Override public synchronized String getBaseUri() { return server.getClientUri(); }
-        };
-    }
+    @Getter private ApiClientBase api = new ApiClientBase() {
+        @Override public synchronized String getBaseUri() { return server.getClientUri(); }
+    };
+
     public void setToken(String sessionId) { getApi().setToken(sessionId); }
     public void pushToken(String sessionId) { getApi().pushToken(sessionId); }
+    public void setCaptureHeaders(boolean capture) { getApi().setCaptureHeaders(capture); }
+    public void logout() { getApi().logout(); }
 
     public RestResponse get(String url) throws Exception { return getApi().get(url); }
     public RestResponse doGet(String url) throws Exception { return getApi().doGet(url); }
 
     public RestResponse put(String url, String json) throws Exception { return getApi().put(url, json); }
-    <T> T put(String path, Object request, Class<T> responseClass) throws Exception { return getApi().put(path, request, responseClass); }
+    public <T> T put(String url, T o) throws Exception { return getApi().put(url, o); }
+    public <T> T put(String path, Object request, Class<T> responseClass) throws Exception { return getApi().put(path, request, responseClass); }
     public RestResponse doPut(String uri, String json) throws Exception { return getApi().doPut(uri, json); }
 
     public RestResponse post(String url, String json) throws Exception { return getApi().post(url, json); }
-    <T> T post(String path, Object request, Class<T> responseClass) throws Exception { return getApi().post(path, request, responseClass); }
+    public <T> T post(String url, T o) throws Exception { return getApi().post(url, o); }
+    public <T> T post(String path, Object request, Class<T> responseClass) throws Exception { return getApi().post(path, request, responseClass); }
     public RestResponse doPost(String uri, String json) throws Exception { return getApi().doPost(uri, json); }
 
     public RestResponse delete(String url) throws Exception { return getApi().delete(url); }
