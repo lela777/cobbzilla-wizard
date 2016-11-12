@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.client.script;
 import com.github.jknack.handlebars.Handlebars;
 import lombok.*;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.cobbzilla.util.collection.multi.MultiResultDriverBase;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
@@ -11,7 +12,7 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import java.util.Map;
 
-@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
+@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true) @Slf4j
 public class ApiMultiScriptDriver extends MultiResultDriverBase {
 
     @Getter @Setter private ApiRunner apiRunner;

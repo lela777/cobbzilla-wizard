@@ -76,8 +76,11 @@ public class ApiClientBase {
 
     public String getBaseUri () { return connectionInfo.getBaseUri(); }
 
-    protected HttpClient httpClient = new DefaultHttpClient();
-    public HttpClient getHttpClient() { return httpClient; }
+    protected HttpClient httpClient;
+    public HttpClient getHttpClient() {
+        if (httpClient == null) httpClient = new DefaultHttpClient();
+        return httpClient;
+    }
     public void setHttpClient(HttpClient httpClient) { this.httpClient = httpClient; }
 
     public RestResponse process(HttpRequestBean requestBean) throws Exception {

@@ -32,8 +32,11 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
 
     public static class ApiDocsApiClient extends ApiClientBase {
 
-        @Getter(lazy=true) private final HttpClient docsClient = initHttpClient();
-        @Override public HttpClient getHttpClient() { return getDocsClient(); }
+        @Override public HttpClient getHttpClient() {
+            if (httpClient == null) httpClient = initHttpClient();
+            return httpClient;
+        }
+        @Override public void setHttpClient(HttpClient httpClient) { this.httpClient = httpClient; }
 
         private final ApiClientBase api;
 
