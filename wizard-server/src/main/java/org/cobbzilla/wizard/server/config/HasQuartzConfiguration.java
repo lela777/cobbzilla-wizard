@@ -5,5 +5,6 @@ import java.util.Properties;
 public interface HasQuartzConfiguration {
 
     Properties getQuartz();
+    boolean isRunScheduler();
 
 }
