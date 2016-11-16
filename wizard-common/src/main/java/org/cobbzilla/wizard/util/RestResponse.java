@@ -1,13 +1,25 @@
 package org.cobbzilla.wizard.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.ToString;
+import lombok.EqualsAndHashCode;
+import org.cobbzilla.util.io.TempDir;
 
+import javax.persistence.Transient;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor @ToString(callSuper=false)
+import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
+
+@AllArgsConstructor @EqualsAndHashCode(of={"status","json","location"})
 public class RestResponse {
+
+    public static Integer defaultWriteToFileLimit = 500;
+    public static File defaultLogDir = new TempDir();
+
+    @JsonIgnore @Transient public Integer writeToFileLimit;
+    @JsonIgnore @Transient public File logDir;
 
     public int status;
     public String json;
@@ -44,4 +56,21 @@ public class RestResponse {
     }
     public int intHeader (String name) { return Integer.parseInt(header(name)); }
 
+    @Override public String toString() {
+        File jsonFile;
+        String displayJson = json;
+        if ((writeToFileLimit != null && json.length() > writeToFileLimit)
+            || (defaultWriteToFileLimit != null && json.length() > defaultWriteToFileLimit)) {
+            int limit = writeToFileLimit != null ? writeToFileLimit : defaultWriteToFileLimit;
+            jsonFile = new File(logDir != null ? logDir : defaultLogDir, "restResponse"+hashCode()+".json");
+            if (!jsonFile.exists()) toFileOrDie(jsonFile, json);
+            displayJson = json.substring(0, limit) + " ... (full JSON: "+jsonFile+")";
+        }
+        return "RestResponse{" +
+                "status=" + status +
+                ", json='" + displayJson + '\'' +
+                ", location='" + location + '\'' +
+                ", headers=" + headers +
+                '}';
+    }
 }
