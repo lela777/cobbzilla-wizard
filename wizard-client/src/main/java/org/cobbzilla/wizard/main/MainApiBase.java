@@ -16,11 +16,7 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
     private static final String TOKEN_PREFIX = "token:";
 
     @Getter(value=PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
-    private ApiClientBase initApiClient() {
-        return new ApiClientBase(getOptions().getApiBase()) {
-            @Override protected String getTokenHeader() { return getApiHeaderTokenName(); }
-        };
-    }
+    private ApiClientBase initApiClient() { return new ApiTokenClient<>(this); }
 
     @Override protected void preRun() { if (getOptions().requireAccount()) login(); }
 
@@ -75,4 +71,16 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
         die("Account not found: "+account);
     }
 
+    public static class ApiTokenClient<OPT extends MainApiOptionsBase> extends ApiClientBase {
+        private String tokenHeader;
+        public ApiTokenClient(MainApiBase command) {
+            super(((OPT) command.getOptions()).getApiBase());
+            this.tokenHeader = command.getApiHeaderTokenName();
+        }
+        public ApiTokenClient(ApiClientBase client) {
+            super(client);
+            this.tokenHeader = client.getTokenHeader();
+        }
+        @Override public String getTokenHeader() { return tokenHeader; }
+    }
 }

@@ -354,7 +354,7 @@ public class ApiClientBase {
         return request;
     }
 
-    protected String getTokenHeader() { return null; }
+    public String getTokenHeader() { return null; }
 
     protected final Stack<String> tokenStack = new Stack<>();
     public void pushToken(String token) {
