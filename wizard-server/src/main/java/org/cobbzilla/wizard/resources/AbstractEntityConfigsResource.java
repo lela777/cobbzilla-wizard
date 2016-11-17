@@ -124,7 +124,7 @@ public abstract class AbstractEntityConfigsResource {
         try {
             in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
         } catch (Exception e) {
-            log.warn("getEntityConfig("+clazz.getName()+"): "+e);
+            log.debug("getEntityConfig("+clazz.getName()+"): "+e);
             return null;
         }
         try {
