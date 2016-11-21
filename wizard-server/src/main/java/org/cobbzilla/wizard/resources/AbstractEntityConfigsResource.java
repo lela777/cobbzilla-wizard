@@ -19,8 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -31,6 +30,7 @@ import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.string.StringUtil.join;
 import static org.cobbzilla.util.string.StringUtil.packagePath;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
@@ -94,6 +94,7 @@ public abstract class AbstractEntityConfigsResource {
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
             scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
+            HashSet<Class<?>> classesWithoutConfigs = new HashSet<>();
             for (String pkg : getConfiguration().getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
@@ -106,10 +107,15 @@ public abstract class AbstractEntityConfigsResource {
                             configMap.put(clazz.getSimpleName(), config);
                         }
                     } else {
-                        log.warn("No config found for "+clazz);
+                        classesWithoutConfigs.add(clazz);
                     }
                 }
             }
+
+            if (classesWithoutConfigs.size() > 0) {
+                log.warn("No config(s) found for class(es): " + join(", ", classesWithoutConfigs));
+            }
+
             synchronized (configs) {
                 configs.set(configMap);
             }
