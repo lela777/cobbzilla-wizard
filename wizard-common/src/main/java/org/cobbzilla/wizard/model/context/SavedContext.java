@@ -61,7 +61,7 @@ public class SavedContext {
                 }
                 entries.add(new ContextEntry(key, className, json(thing)));
             } else {
-                log.warn("setContext: skipping key '"+ key +"' because value was null");
+                log.debug("setContext: skipping key '"+ key +"' because value was null");
             }
         }
         contextJson = json(entries);
