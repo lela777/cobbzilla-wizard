@@ -63,7 +63,7 @@ public class RedisService {
     }
 
     public void reconnect () {
-        log.info("marking redis for reconnection...");
+        log.debug("marking redis for reconnection...");
         synchronized (redis) {
             if (redis.get() != null) {
                 try { redis.get().disconnect(); } catch (Exception e) {
@@ -77,7 +77,7 @@ public class RedisService {
     private Jedis getRedis () {
         synchronized (redis) {
             if (redis.get() == null) {
-                log.info("connecting to redis...");
+                log.debug("connecting to redis...");
                 redis.set(newJedis());
             }
         }
