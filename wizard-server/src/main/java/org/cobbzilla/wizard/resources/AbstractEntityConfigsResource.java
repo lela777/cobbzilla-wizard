@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.cache.AutoRefreshingReference;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
@@ -30,7 +31,6 @@ import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
-import static org.cobbzilla.util.string.StringUtil.join;
 import static org.cobbzilla.util.string.StringUtil.packagePath;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
@@ -113,7 +113,7 @@ public abstract class AbstractEntityConfigsResource {
             }
 
             if (classesWithoutConfigs.size() > 0) {
-                log.warn("No config(s) found for class(es): " + join(", ", classesWithoutConfigs));
+                log.warn("No config(s) found for class(es): " + StringUtil.toString(classesWithoutConfigs));
             }
 
             synchronized (configs) {
