@@ -36,7 +36,12 @@ public class ApiMultiScriptDriver extends MultiResultDriverBase {
     @Override protected void run(Object task) throws Exception {
         @Cleanup final CloseableHttpClient httpClient = httpClientFactory.create();
         final ApiRunner api = new ApiRunner(apiRunner, httpClient);
-        api.run(HandlebarsUtil.apply(handlebars, testTemplate, ReflectionUtil.toMap(task)));
+        api.run(taskToScript(task));
+    }
+
+    protected String taskToScript(Object task) {
+        final Map<String, Object> ctx = ReflectionUtil.toMap(task);
+        return HandlebarsUtil.apply(handlebars, testTemplate, ctx);
     }
 
 }
