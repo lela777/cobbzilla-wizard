@@ -46,21 +46,19 @@ public class JacksonMessageBodyProvider extends JacksonJaxbJsonProvider {
         setMapper(mapper);
     }
 
-    @Override
-    public boolean isReadable(Class<?> type,
-                              Type genericType,
-                              Annotation[] annotations,
-                              MediaType mediaType) {
+    @Override public boolean isReadable(Class<?> type,
+                                        Type genericType,
+                                        Annotation[] annotations,
+                                        MediaType mediaType) {
         return isProvidable(type) && super.isReadable(type, genericType, annotations, mediaType);
     }
 
-    @Override
-    public Object readFrom(Class<Object> type,
-                           Type genericType,
-                           Annotation[] annotations,
-                           MediaType mediaType,
-                           MultivaluedMap<String, String> httpHeaders,
-                           InputStream entityStream) throws IOException {
+    @Override public Object readFrom(Class<Object> type,
+                                     Type genericType,
+                                     Annotation[] annotations,
+                                     MediaType mediaType,
+                                     MultivaluedMap<String, String> httpHeaders,
+                                     InputStream entityStream) throws IOException {
         return validate(annotations, super.readFrom(type,
                 genericType,
                 annotations,
@@ -94,11 +92,10 @@ public class JacksonMessageBodyProvider extends JacksonJaxbJsonProvider {
         return null;
     }
 
-    @Override
-    public boolean isWriteable(Class<?> type,
-                               Type genericType,
-                               Annotation[] annotations,
-                               MediaType mediaType) {
+    @Override public boolean isWriteable(Class<?> type,
+                                         Type genericType,
+                                         Annotation[] annotations,
+                                         MediaType mediaType) {
         return isProvidable(type) && super.isWriteable(type, genericType, annotations, mediaType);
     }
 
