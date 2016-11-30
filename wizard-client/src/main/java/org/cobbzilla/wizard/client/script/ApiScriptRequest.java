@@ -3,7 +3,6 @@ package org.cobbzilla.wizard.client.script;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.cobbzilla.util.http.HttpMethods;
 
 import java.util.Map;
@@ -12,8 +11,8 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.json.JsonUtil.mergeJsonOrDie;
+import static org.cobbzilla.util.string.StringUtil.ellipsis;
 
-@ToString
 public class ApiScriptRequest {
 
     @Getter @Setter private String uri;
@@ -41,6 +40,15 @@ public class ApiScriptRequest {
         final Object o = ctx.get(data);
         if (o == null) die("getJsonEntity: data '" + data + "' not found in context: " + ctx);
         return mergeJsonOrDie(json(o), entity);
+    }
+
+    @Override public String toString () {
+        return "{uri: "+uri
+                + ", method: "+getMethod()
+                + (hasData() ? ", data: "+ ellipsis(data, 1000) : "")
+                + (hasEntity() ? ", entity: " + ellipsis(json(entity), 1000) : "")
+                + (hasSession() ? ", session: " + getSession() : "")
+                +"}";
     }
 
 }
