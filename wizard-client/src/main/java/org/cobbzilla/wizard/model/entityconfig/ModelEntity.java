@@ -4,5 +4,6 @@ import org.cobbzilla.wizard.model.Identifiable;
 
 public interface ModelEntity extends Identifiable {
     boolean allowUpdate();
+    boolean performSubstitutions();
     Identifiable getEntity();
 }

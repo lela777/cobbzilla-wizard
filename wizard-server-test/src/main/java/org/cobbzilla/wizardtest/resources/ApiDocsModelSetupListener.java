@@ -16,9 +16,7 @@ public class ApiDocsModelSetupListener extends ModelSetupListenerBase {
     @Override public void preCreate (EntityConfig entityConfig, Identifiable entity) { note("Create " + entityConfig.getName()); }
     @Override public void preUpdate (EntityConfig entityConfig, Identifiable entity) { note("Update " + entityConfig.getName()); }
 
-    @Override public String preEntityConfig (String entityType, String json) {
-        note("Lookup EntityConfig for " + entityType); return super.preEntityConfig(entityType, json);
-    }
+    @Override public void preEntityConfig (String entityType) { note("Lookup EntityConfig for " + entityType); }
 
     @Override public void preLookup (Identifiable entity)     { note("Checking to see if " + entity.getClass().getSimpleName() + " already exists: " + entity); }
 

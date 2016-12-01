@@ -34,6 +34,7 @@ import static org.cobbzilla.util.string.StringUtil.urlEncode;
 public class ModelSetup {
 
     public static final String ALLOW_UPDATE_PROPERTY = "_update";
+    public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
     public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
 
@@ -102,9 +103,9 @@ public class ModelSetup {
                                  String entityType,
                                  String json,
                                  ModelSetupListener listener) throws Exception {
-        if (listener != null) json = listener.preEntityConfig(entityType, json);
+        if (listener != null) listener.preEntityConfig(entityType);
         final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
-        if (listener != null) json = listener.postEntityConfig(entityType, entityConfig, json);
+        if (listener != null) listener.postEntityConfig(entityType, entityConfig);
 
         final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
         final ModelEntity[] entities = parseEntities(json, entityClass);
@@ -341,17 +342,25 @@ public class ModelSetup {
     private static class ModelEntityInvocationHandler implements InvocationHandler {
 
         private final boolean update;
+        private final boolean subst;
         @Getter private final Identifiable entity;
 
         public ModelEntityInvocationHandler(JsonNode node, Class<? extends Identifiable> entityClass) {
-            this.update = node.has(ALLOW_UPDATE_PROPERTY) && node.get(ALLOW_UPDATE_PROPERTY).booleanValue();
-            ((ObjectNode) node).remove(ALLOW_UPDATE_PROPERTY);
+            update = hasSpecialProperty(node, ALLOW_UPDATE_PROPERTY);
+            subst = hasSpecialProperty(node, PERFORM_SUBST_PROPERTY);
             this.entity = json(node, entityClass);
+        }
+
+        private boolean hasSpecialProperty(JsonNode node, String prop) {
+            boolean val = node.has(prop) && node.get(prop).booleanValue();
+            ((ObjectNode) node).remove(prop);
+            return val;
         }
 
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
                 case "allowUpdate": return update;
+                case "performSubstitutions": return subst;
                 case "getEntity": return entity;
                 default: return method.invoke(entity, args);
             }
