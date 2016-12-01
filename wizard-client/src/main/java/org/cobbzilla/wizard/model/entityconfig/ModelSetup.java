@@ -102,9 +102,9 @@ public class ModelSetup {
                                  String entityType,
                                  String json,
                                  ModelSetupListener listener) throws Exception {
-        if (listener != null) listener.preEntityConfig(entityType);
+        if (listener != null) json = listener.preEntityConfig(entityType, json);
         final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
-        if (listener != null) listener.postEntityConfig(entityType, entityConfig);
+        if (listener != null) json = listener.postEntityConfig(entityType, entityConfig, json);
 
         final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
         final ModelEntity[] entities = parseEntities(json, entityClass);
@@ -114,17 +114,19 @@ public class ModelSetup {
         }
     }
 
-    public static ModelEntity[] parseEntities(String json, Class<? extends Identifiable> entityClass) {
+    public static ModelEntity[] parseEntities(String json,
+                                              Class<? extends Identifiable> entityClass) {
         final JsonNode[] nodes = jsonWithComments(json, JsonNode[].class);
         final ModelEntity[] entities = new ModelEntity[nodes.length];
         for (int i=0; i<nodes.length; i++) {
             final JsonNode node = nodes[i];
-            entities[i] = getModelEntity(node, entityClass);
+            entities[i] = buildModelEntity(node, entityClass);
         }
         return entities;
     }
 
-    public static ModelEntity getModelEntity(JsonNode node, Class<? extends Identifiable> entityClass) {
+    public static ModelEntity buildModelEntity(JsonNode node,
+                                               Class<? extends Identifiable> entityClass) {
         final Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(new Class[]{ModelEntity.class});
         enhancer.setSuperclass(entityClass);
@@ -213,7 +215,7 @@ public class ModelSetup {
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
                     for (JsonNode child : children) {
-                        createEntity(api, childConfig, getModelEntity(child, childClass), context, listener);
+                        createEntity(api, childConfig, buildModelEntity(child, childClass), context, listener);
                     }
                 }
             }
@@ -242,7 +244,7 @@ public class ModelSetup {
         final String uri = processUri(ctx, entity, entityConfig.getCreateUri());
 
         // if the entity has a parent, it will want that parent's UUID in that field
-        setParentFields(ctx, entityConfig, (T) entity);
+        setParentFields(ctx, entityConfig, entity);
 
         if (listener != null) listener.preCreate(entityConfig, entity);
         final T created;
