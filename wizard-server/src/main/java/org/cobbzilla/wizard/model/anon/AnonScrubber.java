@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.CaseInsensitiveStringSet;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
-import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.sql.Connection;
@@ -21,6 +20,7 @@ import java.util.Set;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.jdbc.ResultSetBean.row2map;
+import static org.cobbzilla.wizard.model.ModelCryptUtil.getCryptor;
 
 @Accessors(chain=true) @Slf4j
 public class AnonScrubber {
@@ -101,12 +101,6 @@ public class AnonScrubber {
         } catch (Exception e) {
             die("anonymize: error scrubbing: "+e, e);
         }
-    }
-
-    public HibernatePBEStringEncryptor getCryptor(HasDatabaseConfiguration readConfig) {
-        final RdbmsConfig config = new RdbmsConfig();
-        config.setConfiguration(readConfig);
-        return config.hibernateEncryptor();
     }
 
 }
