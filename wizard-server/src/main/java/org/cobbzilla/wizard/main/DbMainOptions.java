@@ -58,13 +58,7 @@ public abstract class DbMainOptions extends BaseMainOptions {
     @Getter @Setter private boolean ignoreUnknown = true;
 
     public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDatabaseConfiguration() {
-        final String[] paths = getConfigPaths();
-        final String decryptKeyVar = getDecryptKeyEnvVar();
-        final String cryptKeyVar = getCryptKeyEnvVar();
-
-        // if neither decrypt/crypt env vars are specified, or if they are the same, then don't override key
-        final String key = decryptKeyVar == null && cryptKeyVar == null || (decryptKeyVar != null && cryptKeyVar != null && decryptKeyVar.equals(cryptKeyVar)) ? null : decryptKeyVar;
-        return getDatabaseConfiguration(paths, key);
+        return getDatabaseConfiguration(getConfigPaths(), getDecryptKeyEnvVar());
     }
 
     public <C extends RestServerConfiguration, S extends RestServer<C>> HasDatabaseConfiguration getDatabaseConfiguration(String[] paths, String envVar) {
