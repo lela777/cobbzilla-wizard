@@ -247,7 +247,12 @@ public class ModelSetup {
         // if the entity has a parent, it will want that parent's UUID in that field
         setParentFields(ctx, entityConfig, entity);
 
-        if (listener != null) listener.preCreate(entityConfig, entity);
+        if (listener != null) {
+            if (entity instanceof ModelEntity && ((ModelEntity) entity).performSubstitutions()) {
+                entity = listener.subst(entity);
+            }
+            listener.preCreate(entityConfig, entity);
+        }
         final T created;
         switch (entityConfig.getCreateMethod().toLowerCase()) {
             case "put":  created = api.put(uri, entity); break;

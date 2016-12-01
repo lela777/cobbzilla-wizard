@@ -16,5 +16,6 @@ public class ModelSetupListenerBase implements ModelSetupListener {
 
     @Override public void preLookup(Identifiable entity) {}
     @Override public void postLookup(Identifiable entity, Identifiable request, RestResponse response) {}
+    @Override public Identifiable subst (Identifiable entity) {return entity;}
 
 }

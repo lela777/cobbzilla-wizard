@@ -17,4 +17,6 @@ public interface ModelSetupListener {
     void preLookup(Identifiable entity);
     void postLookup(Identifiable entity, Identifiable request, RestResponse response);
 
+    <T extends Identifiable> T subst(T entity);
+
 }
