@@ -20,10 +20,10 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
@@ -43,8 +43,7 @@ public class ModelSetup {
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
     // use 1 + 3/4 of all other processors, max of 10
-//    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
-    public static int maxConcurrency = 1; // i surrender, for now...
+    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
     public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
@@ -227,7 +226,7 @@ public class ModelSetup {
                     if (childClassName == null) childClassName = entity.getClass().getPackage().getName() + "." + childEntityType;
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
-                    final ExecutorService exec = Executors.newFixedThreadPool(maxConcurrency);
+                    final ExecutorService exec = fixedPool(Math.min(children.length, maxConcurrency));
                     final Set<Future> futures = new HashSet<>();
                     for (final JsonNode child : children) {
                          futures.add(exec.submit(new Runnable() {
