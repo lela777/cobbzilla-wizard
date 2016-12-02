@@ -172,7 +172,6 @@ public class ModelSetup {
                         }
                         break;
                     case NOT_FOUND:
-                        log.info("createEntity: creating " + entityType);
                         entity = create(api, context, entityConfig, entity, listener);
                         break;
                     default:
@@ -253,6 +252,7 @@ public class ModelSetup {
             }
             listener.preCreate(entityConfig, entity);
         }
+        log.info("create: creating " + entity.getClass().getSimpleName() + ": " + uri);
         final T created;
         switch (entityConfig.getCreateMethod().toLowerCase()) {
             case "put":  created = api.put(uri, entity); break;
