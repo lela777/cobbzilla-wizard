@@ -10,6 +10,7 @@ import org.cobbzilla.util.daemon.Await;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.NamedEntity;
@@ -31,6 +32,7 @@ import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClass;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
 
@@ -40,9 +42,9 @@ public class ModelSetup {
     public static final String ALLOW_UPDATE_PROPERTY = "_update";
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
-    // use 1 + half of all other processors, max of 10
-    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, Runtime.getRuntime().availableProcessors()/2));
-    public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+    // use 1 + 3/4 of all other processors, max of 10
+    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
+    public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
     public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
@@ -192,6 +194,7 @@ public class ModelSetup {
         } else {
             entity = create(api, context, entityConfig, entity, listener);
         }
+        if (entity == null) return; // for some reason it was OK not to create it. it got created by someone else.
         addToCache(api, entity);
 
         // copy children if present in request (they wouldn't be in object returned from server)
@@ -273,12 +276,23 @@ public class ModelSetup {
             listener.preCreate(entityConfig, entity);
         }
         log.info("create: creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : ""));
-        final T created;
-        switch (entityConfig.getCreateMethod().toLowerCase()) {
-            case "put":  created = api.put(uri, entity); break;
-            case "post": created = api.post(uri, entity); break;
-            default: return die("invalid create method: "+entityConfig.getCreateMethod());
+        T created;
+        try {
+            switch (entityConfig.getCreateMethod().toLowerCase()) {
+                case "put":  created = api.put(uri, entity); break;
+                case "post": created = api.post(uri, entity); break;
+                default: return die("invalid create method: "+entityConfig.getCreateMethod());
+            }
+
+        } catch (ValidationException e) {
+            // try the get again, did it just appear?
+            final String getUri = processUri(ctx, entity, entityConfig.getUpdateUri());
+            created = api.get(getUri, (Class<T>) getSimpleClass(entity));
+
+        } catch (Exception e) {
+            return die("error creating: "+entityConfig.getCreateMethod()+": "+e);
         }
+
         if (listener != null) listener.postCreate(entityConfig, entity, created);
         return created;
     }
