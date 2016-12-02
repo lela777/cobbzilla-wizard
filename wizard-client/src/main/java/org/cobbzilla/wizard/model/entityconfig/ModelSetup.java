@@ -194,7 +194,6 @@ public class ModelSetup {
         } else {
             entity = create(api, context, entityConfig, entity, listener);
         }
-        if (entity == null) return; // for some reason it was OK not to create it. it got created by someone else.
         addToCache(api, entity);
 
         // copy children if present in request (they wouldn't be in object returned from server)
@@ -232,7 +231,7 @@ public class ModelSetup {
                          futures.add(exec.submit(new Runnable() {
                             @Override public void run() {
                                 try {
-                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), context, listener);
+                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), new LinkedHashMap<>(context), listener);
                                 } catch (Exception e) {
                                     die("run: "+e, e);
                                 }
@@ -246,17 +245,21 @@ public class ModelSetup {
     }
 
     private static void addToCache(ApiClientBase api, Identifiable entity) {
-        Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
-        if (cache == null) {
-            cache = new HashMap<>();
-            entityCache.put(api.hashCode(), cache);
+        synchronized (entityCache) {
+            Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
+            if (cache == null) {
+                cache = new HashMap<>();
+                entityCache.put(api.hashCode(), cache);
+            }
+            cache.put(entity, entity);
         }
-        cache.put(entity, entity);
     }
 
     private static Identifiable getCached(ApiClientBase api, Identifiable entity) {
-        final Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
-        return cache == null ? null : cache.get(entity);
+        synchronized (entityCache) {
+            final Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
+            return cache == null ? null : cache.get(entity);
+        }
     }
 
     protected static <T extends Identifiable> T create(ApiClientBase api,
@@ -287,7 +290,12 @@ public class ModelSetup {
         } catch (ValidationException e) {
             // try the get again, did it just appear?
             final String getUri = processUri(ctx, entity, entityConfig.getUpdateUri());
-            created = api.get(getUri, (Class<T>) getSimpleClass(entity));
+            try {
+                created = api.get(getUri, (Class<T>) getSimpleClass(entity));
+                // we're OK, someone else already created it
+            } catch (Exception e2) {
+                return die("error creating: "+entityConfig.getCreateMethod()+": "+e2);
+            }
 
         } catch (Exception e) {
             return die("error creating: "+entityConfig.getCreateMethod()+": "+e);
