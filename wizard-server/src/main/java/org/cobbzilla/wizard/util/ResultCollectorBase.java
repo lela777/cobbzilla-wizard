@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
+import static org.cobbzilla.util.daemon.Await.awaitAndCollect;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
 public class ResultCollectorBase extends ArrayList implements ResultCollector {

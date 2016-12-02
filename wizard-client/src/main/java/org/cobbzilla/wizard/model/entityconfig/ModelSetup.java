@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
+import org.cobbzilla.util.daemon.Await;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -15,9 +16,11 @@ import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
@@ -35,6 +38,11 @@ public class ModelSetup {
 
     public static final String ALLOW_UPDATE_PROPERTY = "_update";
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
+
+    // use 1 + half of all other processors, max of 10
+    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, Runtime.getRuntime().availableProcessors()/2));
+    public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+    static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
     public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
 
@@ -142,11 +150,11 @@ public class ModelSetup {
         return entityType;
     }
 
-    protected static void createEntity(ApiClientBase api,
+    protected static void createEntity(final ApiClientBase api,
                                        EntityConfig entityConfig,
                                        ModelEntity request,
-                                       LinkedHashMap<String, Identifiable> context,
-                                       ModelSetupListener listener) throws Exception {
+                                       final LinkedHashMap<String, Identifiable> context,
+                                       final ModelSetupListener listener) throws Exception {
 
         Identifiable entity = request;
 
@@ -214,9 +222,20 @@ public class ModelSetup {
                     if (childClassName == null) childClassName = entity.getClass().getPackage().getName() + "." + childEntityType;
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
-                    for (JsonNode child : children) {
-                        createEntity(api, childConfig, buildModelEntity(child, childClass), context, listener);
+                    final ExecutorService exec = Executors.newFixedThreadPool(maxConcurrency);
+                    final Set<Future> futures = new HashSet<>();
+                    for (final JsonNode child : children) {
+                         futures.add(exec.submit(new Runnable() {
+                            @Override public void run() {
+                                try {
+                                    createEntity(api, childConfig, buildModelEntity(child, childClass), context, listener);
+                                } catch (Exception e) {
+                                    die("run: "+e, e);
+                                }
+                            }
+                        }));
                     }
+                    Await.awaitAll(futures, CHILD_TIMEOUT);
                 }
             }
         }

@@ -40,8 +40,8 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.wizard.resources.ResourceUtil.timeoutEx;
-import static org.cobbzilla.wizard.util.Await.awaitAndCollect;
-import static org.cobbzilla.wizard.util.Await.awaitFirst;
+import static org.cobbzilla.util.daemon.Await.awaitAndCollect;
+import static org.cobbzilla.util.daemon.Await.awaitFirst;
 import static org.cobbzilla.wizard.util.SpringUtil.autowire;
 
 @Transactional @Slf4j
