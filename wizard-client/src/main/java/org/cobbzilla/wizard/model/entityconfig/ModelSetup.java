@@ -43,7 +43,8 @@ public class ModelSetup {
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
     // use 1 + 3/4 of all other processors, max of 10
-    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
+//    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
+    public static int maxConcurrency = 1; // i surrender, for now...
     public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
