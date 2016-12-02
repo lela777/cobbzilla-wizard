@@ -12,6 +12,7 @@ import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.NamedEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.File;
@@ -271,7 +272,7 @@ public class ModelSetup {
             }
             listener.preCreate(entityConfig, entity);
         }
-        log.info("create: creating " + entity.getClass().getSimpleName() + ": " + uri);
+        log.info("create: creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : "");
         final T created;
         switch (entityConfig.getCreateMethod().toLowerCase()) {
             case "put":  created = api.put(uri, entity); break;
