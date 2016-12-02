@@ -26,6 +26,9 @@ public class DatabaseConfiguration {
     @Getter @Setter private String user;
     @Getter @Setter private String password;
 
+    @Getter @Setter private DatabaseConnectionPoolConfiguration pool = null;
+    public boolean hasPoolConfig () { return pool != null; }
+
     @Getter @Setter private boolean encryptionEnabled = false;
     @Getter @Setter private String encryptionKey;
     @Getter @Setter private int encryptorPoolSize = 5;

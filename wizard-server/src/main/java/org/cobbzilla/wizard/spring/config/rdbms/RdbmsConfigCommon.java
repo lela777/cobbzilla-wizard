@@ -1,10 +1,12 @@
 package org.cobbzilla.wizard.spring.config.rdbms;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.PoisonProxy;
 import org.cobbzilla.wizard.model.crypto.EncryptedTypes;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
+import org.cobbzilla.wizard.server.config.DatabaseConnectionPoolConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HibernateConfiguration;
 import org.hibernate.SessionFactory;
@@ -14,12 +16,12 @@ import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 
 import javax.sql.DataSource;
+import java.beans.PropertyVetoException;
 import java.util.Properties;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
@@ -34,12 +36,25 @@ public class RdbmsConfigCommon {
 
     public DataSource dataSource() {
         final DatabaseConfiguration dbConfiguration = getDatabase();
-        final DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setDriverClassName(dbConfiguration.getDriver());
-        ds.setUrl(dbConfiguration.getUrl());
-        ds.setUsername(dbConfiguration.getUser());
-        ds.setPassword(dbConfiguration.getPassword());
-        return ds;
+        final ComboPooledDataSource cpds = new ComboPooledDataSource();
+        try {
+            cpds.setDriverClass(dbConfiguration.getDriver());
+        } catch (PropertyVetoException e) {
+            return die("dataSource: "+e, e);
+        }
+        cpds.setJdbcUrl(dbConfiguration.getUrl());
+        cpds.setUser(dbConfiguration.getUser());
+        cpds.setPassword(dbConfiguration.getPassword());
+        if (dbConfiguration.hasPoolConfig()) {
+            final DatabaseConnectionPoolConfiguration pool = dbConfiguration.getPool();
+            cpds.setMinPoolSize(pool.getMin());
+            cpds.setMaxPoolSize(pool.getMax());
+            cpds.setAcquireIncrement(pool.getIncrement());
+            if (pool.hasIdleTest()) cpds.setIdleConnectionTestPeriod(pool.getIdleTest());
+            if (pool.hasRetryAttempts()) cpds.setAcquireRetryAttempts(pool.getRetryAttempts());
+            if (pool.hasRetryDelay()) cpds.setAcquireRetryDelay(pool.getRetryDelay());
+        }
+        return cpds;
     }
 
     public HibernateTransactionManager transactionManager(SessionFactory sessionFactory) {

@@ -144,6 +144,13 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <version>${hibernate.version}</version>
         </dependency>
 
+        <!-- connection pool -->
+        <dependency>
+            <groupId>com.mchange</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.5.2</version>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
