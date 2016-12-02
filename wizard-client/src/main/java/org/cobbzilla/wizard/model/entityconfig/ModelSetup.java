@@ -272,7 +272,7 @@ public class ModelSetup {
             }
             listener.preCreate(entityConfig, entity);
         }
-        log.info("create: creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : "");
+        log.info("create: creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : ""));
         final T created;
         switch (entityConfig.getCreateMethod().toLowerCase()) {
             case "put":  created = api.put(uri, entity); break;
