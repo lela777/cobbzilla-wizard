@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.daemon.ErrorApi;
 import org.cobbzilla.util.json.JsonUtil;
@@ -378,7 +377,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                 log.error("report: error reporting exception ("+s+"): "+e2, e2);
             }
         }
-        System.err.println("report: "+s+"\n");
     }
 
     /**
@@ -393,7 +391,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
                 log.error("report: error reporting exception ("+e+"): "+e2, e2);
             }
         }
-        System.err.println("report: "+e+"\n"+ExceptionUtils.getStackTrace(e));
     }
 
 }
