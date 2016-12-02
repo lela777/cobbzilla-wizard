@@ -167,7 +167,7 @@ public class ModelSetup {
                             log.info("createEntity: "+entityType+" already exists, updating");
                             entity = update(api, context, entityConfig, entity, listener);
                         } else {
-                            log.info("createEntity: "+entityType+" already exists");
+                            log.info("createEntity: "+entityType+" already exists: "+getUri);
                             entity = json(response.json, request.getEntity().getClass());
                         }
                         break;
