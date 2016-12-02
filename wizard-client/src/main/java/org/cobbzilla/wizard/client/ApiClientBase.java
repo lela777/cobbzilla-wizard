@@ -35,9 +35,12 @@ import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
 @Slf4j @NoArgsConstructor @ToString(of={"connectionInfo"})
-public class ApiClientBase {
+public class ApiClientBase implements Cloneable {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
+
+    @SuppressWarnings("CloneDoesntCallSuperClone") // subclasses must have a copy constructor
+    @Override public Object clone() { return instantiate(getClass(), this); }
 
     @Getter protected ApiConnectionInfo connectionInfo;
     @Getter protected String token;

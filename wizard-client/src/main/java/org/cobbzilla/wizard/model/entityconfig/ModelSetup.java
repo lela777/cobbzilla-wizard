@@ -229,7 +229,7 @@ public class ModelSetup {
                          futures.add(exec.submit(new Runnable() {
                             @Override public void run() {
                                 try {
-                                    createEntity(api, childConfig, buildModelEntity(child, childClass), context, listener);
+                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), context, listener);
                                 } catch (Exception e) {
                                     die("run: "+e, e);
                                 }
