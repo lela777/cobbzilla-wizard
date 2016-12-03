@@ -196,6 +196,8 @@ public class ModelSetup {
         } else {
             entity = create(api, context, entityConfig, entity, listener);
         }
+        if (entity == null) return;
+
         addToCache(api, entity);
 
         // copy children if present in request (they wouldn't be in object returned from server)
@@ -292,7 +294,14 @@ public class ModelSetup {
         } catch (ValidationException e) {
             // try the get again, did it just appear?
             final String getUri = processUri(ctx, entity, entityConfig.getUpdateUri());
-            if (getUri == null) return die("create: error creating and cannot check for existence: "+entityConfig.getName());
+            if (getUri == null) {
+                if (entity instanceof ParentEntity && ((ParentEntity) entity).hasChildren()) {
+                    return die("create: error creating and cannot check for existence: " + entityConfig.getName());
+                } else {
+                    log.warn("create: error creating and cannot check for existence: " + entityConfig.getName()+", but has no children, skipping");
+                    return null;
+                }
+            }
             try {
                 created = api.get(getUri, (Class<T>) getSimpleClass(entity));
                 // we're OK, someone else already created it
