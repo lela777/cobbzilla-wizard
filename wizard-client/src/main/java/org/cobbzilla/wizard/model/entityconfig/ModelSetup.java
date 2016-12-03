@@ -292,6 +292,7 @@ public class ModelSetup {
         } catch (ValidationException e) {
             // try the get again, did it just appear?
             final String getUri = processUri(ctx, entity, entityConfig.getUpdateUri());
+            if (getUri == null) return die("create: error creating and cannot check for existence: "+entityConfig.getName());
             try {
                 created = api.get(getUri, (Class<T>) getSimpleClass(entity));
                 // we're OK, someone else already created it
