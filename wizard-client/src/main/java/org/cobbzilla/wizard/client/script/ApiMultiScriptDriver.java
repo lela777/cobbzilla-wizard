@@ -33,9 +33,12 @@ public class ApiMultiScriptDriver extends MultiResultDriverBase {
     @Override protected String successMessage(Object task) { return getTestName(task); }
     @Override protected String failureMessage(Object task) { return getTestName(task); }
 
+    protected boolean resetApiContext() { return true; }
+
     @Override protected void run(Object task) throws Exception {
         @Cleanup final CloseableHttpClient httpClient = httpClientFactory.create();
         final ApiRunner api = new ApiRunner(apiRunner, httpClient);
+        if (resetApiContext()) api.getContext().clear();
         api.run(taskToScript(task));
     }
 
