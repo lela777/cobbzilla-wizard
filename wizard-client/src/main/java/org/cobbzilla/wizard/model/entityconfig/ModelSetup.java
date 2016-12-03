@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.processorCount;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.FileUtil.abs;
@@ -43,7 +44,8 @@ public class ModelSetup {
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
     // use 1 + 3/4 of all other processors, max of 10
-    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*Runtime.getRuntime().availableProcessors() / 4) );
+    public static int maxConcurrency = Math.min(10, 1 + Math.max(1, 3*processorCount() / 4) );
+
     public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 

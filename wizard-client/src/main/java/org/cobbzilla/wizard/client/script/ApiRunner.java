@@ -23,6 +23,7 @@ import org.cobbzilla.wizard.validation.ConstraintViolationList;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -66,7 +67,7 @@ public class ApiRunner {
     private ApiClientBase api;
     private ApiRunnerListener listener;
 
-    protected final Map<String, Object> ctx = new HashMap<>();
+    protected final Map<String, Object> ctx = new ConcurrentHashMap<>();
     public Map<String, Object> getContext () { return ctx; }
 
     @Getter(lazy=true) private final Handlebars handlebars = initHandlebars();
