@@ -18,9 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.FileUtil.getDefaultTempDir;
 import static org.cobbzilla.util.io.FileUtil.mkdirOrDie;
-import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClassName;
-import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
-import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 
 @Slf4j
@@ -84,7 +82,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
         }
     }
 
-    public String getDefaultTmpDirName(S server) { return camelCaseToSnakeCase(getSimpleClassName(server)).toUpperCase(); }
+    public String getDefaultTmpDirName(S server) { return camelCaseToSnakeCase(server.getClass().getSimpleName()).toUpperCase()+"_TMPDIR"; }
 
     public File getTmpDir(S server, Map<String, String> env) {
         String defaultTmpdirEnvVar = server.getDefaultTmpdirEnvVar();

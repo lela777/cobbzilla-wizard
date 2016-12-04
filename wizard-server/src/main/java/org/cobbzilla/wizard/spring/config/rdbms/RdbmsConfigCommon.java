@@ -45,8 +45,8 @@ public class RdbmsConfigCommon {
         cpds.setJdbcUrl(dbConfiguration.getUrl());
         cpds.setUser(dbConfiguration.getUser());
         cpds.setPassword(dbConfiguration.getPassword());
-        if (dbConfiguration.hasPoolConfig()) {
-            final DatabaseConnectionPoolConfiguration pool = dbConfiguration.getPool();
+        final DatabaseConnectionPoolConfiguration pool = dbConfiguration.getPool();
+        if (pool.isEnabled()) {
             cpds.setMinPoolSize(pool.getMin());
             cpds.setMaxPoolSize(pool.getMax());
             cpds.setAcquireIncrement(pool.getIncrement());
