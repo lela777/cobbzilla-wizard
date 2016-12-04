@@ -92,7 +92,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || server == null || !shouldCacheServer() || requireNewServer(server)) {
+        if (serverHarness == null || server == null || !shouldCacheServer() || useTestSpecificDatabase()) {
             if (server != null) server.stopServer();
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
@@ -106,14 +106,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
     protected boolean dropDb(String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
-
-    private boolean requireNewServer(RestServer server) {
-        if (server == null) return true;
-        if (!useTestSpecificDatabase() || !(server.getConfiguration() instanceof HasDatabaseConfiguration)) return false;
-        // Is this "leftover" from a previous test?
-        final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
-        return !database.getDatabaseName().startsWith(getTempDbNamePrefix(database.getUrl()));
-    }
 
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
