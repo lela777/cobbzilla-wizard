@@ -92,7 +92,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || server == null || !shouldCacheServer()) {
+        if (serverHarness == null || server == null || !shouldCacheServer() || requireNewServer(server)) {
             if (server != null) server.stopServer();
             serverHarness = new RestServerHarness<>(getRestServerClass());
             serverHarness.setConfigurations(getConfigurations());
@@ -107,6 +107,13 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
     protected boolean dropDb(String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
 
+    private boolean requireNewServer(RestServer server) {
+        if (!useTestSpecificDatabase() || !(server.getConfiguration() instanceof HasDatabaseConfiguration)) return false;
+        // Is this "leftover" from a previous test?
+        final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
+        return !database.getDatabaseName().startsWith(getTempDbNamePrefix(database.getUrl()));
+    }
+
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
             final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
@@ -116,7 +123,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 log.warn("initTestDb: couldn't understand url: " + url + ", leaving as is");
                 return;
             }
-            final String dbName = truncate(url.substring(lastSlash + 1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35) + "_" + randomAlphanumeric(8);
+            final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8);
             try {
                 dropDb(dbName);
                 createDb(dbName);
@@ -125,6 +132,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             }
             database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
         }
+    }
+
+    private String getTempDbNamePrefix(String url) {
+        return truncate(url.substring(url.lastIndexOf('/') + 1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35);
     }
 
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
@@ -158,7 +169,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 } catch (IOException e) {
                     log.warn("error dropping database: " + dbName + ": " + e);
                 }
-                sleep *= 3;
+                sleep *= 4;
             }
             log.error("giving up trying to drop database: " + dbName);
         }
