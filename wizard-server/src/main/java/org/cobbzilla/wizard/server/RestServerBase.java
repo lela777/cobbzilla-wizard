@@ -393,4 +393,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         }
     }
 
+    @Override public String getDefaultTmpdirEnvVar() { return null; }
+
 }

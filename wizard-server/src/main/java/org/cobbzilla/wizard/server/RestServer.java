@@ -18,6 +18,11 @@ public interface RestServer<C extends RestServerConfiguration> {
     C getConfiguration();
     void setConfiguration(C configuration);
 
+    // If this returns a non-null value, we'll set the value of "tmpdir" in the QbisConfiguration and in FileUtil
+    // If this returns a null value, we'll look for a value in an env var based on the server name (converted to snake case, upper-cased). It will be logged if not found.
+    // If nothing else if found, we'll use FileUtil.defaultTempDir
+    String getDefaultTmpdirEnvVar();
+
     ConfigurableApplicationContext buildSpringApplicationContext();
     ConfigurableApplicationContext buildSpringApplicationContext(final ApplicationContextConfig ctxConfig);
 

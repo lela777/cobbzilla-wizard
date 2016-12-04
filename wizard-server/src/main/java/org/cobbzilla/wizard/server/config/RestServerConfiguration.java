@@ -5,12 +5,14 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,7 +29,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 public class RestServerConfiguration {
 
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
-
+    @Getter @Setter private File tmpdir = FileUtil.getDefaultTempDir();
     @Getter @Setter private String serverName;
     @Getter @Setter private String publicUriBase;
     @Getter @Setter private String springContextPath = "classpath:/spring.xml";

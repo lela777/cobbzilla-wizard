@@ -3,18 +3,25 @@ package org.cobbzilla.wizard.server;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.RestServerConfigurationFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.cobbzilla.util.io.FileUtil.abs;
+import static org.cobbzilla.util.io.FileUtil.getDefaultTempDir;
+import static org.cobbzilla.util.io.FileUtil.mkdirOrDie;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClassName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getTypeParameter;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 
 @Slf4j
 public class RestServerHarness<C extends RestServerConfiguration, S extends RestServer<C>> {
@@ -52,6 +59,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
             final RestServerConfigurationFactory<C> factory = new RestServerConfigurationFactory<>(configurationClass);
             configuration = filterConfiguration(factory.build(configurations, env));
             configuration.setEnvironment(env);
+            configuration.setTmpdir(getTmpDir(server, env));
             server.setConfiguration(configuration);
             log.info("starting " + configuration.getServerName() + ": " + server.getClass().getName() + " with config: " + configuration);
         }
@@ -74,6 +82,25 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
             server.stopServer();
             server = null;
         }
+    }
+
+    public String getDefaultTmpDirName(S server) { return camelCaseToSnakeCase(getSimpleClassName(server)).toUpperCase(); }
+
+    public File getTmpDir(S server, Map<String, String> env) {
+        String defaultTmpdirEnvVar = server.getDefaultTmpdirEnvVar();
+        if (defaultTmpdirEnvVar == null) {
+            defaultTmpdirEnvVar = getDefaultTmpDirName(server);
+        }
+        final String tmpdirValue = env.get(defaultTmpdirEnvVar);
+        final File tmpdir;
+        if (tmpdirValue != null) {
+            tmpdir = mkdirOrDie ( new File(tmpdirValue) );
+            FileUtil.defaultTempDir = abs(tmpdir);
+        } else {
+            tmpdir = getDefaultTempDir();
+            log.warn("No "+defaultTmpdirEnvVar+" environment variable found, using defaultTempDir="+abs(tmpdir));
+        }
+        return tmpdir;
     }
 
     public ConfigurableApplicationContext springServer(List<ConfigurationSource> configurationSources,

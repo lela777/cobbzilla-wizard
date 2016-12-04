@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.*;
+import static org.cobbzilla.util.io.FileUtil.getDefaultTempDir;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
@@ -328,7 +329,7 @@ public class ApiClientBase implements Cloneable {
         final HttpEntity entity = response.getEntity();
         if (entity == null) die("getFile("+url+"): No entity");
 
-        final File file = File.createTempFile(getClass().getName()+"-", getTempFileSuffix(path, HttpUtil.getContentType(response)));
+        final File file = File.createTempFile(getClass().getName()+"-", getTempFileSuffix(path, HttpUtil.getContentType(response)), getDefaultTempDir());
         try (InputStream in = entity.getContent()) {
             try (OutputStream out = new FileOutputStream(file)) {
                 IOUtils.copyLarge(in, out);
