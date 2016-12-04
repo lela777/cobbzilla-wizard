@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.daemon;
@@ -124,6 +125,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             try {
                 dropDb(dbName);
                 createDb(dbName);
+                tempDatabases.put(dbName, this);
+
             } catch (Exception e) {
                 die("beforeStart: error dropping/creating database: " + dbName);
             }
@@ -163,6 +166,20 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             }
         }
     }
+
+    private static final Map<String, AbstractResourceIT> tempDatabases = new ConcurrentHashMap<>();
+    private static final Thread dbCleanup = new Thread(new Runnable() {
+        @Override public void run() {
+            for (Map.Entry<String, AbstractResourceIT> entry : tempDatabases.entrySet()) {
+                try {
+                    entry.getValue().dropDb(entry.getKey());
+                } catch (IOException e) {
+                    log.warn("shutdown-hook: error dropping db: "+entry.getKey());
+                }
+            }
+        }
+    });
+    static { Runtime.getRuntime().addShutdownHook(dbCleanup); }
 
     @AllArgsConstructor
     private class DbDropper implements Runnable {
