@@ -32,6 +32,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
+import static org.cobbzilla.util.string.StringUtil.truncate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -116,7 +117,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             log.warn("initTestDb: couldn't understand url: "+url+", leaving as is");
             return;
         }
-        final String dbName = url.substring(lastSlash+1) + "_" + camelCaseToSnakeCase(getClass().getSimpleName()) + "_" + randomAlphanumeric(6);
+        final String dbName = truncate(url.substring(lastSlash+1), 30) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 20) + "_" + randomAlphanumeric(8);
         dropDb(dbName);
         createDb(dbName);
         dbNames.put(dbName, this);
