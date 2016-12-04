@@ -105,7 +105,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
-    protected void dropDb(String dbName) throws IOException { notSupported("dropDb: must be defined in subclass"); }
+    protected boolean dropDb(String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
 
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
@@ -153,12 +153,12 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
                 try {
-                    dropDb(dbName);
-                    return;
+                    if (dropDb(dbName)) return;
+                    log.warn("error dropping database: " + dbName);
                 } catch (IOException e) {
                     log.warn("error dropping database: " + dbName + ": " + e);
-                    sleep *= 3;
                 }
+                sleep *= 3;
             }
             log.error("giving up trying to drop database: " + dbName);
         }
