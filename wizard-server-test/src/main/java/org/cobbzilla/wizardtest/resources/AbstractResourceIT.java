@@ -1,5 +1,6 @@
 package org.cobbzilla.wizardtest.resources;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.cobbzilla.util.daemon.ZillaRuntime.daemon;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
@@ -123,12 +125,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         if (useTestSpecificDatabase()) {
             final C configuration = server.getConfiguration();
             if (configuration instanceof HasDatabaseConfiguration) {
-                final String dbName = ((HasDatabaseConfiguration) configuration).getDatabase().getDatabaseName();
-                try {
-                    dropDb(dbName);
-                } catch (IOException e) {
-                    log.warn("onStop: error dropping database: "+dbName+": "+e);
-                }
+                daemon(new DbDropper(((HasDatabaseConfiguration) configuration).getDatabase().getDatabaseName()));
             }
         }
     }
@@ -172,4 +169,15 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         return getConfiguration().execSql(sql, args);
     }
 
+    @AllArgsConstructor
+    private class DbDropper implements Runnable {
+        private final String dbName;
+        @Override public void run() {
+            try {
+                dropDb(dbName);
+            } catch (IOException e) {
+                log.warn("error dropping database: " + dbName + ": " + e);
+            }
+        }
+    }
 }
