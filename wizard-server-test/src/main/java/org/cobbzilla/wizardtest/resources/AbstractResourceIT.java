@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.daemon;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
@@ -73,7 +74,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Override public C filterConfiguration(C configuration) { return configuration; }
 
-    @Override public void beforeStart(RestServer<C> server) {}
     @Override public void onStart(RestServer<C> server) {
         final RestServerConfiguration config = serverHarness.getConfiguration();
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
@@ -98,7 +98,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             serverHarness.addConfigurationFilter(this);
             serverHarness.init(getServerEnvironment());
             server = serverHarness.getServer();
-            if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) initTestDb();
             server.addLifecycleListener(this);
             serverHarness.startServer();
         }
@@ -107,18 +106,33 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
     protected void dropDb(String dbName) throws IOException { notSupported("dropDb: must be defined in subclass"); }
 
-    public void initTestDb() throws IOException {
-        final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
-        String url = database.getUrl();
-        int lastSlash = url.lastIndexOf('/');
-        if (lastSlash == -1 || lastSlash == url.length()-1) {
-            log.warn("initTestDb: couldn't understand url: "+url+", leaving as is");
-            return;
+    @Override public void beforeStart(RestServer<C> server) {
+        if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
+            final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
+            String url = database.getUrl();
+            int lastSlash = url.lastIndexOf('/');
+            if (lastSlash == -1 || lastSlash == url.length() - 1) {
+                log.warn("initTestDb: couldn't understand url: " + url + ", leaving as is");
+                return;
+            }
+            final String dbName = truncate(url.substring(lastSlash + 1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35) + "_" + randomAlphanumeric(8);
+            try {
+                dropDb(dbName);
+                createDb(dbName);
+            } catch (Exception e) {
+                die("beforeStart: error dropping/creating database: " + dbName);
+            }
+            database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
         }
-        final String dbName = truncate(url.substring(lastSlash+1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35) + "_" + randomAlphanumeric(8);
-        dropDb(dbName);
-        createDb(dbName);
-        database.setUrl(url.substring(0, lastSlash)+"/"+dbName);
+    }
+
+    protected Map<String, String> getServerEnvironment() throws Exception { return null; }
+
+    @After public void stopServer () throws Exception {
+        if (server != null && !shouldCacheServer()) {
+            server.stopServer();
+            server = null;
+        }
     }
 
     @Override public void onStop(RestServer<C> server) {
@@ -130,12 +144,15 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    protected Map<String, String> getServerEnvironment() throws Exception { return null; }
-
-    @After public void stopServer () throws Exception {
-        if (server != null && !shouldCacheServer()) {
-            server.stopServer();
-            server = null;
+    @AllArgsConstructor
+    private class DbDropper implements Runnable {
+        private final String dbName;
+        @Override public void run() {
+            try {
+                dropDb(dbName);
+            } catch (IOException e) {
+                log.warn("error dropping database: " + dbName + ": " + e);
+            }
         }
     }
 
@@ -169,15 +186,4 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         return getConfiguration().execSql(sql, args);
     }
 
-    @AllArgsConstructor
-    private class DbDropper implements Runnable {
-        private final String dbName;
-        @Override public void run() {
-            try {
-                dropDb(dbName);
-            } catch (IOException e) {
-                log.warn("error dropping database: " + dbName + ": " + e);
-            }
-        }
-    }
 }
