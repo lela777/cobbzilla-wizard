@@ -116,7 +116,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 log.warn("initTestDb: couldn't understand url: " + url + ", leaving as is");
                 return;
             }
-            final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8);
+            final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8).toLowerCase();
             try {
                 dropDb(dbName);
                 createDb(dbName);
@@ -128,7 +128,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     private String getTempDbNamePrefix(String url) {
-        return truncate(url.substring(url.lastIndexOf('/') + 1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35);
+        return truncate(url.substring(url.lastIndexOf('/') + 1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35).toLowerCase();
     }
 
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
