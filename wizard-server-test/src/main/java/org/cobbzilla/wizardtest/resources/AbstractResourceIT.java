@@ -22,10 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
@@ -105,7 +102,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    private static Map<String, AbstractResourceIT> dbNames = new ConcurrentHashMap<>();
+    private static final Map<String, AbstractResourceIT> dbNames = new ConcurrentHashMap<>();
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
     protected void dropDb(String dbName) throws IOException { notSupported("dropDb: must be defined in subclass"); }
 
@@ -117,20 +114,27 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             log.warn("initTestDb: couldn't understand url: "+url+", leaving as is");
             return;
         }
-        final String dbName = truncate(url.substring(lastSlash+1), 30) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 20) + "_" + randomAlphanumeric(8);
+        final String dbName = truncate(url.substring(lastSlash+1), 15) + "_" + truncate(camelCaseToSnakeCase(getClass().getSimpleName()), 35) + "_" + randomAlphanumeric(8);
         dropDb(dbName);
         createDb(dbName);
-        dbNames.put(dbName, this);
+        synchronized (dbNames) { dbNames.put(dbName, this); }
         database.setUrl(url.substring(0, lastSlash)+"/"+dbName);
     }
 
     @AfterClass public static void cleanupTempDatabases () {
-        for (Map.Entry<String, AbstractResourceIT> entry : dbNames.entrySet()) {
-            try {
-                entry.getValue().dropDb(entry.getKey());
-            } catch (IOException e) {
-                log.warn("Error dropping database: "+entry.getKey()+": "+e, e);
+        synchronized (dbNames) {
+            final Set<String> removed = new HashSet<>();
+            for (Map.Entry<String, AbstractResourceIT> entry : dbNames.entrySet()) {
+                final String dbName = entry.getKey();
+                final AbstractResourceIT test = entry.getValue();
+                try {
+                    test.dropDb(dbName);
+                    removed.add(dbName);
+                } catch (IOException e) {
+                    log.warn("Error dropping database: " + dbName + ": " + e, e);
+                }
             }
+            for (String db : removed) dbNames.remove(db);
         }
     }
 
