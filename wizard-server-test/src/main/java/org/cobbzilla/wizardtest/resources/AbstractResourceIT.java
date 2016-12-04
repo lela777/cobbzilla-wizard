@@ -1,5 +1,6 @@
 package org.cobbzilla.wizardtest.resources;
 
+import com.mchange.v2.c3p0.PooledDataSource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,15 @@ import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
+import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
 import org.junit.Before;
 
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +148,18 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         if (useTestSpecificDatabase()) {
             final C configuration = server.getConfiguration();
             if (configuration instanceof HasDatabaseConfiguration) {
-                daemon(new DbDropper(((HasDatabaseConfiguration) configuration).getDatabase().getDatabaseName()));
+                final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
+                if (database.getPool().isEnabled()) {
+                    final DataSource ds = configuration.getBean(RdbmsConfig.class).dataSource();
+                    if (ds instanceof PooledDataSource) {
+                        try {
+                            ((PooledDataSource) ds).close();
+                        } catch (SQLException e) {
+                            die("onStop: error stopping pooled data source");
+                        }
+                    }
+                }
+                daemon(new DbDropper(database.getDatabaseName()));
             }
         }
     }
