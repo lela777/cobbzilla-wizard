@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.system.Sleep;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
@@ -148,11 +149,18 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     private class DbDropper implements Runnable {
         private final String dbName;
         @Override public void run() {
-            try {
-                dropDb(dbName);
-            } catch (IOException e) {
-                log.warn("error dropping database: " + dbName + ": " + e);
+            int sleep = 1000;
+            for (int i=0; i<5; i++) {
+                Sleep.sleep(sleep);
+                try {
+                    dropDb(dbName);
+                    return;
+                } catch (IOException e) {
+                    log.warn("error dropping database: " + dbName + ": " + e);
+                    sleep *= 3;
+                }
             }
+            log.error("giving up trying to drop database: " + dbName);
         }
     }
 
