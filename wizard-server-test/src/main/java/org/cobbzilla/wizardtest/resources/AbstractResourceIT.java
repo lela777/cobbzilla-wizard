@@ -10,19 +10,28 @@ import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
 import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.RestServerLifecycleListener;
+import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
+import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static java.lang.Long.toHexString;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -80,6 +89,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected C getConfiguration () { return (C) server.getConfiguration(); }
 
     public boolean shouldCacheServer () { return true; }
+    public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
         if (serverHarness == null || server == null || !shouldCacheServer()) {
@@ -89,8 +99,38 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             serverHarness.addConfigurationFilter(this);
             serverHarness.init(getServerEnvironment());
             server = serverHarness.getServer();
+            if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) initTestDb();
             server.addLifecycleListener(this);
             serverHarness.startServer();
+        }
+    }
+
+    private static Map<String, AbstractResourceIT> dbNames = new ConcurrentHashMap<>();
+    protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
+    protected void dropDb(String dbName) throws IOException { notSupported("dropDb: must be defined in subclass"); }
+
+    public void initTestDb() throws IOException {
+        final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
+        String url = database.getUrl();
+        int lastSlash = url.lastIndexOf('/');
+        if (lastSlash == -1 || lastSlash == url.length()-1) {
+            log.warn("initTestDb: couldn't understand url: "+url+", leaving as is");
+            return;
+        }
+        final String dbName = url.substring(lastSlash+1) + "_" + toHexString(now()) + "_" + randomAlphanumeric(6);
+        dropDb(dbName);
+        createDb(dbName);
+        dbNames.put(dbName, this);
+        database.setUrl(url.substring(0, lastSlash)+"/"+dbName);
+    }
+
+    @AfterClass public static void cleanupTempDatabases () {
+        for (Map.Entry<String, AbstractResourceIT> entry : dbNames.entrySet()) {
+            try {
+                entry.getValue().dropDb(entry.getKey());
+            } catch (IOException e) {
+                log.warn("Error dropping database: "+entry.getKey()+": "+e, e);
+            }
         }
     }
 
