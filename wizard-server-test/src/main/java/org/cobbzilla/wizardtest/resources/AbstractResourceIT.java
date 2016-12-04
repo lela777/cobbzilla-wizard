@@ -131,7 +131,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 die("beforeStart: error dropping/creating database: " + dbName);
             }
             database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
-            log.info("beforeStart: using database "+dbName);
         }
     }
 
@@ -154,7 +153,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (configuration instanceof HasDatabaseConfiguration) {
                 final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
                 final String dbName = database.getDatabaseName();
-                log.info("onStop: stopping connection pool for database "+dbName);
                 if (database.getPool().isEnabled()) {
                     final DataSource ds = configuration.getBean(RdbmsConfig.class).dataSource();
                     if (ds instanceof PooledDataSource) {
