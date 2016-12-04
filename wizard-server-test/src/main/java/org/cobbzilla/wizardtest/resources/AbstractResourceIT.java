@@ -28,11 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.lang.Long.toHexString;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
+import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -117,7 +116,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             log.warn("initTestDb: couldn't understand url: "+url+", leaving as is");
             return;
         }
-        final String dbName = url.substring(lastSlash+1) + "_" + toHexString(now()) + "_" + randomAlphanumeric(6);
+        final String dbName = url.substring(lastSlash+1) + "_" + camelCaseToSnakeCase(getClass().getSimpleName()) + "_" + randomAlphanumeric(6);
         dropDb(dbName);
         createDb(dbName);
         dbNames.put(dbName, this);
