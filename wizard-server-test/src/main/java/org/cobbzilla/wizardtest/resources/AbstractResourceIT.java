@@ -18,7 +18,6 @@ import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 
 import java.io.IOException;
@@ -76,7 +75,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
     }
     @Override public void beforeStop(RestServer<C> server) {}
-    @Override public void onStop(RestServer<C> server) {}
     protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
 
     protected static volatile RestServer server = null;
@@ -102,7 +100,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    private static final Map<String, AbstractResourceIT> dbNames = new ConcurrentHashMap<>();
+    private final Map<String, AbstractResourceIT> dbNames = new ConcurrentHashMap<>();
     protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
     protected void dropDb(String dbName) throws IOException { notSupported("dropDb: must be defined in subclass"); }
 
@@ -121,7 +119,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         database.setUrl(url.substring(0, lastSlash)+"/"+dbName);
     }
 
-    @AfterClass public static void cleanupTempDatabases () {
+    @Override public void onStop(RestServer<C> server) {
         synchronized (dbNames) {
             final Set<String> removed = new HashSet<>();
             for (Map.Entry<String, AbstractResourceIT> entry : dbNames.entrySet()) {

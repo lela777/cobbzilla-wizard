@@ -4,10 +4,10 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 
 public interface RestServerLifecycleListener<C extends RestServerConfiguration> {
 
-    public void beforeStart(RestServer<C> server);
-    public void onStart(RestServer<C> server);
+    void beforeStart(RestServer<C> server);
+    void onStart(RestServer<C> server);
 
-    public void beforeStop(RestServer<C> server);
-    public void onStop (RestServer<C> server);
+    void beforeStop(RestServer<C> server);
+    void onStop (RestServer<C> server);
 
 }
