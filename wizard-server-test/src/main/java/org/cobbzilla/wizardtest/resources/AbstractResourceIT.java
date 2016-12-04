@@ -34,9 +34,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.cobbzilla.util.daemon.ZillaRuntime.daemon;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
@@ -153,17 +151,14 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (configuration instanceof HasDatabaseConfiguration) {
                 final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
                 final String dbName = database.getDatabaseName();
+                PooledDataSource pool = null;
                 if (database.getPool().isEnabled()) {
                     final DataSource ds = configuration.getBean(RdbmsConfig.class).dataSource();
                     if (ds instanceof PooledDataSource) {
-                        try {
-                            ((PooledDataSource) ds).close();
-                        } catch (SQLException e) {
-                            die("onStop: error stopping pooled data source");
-                        }
+                        pool = (PooledDataSource) ds;
                     }
                 }
-                daemon(new DbDropper(dbName));
+                daemon(new DbDropper(dbName, pool));
             }
         }
     }
@@ -184,18 +179,32 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @AllArgsConstructor
     private class DbDropper implements Runnable {
+
+        public static final int DROP_DELAY = 30000;
+        public static final int DROP_RETRY_INCR = 10000;
+
         private final String dbName;
+        private PooledDataSource pool = null
+;
         @Override public void run() {
-            int sleep = 1000;
+            int sleep = DROP_DELAY;
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
+                if (pool != null) {
+                    try {
+                        pool.close();
+                        pool = null;
+                    } catch (SQLException e) {
+                        log.warn("onStop: error stopping pooled data source: " + dbName + ": " + e);
+                    }
+                }
                 try {
                     if (dropDb(dbName)) return;
                     log.warn("error dropping database: " + dbName);
                 } catch (IOException e) {
                     log.warn("error dropping database: " + dbName + ": " + e);
                 }
-                sleep *= 4;
+                sleep += DROP_RETRY_INCR;
             }
             log.error("giving up trying to drop database: " + dbName);
         }
