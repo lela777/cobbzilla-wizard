@@ -27,7 +27,6 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-// todo: this should not inherit from ApiClientBase. instead, it should *have* an ApiClientBase, and a method to
 // initialize a new one. parallel tests should share the same server, but user a different api client.
 @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
