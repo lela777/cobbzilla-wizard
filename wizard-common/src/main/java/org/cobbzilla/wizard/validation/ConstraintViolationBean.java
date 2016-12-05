@@ -53,9 +53,11 @@ public class ConstraintViolationBean {
         final int firstDot = messageTemplate.indexOf('.');
         final int lastDot = messageTemplate.lastIndexOf('.');
         try {
-            return (firstDot != -1 && lastDot != -1 && lastDot <= messageTemplate.length()) ? messageTemplate.substring(firstDot + 1, lastDot) : null;
+            return (firstDot != -1 && lastDot != -1 && firstDot != lastDot)
+                    ? messageTemplate.substring(firstDot + 1, lastDot)
+                    : null;
         } catch (Exception e) {
-            log.info("getField("+messageTemplate+"): "+e);
+            log.info("getField("+messageTemplate+"): ", e);
             return null;
         }
     }
