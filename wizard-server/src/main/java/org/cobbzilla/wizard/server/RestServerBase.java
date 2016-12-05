@@ -401,6 +401,16 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         }
     }
 
+    public static void reportError(String s, Exception e) {
+        if (errorApi != null) {
+            try {
+                errorApi.report(s, e);
+            } catch (Exception e2) {
+                log.error("report: error reporting exception ("+s+", "+e+"): "+e2, e2);
+            }
+        }
+    }
+
     @Override public String getDefaultTmpdirEnvVar() { return null; }
 
 }

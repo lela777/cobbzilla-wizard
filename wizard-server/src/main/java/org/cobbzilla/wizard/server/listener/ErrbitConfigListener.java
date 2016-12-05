@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.server.listener;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.cobbzilla.util.daemon.ErrorApi;
 import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.wizard.server.RestServer;
@@ -38,6 +39,9 @@ public class ErrbitConfigListener extends RestServerLifecycleListenerBase {
             }
         }
 
+        @Override public void report(String s, Exception e) {
+            report(s+"\nException: "+e+"\n"+ExceptionUtils.getStackTrace(e));
+        }
     }
 
 }
