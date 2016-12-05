@@ -82,22 +82,24 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
     }
     @Override public void beforeStop(RestServer<C> server) {}
+    @Override public void onStop(RestServer<C> server) {}
+
     protected RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
 
-    protected static Map<Class, RestServer> servers = new ConcurrentHashMap<>();
+    protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
     @Getter protected volatile RestServer server = null;
 
     protected <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
 
     protected C getConfiguration () { return (C) server.getConfiguration(); }
 
-    public boolean shouldCacheServer () { return true; }
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || server == null || !shouldCacheServer()) {
-            if (shouldCacheServer() && servers.containsKey(getClass())) {
-                server = servers.get(getClass());
+        if (serverHarness == null || server == null) {
+            final String serverCacheKey = getClass().getName();
+            if (servers.containsKey(serverCacheKey)) {
+                server = servers.get(serverCacheKey);
             } else {
                 if (server != null) server.stopServer();
                 serverHarness = new RestServerHarness<>(getRestServerClass());
@@ -108,7 +110,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 server.addLifecycleListener(this);
                 server.addLifecycleListener(new DbPoolShutdownListener());
                 serverHarness.startServer();
-                servers.put(getClass(), server);
+                servers.put(serverCacheKey, server);
             }
         }
     }
@@ -145,20 +147,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
     @Test public void ____stopServer () throws Exception {
-        if (server != null) {
-            server.stopServer();
-            server = null;
-        }
-    }
-
-    @Override public void onStop(RestServer<C> server) {
+        if (server != null) server.stopServer();
         if (useTestSpecificDatabase()) {
-            final C configuration = server.getConfiguration();
-            if (configuration instanceof HasDatabaseConfiguration) {
-                final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
-                daemon(new DbDropper(database.getDatabaseName()));
-            }
+            daemon(new DbDropper(((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName()));
         }
+        server = null;
     }
 
     private static final Map<String, AbstractResourceIT> tempDatabases = new ConcurrentHashMap<>();
