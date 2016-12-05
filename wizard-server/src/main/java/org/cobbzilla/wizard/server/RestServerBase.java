@@ -40,13 +40,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.TRUE;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 @NoArgsConstructor @Slf4j
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
@@ -60,14 +61,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Getter private HttpServer httpServer;
     @Getter @Setter private C configuration;
 
-    @Getter @Setter private final List<RestServerLifecycleListener<C>> listeners = new ArrayList<>();
+    @Getter private final Map<String, RestServerLifecycleListener<C>> listeners = new ConcurrentHashMap<>();
 
     @Override public void addLifecycleListener(RestServerLifecycleListener<C> listener) {
-        synchronized (listeners) { listeners.add(listener); }
+        synchronized (listeners) { listeners.put(listenerKey(listener), listener); }
     }
     @Override public void removeLifecycleListener(RestServerLifecycleListener<C> listener) {
-        synchronized (listeners) { listeners.remove(listener); }
+        synchronized (listeners) { listeners.remove(listenerKey(listener)); }
     }
+    protected String listenerKey(RestServerLifecycleListener<C> listener) { return listener.getClass().getName()+listener.hashCode(); }
 
     private ConfigurableApplicationContext applicationContext;
     public ApplicationContext getApplicationContext () { return applicationContext; }
@@ -111,9 +113,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public synchronized HttpServer startServer() throws IOException {
 
-        synchronized (listeners) {
-            for (RestServerLifecycleListener<C> listener : listeners) listener.beforeStart(this);
-        }
+        for (RestServerLifecycleListener<C> listener : listeners.values()) listener.beforeStart(this);
 
         final String serverName = configuration.getServerName();
         httpServer = buildServer(serverName);
@@ -123,9 +123,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         httpServer.start();
         // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(serverName+" started.");
-        synchronized (listeners) {
-            for (RestServerLifecycleListener<C> listener : listeners) listener.onStart(this);
-        }
+        for (RestServerLifecycleListener<C> listener : listeners.values()) listener.onStart(this);
         return httpServer;
     }
 
@@ -245,15 +243,16 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     public synchronized void stopServer() {
         if (httpServer.isStarted()) {
             log.info("stopServer: stopping " + configuration.getServerName() + "...");
-            synchronized (listeners) {
-                for (RestServerLifecycleListener<C> listener : listeners) listener.beforeStop(this);
-            }
+            for (RestServerLifecycleListener<C> listener : listeners.values()) listener.beforeStop(this);
             try {
                 httpServer.shutdownNow();
             } finally {
-                synchronized (listeners) {
-                    for (RestServerLifecycleListener<C> listener : listeners) listener.onStop(this);
+                long start = realNow();
+                while (httpServer.isStarted() && realNow() - start < shutdownTimeout()) {
+                    sleep(100);
                 }
+                if (httpServer.isStarted()) log.warn("stopServer: server did not stop, running onStop for "+listeners.size()+" handlers anyway");
+                for (RestServerLifecycleListener<C> listener : listeners.values()) listener.onStop(this);
             }
             log.info("stopServer: " + configuration.getServerName() + " stopped.");
         } else {
