@@ -5,10 +5,13 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
@@ -20,11 +23,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.URIUtil.getHost;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 @Slf4j
 public class RestServerConfiguration {
@@ -156,4 +161,53 @@ public class RestServerConfiguration {
             }
         }
     }
+
+    /**
+     * Allows forever-reuse of subresources, each instantiated with a particular set of immutable objects.
+     * Override to supply your own cache implementations on a per-resource-class basis.
+     * @param <R> the type of resource we are, and that will be cached, so method calls can be typesafe.
+     */
+    private final Map<String, Map<String, Object>> subResourceCaches = new ConcurrentHashMap<>();
+    public <R> Map<String, R> getSubResourceCache(Class<R> resourceClass) {
+        Map cache = subResourceCaches.get(resourceClass.getName());
+        if (cache == null) {
+            synchronized (subResourceCaches) {
+                cache = subResourceCaches.get(resourceClass.getName());
+                if (cache == null) {
+                    cache = new ConcurrentHashMap<>();
+                    subResourceCaches.put(resourceClass.getName(), cache);
+                }
+            }
+        }
+        return cache;
+    }
+
+    public <R> R subResource(Class<R> resourceClass, Object... args) {
+        final StringBuilder cacheKey = new StringBuilder(getId());
+        for (Object o : args) {
+            if (o == null) {
+                log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
+                continue;
+            }
+            if (o instanceof Identifiable) {
+                cacheKey.append(((Identifiable) o).getUuid()).append(":");
+            } else if (!(o instanceof DAO)) {
+                log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
+            }
+        }
+        final Map<String, R> resourceCache = getSubResourceCache(resourceClass);
+        R r = resourceCache.get(cacheKey.toString());
+        if (r == null) {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
+            synchronized (resourceCache) {
+                r = resourceCache.get(cacheKey.toString());
+                if (r == null) {
+                    r = autowire(instantiate(resourceClass, args));
+                    resourceCache.put(cacheKey.toString(), r);
+                }
+            }
+        }
+        return r;
+    }
+
 }
