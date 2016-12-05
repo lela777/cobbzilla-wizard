@@ -57,6 +57,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
             configuration.setEnvironment(env);
             configuration.setTmpdir(getTmpDir(server, env));
             server.setConfiguration(configuration);
+            configuration.setServer(server);
             log.info("starting " + configuration.getServerName() + ": " + server.getClass().getName() + " with config: " + configuration);
         }
     }

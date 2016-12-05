@@ -12,6 +12,7 @@ import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
@@ -36,6 +37,8 @@ public class RestServerConfiguration {
 
     @Getter(lazy=true) private final String id = initId();
     private String initId() { return getServerName() + "_" + RandomStringUtils.randomAlphanumeric(12); }
+
+    @Getter @Setter RestServer server;
 
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
     @Getter @Setter private File tmpdir = FileUtil.getDefaultTempDir();

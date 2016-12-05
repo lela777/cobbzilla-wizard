@@ -5,10 +5,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.PoisonProxy;
 import org.cobbzilla.wizard.model.crypto.EncryptedTypes;
-import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
-import org.cobbzilla.wizard.server.config.DatabaseConnectionPoolConfiguration;
-import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
-import org.cobbzilla.wizard.server.config.HibernateConfiguration;
+import org.cobbzilla.wizard.server.config.*;
+import org.cobbzilla.wizard.server.listener.DbPoolShutdownListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.jasypt.encryption.pbe.PBEStringEncryptor;
@@ -53,6 +51,7 @@ public class RdbmsConfigCommon {
             if (pool.hasIdleTest()) cpds.setIdleConnectionTestPeriod(pool.getIdleTest());
             if (pool.hasRetryAttempts()) cpds.setAcquireRetryAttempts(pool.getRetryAttempts());
             if (pool.hasRetryDelay()) cpds.setAcquireRetryDelay(pool.getRetryDelay());
+            ((RestServerConfiguration) configuration).getServer().addLifecycleListener(new DbPoolShutdownListener());
         }
         return cpds;
     }
