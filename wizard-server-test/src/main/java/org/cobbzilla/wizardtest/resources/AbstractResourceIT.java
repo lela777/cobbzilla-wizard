@@ -26,7 +26,6 @@ import org.junit.Before;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -158,7 +157,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                         pool = (PooledDataSource) ds;
                     }
                 }
-                daemon(new DbDropper(dbName, pool));
+                daemon(new DbDropper(dbName));
             }
         }
     }
@@ -184,20 +183,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         public static final int DROP_RETRY_INCR = 10000;
 
         private final String dbName;
-        private PooledDataSource pool = null
 ;
         @Override public void run() {
             int sleep = DROP_DELAY;
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
-                if (pool != null) {
-                    try {
-                        pool.close();
-                        pool = null;
-                    } catch (SQLException e) {
-                        log.warn("onStop: error stopping pooled data source: " + dbName + ": " + e);
-                    }
-                }
                 try {
                     if (dropDb(dbName)) return;
                     log.warn("error dropping database: " + dbName);
