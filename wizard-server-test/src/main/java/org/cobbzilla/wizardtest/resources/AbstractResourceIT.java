@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -88,35 +87,30 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
 
     protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
-    protected final AtomicReference<RestServer> server = new AtomicReference<>(null);
-    public RestServer getServer () { return server.get(); }
+    @Getter protected volatile RestServer server = null;
 
-    protected <T> T getBean(Class<T> beanClass) { return getServer().getApplicationContext().getBean(beanClass); }
+    protected <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
 
-    protected C getConfiguration () { return (C) getServer().getConfiguration(); }
+    protected C getConfiguration () { return (C) server.getConfiguration(); }
 
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (server.get() == null) {
-            synchronized (server) {
-                if (server.get() == null) {
-                    final String serverCacheKey = getClass().getName();
-                    if (servers.containsKey(serverCacheKey)) {
-                        server.set(servers.get(serverCacheKey));
-                    } else {
-                        if (getServer() != null) getServer().stopServer();
-                        serverHarness = new RestServerHarness<>(getRestServerClass());
-                        serverHarness.setConfigurations(getConfigurations());
-                        serverHarness.addConfigurationFilter(this);
-                        serverHarness.init(getServerEnvironment());
-                        server.set(serverHarness.getServer());
-                        getServer().addLifecycleListener(this);
-                        getServer().addLifecycleListener(new DbPoolShutdownListener());
-                        serverHarness.startServer();
-                        servers.put(serverCacheKey, getServer());
-                    }
-                }
+        if (serverHarness == null || server == null) {
+            final String serverCacheKey = getClass().getName();
+            if (servers.containsKey(serverCacheKey)) {
+                server = servers.get(serverCacheKey);
+            } else {
+                if (server != null) server.stopServer();
+                serverHarness = new RestServerHarness<>(getRestServerClass());
+                serverHarness.setConfigurations(getConfigurations());
+                serverHarness.addConfigurationFilter(this);
+                serverHarness.init(getServerEnvironment());
+                server = serverHarness.getServer();
+                server.addLifecycleListener(this);
+                server.addLifecycleListener(new DbPoolShutdownListener());
+                serverHarness.startServer();
+                servers.put(serverCacheKey, server);
             }
         }
     }
@@ -125,8 +119,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected boolean dropDb(String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
 
     @Override public void beforeStart(RestServer<C> server) {
-        if (useTestSpecificDatabase() && getServer().getConfiguration() instanceof HasDatabaseConfiguration) {
-            final DatabaseConfiguration database = ((HasDatabaseConfiguration) getServer().getConfiguration()).getDatabase();
+        if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
+            final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
             String url = database.getUrl();
             int lastSlash = url.lastIndexOf('/');
             if (lastSlash == -1 || lastSlash == url.length() - 1) {
@@ -153,11 +147,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
     @Test public void ____stopServer () throws Exception {
-        if (server != null) getServer().stopServer();
+        if (server != null) server.stopServer();
         if (useTestSpecificDatabase()) {
-            daemon(new DbDropper(((HasDatabaseConfiguration) getServer().getConfiguration()).getDatabase().getDatabaseName()));
+            daemon(new DbDropper(((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName()));
         }
-        server.set(null);
+        server = null;
     }
 
     private static final Map<String, AbstractResourceIT> tempDatabases = new ConcurrentHashMap<>();
