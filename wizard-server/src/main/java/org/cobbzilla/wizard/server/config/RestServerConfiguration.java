@@ -183,14 +183,14 @@ public class RestServerConfiguration {
     }
 
     public <R> R subResource(Class<R> resourceClass, Object... args) {
-        final StringBuilder cacheKey = new StringBuilder(resourceClass.getName()).append(":").append(getId()).append(":");
+        final StringBuilder cacheKey = new StringBuilder(resourceClass.getName()).append(":").append(getId());
         for (Object o : args) {
             if (o == null) {
                 log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
                 continue;
             }
             if (o instanceof Identifiable) {
-                cacheKey.append(((Identifiable) o).getUuid()).append(":");
+                cacheKey.append(":").append(o.getClass().getName()).append("(").append(((Identifiable) o).getUuid()).append(")");
             } else if (!(o instanceof DAO)) {
                 log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
             }
