@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static org.cobbzilla.wizard.util.SpringUtil.getBean;
 
 @Slf4j
-public abstract class DbPoolShutdownListener<C extends RestServerConfiguration> extends RestServerLifecycleListenerBase<C> {
+public class DbPoolShutdownListener<C extends RestServerConfiguration> extends RestServerLifecycleListenerBase<C> {
 
     @Override public void onStop(RestServer server) {
         if (server.getConfiguration() instanceof HasDatabaseConfiguration) {
