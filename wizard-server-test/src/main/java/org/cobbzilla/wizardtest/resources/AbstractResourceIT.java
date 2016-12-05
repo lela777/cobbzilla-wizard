@@ -136,11 +136,14 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             final String dbName = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName();
             try {
                 dropDb(dbName);
+            } catch (Exception e) {
+                log.warn("beforeStart: error dropping database: " + dbName);
+            }
+            try {
                 createDb(dbName);
                 tempDatabases.put(dbName, this);
-
             } catch (Exception e) {
-                die("beforeStart: error dropping/creating database: " + dbName);
+                die("beforeStart: error creating database: " + dbName);
             }
         }
     }
