@@ -47,13 +47,13 @@ public abstract class DbPoolShutdownListener<C extends RestServerConfiguration> 
                     pool.close();
                     pool = null;
                 } catch (SQLException e) {
-                    log.warn("drop: error stopping pooled data source: " + dbName + ": " + e);
+                    log.warn("stopPool: error stopping pooled data source: " + dbName + ": " + e);
                 }
             }
             sleep += getStopPoolSleepIncrement(i);
             Sleep.sleep(sleep);
         }
-        log.error("drop: giving up trying to drop database: " + dbName);
+        log.error("stopPool: giving up trying to drop database: " + dbName);
     }
 
 }
