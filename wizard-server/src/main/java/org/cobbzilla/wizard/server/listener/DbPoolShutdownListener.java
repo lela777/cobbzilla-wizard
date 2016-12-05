@@ -53,7 +53,7 @@ public abstract class DbPoolShutdownListener<C extends RestServerConfiguration> 
             sleep += getStopPoolSleepIncrement(i);
             Sleep.sleep(sleep);
         }
-        log.error("stopPool: giving up trying to drop database: " + dbName);
+        log.error("stopPool: giving up trying to stop pooled data source: " + dbName);
     }
 
 }
