@@ -147,9 +147,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
     @Test public void ____stopServer () throws Exception {
-        if (server != null) server.stopServer();
-        if (useTestSpecificDatabase()) {
-            daemon(new DbDropper(((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName()));
+        if (server != null) {
+            server.stopServer();
+            if (useTestSpecificDatabase()) {
+                daemon(new DbDropper(((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName()));
+            }
         }
         server = null;
     }
