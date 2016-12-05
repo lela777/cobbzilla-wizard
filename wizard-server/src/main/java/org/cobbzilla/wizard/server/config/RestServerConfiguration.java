@@ -183,7 +183,7 @@ public class RestServerConfiguration {
     }
 
     public <R> R subResource(Class<R> resourceClass, Object... args) {
-        final StringBuilder cacheKey = new StringBuilder(getId());
+        final StringBuilder cacheKey = new StringBuilder(resourceClass.getName()).append(":").append(getId()).append(":");
         for (Object o : args) {
             if (o == null) {
                 log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
