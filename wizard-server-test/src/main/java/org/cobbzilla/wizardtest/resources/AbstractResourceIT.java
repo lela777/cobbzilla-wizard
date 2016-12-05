@@ -143,7 +143,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 createDb(dbName);
                 tempDatabases.put(dbName, this);
             } catch (Exception e) {
-                die("beforeStart: error creating database: " + dbName);
+                die("beforeStart: error creating database: " + dbName+": "+e);
             }
         }
     }
