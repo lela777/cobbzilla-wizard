@@ -18,6 +18,7 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.server.listener.DbPoolShutdownListener;
+import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.Before;
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -84,33 +86,34 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     @Override public void beforeStop(RestServer<C> server) {}
     @Override public void onStop(RestServer<C> server) {}
 
-    protected RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
+    protected volatile RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
+    protected static Map<String, AtomicReference<RestServer>> servers = new ConcurrentHashMap<>();
+    @Getter protected final AtomicReference<RestServer> server = new AtomicReference<>();
 
-    protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
-    @Getter protected volatile RestServer server = null;
+    protected <T> T getBean(Class<T> beanClass) { return server.get().getApplicationContext().getBean(beanClass); }
 
-    protected <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
-
-    protected C getConfiguration () { return (C) server.getConfiguration(); }
+    protected C getConfiguration () { return (C) server.get().getConfiguration(); }
 
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || server == null) {
-            final String serverCacheKey = getClass().getName();
-            if (servers.containsKey(serverCacheKey)) {
-                server = servers.get(serverCacheKey);
-            } else {
-                if (server != null) server.stopServer();
-                serverHarness = new RestServerHarness<>(getRestServerClass());
-                serverHarness.setConfigurations(getConfigurations());
-                serverHarness.addConfigurationFilter(this);
-                serverHarness.init(getServerEnvironment());
-                server = serverHarness.getServer();
-                server.addLifecycleListener(this);
-                server.addLifecycleListener(new DbPoolShutdownListener());
-                serverHarness.startServer();
-                servers.put(serverCacheKey, server);
+        synchronized (server) {
+            if (serverHarness == null || server.get() == null) {
+                final String serverCacheKey = getClass().getName();
+                if (servers.containsKey(serverCacheKey)) {
+                    server.set(servers.get(serverCacheKey).get());
+                } else {
+                    if (server.get() != null) server.get().stopServer();
+                    serverHarness = new RestServerHarness<>(getRestServerClass());
+                    serverHarness.setConfigurations(getConfigurations());
+                    serverHarness.addConfigurationFilter(this);
+                    serverHarness.init(getServerEnvironment());
+                    server.set(serverHarness.getServer());
+                    server.get().addLifecycleListener(this);
+                    server.get().addLifecycleListener(new DbPoolShutdownListener());
+                    serverHarness.startServer();
+                    servers.put(serverCacheKey, server);
+                }
             }
         }
     }
@@ -147,13 +150,16 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
     @Test public void ____stopServer () throws Exception {
-        if (server != null) {
-            server.stopServer();
-            if (useTestSpecificDatabase()) {
-                daemon(new DbDropper(((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName()));
+        synchronized (server) {
+            if (server.get() != null) {
+                server.get().stopServer();
+                if (useTestSpecificDatabase()) {
+                    daemon(new DbDropper(((HasDatabaseConfiguration) server.get().getConfiguration()).getDatabase().getDatabaseName()));
+                }
             }
+            serverHarness = null;
+            server.set(null);
         }
-        server = null;
     }
 
     private static final Map<String, AbstractResourceIT> tempDatabases = new ConcurrentHashMap<>();
@@ -185,7 +191,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 Sleep.sleep(sleep);
                 try {
                     if (dropDb(dbName)) {
-                        log.info(prefix+"successfully dropped test database: " + dbName);
+                        log.info(prefix+"successfully dropped test database: " + dbName + " with data source "+getBean(RdbmsConfig.class).dataSource());
                         return;
                     }
                     log.warn(prefix+"error dropping database: " + dbName);
