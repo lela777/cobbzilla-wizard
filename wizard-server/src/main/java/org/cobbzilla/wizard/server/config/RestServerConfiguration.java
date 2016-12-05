@@ -31,6 +31,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.URIUtil.getHost;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.system.CommandShell.execScript;
 
 @Slf4j
 public class RestServerConfiguration {
@@ -213,4 +214,10 @@ public class RestServerConfiguration {
         return r;
     }
 
+    public void copyDatabase(String targetDbName) {
+        final String user = ((HasDatabaseConfiguration) this).getDatabase().getUser();
+        execScript("dropdb " + targetDbName
+                + " ; createdb "+ targetDbName
+                + " && " +pgCommand("pg_dump") + " | psql -U "+ user + " " + targetDbName, pgEnv());
+    }
 }
