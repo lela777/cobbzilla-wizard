@@ -88,29 +88,30 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected volatile RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
     protected static Map<String, AtomicReference<RestServer>> servers = new ConcurrentHashMap<>();
-    @Getter protected final AtomicReference<RestServer> server = new AtomicReference<>();
+    private final AtomicReference<RestServer> server = new AtomicReference<>();
+    public RestServer getServer () { return server.get(); }
 
-    protected <T> T getBean(Class<T> beanClass) { return server.get().getApplicationContext().getBean(beanClass); }
+    protected <T> T getBean(Class<T> beanClass) { return getServer().getApplicationContext().getBean(beanClass); }
 
-    protected C getConfiguration () { return (C) server.get().getConfiguration(); }
+    protected C getConfiguration () { return (C) getServer().getConfiguration(); }
 
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
         synchronized (server) {
-            if (serverHarness == null || server.get() == null) {
-                final String serverCacheKey = getClass().getName();
+            if (serverHarness == null || getServer() == null) {
+                final String serverCacheKey = getClass().getName() + hashCode();
                 if (servers.containsKey(serverCacheKey)) {
                     server.set(servers.get(serverCacheKey).get());
                 } else {
-                    if (server.get() != null) server.get().stopServer();
+                    if (getServer() != null) getServer().stopServer();
                     serverHarness = new RestServerHarness<>(getRestServerClass());
                     serverHarness.setConfigurations(getConfigurations());
                     serverHarness.addConfigurationFilter(this);
                     serverHarness.init(getServerEnvironment());
                     server.set(serverHarness.getServer());
-                    server.get().addLifecycleListener(this);
-                    server.get().addLifecycleListener(new DbPoolShutdownListener());
+                    getServer().addLifecycleListener(this);
+                    getServer().addLifecycleListener(new DbPoolShutdownListener());
                     serverHarness.startServer();
                     servers.put(serverCacheKey, server);
                 }
@@ -151,10 +152,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Test public void ____stopServer () throws Exception {
         synchronized (server) {
-            if (server.get() != null) {
-                server.get().stopServer();
+            if (getServer() != null) {
+                getServer().stopServer();
                 if (useTestSpecificDatabase()) {
-                    daemon(new DbDropper(((HasDatabaseConfiguration) server.get().getConfiguration()).getDatabase().getDatabaseName()));
+                    daemon(new DbDropper(((HasDatabaseConfiguration) getServer().getConfiguration()).getDatabase().getDatabaseName()));
                 }
             }
             serverHarness = null;
