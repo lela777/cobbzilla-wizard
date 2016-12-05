@@ -96,6 +96,7 @@ public class ApiRunner {
 
     protected final Map<String, Class> storeTypes = new HashMap<>();
     protected final Map<String, String> namedSessions = new HashMap<>();
+    public void addNamedSession (String name, String token) { namedSessions.put(name, token); }
 
     public void reset () {
         ctx.clear();

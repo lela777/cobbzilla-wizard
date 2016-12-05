@@ -1,6 +1,5 @@
 package org.cobbzilla.wizardtest.resources;
 
-import com.mchange.v2.c3p0.PooledDataSource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +17,14 @@ import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
-import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
+import org.cobbzilla.wizard.server.listener.DbPoolShutdownListener;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,12 +40,12 @@ import static org.cobbzilla.util.string.StringUtil.truncate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-// initialize a new one. parallel tests should share the same server, but user a different api client.
-@Slf4j
+// initialize a new one. parallel tests will share the same server, but user a different api client.
+@FixMethodOrder(MethodSorters.NAME_ASCENDING) @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
 
-    @Getter private final ApiClientBase api = new BasicTestApiClient();
+    @Getter private final ApiClientBase api = new BasicTestApiClient(this);
 
     public void setToken(String sessionId) { getApi().setToken(sessionId); }
     public void pushToken(String sessionId) { getApi().pushToken(sessionId); }
@@ -82,11 +82,12 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
     }
     @Override public void beforeStop(RestServer<C> server) {}
-    protected static RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
+    protected RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
 
-    protected static volatile RestServer server = null;
+    protected static Map<Class, RestServer> servers = new ConcurrentHashMap<>();
+    @Getter protected volatile RestServer server = null;
 
-    protected static <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
+    protected <T> T getBean(Class<T> beanClass) { return server.getApplicationContext().getBean(beanClass); }
 
     protected C getConfiguration () { return (C) server.getConfiguration(); }
 
@@ -94,15 +95,21 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public boolean useTestSpecificDatabase () { return false; }
 
     @Before public synchronized void startServer() throws Exception {
-        if (serverHarness == null || server == null || !shouldCacheServer() || useTestSpecificDatabase()) {
-            if (server != null) server.stopServer();
-            serverHarness = new RestServerHarness<>(getRestServerClass());
-            serverHarness.setConfigurations(getConfigurations());
-            serverHarness.addConfigurationFilter(this);
-            serverHarness.init(getServerEnvironment());
-            server = serverHarness.getServer();
-            server.addLifecycleListener(this);
-            serverHarness.startServer();
+        if (serverHarness == null || server == null || !shouldCacheServer()) {
+            if (shouldCacheServer() && servers.containsKey(getClass())) {
+                server = servers.get(getClass());
+            } else {
+                if (server != null) server.stopServer();
+                serverHarness = new RestServerHarness<>(getRestServerClass());
+                serverHarness.setConfigurations(getConfigurations());
+                serverHarness.addConfigurationFilter(this);
+                serverHarness.init(getServerEnvironment());
+                server = serverHarness.getServer();
+                server.addLifecycleListener(this);
+                server.addLifecycleListener(new DbPoolShutdownListener());
+                serverHarness.startServer();
+                servers.put(getClass(), server);
+            }
         }
     }
 
@@ -137,8 +144,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Map<String, String> getServerEnvironment() throws Exception { return null; }
 
-    @After public void stopServer () throws Exception {
-        if (server != null && !shouldCacheServer()) {
+    @Test public void ____stopServer () throws Exception {
+        if (server != null) {
             server.stopServer();
             server = null;
         }
@@ -149,15 +156,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             final C configuration = server.getConfiguration();
             if (configuration instanceof HasDatabaseConfiguration) {
                 final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
-                final String dbName = database.getDatabaseName();
-                PooledDataSource pool = null;
-                if (database.getPool().isEnabled()) {
-                    final DataSource ds = configuration.getBean(RdbmsConfig.class).dataSource();
-                    if (ds instanceof PooledDataSource) {
-                        pool = (PooledDataSource) ds;
-                    }
-                }
-                daemon(new DbDropper(dbName));
+                daemon(new DbDropper(database.getDatabaseName()));
             }
         }
     }
@@ -189,7 +188,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
                 try {
-                    if (dropDb(dbName)) return;
+                    if (dropDb(dbName)) {
+                        log.info("successfully dropped database: " + dbName);
+                        return;
+                    }
                     log.warn("error dropping database: " + dbName);
                 } catch (IOException e) {
                     log.warn("error dropping database: " + dbName + ": " + e);

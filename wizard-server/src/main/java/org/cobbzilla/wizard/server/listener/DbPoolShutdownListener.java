@@ -45,7 +45,8 @@ public class DbPoolShutdownListener<C extends RestServerConfiguration> extends R
             if (pool != null) {
                 try {
                     pool.close();
-                    pool = null;
+                    log.info("stopPool: stopped pooled data source: " + dbName);
+                    return;
                 } catch (SQLException e) {
                     log.warn("stopPool: error stopping pooled data source: " + dbName + ": " + e);
                 }
