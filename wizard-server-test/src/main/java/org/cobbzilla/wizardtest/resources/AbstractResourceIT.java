@@ -177,17 +177,18 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         private final String dbName;
 ;
         @Override public void run() {
+            final String prefix = getClass().getSimpleName()+": ";
             int sleep = DROP_DELAY;
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
                 try {
                     if (dropDb(dbName)) {
-                        log.info("successfully dropped database: " + dbName);
+                        log.info(prefix+"successfully dropped test database: " + dbName);
                         return;
                     }
-                    log.warn("error dropping database: " + dbName);
+                    log.warn(prefix+"error dropping database: " + dbName);
                 } catch (IOException e) {
-                    log.warn("error dropping database: " + dbName + ": " + e);
+                    log.warn(prefix+"error dropping database: " + dbName + ": " + e);
                 }
                 sleep += DROP_RETRY_INCR;
             }
