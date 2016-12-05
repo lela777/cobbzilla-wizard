@@ -5,6 +5,7 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
@@ -27,6 +28,9 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 @Slf4j
 public class RestServerConfiguration {
+
+    @Getter(lazy=true) private final String id = initId();
+    private String initId() { return getServerName() + "_" + RandomStringUtils.randomAlphanumeric(12); }
 
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
     @Getter @Setter private File tmpdir = FileUtil.getDefaultTempDir();
