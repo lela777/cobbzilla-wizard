@@ -76,17 +76,27 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Class<? extends S> getRestServerClass() { return getFirstTypeParam(getClass(), RestServer.class); }
 
-    @Override public C filterConfiguration(C configuration) { return configuration; }
+    @Override public C filterConfiguration(C configuration) {
+        final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
+        String url = database.getUrl();
+        int lastSlash = url.lastIndexOf('/');
+        if (lastSlash == -1 || lastSlash == url.length() - 1) {
+            log.warn("beforeStart: couldn't understand url: " + url + ", leaving as is");
+            return configuration;
+        }
+        final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8).toLowerCase();
+        database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
+        return configuration;
+    }
 
     @Override public void onStart(RestServer<C> server) {
-        final RestServerConfiguration config = serverHarness.getConfiguration();
+        final RestServerConfiguration config = server.getConfiguration();
         config.setPublicUriBase("http://127.0.0.1:" +config.getHttp().getPort()+"/");
     }
     @Override public void beforeStop(RestServer<C> server) {}
     @Override public void onStop(RestServer<C> server) {}
 
-    protected volatile RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness = null;
-    protected static Map<String, AtomicReference<RestServer>> servers = new ConcurrentHashMap<>();
+    protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
     private final AtomicReference<RestServer> server = new AtomicReference<>();
     public RestServer getServer () { return server.get(); }
 
@@ -98,13 +108,13 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Before public synchronized void startServer() throws Exception {
         synchronized (server) {
-            if (serverHarness == null || getServer() == null) {
-                final String serverCacheKey = getClass().getName() + hashCode();
+            if (getServer() == null) {
+                final String serverCacheKey = getClass().getName();
                 if (servers.containsKey(serverCacheKey)) {
-                    server.set(servers.get(serverCacheKey).get());
+                    server.set(servers.get(serverCacheKey));
                 } else {
-                    if (getServer() != null) getServer().stopServer();
-                    serverHarness = new RestServerHarness<>(getRestServerClass());
+                    final RestServerHarness<? extends RestServerConfiguration, ? extends RestServer> serverHarness
+                            = new RestServerHarness<>(getRestServerClass());
                     serverHarness.setConfigurations(getConfigurations());
                     serverHarness.addConfigurationFilter(this);
                     serverHarness.init(getServerEnvironment());
@@ -112,7 +122,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                     getServer().addLifecycleListener(this);
                     getServer().addLifecycleListener(new DbPoolShutdownListener());
                     serverHarness.startServer();
-                    servers.put(serverCacheKey, server);
+                    servers.put(serverCacheKey, server.get());
                 }
             }
         }
@@ -123,14 +133,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
-            final DatabaseConfiguration database = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase();
-            String url = database.getUrl();
-            int lastSlash = url.lastIndexOf('/');
-            if (lastSlash == -1 || lastSlash == url.length() - 1) {
-                log.warn("beforeStart: couldn't understand url: " + url + ", leaving as is");
-                return;
-            }
-            final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8).toLowerCase();
+            final String dbName = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName();
             try {
                 dropDb(dbName);
                 createDb(dbName);
@@ -139,7 +142,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             } catch (Exception e) {
                 die("beforeStart: error dropping/creating database: " + dbName);
             }
-            database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
         }
     }
 
@@ -157,7 +159,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                     daemon(new DbDropper(((HasDatabaseConfiguration) getServer().getConfiguration()).getDatabase().getDatabaseName()));
                 }
             }
-            serverHarness = null;
             server.set(null);
         }
     }
