@@ -18,7 +18,6 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
 import org.cobbzilla.wizard.server.listener.DbPoolShutdownListener;
-import org.cobbzilla.wizard.spring.config.rdbms.RdbmsConfig;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.junit.Before;
@@ -169,6 +168,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             for (Map.Entry<String, AbstractResourceIT> entry : tempDatabases.entrySet()) {
                 try {
                     entry.getValue().dropDb(entry.getKey());
+                    log.info("shutdown-hook: successfully dropped db: "+entry.getKey());
                 } catch (IOException e) {
                     log.warn("shutdown-hook: error dropping db: "+entry.getKey());
                 }
@@ -192,7 +192,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 Sleep.sleep(sleep);
                 try {
                     if (dropDb(dbName)) {
-                        log.info(prefix+"successfully dropped test database: " + dbName + " with data source "+getBean(RdbmsConfig.class).dataSource());
+                        log.info(prefix+"successfully dropped test database: " + dbName);
                         return;
                     }
                     log.warn(prefix+"error dropping database: " + dbName);
