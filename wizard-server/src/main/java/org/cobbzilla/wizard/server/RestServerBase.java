@@ -40,12 +40,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.TRUE;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 @NoArgsConstructor @Slf4j
 public abstract class RestServerBase<C extends RestServerConfiguration> implements RestServer<C> {
@@ -231,6 +232,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return applicationContext;
     }
 
+    protected long shutdownTimeout() { return TimeUnit.SECONDS.toMillis(5); }
+
     public synchronized void stopServer() {
         if (httpServer.isStarted()) {
             log.info("stopServer: stopping " + configuration.getServerName() + "...");
@@ -238,6 +241,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             try {
                 httpServer.shutdownNow();
             } finally {
+                long start = realNow();
+                while (httpServer.isStarted() && realNow() - start < shutdownTimeout()) {
+                    sleep(100);
+                }
+                if (httpServer.isStarted()) log.warn("stopServer: server did not stop, running onStop for "+listeners.size()+" handlers anyway");
                 for (RestServerLifecycleListener<C> listener : listeners) listener.onStop(this);
             }
             log.info("stopServer: " + configuration.getServerName() + " stopped.");
