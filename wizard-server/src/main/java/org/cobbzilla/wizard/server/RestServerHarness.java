@@ -31,9 +31,7 @@ public class RestServerHarness<C extends RestServerConfiguration, S extends Rest
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    public RestServerHarness(Class<S> restServerClass) {
-        this.restServerClass = restServerClass;
-    }
+    public RestServerHarness(Class<S> restServerClass) { this.restServerClass = restServerClass; }
 
     public void addConfiguration(ConfigurationSource source) { configurations.add(source); }
     public void addConfigurations(List<ConfigurationSource> sources) { configurations.addAll(sources); }
