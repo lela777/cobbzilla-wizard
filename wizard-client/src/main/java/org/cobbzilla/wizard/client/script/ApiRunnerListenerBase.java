@@ -19,13 +19,14 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
 
     @Override public void statusCheckFailed(ApiScript script, RestResponse restResponse) {
         if (script.isTimedOut()) {
-            die("statusCheckFailed: expected "+script.getResponse().getStatus()+" but was "+restResponse.status);
+            die("statusCheckFailed: request "+script.getRequestLine()+" expected "+script.getResponse().getStatus()+" but was "+restResponse.status
+                    + (restResponse.status == 422 ? ", validation errors: "+restResponse.json : ""));
         }
     }
 
     @Override public void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check, Map<String, Object> ctx) {
         if (script.isTimedOut()) {
-            die("conditionCheckFailed("+script+"):\nfailed condition="+check+"\nserver response="+restResponse+"\nctx="+ctx);
+            die("conditionCheckFailed("+script.getRequestLine()+"):\nfailed condition="+check+"\nserver response="+restResponse+"\nctx="+ctx);
         }
     }
 

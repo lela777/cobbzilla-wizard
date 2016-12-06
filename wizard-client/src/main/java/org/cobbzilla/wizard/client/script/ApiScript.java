@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.client.script;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,6 +30,7 @@ public class ApiScript {
     @Getter @Setter private ApiScriptRequest request;
     @Getter @Setter private ApiScriptResponse response;
     public boolean hasResponse () { return response != null; }
+    @JsonIgnore public String getRequestLine () { return request.getMethod() + " " + request.getUri(); }
 
     @Getter @Setter private long start = now();
     public long getAge () { return now() - start; }
