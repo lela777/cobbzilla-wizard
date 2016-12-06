@@ -120,14 +120,16 @@ public class RestServerConfiguration {
 
     public String pgCommand() { return pgCommand("psql"); }
 
-    public String pgCommand(String command) {
+    public String pgCommand(String command) { return pgCommand(command, null); }
+
+    public String pgCommand(String command, String db) {
         final HasDatabaseConfiguration config = validatePgConfig("pgCommand("+command+")");
         final String dbUser = config.getDatabase().getUser();
         final String dbUrl = config.getDatabase().getUrl();
 
         // here we assume URL is in the form 'jdbc:{driver}://{host}:{port}/{db_name}'
         final String host = getHost(dbUrl.substring(dbUrl.indexOf(":")+1));
-        final String dbName = dbUrl.substring(dbUrl.lastIndexOf('/')+1);
+        final String dbName = !empty(db) ? db : dbUrl.substring(dbUrl.lastIndexOf('/')+1);
 
         return command + " -h " + host +" -U " + dbUser + " " + dbName;
     }
