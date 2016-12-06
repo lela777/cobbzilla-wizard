@@ -84,11 +84,12 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             String url = database.getUrl();
             int lastSlash = url.lastIndexOf('/');
             if (lastSlash == -1 || lastSlash == url.length() - 1) {
-                log.warn("beforeStart: couldn't understand url: " + url + ", leaving as is");
+                log.warn("filterConfiguration: couldn't understand url: " + url + ", leaving as is");
                 return configuration;
             }
             final String dbName = getTempDbNamePrefix(url) + "_" + rand;
             database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
+            log.info("filterConfiguration: pool config is "+database.getPool());
 
             if (configuration instanceof HasQuartzConfiguration) {
                 final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
