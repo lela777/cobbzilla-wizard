@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
-import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.system.Sleep;
 import org.cobbzilla.wizard.client.ApiClientBase;
@@ -113,10 +112,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
     private final AtomicReference<RestServer> server = new AtomicReference<>();
     public RestServer getServer () { return server.get(); }
+    public C getConfiguration () { return server.get() == null ? null : (C) server.get().getConfiguration(); }
 
     protected <T> T getBean(Class<T> beanClass) { return getServer().getApplicationContext().getBean(beanClass); }
-
-    protected C getConfiguration () { return (C) getServer().getConfiguration(); }
 
     public boolean useTestSpecificDatabase () { return false; }
 
@@ -142,20 +140,20 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         }
     }
 
-    protected void createDb(String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
-    protected boolean dropDb(String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
+    protected void createDb(C config, String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
+    protected boolean dropDb(C config, String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
 
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
             final String dbName = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName();
             try {
-                dropDb(dbName);
+                dropDb(server.getConfiguration(), dbName);
             } catch (Exception e) {
                 log.warn("beforeStart: error dropping database: " + dbName);
             }
             try {
-                createDb(dbName);
-                tempDatabases.put(dbName, this);
+                createDb(server.getConfiguration(), dbName);
+                tempDatabases.put(dbName, new DbDropper<>(this, server.getConfiguration(), dbName));
             } catch (Exception e) {
                 die("beforeStart: error creating database: " + dbName+": "+e);
             }
@@ -171,23 +169,24 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     @Test public void ____stopServer () throws Exception {
         synchronized (server) {
             if (getServer() != null) {
+                final RestServerConfiguration config = getServer().getConfiguration();
                 getServer().stopServer();
                 if (useTestSpecificDatabase()) {
-                    daemon(new DbDropper(((HasDatabaseConfiguration) getServer().getConfiguration()).getDatabase().getDatabaseName()));
+                    daemon(new DbDropper(this, config, ((HasDatabaseConfiguration) config).getDatabase().getDatabaseName()));
                 }
             }
             server.set(null);
         }
     }
 
-    private static final Map<String, AbstractResourceIT> tempDatabases = new ConcurrentHashMap<>();
+    private static final Map<String, DbDropper> tempDatabases = new ConcurrentHashMap<>();
     private static final Thread dbCleanup = new Thread(new Runnable() {
         @Override public void run() {
-            for (Map.Entry<String, AbstractResourceIT> entry : tempDatabases.entrySet()) {
+            for (Map.Entry<String, DbDropper> entry : tempDatabases.entrySet()) {
                 try {
-                    entry.getValue().dropDb(entry.getKey());
+                    entry.getValue().drop();
                     log.info("shutdown-hook: successfully dropped db: "+entry.getKey());
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.warn("shutdown-hook: error dropping db: "+entry.getKey());
                 }
             }
@@ -196,12 +195,14 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     static { Runtime.getRuntime().addShutdownHook(dbCleanup); }
 
     @AllArgsConstructor
-    private class DbDropper implements Runnable {
+    private static class DbDropper<C extends RestServerConfiguration> implements Runnable {
 
         public static final int DROP_DELAY = 30000;
         public static final int DROP_RETRY_INCR = 10000;
 
-        private final String dbName;
+        @Getter private final AbstractResourceIT test;
+        @Getter private final C configuration;
+        @Getter private final String dbName;
 ;
         @Override public void run() {
             final String prefix = getClass().getSimpleName()+": ";
@@ -209,7 +210,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             for (int i=0; i<5; i++) {
                 Sleep.sleep(sleep);
                 try {
-                    if (dropDb(dbName)) {
+                    if (drop()) {
                         log.info(prefix+"successfully dropped test database: " + dbName);
                         return;
                     }
@@ -221,6 +222,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             }
             log.error("giving up trying to drop database: " + dbName);
         }
+
+        protected boolean drop() throws IOException { return test.dropDb(configuration, dbName); }
     }
 
     protected Map<String, ConstraintViolationBean> mapViolations(ConstraintViolationBean[] violations) {
@@ -247,10 +250,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
         for (String message : violationMessages) {
             assertTrue("assertExpectedViolations: key "+message+" not found in map: "+map, map.containsKey(message));
         }
-    }
-
-    protected ResultSetBean execSql(String sql, Object... args) throws Exception {
-        return getConfiguration().execSql(sql, args);
     }
 
 }
