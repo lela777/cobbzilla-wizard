@@ -221,14 +221,14 @@ public class RestServerConfiguration {
 
     public void copyDatabase(String targetDbName, String user) {
         final String dbUser = !empty(user) ? user : "postgres";
+        String copyCommand = null;
         try {
-            final String copyCommand = pgCommand("dropdb", null, dbUser) + " ; " + pgCommand("createdb", null, dbUser)
+            copyCommand = pgCommand("dropdb", null, dbUser) + " ; " + pgCommand("createdb", null, dbUser)
                     + " && " + pgCommand("pg_dump", null, dbUser)
                     + " | " + pgCommand("psql", user, targetDbName);
-            log.info("copyDatabase: "+copyCommand);
             execScript(copyCommand, pgEnv());
         } catch (Exception e) {
-            die(e);
+            die("copyDatabase("+copyCommand+"): "+e);
         }
     }
 }
