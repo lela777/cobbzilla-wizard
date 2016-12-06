@@ -120,11 +120,12 @@ public class RestServerConfiguration {
 
     public String pgCommand() { return pgCommand("psql"); }
 
-    public String pgCommand(String command) { return pgCommand(command, null); }
+    public String pgCommand(String command)            { return pgCommand(command, null, null); }
+    public String pgCommand(String command, String db) { return pgCommand(command, db, null); }
 
-    public String pgCommand(String command, String db) {
+    public String pgCommand(String command, String db, String user) {
         final HasDatabaseConfiguration config = validatePgConfig("pgCommand("+command+")");
-        final String dbUser = config.getDatabase().getUser();
+        final String dbUser = !empty(user) ? user : config.getDatabase().getUser();
         final String dbUrl = config.getDatabase().getUrl();
 
         // here we assume URL is in the form 'jdbc:{driver}://{host}:{port}/{db_name}'
@@ -216,11 +217,13 @@ public class RestServerConfiguration {
         return r;
     }
 
-    public void copyDatabase(String targetDbName) {
-        final String user = ((HasDatabaseConfiguration) this).getDatabase().getUser();
+    public void copyDatabase(String targetDbName, String user) {
+        final String dbUser = !empty(user) ? user : ((HasDatabaseConfiguration) this).getDatabase().getUser();
         try {
-            execScript(pgCommand("dropdb") + " ; " + pgCommand("createdb")
-                    + " && " + pgCommand("pg_dump") + " | psql -U " + user + " " + targetDbName, pgEnv());
+            final String copyCommand = pgCommand("dropdb", null, dbUser) + " ; " + pgCommand("createdb", null, dbUser)
+                    + " && " + pgCommand("pg_dump", null, dbUser) + " | psql -U " + dbUser + " " + targetDbName;
+            log.info("copyDatabase: "+copyCommand);
+            execScript(copyCommand, pgEnv());
         } catch (Exception e) {
             die(e);
         }
