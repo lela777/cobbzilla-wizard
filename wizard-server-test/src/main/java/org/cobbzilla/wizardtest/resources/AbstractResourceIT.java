@@ -92,8 +92,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
             if (configuration instanceof HasQuartzConfiguration) {
                 final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
-                final String schedName = quartz.getProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME);
-                quartz.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, schedName+"-"+rand);
+                if (quartz != null) {
+                    final String schedName = quartz.getProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME);
+                    quartz.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, schedName + "-" + rand);
+                }
             }
 
             configuration.setServerName(configuration.getServerName()+"-"+rand);
