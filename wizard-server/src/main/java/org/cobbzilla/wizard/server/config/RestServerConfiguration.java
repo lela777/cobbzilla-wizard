@@ -217,8 +217,7 @@ public class RestServerConfiguration {
     public void copyDatabase(String targetDbName) {
         final String user = ((HasDatabaseConfiguration) this).getDatabase().getUser();
         try {
-            execScript(pgCommand("dropdb") + " " + targetDbName
-                    + " ; "+pgCommand("createdb") +" " + targetDbName
+            execScript(pgCommand("dropdb") + " ; " + pgCommand("createdb")
                     + " && " + pgCommand("pg_dump") + " | psql -U " + user + " " + targetDbName, pgEnv());
         } catch (Exception e) {
             die(e);
