@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.dao.shard.cache;
 import org.cobbzilla.wizard.dao.shard.AbstractShardedDAO;
 import org.cobbzilla.wizard.dao.shard.SingleShardDAO;
 import org.cobbzilla.wizard.dao.shard.task.ShardFindFirstBy3FieldsTask;
+import org.cobbzilla.wizard.dao.shard.task.ShardTaskFactory;
 import org.cobbzilla.wizard.model.shard.Shardable;
 
 public class ShardCacheableFindByUnique3FieldFinder<E extends Shardable, D extends SingleShardDAO<E>> extends ShardCacheableFinder<E, D> {
@@ -28,6 +29,6 @@ public class ShardCacheableFindByUnique3FieldFinder<E extends Shardable, D exten
         if (dao != null) return dao.findByUniqueFields(f1, v1, f2, v2, f3, v3);
 
         // have to search all shards for it
-        return shardedDAO.queryShardsUnique(new ShardFindFirstBy3FieldsTask.Factory(f1, v1, f2, v2, f3, v3), "findByUniqueFields");
+        return shardedDAO.queryShardsUnique((ShardTaskFactory<E, D, E>) new ShardFindFirstBy3FieldsTask.Factory(f1, v1, f2, v2, f3, v3), "findByUniqueFields");
     }
 }
