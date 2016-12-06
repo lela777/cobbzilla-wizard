@@ -89,7 +89,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             }
             final String dbName = getTempDbNamePrefix(url) + "_" + rand;
             database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
-            log.info("filterConfiguration: pool config is "+database.getPool());
 
             if (configuration instanceof HasQuartzConfiguration) {
                 final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
