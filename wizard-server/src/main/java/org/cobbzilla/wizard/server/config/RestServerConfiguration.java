@@ -225,7 +225,7 @@ public class RestServerConfiguration {
         try {
             copyCommand = pgCommand("dropdb", targetDbName, dbUser) + " ; " + pgCommand("createdb", targetDbName, dbUser)
                     + " && " + pgCommand("pg_dump", null, dbUser)
-                    + " | " + pgCommand("psql", user, targetDbName);
+                    + " | " + pgCommand("psql", targetDbName, user);
             execScript(copyCommand, pgEnv());
         } catch (Exception e) {
             die("copyDatabase("+copyCommand+"): "+e);
