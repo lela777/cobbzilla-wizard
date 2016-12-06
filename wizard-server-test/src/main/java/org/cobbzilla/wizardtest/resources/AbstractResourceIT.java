@@ -14,6 +14,7 @@ import org.cobbzilla.wizard.server.RestServerHarness;
 import org.cobbzilla.wizard.server.RestServerLifecycleListener;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
+import org.cobbzilla.wizard.server.config.HasQuartzConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.StreamConfigurationSource;
@@ -24,12 +25,10 @@ import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+import org.quartz.impl.StdSchedulerFactory;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -77,15 +76,28 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected Class<? extends S> getRestServerClass() { return getFirstTypeParam(getClass(), RestServer.class); }
 
     @Override public C filterConfiguration(C configuration) {
-        final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
-        String url = database.getUrl();
-        int lastSlash = url.lastIndexOf('/');
-        if (lastSlash == -1 || lastSlash == url.length() - 1) {
-            log.warn("beforeStart: couldn't understand url: " + url + ", leaving as is");
-            return configuration;
+        if (useTestSpecificDatabase()) {
+            // we'll use this to randomize the name of our database, server, and quartz scheduler
+            final String rand = randomAlphanumeric(8).toLowerCase();
+
+            final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
+            String url = database.getUrl();
+            int lastSlash = url.lastIndexOf('/');
+            if (lastSlash == -1 || lastSlash == url.length() - 1) {
+                log.warn("beforeStart: couldn't understand url: " + url + ", leaving as is");
+                return configuration;
+            }
+            final String dbName = getTempDbNamePrefix(url) + "_" + rand;
+            database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
+
+            if (configuration instanceof HasQuartzConfiguration) {
+                final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
+                final String schedName = quartz.getProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME);
+                quartz.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, schedName+"-"+rand);
+            }
+
+            configuration.setServerName(configuration.getServerName()+"-"+rand);
         }
-        final String dbName = getTempDbNamePrefix(url) + "_" + randomAlphanumeric(8).toLowerCase();
-        database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
         return configuration;
     }
 
