@@ -112,7 +112,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected static Map<String, RestServer> servers = new ConcurrentHashMap<>();
     private final AtomicReference<RestServer> server = new AtomicReference<>();
     public RestServer getServer () { return server.get(); }
-    public C getConfiguration () { return server.get() == null ? null : (C) server.get().getConfiguration(); }
+    public C getConfiguration () { return (C) server.get().getConfiguration(); }
 
     protected <T> T getBean(Class<T> beanClass) { return getServer().getApplicationContext().getBean(beanClass); }
 
