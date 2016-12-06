@@ -220,10 +220,11 @@ public class RestServerConfiguration {
     public void copyDatabase(String targetDbName) { copyDatabase(targetDbName, null); }
 
     public void copyDatabase(String targetDbName, String user) {
-        final String dbUser = !empty(user) ? user : ((HasDatabaseConfiguration) this).getDatabase().getUser();
+        final String dbUser = !empty(user) ? user : "postgres";
         try {
             final String copyCommand = pgCommand("dropdb", null, dbUser) + " ; " + pgCommand("createdb", null, dbUser)
-                    + " && " + pgCommand("pg_dump", null, dbUser) + " | psql -U " + dbUser + " " + targetDbName;
+                    + " && " + pgCommand("pg_dump", null, dbUser)
+                    + " | " + pgCommand("psql", user, targetDbName);
             log.info("copyDatabase: "+copyCommand);
             execScript(copyCommand, pgEnv());
         } catch (Exception e) {
