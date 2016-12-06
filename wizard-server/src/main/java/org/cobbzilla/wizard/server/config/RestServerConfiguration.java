@@ -217,6 +217,8 @@ public class RestServerConfiguration {
         return r;
     }
 
+    public void copyDatabase(String targetDbName) { copyDatabase(targetDbName, null); }
+
     public void copyDatabase(String targetDbName, String user) {
         final String dbUser = !empty(user) ? user : ((HasDatabaseConfiguration) this).getDatabase().getUser();
         try {
