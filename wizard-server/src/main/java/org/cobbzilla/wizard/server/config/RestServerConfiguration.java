@@ -223,7 +223,7 @@ public class RestServerConfiguration {
         final String dbUser = !empty(user) ? user : "postgres";
         String copyCommand = null;
         try {
-            copyCommand = pgCommand("dropdb", null, dbUser) + " ; " + pgCommand("createdb", null, dbUser)
+            copyCommand = pgCommand("dropdb", targetDbName, dbUser) + " ; " + pgCommand("createdb", targetDbName, dbUser)
                     + " && " + pgCommand("pg_dump", null, dbUser)
                     + " | " + pgCommand("psql", user, targetDbName);
             execScript(copyCommand, pgEnv());
