@@ -154,6 +154,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             try {
                 createDb(server.getConfiguration(), dbName);
                 tempDatabases.put(dbName, new DbDropper<>(this, server.getConfiguration(), dbName));
+                log.info("beforeStart: "+getClass().getSimpleName()+" using database "+dbName);
+
             } catch (Exception e) {
                 die("beforeStart: error creating database: " + dbName+": "+e);
             }
