@@ -14,6 +14,7 @@ public interface RestServer<C extends RestServerConfiguration> {
     String LOCALHOST = "127.0.0.1";
 
     HttpServer startServer() throws IOException;
+    boolean isRunning ();
 
     C getConfiguration();
     void setConfiguration(C configuration);

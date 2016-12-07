@@ -40,6 +40,7 @@ public class RestServerConfiguration {
     private String initId() { return getServerName() + "_" + RandomStringUtils.randomAlphanumeric(12); }
 
     @Getter @Setter RestServer server;
+    public boolean isRunning() { return getServer() != null && getServer().isRunning(); }
 
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
     @Getter @Setter private File tmpdir = FileUtil.getDefaultTempDir();

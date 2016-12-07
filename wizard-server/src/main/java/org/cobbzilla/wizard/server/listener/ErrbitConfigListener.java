@@ -10,12 +10,14 @@ import org.cobbzilla.wizard.server.RestServerBase;
 import org.cobbzilla.wizard.server.RestServerLifecycleListenerBase;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 
+@Slf4j
 public class ErrbitConfigListener extends RestServerLifecycleListenerBase {
 
     @Override public void onStart(RestServer server) {
         final ErrbitApi errorApi = new ErrbitApi(server.getConfiguration());
         RestServerBase.setErrorApi(errorApi);
         ZillaRuntime.setErrorApi(errorApi);
+        log.info("onStart: "+server.getConfiguration().getErrorApi());
     }
 
     @AllArgsConstructor @Slf4j

@@ -2,17 +2,14 @@ package org.cobbzilla.wizard.server.config;
 
 import airbrake.AirbrakeNoticeBuilder;
 import airbrake.AirbrakeNotifier;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.cobbzilla.util.system.CommandShell;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@NoArgsConstructor @AllArgsConstructor @Slf4j
+@NoArgsConstructor @AllArgsConstructor @Slf4j @ToString
 public class ErrorApiConfiguration {
 
     @Getter @Setter private String url;

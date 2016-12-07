@@ -127,6 +127,8 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         return httpServer;
     }
 
+    @Override public boolean isRunning() { return httpServer != null && httpServer.isStarted(); }
+
     public HttpServer buildServer(String serverName) throws IOException {
 
         final ResourceConfig rc = getJerseyResourceConfig(configuration.getJersey());
