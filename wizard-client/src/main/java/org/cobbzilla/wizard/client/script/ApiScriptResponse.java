@@ -2,13 +2,11 @@ package org.cobbzilla.wizard.client.script;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.cobbzilla.util.http.HttpStatusCodes;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.parseDuration;
 
-@ToString
 public class ApiScriptResponse {
 
     @Getter @Setter private int status = HttpStatusCodes.OK;

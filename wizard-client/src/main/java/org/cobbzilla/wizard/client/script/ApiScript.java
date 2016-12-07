@@ -3,13 +3,13 @@ package org.cobbzilla.wizard.client.script;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.string.StringUtil.ellipsis;
 import static org.cobbzilla.util.string.StringUtil.parseDuration;
 
-@ToString
 public class ApiScript {
 
     @Getter @Setter private String comment;
@@ -37,4 +37,11 @@ public class ApiScript {
 
     public boolean isTimedOut() { return getAge() > getTimeoutMillis(); }
 
+    @Override public String toString() {
+        return "{\n" +
+                "  \"comment\": \"" + comment + "\"," +
+                "  \"request\": \"" + ellipsis(json(request), 300) + "\",\n" +
+                "  \"response\": \"" + ellipsis(json(request), 300) + "\",\n" +
+                "}";
+    }
 }

@@ -114,7 +114,7 @@ public class ApiRunner {
 
     public boolean run(ApiScript script) throws Exception {
         setScriptForThread(script);
-        if (listener != null) listener.handleBefore(script.getBefore(), ctx);
+        if (listener != null) listener.beforeScript(script.getBefore(), ctx);
         if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: "+script);
         try {
             script.setStart(now());
@@ -130,7 +130,7 @@ public class ApiRunner {
             throw e;
 
         } finally {
-            if (listener != null) listener.handleAfter(script.getAfter(), ctx);
+            if (listener != null) listener.afterScript(script.getAfter(), ctx);
         }
     }
 
