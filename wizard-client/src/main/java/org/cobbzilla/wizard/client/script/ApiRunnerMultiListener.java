@@ -11,12 +11,13 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 public class ApiRunnerMultiListener extends ApiRunnerListenerBase {
 
     private List<ApiRunnerListener> apiListeners = new ArrayList<>();
+
     public ApiRunnerMultiListener addApiListener(ApiRunnerListener listener) { apiListeners.add(listener); return this; }
 
-    public static ApiRunnerListener addApiListener(ApiRunnerListener multi, ApiRunnerListener add) {
-        if (multi == null)  return add;
+    public static ApiRunnerMultiListener addApiListener(ApiRunnerListener multi, ApiRunnerListener add) {
+        if (multi == null)  return die("addApiListener: multi was null");
         if (multi instanceof ApiRunnerMultiListener) return ((ApiRunnerMultiListener) multi).addApiListener(add);
-        return die("addListener: expected ApiRunnerMultiListener, but was "+multi.getClass().getName());
+        return die("addApiListener: expected ApiRunnerMultiListener, but was "+multi.getClass().getName());
     }
 
     @Override public void beforeCall(ApiScript script, Map<String, Object> ctx) {
