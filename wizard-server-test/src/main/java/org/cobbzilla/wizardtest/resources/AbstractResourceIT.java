@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.quartz.impl.StdSchedulerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -38,6 +37,8 @@ import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.quartz.impl.StdSchedulerFactory.*;
+import static org.quartz.utils.PoolingConnectionProvider.DB_URL;
 
 // initialize a new one. parallel tests will share the same server, but user a different api client.
 @FixMethodOrder(MethodSorters.NAME_ASCENDING) @Slf4j
@@ -92,8 +93,18 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (configuration instanceof HasQuartzConfiguration) {
                 final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
                 if (quartz != null) {
-                    final String schedName = quartz.getProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME);
-                    quartz.setProperty(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, schedName + "-" + rand);
+                    final String schedName = quartz.getProperty(PROP_SCHED_INSTANCE_NAME);
+                    if (empty(schedName)) die("filterConfiguration: quartz config found but no "+PROP_SCHED_INSTANCE_NAME+" found. Quartz properties: "+quartz.stringPropertyNames());
+                    quartz.setProperty(PROP_SCHED_INSTANCE_NAME, schedName + "-" + rand);
+
+                    final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
+                    final String dataSource = quartz.getProperty(dsProp);
+                    if (empty(dataSource)) die("filterConfiguration: quartz config found but no "+dsProp+" found. Quartz properties: "+quartz.stringPropertyNames());
+
+                    final String jdbcUrlProp = PROP_DATASOURCE_PREFIX + "." + dataSource + "." + DB_URL;
+                    final String jdbcUrl = quartz.getProperty(jdbcUrlProp);
+                    if (empty(jdbcUrl)) die("filterConfiguration: quartz DataSource "+dataSource+" found but no "+jdbcUrl+" found. Quartz properties: "+quartz.stringPropertyNames());
+                    quartz.setProperty(jdbcUrlProp, database.getUrl());
                 }
             }
 
