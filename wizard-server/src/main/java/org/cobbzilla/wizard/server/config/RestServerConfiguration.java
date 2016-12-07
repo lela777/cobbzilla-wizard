@@ -49,6 +49,9 @@ public class RestServerConfiguration {
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
 
+    public String uri(String path) { return publicUriBase + (path.startsWith("/") ? path : "/" + path); }
+    public String api(String path) { return publicUriBase + getHttp().getBaseUri() + (path.startsWith("/") ? path : "/" + path); }
+
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
 
