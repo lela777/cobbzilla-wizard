@@ -107,14 +107,23 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                         quartz.setProperty(dsProp, newDataSource);
 
                         // scrub properties, replace datasource name in property names
+                        boolean replacedUrl = false;
+                        boolean replacedDs = false;
                         for (String name : quartz.stringPropertyNames()) {
                             String val = quartz.getProperty(name);
                             if (name.startsWith(PROP_DATASOURCE_PREFIX+"."+dataSource+".")) {
-                                if (name.endsWith(DB_URL)) val = database.getUrl();
+                                if (name.endsWith(DB_URL)) {
+                                    val = database.getUrl();
+                                    replacedUrl = true;
+                                } else if (name.endsWith("dataSourceName")) {
+                                    val = "dbPool_"+newDataSource;
+                                    replacedDs = true;
+                                }
                                 quartz.remove(name);
                                 quartz.setProperty(name.replace("."+dataSource+".", "."+newDataSource+"."), val);
                             }
                         }
+                        if (!replacedUrl || !replacedDs) die("filterConfiguration: quartz config found but dataSourceName and/or URL properties were not defined for the pool. Quartz properties: "+quartz.stringPropertyNames());
                     }
                 }
                 configuration.setServerName(configuration.getServerName()+"-"+rand);
