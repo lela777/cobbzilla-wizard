@@ -4,9 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.cobbzilla.util.daemon.ZillaRuntime.hexnow;
+
 @ToString
 public class DatabaseConnectionPoolConfiguration {
 
+    @Getter @Setter private String name = "Pool-"+hexnow()+"-"+randomAlphanumeric(10);
     @Getter @Setter private boolean enabled = false;
 
     protected int getDefaultMin() { return 5; }
