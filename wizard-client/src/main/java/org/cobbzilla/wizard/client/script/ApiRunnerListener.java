@@ -6,6 +6,8 @@ import java.util.Map;
 
 public interface ApiRunnerListener {
 
+    String getName();
+
     void beforeScript(String before, Map<String, Object> ctx) throws Exception;
     void afterScript(String after, Map<String, Object> ctx) throws Exception;
 
