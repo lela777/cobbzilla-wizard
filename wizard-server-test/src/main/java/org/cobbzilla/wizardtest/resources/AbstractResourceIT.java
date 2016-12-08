@@ -24,7 +24,8 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
-import static org.cobbzilla.util.io.FileUtil.temp;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
