@@ -166,13 +166,13 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     }
 
     protected void createDb(C config, String dbName) throws IOException { notSupported("createDb: must be defined in subclass"); }
-    protected boolean dropDb(C config, String dbName) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
+    protected boolean dropDb(C config, String dbName, boolean background) throws IOException { return notSupported("dropDb: must be defined in subclass"); }
 
     @Override public void beforeStart(RestServer<C> server) {
         if (useTestSpecificDatabase() && server.getConfiguration() instanceof HasDatabaseConfiguration) {
             final String dbName = ((HasDatabaseConfiguration) server.getConfiguration()).getDatabase().getDatabaseName();
             try {
-                dropDb(server.getConfiguration(), dbName);
+                dropDb(server.getConfiguration(), dbName, false);
             } catch (Exception e) {
                 log.warn("beforeStart: error dropping database: " + dbName);
             }
@@ -250,7 +250,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             log.error("giving up trying to drop database: " + dbName);
         }
 
-        protected boolean drop() throws IOException { return test.dropDb(configuration, dbName); }
+        protected boolean drop() throws IOException { return test.dropDb(configuration, dbName, true); }
     }
 
     protected Map<String, ConstraintViolationBean> mapViolations(ConstraintViolationBean[] violations) {
