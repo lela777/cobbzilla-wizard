@@ -6,11 +6,12 @@ import lombok.ToString;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.hexnow;
+import static org.cobbzilla.util.reflect.ReflectionUtil.caller;
 
 @ToString
 public class DatabaseConnectionPoolConfiguration {
 
-    @Getter @Setter private String name = "Pool-"+hexnow()+"-"+randomAlphanumeric(10);
+    @Getter @Setter private String name = "Pool-"+hexnow()+"-"+randomAlphanumeric(10) + ", caller: "+caller();
     @Getter @Setter private boolean enabled = false;
 
     protected int getDefaultMin() { return 5; }
