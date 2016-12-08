@@ -63,33 +63,36 @@ public class ModelSetup {
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            String prefix,
-                                                           ModelSetupListener listener) throws Exception {
-        return setupModel(api, entityConfigsEndpoint, prefix, "manifest", listener);
+                                                           ModelSetupListener listener,
+                                                           String runName) throws Exception {
+        return setupModel(api, entityConfigsEndpoint, prefix, "manifest", listener, runName);
     }
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            String prefix,
                                                            String manifest,
-                                                           ModelSetupListener listener) throws Exception {
+                                                           ModelSetupListener listener,
+                                                           String runName) throws Exception {
         final String[] models = json(stream2string(prefix + manifest + ".json"), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
         for (String model : models) {
             modelJson.put(model, stream2string(prefix + model + ".json"));
         }
-        return setupModel(api, entityConfigsEndpoint, modelJson, listener);
+        return setupModel(api, entityConfigsEndpoint, modelJson, listener, runName);
     }
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            LinkedHashMap<String, String> models,
-                                                           ModelSetupListener listener) throws Exception {
+                                                           ModelSetupListener listener,
+                                                           String runName) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
             String modelName = model.getKey();
             final String json = model.getValue();
             final String entityType = getEntityTypeFromString(modelName);
 
-            setupJson(api, entityConfigsEndpoint, entityType, json, listener);
+            setupJson(api, entityConfigsEndpoint, entityType, json, listener, runName);
         }
         return models;
     }
@@ -115,7 +118,8 @@ public class ModelSetup {
                                  String entityConfigsEndpoint,
                                  String entityType,
                                  String json,
-                                 ModelSetupListener listener) throws Exception {
+                                 ModelSetupListener listener,
+                                 String runName) throws Exception {
         if (listener != null) listener.preEntityConfig(entityType);
         final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
         if (listener != null) listener.postEntityConfig(entityType, entityConfig);
@@ -124,7 +128,7 @@ public class ModelSetup {
         final ModelEntity[] entities = parseEntities(json, entityClass);
         for (ModelEntity entity : entities) {
             final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
-            createEntity(api, entityConfig, entity, context, listener);
+            createEntity(api, entityConfig, entity, context, listener, runName);
         }
     }
 
@@ -159,13 +163,15 @@ public class ModelSetup {
                                        EntityConfig entityConfig,
                                        ModelEntity request,
                                        final LinkedHashMap<String, Identifiable> context,
-                                       final ModelSetupListener listener) throws Exception {
+                                       final ModelSetupListener listener,
+                                       final String runName) throws Exception {
 
         Identifiable entity = request;
 
         // does it already exist?
         final String entityType = getRawClass(entity.getClass().getSimpleName());
         final String updateUri = entityConfig.getUpdateUri();
+        final String logPrefix = "createEntity(" + runName + "): " + entityType;
         if (updateUri != null && !updateUri.equals(":notSupported")) {
             final String getUri = processUri(context, entity, updateUri);
             if (getUri != null) {
@@ -177,10 +183,10 @@ public class ModelSetup {
                         if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, entity);
                             if (existing != null) ReflectionUtil.copy(existing, entity);
-                            log.info("createEntity: "+entityType+" already exists, updating");
+                            log.info(logPrefix + " already exists, updating");
                             entity = update(api, context, entityConfig, entity, listener);
                         } else {
-                            log.info("createEntity: "+entityType+" already exists: "+getUri);
+                            log.info(logPrefix+" already exists: "+getUri);
                             entity = json(response.json, request.getEntity().getClass());
                         }
                         break;
@@ -188,7 +194,7 @@ public class ModelSetup {
                         entity = create(api, context, entityConfig, entity, listener);
                         break;
                     default:
-                        die("createEntity: error creating " + entityType + ": " + response);
+                        die(logPrefix+"error creating " + entityType + ": " + response);
                 }
             } else {
                 entity = create(api, context, entityConfig, entity, listener);
@@ -235,7 +241,7 @@ public class ModelSetup {
                          futures.add(exec.submit(new Runnable() {
                             @Override public void run() {
                                 try {
-                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), new LinkedHashMap<>(context), listener);
+                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), new LinkedHashMap<>(context), listener, runName);
                                 } catch (Exception e) {
                                     die("run: "+e, e);
                                 }

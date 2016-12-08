@@ -93,6 +93,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (useTestSpecificDatabase()) {
                 // we'll use this to randomize the name of our database and server
                 final String rand = randomAlphanumeric(8).toLowerCase();
+                log.info("filterConfiguration: using random token "+rand+" for test "+getClass().getName());
+                final String serverName = configuration.getServerName() + "-" + rand;
+                configuration.setServerName(serverName);
+                database.getPool().setName("pool_"+serverName);
 
                 String url = database.getUrl();
                 int lastSlash = url.lastIndexOf('/');
@@ -146,7 +150,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                         preRestoreTasks.add(new QuartzRestoreTask(newSchedName));
                     }
                 }
-                configuration.setServerName(configuration.getServerName()+"-"+rand);
             }
 
             database.addPostDataSourceSetupHandler(new Runnable() {
