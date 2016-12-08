@@ -13,6 +13,8 @@ public class ApiRunnerMultiListener extends ApiRunnerListenerBase {
 
     private List<ApiRunnerListener> apiListeners = new ArrayList<>();
 
+    public ApiRunnerMultiListener (String name) { super(name); }
+
     @SuppressWarnings("unused") // called from ApiRunner copy constructor via reflection (which is called from ApiScriptMultiDriver.run)
     public ApiRunnerMultiListener (ApiRunnerMultiListener other) {
         super(other.getName());
