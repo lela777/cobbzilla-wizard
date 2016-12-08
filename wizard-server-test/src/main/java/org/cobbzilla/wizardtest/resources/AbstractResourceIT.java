@@ -77,7 +77,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     @Override public C filterConfiguration(C configuration) {
         if (useTestSpecificDatabase()) {
-            // we'll use this to randomize the name of our database, server, and quartz scheduler
+            // we'll use this to randomize the name of our database and server
             final String rand = randomAlphanumeric(8).toLowerCase();
 
             final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
@@ -93,10 +93,6 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (configuration instanceof HasQuartzConfiguration) {
                 final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
                 if (quartz != null) {
-                    final String schedName = quartz.getProperty(PROP_SCHED_INSTANCE_NAME);
-                    if (empty(schedName)) die("filterConfiguration: quartz config found but no "+PROP_SCHED_INSTANCE_NAME+" found. Quartz properties: "+quartz.stringPropertyNames());
-                    quartz.setProperty(PROP_SCHED_INSTANCE_NAME, schedName + "-" + rand);
-
                     final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
                     final String dataSource = quartz.getProperty(dsProp);
                     if (empty(dataSource)) die("filterConfiguration: quartz config found but no "+dsProp+" found. Quartz properties: "+quartz.stringPropertyNames());
