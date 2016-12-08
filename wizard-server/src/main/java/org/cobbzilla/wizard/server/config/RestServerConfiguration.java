@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
@@ -120,6 +121,17 @@ public class RestServerConfiguration {
         ps.executeUpdate();
         log.info("execSql (update): "+sql);
         return ResultSetBean.EMPTY;
+    }
+
+    public int rowCount(String table) throws SQLException {
+        return execSql("select count(*) from " + table, ArrayUtil.EMPTY_OBJECT_ARRAY).count();
+    }
+
+    public int rowCountOrZero(String table) {
+        try { return rowCount(table); } catch (Exception e) {
+            log.warn("rowCountOrZero (returning 0): "+e);
+            return 0;
+        }
     }
 
     public String pgCommand() { return pgCommand("psql"); }

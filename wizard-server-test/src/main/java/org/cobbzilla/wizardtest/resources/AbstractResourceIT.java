@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.system.Sleep;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
@@ -25,7 +24,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,19 +32,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.io.FileUtil.temp;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
+import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.quartz.impl.StdSchedulerFactory.PROP_DATASOURCE_PREFIX;
-import static org.quartz.impl.StdSchedulerFactory.PROP_JOB_STORE_PREFIX;
+import static org.quartz.impl.StdSchedulerFactory.*;
 import static org.quartz.utils.PoolingConnectionProvider.DB_URL;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING) @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
+
+    public static final String QUARTZ_SQL_COMMANDS = stream2string("seed/quartz.sql");
 
     @Getter private final ApiClientBase api = new BasicTestApiClient(this);
 
@@ -77,6 +79,11 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Class<? extends S> getRestServerClass() { return getFirstTypeParam(getClass(), RestServer.class); }
 
+    public interface PreRestoreTask { File handle (File dbFile); }
+
+    protected List<PreRestoreTask> preRestoreTasks = new ArrayList<>();
+    protected List<Runnable> postRestoreTasks = new ArrayList<>();
+
     @Override public C filterConfiguration(final C configuration) {
 
         final boolean hasDb = configuration instanceof HasDatabaseConfiguration;
@@ -99,6 +106,10 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 if (hasQuartz) {
                     final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
                     if (quartz != null) {
+                        // rename scheduler
+                        final String newSchedName = quartz.getProperty(PROP_SCHED_INSTANCE_NAME) + "_" + rand;
+                        quartz.setProperty(PROP_SCHED_INSTANCE_NAME, newSchedName);
+
                         // rename datasource
                         final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
                         final String dataSource = quartz.getProperty(dsProp);
@@ -124,6 +135,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                             }
                         }
                         if (!replacedUrl || !replacedDs) die("filterConfiguration: quartz config found but dataSourceName and/or URL properties were not defined for the pool. Quartz properties: "+quartz.stringPropertyNames());
+
+                        // replace SCHED_NAME in database tables, if they become populated by restoring an older database
+                        preRestoreTasks.add(new QuartzRestoreTask(newSchedName));
                     }
                 }
                 configuration.setServerName(configuration.getServerName()+"-"+rand);
@@ -135,7 +149,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                         configuration.execSql("select count(*) from qrtz_triggers", EMPTY_OBJECT_ARRAY);
                     } catch (Exception e) {
                         log.info("Quartz tables not found ("+e.getMessage()+"), creating them...");
-                        configuration.execSqlCommands(stream2string("seed/quartz.sql"));
+                        configuration.execSqlCommands(QUARTZ_SQL_COMMANDS);
                     }
                 }
             });
@@ -251,7 +265,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             final String prefix = getClass().getSimpleName()+": ";
             int sleep = DROP_DELAY;
             for (int i=0; i<5; i++) {
-                Sleep.sleep(sleep);
+                sleep(sleep);
                 try {
                     if (drop()) {
                         log.info(prefix+"successfully dropped test database: " + dbName);
