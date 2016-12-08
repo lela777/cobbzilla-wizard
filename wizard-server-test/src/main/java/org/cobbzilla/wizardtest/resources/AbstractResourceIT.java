@@ -43,20 +43,6 @@ import static org.quartz.impl.StdSchedulerFactory.PROP_DATASOURCE_PREFIX;
 import static org.quartz.impl.StdSchedulerFactory.PROP_JOB_STORE_PREFIX;
 import static org.quartz.utils.PoolingConnectionProvider.DB_URL;
 
-// Parallel tests will share the same server, but user a different api client and have a different classloader.
-//
-// NOTE: subclasses of AbstractResourceIT should also subclass SeparateClassloaderTestRunner, and @RunWith that
-// It's as simple as this:
-//
-// @RunWith(MyTest.MyTestRunner.class)
-// public class MyTest {
-//
-//   public static class MyTestRunner extends SeparateClassloaderTestRunner {
-//       public MyTestRunner(Class<?> clazz) throws InitializationError { super(clazz, MyTest.class.getName()); }
-//   }
-//
-//   ...
-//
 @FixMethodOrder(MethodSorters.NAME_ASCENDING) @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
@@ -113,14 +99,22 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 if (hasQuartz) {
                     final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
                     if (quartz != null) {
+                        // rename datasource
                         final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
                         final String dataSource = quartz.getProperty(dsProp);
                         if (empty(dataSource)) die("filterConfiguration: quartz config found but no "+dsProp+" found. Quartz properties: "+quartz.stringPropertyNames());
+                        final String newDataSource = dataSource + "_" + rand;
+                        quartz.setProperty(dsProp, newDataSource);
 
-                        final String jdbcUrlProp = PROP_DATASOURCE_PREFIX + "." + dataSource + "." + DB_URL;
-                        final String jdbcUrl = quartz.getProperty(jdbcUrlProp);
-                        if (empty(jdbcUrl)) die("filterConfiguration: quartz DataSource "+dataSource+" found but no "+jdbcUrl+" found. Quartz properties: "+quartz.stringPropertyNames());
-                        quartz.setProperty(jdbcUrlProp, database.getUrl());
+                        // scrub properties, replace datasource name in property names
+                        for (String name : quartz.stringPropertyNames()) {
+                            String val = quartz.getProperty(name);
+                            if (name.startsWith(PROP_DATASOURCE_PREFIX+"."+dataSource+".")) {
+                                if (name.endsWith(DB_URL)) val = database.getUrl();
+                                quartz.remove(name);
+                                quartz.setProperty(name.replace("."+dataSource+".", "."+newDataSource+"."), val);
+                            }
+                        }
                     }
                 }
                 configuration.setServerName(configuration.getServerName()+"-"+rand);
