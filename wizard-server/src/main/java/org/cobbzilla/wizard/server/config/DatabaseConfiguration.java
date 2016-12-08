@@ -10,7 +10,9 @@ import org.cobbzilla.wizard.model.shard.Shardable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -37,6 +39,12 @@ public class DatabaseConfiguration {
     // migration is always enabled, unless its value is "false"
     @Getter @Setter private String migrationEnabled;
     public boolean migrationEnabled () { return empty(migrationEnabled) || !migrationEnabled.equalsIgnoreCase("false"); }
+
+    private List<Runnable> postDataSourceSetupHandlers = new ArrayList<>();
+    public void addPostDataSourceSetupHandler (Runnable handler) { postDataSourceSetupHandlers.add(handler); }
+    public void runPostDataSourceSetupHandlers () {
+        for (Runnable r : postDataSourceSetupHandlers) r.run();
+    }
 
     @JsonIgnore public String getDatabaseName() { return getUrl().substring(getUrl().lastIndexOf('/')+1); }
 

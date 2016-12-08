@@ -54,6 +54,9 @@ public class RdbmsConfigCommon {
             if (pool.hasRetryDelay()) cpds.setAcquireRetryDelay(pool.getRetryDelay());
             ((RestServerConfiguration) configuration).getServer().addLifecycleListener(new DbPoolShutdownListener());
         }
+
+        dbConfiguration.runPostDataSourceSetupHandlers();
+
         return cpds;
     }
 

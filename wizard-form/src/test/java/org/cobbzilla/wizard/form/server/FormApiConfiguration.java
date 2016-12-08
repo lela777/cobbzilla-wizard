@@ -12,5 +12,6 @@ public class FormApiConfiguration extends RestServerConfiguration implements Has
 
     @Setter private DatabaseConfiguration database;
     @Bean public DatabaseConfiguration getDatabase() { return database; }
+    @Override public void runPostDataSourceSetup() {}
 
 }

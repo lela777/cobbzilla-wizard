@@ -31,13 +31,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.quartz.impl.StdSchedulerFactory.*;
+import static org.quartz.impl.StdSchedulerFactory.PROP_DATASOURCE_PREFIX;
+import static org.quartz.impl.StdSchedulerFactory.PROP_JOB_STORE_PREFIX;
 import static org.quartz.utils.PoolingConnectionProvider.DB_URL;
 
 // initialize a new one. parallel tests will share the same server, but user a different api client.
@@ -75,36 +78,51 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
 
     protected Class<? extends S> getRestServerClass() { return getFirstTypeParam(getClass(), RestServer.class); }
 
-    @Override public C filterConfiguration(C configuration) {
-        if (useTestSpecificDatabase()) {
-            // we'll use this to randomize the name of our database and server
-            final String rand = randomAlphanumeric(8).toLowerCase();
+    @Override public C filterConfiguration(final C configuration) {
 
+        final boolean hasDb = configuration instanceof HasDatabaseConfiguration;
+        final boolean hasQuartz = configuration instanceof HasQuartzConfiguration;
+        if (hasDb) {
             final DatabaseConfiguration database = ((HasDatabaseConfiguration) configuration).getDatabase();
-            String url = database.getUrl();
-            int lastSlash = url.lastIndexOf('/');
-            if (lastSlash == -1 || lastSlash == url.length() - 1) {
-                log.warn("filterConfiguration: couldn't understand url: " + url + ", leaving as is");
-                return configuration;
-            }
-            final String dbName = getTempDbNamePrefix(url) + "_" + rand;
-            database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
+            if (useTestSpecificDatabase()) {
+                // we'll use this to randomize the name of our database and server
+                final String rand = randomAlphanumeric(8).toLowerCase();
 
-            if (configuration instanceof HasQuartzConfiguration) {
-                final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
-                if (quartz != null) {
-                    final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
-                    final String dataSource = quartz.getProperty(dsProp);
-                    if (empty(dataSource)) die("filterConfiguration: quartz config found but no "+dsProp+" found. Quartz properties: "+quartz.stringPropertyNames());
-
-                    final String jdbcUrlProp = PROP_DATASOURCE_PREFIX + "." + dataSource + "." + DB_URL;
-                    final String jdbcUrl = quartz.getProperty(jdbcUrlProp);
-                    if (empty(jdbcUrl)) die("filterConfiguration: quartz DataSource "+dataSource+" found but no "+jdbcUrl+" found. Quartz properties: "+quartz.stringPropertyNames());
-                    quartz.setProperty(jdbcUrlProp, database.getUrl());
+                String url = database.getUrl();
+                int lastSlash = url.lastIndexOf('/');
+                if (lastSlash == -1 || lastSlash == url.length() - 1) {
+                    log.warn("filterConfiguration: couldn't understand url: " + url + ", leaving as is");
+                    return configuration;
                 }
+                final String dbName = getTempDbNamePrefix(url) + "_" + rand;
+                database.setUrl(url.substring(0, lastSlash) + "/" + dbName);
+
+                if (hasQuartz) {
+                    final Properties quartz = ((HasQuartzConfiguration) configuration).getQuartz();
+                    if (quartz != null) {
+                        final String dsProp = PROP_JOB_STORE_PREFIX + ".dataSource";
+                        final String dataSource = quartz.getProperty(dsProp);
+                        if (empty(dataSource)) die("filterConfiguration: quartz config found but no "+dsProp+" found. Quartz properties: "+quartz.stringPropertyNames());
+
+                        final String jdbcUrlProp = PROP_DATASOURCE_PREFIX + "." + dataSource + "." + DB_URL;
+                        final String jdbcUrl = quartz.getProperty(jdbcUrlProp);
+                        if (empty(jdbcUrl)) die("filterConfiguration: quartz DataSource "+dataSource+" found but no "+jdbcUrl+" found. Quartz properties: "+quartz.stringPropertyNames());
+                        quartz.setProperty(jdbcUrlProp, database.getUrl());
+                    }
+                }
+                configuration.setServerName(configuration.getServerName()+"-"+rand);
             }
 
-            configuration.setServerName(configuration.getServerName()+"-"+rand);
+            database.addPostDataSourceSetupHandler(new Runnable() {
+                @Override public void run() {
+                    try {
+                        configuration.execSql("select count(*) from qrtz_triggers", EMPTY_OBJECT_ARRAY);
+                    } catch (Exception e) {
+                        log.info("Quartz tables not found ("+e.getMessage()+"), creating them...");
+                        configuration.execSqlCommands(stream2string("seed/quartz.sql"));
+                    }
+                }
+            });
         }
         return configuration;
     }
