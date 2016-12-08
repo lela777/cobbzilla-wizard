@@ -45,6 +45,7 @@ public class RdbmsConfigCommon {
         cpds.setPassword(dbConfiguration.getPassword());
         final DatabaseConnectionPoolConfiguration pool = dbConfiguration.getPool();
         if (pool.isEnabled()) {
+            cpds.setIdentityToken(pool.getName());
             cpds.setDataSourceName(pool.getName());
             cpds.setInitialPoolSize(pool.getMin());
             cpds.setMinPoolSize(pool.getMin());
