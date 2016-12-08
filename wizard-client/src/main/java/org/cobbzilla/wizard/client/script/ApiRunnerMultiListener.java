@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.client.script;
 
-import lombok.NoArgsConstructor;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.Map;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
-@NoArgsConstructor
 public class ApiRunnerMultiListener extends ApiRunnerListenerBase {
 
     private List<ApiRunnerListener> apiListeners = new ArrayList<>();

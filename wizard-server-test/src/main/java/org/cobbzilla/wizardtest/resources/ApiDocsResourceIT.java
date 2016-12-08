@@ -27,7 +27,7 @@ public abstract class ApiDocsResourceIT<C extends RestServerConfiguration, S ext
     public static final ApiDocsApiRunnerListener apiDocsRunnerListener = initApiDocsApiRunnerListener();
 
     protected static ApiDocsApiRunnerListener initApiDocsApiRunnerListener() {
-        return new ApiDocsApiRunnerListener(apiDocs);
+        return new ApiDocsApiRunnerListener("api-docs", apiDocs);
     }
 
     public static class ApiDocsApiClient extends ApiClientBase {
