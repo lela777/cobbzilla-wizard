@@ -43,7 +43,20 @@ import static org.quartz.impl.StdSchedulerFactory.PROP_DATASOURCE_PREFIX;
 import static org.quartz.impl.StdSchedulerFactory.PROP_JOB_STORE_PREFIX;
 import static org.quartz.utils.PoolingConnectionProvider.DB_URL;
 
-// initialize a new one. parallel tests will share the same server, but user a different api client.
+// Parallel tests will share the same server, but user a different api client and have a different classloader.
+//
+// NOTE: subclasses of AbstractResourceIT should also subclass SeparateClassloaderTestRunner, and @RunWith that
+// It's as simple as this:
+//
+// @RunWith(MyTest.MyTestRunner.class)
+// public class MyTest {
+//
+//   public static class MyTestRunner extends SeparateClassloaderTestRunner {
+//       public MyTestRunner(Class<?> clazz) throws InitializationError { super(clazz, MyTest.class.getName()); }
+//   }
+//
+//   ...
+//
 @FixMethodOrder(MethodSorters.NAME_ASCENDING) @Slf4j
 public abstract class AbstractResourceIT<C extends RestServerConfiguration, S extends RestServer<C>>
         implements RestServerLifecycleListener<C>, RestServerConfigurationFilter<C> {
