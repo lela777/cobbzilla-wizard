@@ -120,12 +120,16 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                         // scrub properties, replace datasource name in property names
                         boolean replacedUrl = false;
                         boolean replacedDs = false;
+                        boolean replacedIdToken = false;
                         for (String name : quartz.stringPropertyNames()) {
                             String val = quartz.getProperty(name);
                             if (name.startsWith(PROP_DATASOURCE_PREFIX+"."+dataSource+".")) {
                                 if (name.endsWith(DB_URL)) {
                                     val = database.getUrl();
                                     replacedUrl = true;
+                                } else if (name.endsWith("identityToken")) {
+                                    val = "id_token_"+newDataSource;
+                                    replacedIdToken = true;
                                 } else if (name.endsWith("dataSourceName")) {
                                     val = "dbPool_"+newDataSource;
                                     replacedDs = true;
@@ -134,7 +138,9 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                                 quartz.setProperty(name.replace("."+dataSource+".", "."+newDataSource+"."), val);
                             }
                         }
-                        if (!replacedUrl || !replacedDs) die("filterConfiguration: quartz config found but dataSourceName and/or URL properties were not defined for the pool. Quartz properties: "+quartz.stringPropertyNames());
+                        if (!replacedUrl || !replacedDs || !replacedIdToken) {
+                            die("filterConfiguration: quartz config found but some properties were missing. Quartz properties: "+quartz.stringPropertyNames());
+                        }
 
                         // replace SCHED_NAME in database tables, if they become populated by restoring an older database
                         preRestoreTasks.add(new QuartzRestoreTask(newSchedName));
