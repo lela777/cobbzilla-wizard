@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.validation;
 
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.format.DateTimeFormat;
 
 import javax.validation.ConstraintValidator;
@@ -9,6 +10,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.string.StringUtil.parseDuration;
 
+@Slf4j
 public class FutureDateValidator implements ConstraintValidator<FutureDate, Object> {
 
     private long min;
@@ -22,11 +24,19 @@ public class FutureDateValidator implements ConstraintValidator<FutureDate, Obje
     }
 
     @Override public boolean isValid(Object value, ConstraintValidatorContext context) {
+
         if (empty(value)) return emptyOk;
+
         if (!empty(format) && value instanceof String) {
             return DateTimeFormat.forPattern(format).parseMillis(value.toString()) - now() >= min;
+
         } else if (value instanceof Number) {
-            return ((Number) value).longValue() - now() >= min;
+            long now = now();
+            long epoch = ((Number) value).longValue();
+            boolean ok = epoch - now >= min;
+            if (!ok) log.error("FutureDateValidator: not in the future: "+epoch+" (now="+now+", min="+min+")");
+            return ok;
+
         } else {
             return isValid(Long.parseLong(value.toString()), context);
         }
