@@ -191,16 +191,16 @@ public class ModelSetup {
                         }
                         break;
                     case NOT_FOUND:
-                        entity = create(api, context, entityConfig, entity, listener);
+                        entity = create(api, context, entityConfig, entity, listener, runName);
                         break;
                     default:
                         die(logPrefix+"error creating " + entityType + ": " + response);
                 }
             } else {
-                entity = create(api, context, entityConfig, entity, listener);
+                entity = create(api, context, entityConfig, entity, listener, runName);
             }
         } else {
-            entity = create(api, context, entityConfig, entity, listener);
+            entity = create(api, context, entityConfig, entity, listener, runName);
         }
         if (entity == null) return;
 
@@ -276,7 +276,8 @@ public class ModelSetup {
                                                        LinkedHashMap<String, Identifiable> ctx,
                                                        EntityConfig entityConfig,
                                                        T entity,
-                                                       ModelSetupListener listener) throws Exception {
+                                                       ModelSetupListener listener,
+                                                       String runName) throws Exception {
         final String uri = processUri(ctx, entity, entityConfig.getCreateUri());
 
         // if the entity has a parent, it will want that parent's UUID in that field
@@ -288,7 +289,7 @@ public class ModelSetup {
             }
             listener.preCreate(entityConfig, entity);
         }
-        log.info("create: creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : ""));
+        log.info("create("+runName+"): creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : ""));
         T created;
         try {
             switch (entityConfig.getCreateMethod().toLowerCase()) {
