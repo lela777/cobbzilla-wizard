@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -175,12 +176,14 @@ public class RestServerConfiguration {
         return (HasDatabaseConfiguration) this;
     }
 
+    private static final Pattern DROP_PATTERN = Pattern.compile("^drop ", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+
     public void execSqlCommands(String sqlCommands) {
         for (String sql : StringUtil.split(sqlCommands, ";")) {
             try {
                 execSql(sql, StringUtil.EMPTY_ARRAY);
             } catch (Exception e) {
-                if (sql.trim().toLowerCase().startsWith("drop ")) {
+                if (DROP_PATTERN.matcher(sql).find()) {
                     log.info("execSqlCommands ("+sql+"): " + e);
                 } else {
                     log.warn("execSqlCommands ("+sql+"): " + e);
