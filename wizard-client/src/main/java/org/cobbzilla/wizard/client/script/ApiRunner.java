@@ -254,7 +254,11 @@ public class ApiRunner {
                                 log.debug("runOnce("+script+"): condition check ("+condition+") returned false");
                             }
                         } catch (Exception e) {
-                            log.warn("runOnce("+script+"): condition check ("+condition+") failed: " + e);
+                            if (script.isTimedOut()) {
+                                log.warn("runOnce(" + script + "): condition check (" + condition + ") failed: " + e);
+                            } else {
+                                log.debug("runOnce(" + script + "): condition check (" + condition + ") failed: " + e);
+                            }
                         }
                         sleep(Math.min(timeout/10, 1000), "waiting to retry condition: "+condition);
                     } while (now() - checkStart < timeout);
