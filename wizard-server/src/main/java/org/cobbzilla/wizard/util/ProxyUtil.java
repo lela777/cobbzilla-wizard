@@ -24,14 +24,14 @@ public class ProxyUtil {
 
     private static final String TRANSFER_ENCODING = "transfer-encoding";
 
-    public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
+    public static BufferedResponse proxyResponse (HttpRequestBean requestBean,
                                                   HttpContext callerContext,
                                                   String baseUri) throws IOException {
 
         return proxyResponse(requestBean, callerContext, baseUri, null);
     }
 
-    public static BufferedResponse proxyResponse (HttpRequestBean<String> requestBean,
+    public static BufferedResponse proxyResponse (HttpRequestBean requestBean,
                                                   HttpContext callerContext,
                                                   String baseUri,
                                                   CookieJar cookieJar) throws IOException {

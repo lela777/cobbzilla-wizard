@@ -102,7 +102,7 @@ public class ApiClientBase implements Cloneable {
         }
     }
 
-    public <T> RestResponse process_raw(HttpRequestBean<T> requestBean) throws Exception {
+    public RestResponse process_raw(HttpRequestBean requestBean) throws Exception {
         switch (requestBean.getMethod()) {
             case HttpMethods.GET:
                 return doGet(requestBean.getUri());
