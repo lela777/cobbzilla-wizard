@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.validation;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.joda.time.format.DateTimeFormat;
 
 import javax.validation.ConstraintValidator;
@@ -34,7 +35,7 @@ public class FutureDateValidator implements ConstraintValidator<FutureDate, Obje
             long now = now();
             long epoch = ((Number) value).longValue();
             boolean ok = epoch - now >= min;
-            if (!ok) log.error("FutureDateValidator: not in the future: "+epoch+" (now="+now+", min="+min+")");
+            if (!ok) log.error("FutureDateValidator: not in the future: "+epoch+" (now="+now+", min="+min+", system-offset="+ ZillaRuntime.getSystemTimeOffset()+")");
             return ok;
 
         } else {
