@@ -180,7 +180,11 @@ public class RestServerConfiguration {
             try {
                 execSql(sql, StringUtil.EMPTY_ARRAY);
             } catch (Exception e) {
-                log.warn("onStart: "+e);
+                if (sql.trim().toLowerCase().startsWith("drop ")) {
+                    log.info("execSqlCommands: " + e);
+                } else {
+                    log.warn("execSqlCommands: " + e);
+                }
             }
         }
     }
