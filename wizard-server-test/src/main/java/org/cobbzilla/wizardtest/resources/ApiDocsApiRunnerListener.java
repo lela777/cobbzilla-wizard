@@ -10,6 +10,12 @@ public class ApiDocsApiRunnerListener extends ApiRunnerListenerBase {
 
     private TemplateCaptureTarget apiDocs;
 
+    @SuppressWarnings("unused") // called from ApiRunner copy constructor via reflection (which is called from ApiScriptMultiDriver.run)
+    public ApiDocsApiRunnerListener(ApiDocsApiRunnerListener other) {
+        super(other.getName());
+        this.apiDocs = other.apiDocs;
+    }
+
     public ApiDocsApiRunnerListener(String name, TemplateCaptureTarget apiDocs) {
         super(name);
         this.apiDocs = apiDocs;
