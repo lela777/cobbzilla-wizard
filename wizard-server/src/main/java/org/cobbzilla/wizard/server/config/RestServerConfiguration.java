@@ -181,9 +181,9 @@ public class RestServerConfiguration {
                 execSql(sql, StringUtil.EMPTY_ARRAY);
             } catch (Exception e) {
                 if (sql.trim().toLowerCase().startsWith("drop ")) {
-                    log.info("execSqlCommands: " + e);
+                    log.info("execSqlCommands ("+sql+"): " + e);
                 } else {
-                    log.warn("execSqlCommands: " + e);
+                    log.warn("execSqlCommands ("+sql+"): " + e);
                 }
             }
         }
