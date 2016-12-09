@@ -93,7 +93,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (useTestSpecificDatabase()) {
                 // we'll use this to randomize the name of our database and server
                 final String rand = randomAlphanumeric(8).toLowerCase();
-                log.info("filterConfiguration: using random token "+rand+" for test "+getClass().getName());
+                log.debug("filterConfiguration: using random token "+rand+" for test "+getClass().getName());
                 final String serverName = configuration.getServerName() + "-" + rand;
                 configuration.setServerName(serverName);
                 database.getPool().setName("pool_"+serverName);
@@ -157,7 +157,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                     try {
                         configuration.execSql("select count(*) from qrtz_triggers", EMPTY_OBJECT_ARRAY);
                     } catch (Exception e) {
-                        log.info("Quartz tables not found ("+e.getMessage()+"), creating them...");
+                        log.debug("Quartz tables not found ("+e.getMessage()+"), creating them...");
                         configuration.execSqlCommands(QUARTZ_SQL_COMMANDS);
                     }
                 }
@@ -251,7 +251,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             for (Map.Entry<String, DbDropper> entry : tempDatabases.entrySet()) {
                 try {
                     entry.getValue().drop();
-                    log.info("shutdown-hook: successfully dropped db: "+entry.getKey());
+                    log.debug("shutdown-hook: successfully dropped db: "+entry.getKey());
                 } catch (Exception e) {
                     log.warn("shutdown-hook: error dropping db: "+entry.getKey());
                 }
@@ -277,7 +277,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                 sleep(sleep);
                 try {
                     if (drop()) {
-                        log.info(prefix+"successfully dropped test database: " + dbName);
+                        log.debug(prefix+"successfully dropped test database: " + dbName);
                         return;
                     }
                     log.warn(prefix+"error dropping database: " + dbName);
