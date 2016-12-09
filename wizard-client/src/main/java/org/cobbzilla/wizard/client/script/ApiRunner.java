@@ -248,7 +248,11 @@ public class ApiRunner {
                         try {
                             result = StandardJsEngine.evaluate(condition, localCtx, Boolean.class);
                             if (result != null && result) break;
-                            log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
+                            if (script.isTimedOut()) {
+                                log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
+                            } else {
+                                log.debug("runOnce("+script+"): condition check ("+condition+") returned false");
+                            }
                         } catch (Exception e) {
                             log.warn("runOnce("+script+"): condition check ("+condition+") failed: " + e);
                         }
