@@ -54,7 +54,7 @@ public class ApiRunner {
         this.ctx.putAll(other.ctx);
     }
 
-    public static void setScriptForThread(ApiScript script) {
+    public void setScriptForThread(ApiScript script) {
         log.info(script.getComment());
         currentScripts.put(Thread.currentThread().getName(), script);
     }
