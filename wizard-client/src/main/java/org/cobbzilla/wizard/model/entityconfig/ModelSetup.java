@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
@@ -235,7 +236,7 @@ public class ModelSetup {
                     if (childClassName == null) childClassName = entity.getClass().getPackage().getName() + "." + childEntityType;
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
-                    final ExecutorService exec = fixedPool(Math.min(children.length, maxConcurrency));
+                    @Cleanup("shutdownNow") final ExecutorService exec = fixedPool(Math.min(children.length, maxConcurrency));
                     final Set<Future<?>> futures = new HashSet<>();
                     for (final JsonNode child : children) {
                          futures.add(exec.submit(new Runnable() {
