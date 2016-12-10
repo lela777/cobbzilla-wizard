@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
+import org.cobbzilla.util.daemon.AwaitResult;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -249,7 +250,8 @@ public class ModelSetup {
                             }
                         }));
                     }
-                    awaitAll(futures, CHILD_TIMEOUT);
+                    final AwaitResult<?> result = awaitAll(futures, CHILD_TIMEOUT);
+                    if (!result.allSucceeded()) die("createEntity: "+result);
                 }
             }
         }
