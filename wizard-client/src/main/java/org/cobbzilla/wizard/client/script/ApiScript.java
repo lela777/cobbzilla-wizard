@@ -41,7 +41,7 @@ public class ApiScript {
         return "{\n" +
                 "  \"comment\": \"" + comment + "\"," +
                 "  \"request\": \"" + ellipsis(json(request), 300) + "\",\n" +
-                "  \"response\": \"" + ellipsis(json(request), 300) + "\",\n" +
+                "  \"response\": \"" + ellipsis(json(response), 300) + "\",\n" +
                 "}";
     }
 }
