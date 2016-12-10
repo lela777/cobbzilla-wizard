@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
-import org.cobbzilla.util.daemon.Await;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -23,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.processorCount;
@@ -236,7 +236,7 @@ public class ModelSetup {
                     final Class<? extends Identifiable> childClass = forName(childClassName);
 
                     final ExecutorService exec = fixedPool(Math.min(children.length, maxConcurrency));
-                    final Set<Future> futures = new HashSet<>();
+                    final Set<Future<?>> futures = new HashSet<>();
                     for (final JsonNode child : children) {
                          futures.add(exec.submit(new Runnable() {
                             @Override public void run() {
@@ -248,7 +248,7 @@ public class ModelSetup {
                             }
                         }));
                     }
-                    Await.awaitAll(futures, CHILD_TIMEOUT);
+                    awaitAll(futures, CHILD_TIMEOUT);
                 }
             }
         }
