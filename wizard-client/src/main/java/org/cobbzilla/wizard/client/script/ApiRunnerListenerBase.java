@@ -6,6 +6,7 @@ import org.cobbzilla.wizard.util.RestResponse;
 
 import java.util.Map;
 
+import static java.lang.System.identityHashCode;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
 public class ApiRunnerListenerBase implements ApiRunnerListener {
@@ -14,7 +15,7 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
 
     @Getter @Setter private String name;
 
-    public String getId () { return getName() + "/" + System.identityHashCode(this); }
+    public String getId () { return getName() + "/" + identityHashCode(this); }
 
     @Override public void beforeCall(ApiScript script, Map<String, Object> ctx) {}
     @Override public void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response) {}
