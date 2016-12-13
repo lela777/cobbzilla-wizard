@@ -72,7 +72,7 @@ public class ResourceUtil {
 
     public static EntityNotFoundException notFoundEx(String id) {
         if (id == null) id = "-unknown-";
-        throw new EntityNotFoundException(id);
+        return new EntityNotFoundException(id);
     }
 
     public static Response status (Response.Status status) { return status(status.getStatusCode()); }
@@ -118,7 +118,7 @@ public class ResourceUtil {
     public static SimpleViolationException invalidEx(String messageTemplate, String message) { return invalidEx(messageTemplate, message, null); }
     public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue) {
         final SimpleViolationException ex = new SimpleViolationException(messageTemplate, message, invalidValue);
-        log.warn("invalidEx: "+ex);
+        log.warn("invalidEx: ", ex);
         return ex;
     }
 
