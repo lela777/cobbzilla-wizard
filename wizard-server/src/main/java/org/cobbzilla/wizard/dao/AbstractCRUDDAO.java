@@ -11,6 +11,7 @@ import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.hibernate.FlushMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -142,8 +143,15 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     @Transactional(readOnly=true)
     @Override public List<E> findByField(String field, Object value) {
-        return list(criteria().add(eq(field, value)), 0, getFinderMaxResults());
+        return list(sort(criteria().add(eq(field, value))), 0, getFinderMaxResults());
     }
+
+    protected DetachedCriteria sort(DetachedCriteria criteria) {
+        final Order order = getDefaultSortOrder();
+        return order == null ? criteria : criteria.addOrder(order);
+    }
+
+    public Order getDefaultSortOrder() { return null; }
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldLike(String field, String value) {
@@ -175,7 +183,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     public List<E> findByFields(String f1, Object v1, String f2, Object v2) {
         final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
         final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
-        return list(criteria().add(and(expr1, expr2)), 0, getFinderMaxResults());
+        return list(sort(criteria().add(and(expr1, expr2))), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
@@ -183,7 +191,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
         final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
         final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
-        return list(criteria().add(and(expr1, expr2, expr3)), 0, getFinderMaxResults());
+        return list(sort(criteria().add(and(expr1, expr2, expr3))), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
@@ -192,7 +200,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
         final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
         final Criterion expr4 = v4 == null ? isNull(f4) : eq(f4, v4);
-        return list(criteria().add(and(expr1, expr2, expr3, expr4)), 0, getFinderMaxResults());
+        return list(sort(criteria().add(and(expr1, expr2, expr3, expr4))), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
