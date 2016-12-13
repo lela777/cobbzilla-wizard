@@ -316,11 +316,12 @@ public class ModelSetup {
                 created = api.get(getUri, (Class<T>) getSimpleClass(entity));
                 // we're OK, someone else already created it
             } catch (Exception e2) {
-                return die("error creating: "+entityConfig.getCreateMethod()+": "+e2);
+                log.error("error creating: "+entityConfig.getCreateMethod()+": "+e2, e2);
+                throw e;
             }
 
         } catch (Exception e) {
-            return die("error creating: "+entityConfig.getCreateMethod()+": "+e);
+            return die("error creating: "+entityConfig.getCreateMethod()+": "+e, e);
         }
 
         if (listener != null) listener.postCreate(entityConfig, entity, created);
