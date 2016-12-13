@@ -13,6 +13,9 @@ public enum EntityFieldControl {
     /** a multi-line text input field */
     textarea,
 
+    /** a large multi-line text input field */
+    big_textarea,
+
     /** a yes/no field that also supports a 'no selection made' state */
     flag,
 

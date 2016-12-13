@@ -61,7 +61,7 @@ public class EntityFieldConfig {
         switch (type) {
             case flag:                  return EntityFieldControl.flag;
             case epoch_time: case date: return EntityFieldControl.date;
-            default:                    return EntityFieldControl.text;
+            default:                    return hasLength() && length > 200 ? EntityFieldControl.textarea : EntityFieldControl.text;
         }
     }
 
