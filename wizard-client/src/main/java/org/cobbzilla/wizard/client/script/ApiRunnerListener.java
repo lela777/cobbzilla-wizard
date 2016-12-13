@@ -15,7 +15,8 @@ public interface ApiRunnerListener {
     void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response);
 
     void statusCheckFailed(ApiScript script, RestResponse restResponse);
-    void conditionCheckFailed(ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check, Map<String, Object> ctx);
+    void conditionCheckFailed(String message, ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check,
+                              Map<String, Object> ctx);
 
     void sessionIdNotFound(ApiScript script, RestResponse restResponse);
 
