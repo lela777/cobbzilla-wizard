@@ -8,6 +8,7 @@ import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
+import org.flywaydb.core.internal.dbsupport.FlywaySqlScriptException;
 
 @Slf4j
 public class FlywayMigrationListener<C extends RestServerConfiguration> extends RestServerLifecycleListenerBase<C> {
@@ -36,7 +37,17 @@ public class FlywayMigrationListener<C extends RestServerConfiguration> extends 
         int applied;
         try {
             applied = flyway.migrate();
+
+        } catch (FlywaySqlScriptException e) {
+            if (e.getStatement().trim().toLowerCase().startsWith("drop ") && e.getMessage().contains("does not exist")) {
+                log.info("migrate: drop statement ("+e.getStatement()+") failed, ignoring: "+e, e);
+                return;
+            } else {
+                throw e;
+            }
+
         } catch (FlywayException e) {
+
             if (e.getMessage().contains("Migration checksum mismatch")) {
                 log.warn("migrate: checksum mismatch; attempting to repair");
                 flyway.repair();
