@@ -24,6 +24,12 @@ public enum AnonType {
         }
     }),
 
+    description(new SqlTransform() {
+        @Override public String transform(String value) {
+            return "lorem ipsum the " + safeColor(value).toLowerCase() + " " + safeAnimal(value).toLowerCase() + " jumped over the lazy dog";
+        }
+    }),
+
     address(new SqlTransform() {
         @Override public String transform(String value) {
             return (Long.parseLong(sha256_hex(value).substring(0, 4), 16) % 10000) +  " " + safeFruit(value) + " Street";

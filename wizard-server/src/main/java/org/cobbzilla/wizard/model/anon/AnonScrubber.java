@@ -87,7 +87,7 @@ public class AnonScrubber {
                                 col.setParam(update, decryptor, encryptor, i + 1, value == null ? null : value);
                             } catch (Exception e) {
                                 final String errColumn = table + "." + col;
-                                die("anonymize: error handling table.column: " + errColumn);
+                                die("anonymize: error handling table.column: " + errColumn, e);
                             }
                         }
                         update.setString(columns.length + 1, row.get("uuid").toString());
