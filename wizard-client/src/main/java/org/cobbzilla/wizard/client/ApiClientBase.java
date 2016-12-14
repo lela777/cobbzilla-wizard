@@ -46,6 +46,8 @@ public class ApiClientBase implements Cloneable {
     @Getter protected ApiConnectionInfo connectionInfo;
     @Getter protected String token;
 
+    public String getSuperuserToken () { return null; } // subclasses may override
+
     // the server may be coming up, and either not accepting connections or issuing 503 Service Unavailable.
     @Getter @Setter protected int numTries = 5;
     @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(1);
