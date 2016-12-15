@@ -89,6 +89,7 @@ public class ApiRunner {
                 return new Handlebars.SafeString(src.toString());
             }
         });
+        HandlebarsUtil.registerUtilityHelpers(hb);
         HandlebarsUtil.registerCurrencyHelpers(hb);
         HandlebarsUtil.registerDateHelpers(hb);
         return hb;
