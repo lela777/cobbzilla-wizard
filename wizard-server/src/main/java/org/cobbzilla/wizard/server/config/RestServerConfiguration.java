@@ -249,7 +249,9 @@ public class RestServerConfiguration {
             copyCommand = pgCommand("dropdb", targetDbName, dbUser) + " ; " + pgCommand("createdb", targetDbName, dbUser)
                     + " && " + pgCommand("pg_dump", null, dbUser)
                     + " | " + pgCommand("psql", targetDbName, user);
-            execScript(copyCommand, pgEnv());
+            log.warn("copyDatabase: "+copyCommand);
+            final String result = execScript(copyCommand, pgEnv());
+            log.warn("copyDatabase: "+copyCommand+", result="+result);
         } catch (Exception e) {
             die("copyDatabase("+copyCommand+"): "+e);
         }
