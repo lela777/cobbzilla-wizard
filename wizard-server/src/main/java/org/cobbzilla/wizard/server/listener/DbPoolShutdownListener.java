@@ -2,7 +2,6 @@ package org.cobbzilla.wizard.server.listener;
 
 import com.mchange.v2.c3p0.PooledDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.system.Sleep;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.server.RestServerLifecycleListenerBase;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
@@ -14,6 +13,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.wizard.util.SpringUtil.getBean;
 
 @Slf4j
@@ -52,7 +52,7 @@ public class DbPoolShutdownListener<C extends RestServerConfiguration> extends R
                 }
             }
             sleep += getStopPoolSleepIncrement(i);
-            Sleep.sleep(sleep);
+            sleep(sleep);
         }
         log.error("stopPool: giving up trying to stop pooled data source: " + dbName);
     }
