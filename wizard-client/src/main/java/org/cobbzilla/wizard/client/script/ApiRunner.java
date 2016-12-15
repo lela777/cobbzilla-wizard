@@ -2,8 +2,6 @@ package org.cobbzilla.wizard.client.script;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.Helper;
-import com.github.jknack.handlebars.Options;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +13,6 @@ import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.StandardJsEngine;
 import org.cobbzilla.util.json.JsonUtil;
-import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
@@ -30,7 +27,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
-import static org.cobbzilla.util.string.StringUtil.urlEncode;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
 @NoArgsConstructor @AllArgsConstructor @Slf4j
@@ -73,22 +69,6 @@ public class ApiRunner {
     @Getter(lazy=true) private final Handlebars handlebars = initHandlebars();
     protected Handlebars initHandlebars() {
         final Handlebars hb = new Handlebars(new HandlebarsUtil("api-runner(" + api + ")"));
-        hb.registerHelper("sha256", new Helper<Object>() {
-            public CharSequence apply(Object src, Options options) {
-                if (empty(src)) return "";
-                src = handlebars(src.toString(), (Map<String, Object>) options.context.model());
-                src = ShaUtil.sha256_hex(src.toString());
-                return new Handlebars.SafeString(src.toString());
-            }
-        });
-        hb.registerHelper("urlEncode", new Helper<Object>() {
-            public CharSequence apply(Object src, Options options) {
-                if (empty(src)) return "";
-                src = handlebars(src.toString(), (Map<String, Object>) options.context.model());
-                src = urlEncode(src.toString());
-                return new Handlebars.SafeString(src.toString());
-            }
-        });
         HandlebarsUtil.registerUtilityHelpers(hb);
         HandlebarsUtil.registerCurrencyHelpers(hb);
         HandlebarsUtil.registerDateHelpers(hb);
