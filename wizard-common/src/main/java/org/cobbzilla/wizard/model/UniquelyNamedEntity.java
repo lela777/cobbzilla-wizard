@@ -13,8 +13,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @EqualsAndHashCode(of={"name"}, callSuper=false)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
-    public static final int NAME_MAXLEN = 100;
-
     public UniquelyNamedEntity (String name) { setName(name); }
 
     public boolean forceLowercase () { return true; }

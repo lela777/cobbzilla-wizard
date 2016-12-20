@@ -4,6 +4,8 @@ import java.util.Comparator;
 
 public interface NamedEntity {
 
+    int NAME_MAXLEN = 100;
+
     String getName ();
 
     Comparator<? extends NamedEntity> NAME_COMPARATOR = new Comparator<NamedEntity>() {

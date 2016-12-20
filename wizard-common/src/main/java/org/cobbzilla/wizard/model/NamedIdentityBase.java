@@ -17,8 +17,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 @NoArgsConstructor @Accessors(chain=true)
 public class NamedIdentityBase implements NamedEntity, Identifiable {
 
-    public static final int NAME_MAXLEN = UniquelyNamedEntity.NAME_MAXLEN;
-
     public NamedIdentityBase (String name) { setName(name); }
 
     public NamedIdentityBase update(NamedIdentityBase other) { return setName(other.getName()); }
