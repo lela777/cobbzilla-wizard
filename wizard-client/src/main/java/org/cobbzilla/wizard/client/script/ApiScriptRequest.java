@@ -27,6 +27,9 @@ public class ApiScriptRequest {
     @Getter @Setter private String session;
     public boolean hasSession () { return !empty(session); }
 
+    @Getter @Setter private JsonNode headers;
+    public boolean hasHeaders () { return !empty(headers); }
+
     @Setter private String method;
 
     public String getMethod() {
@@ -48,6 +51,7 @@ public class ApiScriptRequest {
                 + (hasData() ? ", data: "+ ellipsis(data, 1000) : "")
                 + (hasEntity() ? ", entity: " + ellipsis(json(entity), 1000) : "")
                 + (hasSession() ? ", session: " + getSession() : "")
+                + (hasHeaders() ? ", headers: " + getHeaders() : "")
                 +"}";
     }
 

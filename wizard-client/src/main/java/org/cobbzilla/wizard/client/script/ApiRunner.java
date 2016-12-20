@@ -130,6 +130,10 @@ public class ApiRunner {
             }
         }
 
+        if (request.hasHeaders()) {
+            api.setHeaders(request.getHeaders());
+        }
+
         String uri = handlebars(request.getUri(), ctx);
         if (!uri.startsWith("/")) uri = "/" + uri;
 
@@ -144,10 +148,12 @@ public class ApiRunner {
 
             case HttpMethods.PUT:
                 restResponse = api.doPut(uri, subst(request));
+                api.removeHeaders();
                 break;
 
             case HttpMethods.POST:
                 restResponse = api.doPost(uri, subst(request));
+                api.removeHeaders();
                 break;
 
             case HttpMethods.DELETE:

@@ -1,5 +1,7 @@
 package org.cobbzilla.wizard.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -23,6 +25,7 @@ import org.cobbzilla.wizard.model.entityconfig.ModelEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
@@ -54,6 +57,13 @@ public class ApiClientBase implements Cloneable {
 
     @Getter @Setter protected boolean captureHeaders = false;
     @Getter @Setter private HttpContext httpContext = null;
+    @Getter private Map<String, String> headers = null;
+
+    public void setHeaders(JsonNode jsonNode) {
+        ObjectMapper mapper = new ObjectMapper();
+        headers = mapper.convertValue(jsonNode, Map.class);
+    }
+    public void removeHeaders () { headers = null; }
 
     public void setToken(String token) {
         this.token = token;
@@ -355,7 +365,12 @@ public class ApiClientBase implements Cloneable {
         if (!empty(token)) {
             final String tokenHeader = getTokenHeader();
             if (empty(tokenHeader)) die("token set but getTokenHeader returned null");
-            request.setHeader(tokenHeader, token);
+            request.addHeader(tokenHeader, token);
+        }
+        if (!empty(headers)) {
+            for (Map.Entry<String, String> entry: headers.entrySet()){
+                request.addHeader(entry.getKey(), entry.getValue());
+            }
         }
         return request;
     }
