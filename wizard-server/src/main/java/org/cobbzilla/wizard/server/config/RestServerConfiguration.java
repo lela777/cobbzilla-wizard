@@ -19,6 +19,8 @@ import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -51,8 +53,21 @@ public class RestServerConfiguration {
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
 
-    public String uri(String path) { return publicUriBase + (path.startsWith("/") ? path : "/" + path); }
-    public String api(String path) { return publicUriBase + getHttp().getBaseUri() + (path.startsWith("/") ? path : "/" + path); }
+    private String appendPathToUriBase(String base, String... pathParts) {
+        try {
+            URL url = new URL(base);
+            for (String path : pathParts) {
+                url = new URL(url, path);
+            }
+            return url.toString();
+        } catch (MalformedURLException e) {
+            log.error("Wrong URI " + base + " and/or URI parts " + pathParts);
+            return null;
+        }
+    }
+
+    public String uri(String path) { return appendPathToUriBase(publicUriBase, path); }
+    public String api(String path) { return appendPathToUriBase(publicUriBase, getHttp().getBaseUri(), path); }
 
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
