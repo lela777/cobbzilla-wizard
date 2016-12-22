@@ -9,11 +9,12 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@MappedSuperclass @NoArgsConstructor
-@EqualsAndHashCode(of={"name"}, callSuper=false)
+@MappedSuperclass @NoArgsConstructor @EqualsAndHashCode(of={"name"}, callSuper=false)
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
     public UniquelyNamedEntity (String name) { setName(name); }
+
+    public UniquelyNamedEntity(UniquelyNamedEntity other) { setName(other.getName()); }
 
     public boolean forceLowercase () { return true; }
 
