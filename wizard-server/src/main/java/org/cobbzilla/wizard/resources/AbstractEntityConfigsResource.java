@@ -75,8 +75,9 @@ public abstract class AbstractEntityConfigsResource {
                 try {
                     final EntityConfig localConfig = fromJson(localFile, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
                     if (localConfig != null) {
+                        localConfig.setClassName(config.getClassName());
                         setNames(localConfig);
-                        return ok(localConfig);
+                        return ok(localConfig.updateWithAnnotations());
                     }
                 } catch (Exception e) {
                     log.warn("getConfig("+name+"): debug enabled and local config exists ("+abs(localFile)+"), but error loading: "+e);
@@ -136,7 +137,7 @@ public abstract class AbstractEntityConfigsResource {
         try {
             final EntityConfig entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
             entityConfig.setClassName(clazz.getName());
-            return entityConfig;
+            return entityConfig.updateWithAnnotations(clazz);
         } catch (Exception e) {
             return die("getEntityConfig("+clazz.getName()+"): "+e, e);
         }

@@ -3,7 +3,9 @@ package org.cobbzilla.wizard.model.entityconfig;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 
 import java.util.*;
 
@@ -24,7 +26,7 @@ import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
  *   If the resource class has sub-resources (also known as child resources), there will be sub-EntityConfigs to describe those children
  * </li></ul>
  */
-@ToString(of="name")
+@ToString(of="name") @Slf4j
 public class EntityConfig {
 
     /**
@@ -142,4 +144,106 @@ public class EntityConfig {
     @Getter @Setter private Map<String, EntityConfig> children = new HashMap<>();
     public boolean hasChildren () { return !children.isEmpty(); }
 
+    /* -------------------------------------------------- */
+    /* ----- Config updates from class annotations: ----- */
+
+    /** Update properties with values from the annotations from the corresponding class. Doesn't override existing
+     *  non-empty values!
+     */
+    public EntityConfig updateWithAnnotations() {
+        String className = getClassName();
+
+        Class<?> clazz = null;
+        if (!empty(className)) {
+            try {
+                // Use Java's Class.forName method so we can catch (and ignore) ClassNotFoundException.
+                clazz = Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                log.warn("Cannot find class with name " + className + " for entity condig");
+            }
+        }
+
+        return updateWithAnnotations(clazz);
+    }
+
+    /** Update properties with values from the class' annotation. Doesn't override existing non-empty values! */
+    public EntityConfig updateWithAnnotations(Class<?> clazz) {
+        String clazzPackageName = null;
+        if (clazz != null) {
+            clazzPackageName = clazz.getPackage().getName();
+
+            updateWithAnnotation(clazz.getAnnotation(ECTypeName.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeList.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeSearch.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeCreate.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeUpdate.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
+        }
+
+        for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
+            EntityConfig childConfig = childConfigEntry.getValue();
+            if (empty(childConfig.getClassName()) && clazzPackageName != null) {
+                childConfig.setClassName(clazzPackageName + "." + childConfigEntry.getKey());
+            }
+            childConfig.updateWithAnnotations();
+        }
+
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeName annotation) {
+        if (annotation != null) {
+            if (empty(name)) setName(annotation.name());
+            if (empty(displayName)) setDisplayName(annotation.displayName());
+            if (empty(pluralDisplayName)) setPluralDisplayName(annotation.pluralDisplayName());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeList annotation) {
+        if (annotation != null) {
+            if (empty(listFields)) setListFields(Arrays.asList(annotation.fields()));
+            if (empty(listUri)) setListUri(annotation.uri());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeSearch annotation) {
+        if (annotation != null) {
+            if (empty(searchFields)) setSearchFields(Arrays.asList(annotation.fields()));
+            if (empty(searchMethod)) setSearchMethod(annotation.method());
+            if (empty(searchUri)) setSearchUri(annotation.uri());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeCreate annotation) {
+        if (annotation != null) {
+            if (empty(createMethod)) setCreateMethod(annotation.method());
+            if (empty(createUri)) setCreateUri(annotation.uri());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeUpdate annotation) {
+        if (annotation != null) {
+            if (empty(updateMethod)) setUpdateMethod(annotation.method());
+            if (empty(updateUri)) setUpdateUri(annotation.uri());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeDelete annotation) {
+        if (annotation != null) {
+            if (empty(deleteMethod)) setDeleteMethod(annotation.method());
+            if (empty(deleteUri)) setDeleteUri(annotation.uri());
+        }
+        return this;
+    }
 }
