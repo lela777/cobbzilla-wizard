@@ -84,16 +84,10 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         return auditingEnabled() ? commit_audit(entity, context) : entity;
     }
 
-    @Override public E update(@Valid E entity) {
-        entity.beforeUpdate();
-        final Object ctx = preUpdate(entity);
-        setFlushMode();
-        entity = getHibernateTemplate().merge(checkNotNull(entity));
-        getHibernateTemplate().flush();
-        return postUpdate(entity, ctx);
-    }
+    @Override public E update(@Valid E entity) { return update(entity, this); }
 
     public static <E extends Identifiable> E update(@Valid E entity, AbstractCRUDDAO<E> dao) {
+        entity.beforeUpdate();
         final Object ctx = dao.preUpdate(entity);
         setFlushMode(dao.getHibernateTemplate());
         entity = dao.getHibernateTemplate().merge(checkNotNull(entity));
