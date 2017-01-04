@@ -38,6 +38,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClass;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
+import static org.cobbzilla.wizard.model.entityconfig.EntityConfig.URI_NOT_SUPPORTED;
 
 @Slf4j
 public class ModelSetup {
@@ -174,7 +175,7 @@ public class ModelSetup {
         final String entityType = getRawClass(entity.getClass().getSimpleName());
         final String updateUri = entityConfig.getUpdateUri();
         final String logPrefix = "createEntity(" + runName + "): " + entityType;
-        if (updateUri != null && !updateUri.equals(":notSupported")) {
+        if (updateUri != null && !updateUri.equals(URI_NOT_SUPPORTED)) {
             final String getUri = processUri(context, entity, updateUri);
             if (getUri != null) {
                 if (listener != null) listener.preLookup(entity);
