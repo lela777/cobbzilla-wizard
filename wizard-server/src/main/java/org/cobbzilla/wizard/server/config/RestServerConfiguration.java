@@ -208,8 +208,7 @@ public class RestServerConfiguration {
 
     /**
      * Allows forever-reuse of subresources, each instantiated with a particular set of immutable objects.
-     * Override to supply your own cache implementations on a per-resource-class basis.
-     * @param <R> the type of resource we are, and that will be cached, so method calls can be typesafe.
+     * @param <R> the type of resource to return, so method calls can be typesafe.
      */
     private final Map<String, Map<String, Object>> subResourceCaches = new ConcurrentHashMap<>();
     public <R> Map<String, R> getSubResourceCache(Class<R> resourceClass) {
@@ -218,7 +217,7 @@ public class RestServerConfiguration {
             synchronized (subResourceCaches) {
                 cache = subResourceCaches.get(resourceClass.getName());
                 if (cache == null) {
-                    cache = new ConcurrentHashMap<>();
+                    cache = new ConcurrentHashMap();
                     subResourceCaches.put(resourceClass.getName(), cache);
                 }
             }
