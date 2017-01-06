@@ -26,6 +26,7 @@ public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractC
         E thing = cache.get(name);
         if (thing == null) {
             thing = findByUniqueField("name", name);
+            if (thing == null) return null;
             cache.put(name, thing);
         }
         return thing;
