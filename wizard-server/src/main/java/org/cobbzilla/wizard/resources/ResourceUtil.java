@@ -117,8 +117,12 @@ public class ResourceUtil {
     public static SimpleViolationException invalidEx(String messageTemplate) { return invalidEx(messageTemplate, null, null); }
     public static SimpleViolationException invalidEx(String messageTemplate, String message) { return invalidEx(messageTemplate, message, null); }
     public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue) {
+        return invalidEx(messageTemplate, message, invalidValue, true);
+    }
+    public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue,
+                                                     boolean logException) {
         final SimpleViolationException ex = new SimpleViolationException(messageTemplate, message, invalidValue);
-        log.warn("invalidEx: ", ex);
+        if (logException) log.warn("invalidEx: ", ex);
         return ex;
     }
 
