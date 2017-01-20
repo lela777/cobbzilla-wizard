@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.util;
 
-import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
 import com.sun.jersey.core.util.StringKeyStringValueIgnoreCaseMultivaluedMap;
 import lombok.Cleanup;
@@ -8,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.http.*;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -132,13 +132,10 @@ public class ProxyUtil {
         }
 
         // then overwrite with request bean headers, which take precedence
-        final Multimap<String, String> headers = requestBean.getHeaders();
-        for (String key : headers.keySet()) {
+        for (NameAndValue header : requestBean.getHeaders()) {
             // skip Host header, we will write this at the end to match the URL
-            if (!key.equals(HttpHeaders.HOST)) {
-                for (String value : headers.get(key)) {
-                    requestHeaders.add(key, value);
-                }
+            if (!header.getName().equalsIgnoreCase(HttpHeaders.HOST)) {
+                requestHeaders.add(header.getName(), header.getValue());
             }
         }
 

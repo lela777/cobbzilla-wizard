@@ -119,9 +119,9 @@ public class ApiClientBase implements Cloneable {
             case HttpMethods.GET:
                 return doGet(requestBean.getUri());
             case HttpMethods.POST:
-                return doPost(requestBean.getUri(), requestBean.getData(), requestBean.getContentType());
+                return doPost(requestBean.getUri(), requestBean.getEntity(), requestBean.getContentType());
             case HttpMethods.PUT:
-                return doPut(requestBean.getUri(), requestBean.getData(), requestBean.getContentType());
+                return doPut(requestBean.getUri(), requestBean.getEntity(), requestBean.getContentType());
             case HttpMethods.DELETE:
                 return doDelete(requestBean.getUri());
             default:
@@ -136,7 +136,7 @@ public class ApiClientBase implements Cloneable {
     }
 
     private String getJson(HttpRequestBean requestBean) throws Exception {
-        Object data = requestBean.getData();
+        Object data = requestBean.getEntity();
         if (data == null) return null;
         if (data instanceof String) return (String) data;
         return toJson(data);

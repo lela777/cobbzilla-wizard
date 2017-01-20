@@ -1,8 +1,8 @@
 package org.cobbzilla.wizard.resources;
 
-import com.google.common.collect.Multimap;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.http.HttpContentTypes;
 import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.util.http.HttpStatusCodes;
@@ -181,11 +181,9 @@ public class ResourceUtil {
     public static Response toResponse (final HttpResponseBean response) {
         Response.ResponseBuilder builder = Response.status(response.getStatus());
 
-        final Multimap<String, String> headers = response.getHeaders();
-        for (String name : headers.keySet()) {
-            for (String value : headers.get(name)) {
-                builder = builder.header(name, value);
-            }
+        final List<NameAndValue> headers = response.getHeaders();
+        for (NameAndValue header : headers) {
+            builder = builder.header(header.getName(), header.getValue());
         }
 
         if (response.hasEntity()) {
