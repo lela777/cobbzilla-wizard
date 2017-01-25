@@ -13,6 +13,12 @@ public enum EntityFieldType {
     /** a real number */
     decimal,
 
+    /** an integer-valued monetary amount */
+    money_integer,
+
+    /** a real-valued monetary amount */
+    money_decimal,
+
     /** a boolean value */
     flag,
 
