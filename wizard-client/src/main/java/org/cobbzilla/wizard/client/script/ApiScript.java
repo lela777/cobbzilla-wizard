@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.json.JsonUtil.json;
@@ -17,6 +19,12 @@ public class ApiScript {
 
     @Getter @Setter private String include;
     public boolean hasInclude () { return !empty(include); }
+
+    @Getter @Setter private Map<String, Object> params;
+    public boolean hasParams () { return !empty(params); }
+
+    @Getter @Setter private char paramStartDelim = '<';
+    @Getter @Setter private char paramEndDelim = '>';
 
     @Getter @Setter private String delay;
     public boolean hasDelay () { return !empty(delay); }

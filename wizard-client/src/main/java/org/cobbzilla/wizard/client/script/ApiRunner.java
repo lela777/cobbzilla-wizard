@@ -10,11 +10,13 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.StandardJsEngine;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
@@ -93,9 +95,11 @@ public class ApiRunner {
         api.logout();
     }
 
-    public ApiScript[] include (String path) {
-        if (includeHandler != null) return includeHandler.include(path);
-        return notSupported("include("+path+"): no includeHandler set");
+    public ApiScript[] include (ApiScript script) {
+        if (includeHandler != null) {
+            return jsonWithComments(handlebars(includeHandler.include(script.getInclude()), script.getParams(), script.getParamStartDelim(), script.getParamEndDelim()), ApiScript[].class);
+        }
+        return notSupported("include("+script.getInclude()+"): no includeHandler set");
     }
 
     public void run(String script) throws Exception {
@@ -110,8 +114,10 @@ public class ApiRunner {
 
     public boolean run(ApiScript script) throws Exception {
         if (script.hasInclude()) {
-            log.info(script.hasComment() ? script.getComment() : ">>> including script: "+script.getInclude());
-            return run(include(script.getInclude()));
+            log.info((script.hasComment() ? script.getComment()+"\n" : "") + ">>> including script: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":""));
+            boolean ok = run(include(script));
+            log.info(">>> included script completed: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":"")+", ok="+ok);
+            return ok;
 
         } else {
             setScriptForThread(script);
@@ -305,6 +311,10 @@ public class ApiRunner {
 
     protected String handlebars(String value, Map<String, Object> ctx) {
         return HandlebarsUtil.apply(getHandlebars(), value, ctx);
+    }
+
+    protected String handlebars(String value, Map<String, Object> ctx, char altStart, char altEnd) {
+        return HandlebarsUtil.apply(getHandlebars(), value, ctx, altStart, altEnd);
     }
 
 }
