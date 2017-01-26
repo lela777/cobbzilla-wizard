@@ -180,6 +180,7 @@ public class EntityConfig {
             updateWithAnnotation(clazz.getAnnotation(ECTypeCreate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeUpdate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
+            updateWithAnnotation(clazz.getAnnotation(ECTypeURIs.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -245,6 +246,24 @@ public class EntityConfig {
         if (annotation != null) {
             if (empty(deleteMethod)) setDeleteMethod(annotation.method());
             if (empty(deleteUri)) setDeleteUri(annotation.uri());
+        }
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(ECTypeURIs annotation) {
+        if (annotation != null) {
+            if (annotation.isListDefined()) {
+                if (empty(listUri)) setListUri(annotation.baseURI());
+                if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
+            }
+            if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(annotation.baseURI());
+
+            String identifiableURI = annotation.baseURI() + (annotation.baseURI().endsWith("/") ? "" : "/") +
+                                     "{" + annotation.identifierInURI() + "}";
+
+            if (empty(updateUri) && annotation.isUpdateDefined()) setUpdateUri(identifiableURI);
+            if (empty(deleteUri) && annotation.isDeleteDefined()) setDeleteUri(identifiableURI);
         }
         return this;
     }
