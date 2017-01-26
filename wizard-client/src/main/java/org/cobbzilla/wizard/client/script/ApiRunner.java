@@ -5,6 +5,8 @@ import com.github.jknack.handlebars.Handlebars;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -29,7 +31,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.system.Sleep.sleep;
 
-@NoArgsConstructor @AllArgsConstructor @Slf4j
+@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true) @Slf4j
 public class ApiRunner {
 
     public static final String CTX_JSON = "json";
@@ -41,6 +43,11 @@ public class ApiRunner {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
 
+    public ApiRunner(ApiClientBase api, ApiRunnerListener listener) {
+        this.api = api;
+        this.listener = listener;
+    }
+
     public ApiRunner(ApiRunner other, HttpClient httpClient) {
         copy(this, other);
         this.api = other.api.copy();
@@ -51,7 +58,7 @@ public class ApiRunner {
     }
 
     public void setScriptForThread(ApiScript script) {
-        log.info(script.getComment());
+        if (script.hasComment()) log.info(script.getComment());
         currentScripts.put(Thread.currentThread().getName(), script);
     }
 
@@ -62,6 +69,7 @@ public class ApiRunner {
 
     private ApiClientBase api;
     private ApiRunnerListener listener;
+    @Getter @Setter private ApiScriptIncludeHandler includeHandler;
 
     protected final Map<String, Object> ctx = new ConcurrentHashMap<>();
     public Map<String, Object> getContext () { return ctx; }
@@ -85,33 +93,45 @@ public class ApiRunner {
         api.logout();
     }
 
-    public void run(String script) throws Exception {
-        run(json(script, ApiScript[].class, FULL_MAPPER_ALLOW_COMMENTS));
+    public ApiScript[] include (String path) {
+        if (includeHandler != null) return includeHandler.include(path);
+        return notSupported("include("+path+"): no includeHandler set");
     }
 
-    public void run(ApiScript[] scripts) throws Exception {
-        for (ApiScript script : scripts) run(script);
+    public void run(String script) throws Exception {
+        run(jsonWithComments(script, ApiScript[].class));
+    }
+
+    public boolean run(ApiScript[] scripts) throws Exception {
+        boolean allSucceeded = true;
+        for (ApiScript script : scripts) if (!run(script)) allSucceeded = false;
+        return allSucceeded;
     }
 
     public boolean run(ApiScript script) throws Exception {
         setScriptForThread(script);
-        if (listener != null) listener.beforeScript(script.getBefore(), ctx);
-        if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: "+script);
-        try {
-            script.setStart(now());
-            do {
-                if (runOnce(script)) return true;
-                sleep(Math.min(script.getTimeoutMillis() / 10, 1000), "waiting to retry script: " + script);
-            } while (!script.isTimedOut());
-            if (listener != null) listener.scriptTimedOut(script);
-            return false;
+        if (script.hasInclude()) {
+            return run(include(script.getInclude()));
 
-        } catch (Exception e) {
-            log.warn("run("+script+"): "+e, e);
-            throw e;
+        } else {
+            if (listener != null) listener.beforeScript(script.getBefore(), ctx);
+            if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: " + script);
+            try {
+                script.setStart(now());
+                do {
+                    if (runOnce(script)) return true;
+                    sleep(Math.min(script.getTimeoutMillis() / 10, 1000), "waiting to retry script: " + script);
+                } while (!script.isTimedOut());
+                if (listener != null) listener.scriptTimedOut(script);
+                return false;
 
-        } finally {
-            if (listener != null) listener.afterScript(script.getAfter(), ctx);
+            } catch (Exception e) {
+                log.warn("run(" + script + "): " + e, e);
+                throw e;
+
+            } finally {
+                if (listener != null) listener.afterScript(script.getAfter(), ctx);
+            }
         }
     }
 

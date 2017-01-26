@@ -13,6 +13,10 @@ import static org.cobbzilla.util.string.StringUtil.parseDuration;
 public class ApiScript {
 
     @Getter @Setter private String comment;
+    public boolean hasComment () { return !empty(comment); }
+
+    @Getter @Setter private String include;
+    public boolean hasInclude () { return !empty(include); }
 
     @Getter @Setter private String delay;
     public boolean hasDelay () { return !empty(delay); }
