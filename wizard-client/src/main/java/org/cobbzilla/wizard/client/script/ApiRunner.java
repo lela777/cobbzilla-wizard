@@ -109,11 +109,12 @@ public class ApiRunner {
     }
 
     public boolean run(ApiScript script) throws Exception {
-        setScriptForThread(script);
         if (script.hasInclude()) {
+            log.info(script.hasComment() ? script.getComment() : ">>> including script: "+script.getInclude());
             return run(include(script.getInclude()));
 
         } else {
+            setScriptForThread(script);
             if (listener != null) listener.beforeScript(script.getBefore(), ctx);
             if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: " + script);
             try {
