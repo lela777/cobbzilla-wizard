@@ -4,14 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 
 import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
-import static org.cobbzilla.util.string.StringUtil.uncapitalize;
+import static org.cobbzilla.util.string.StringUtil.*;
 
 /**
  * Defines API interactions for an entity.
@@ -60,7 +58,7 @@ public class EntityConfig {
      * Default value: the value of `displayName` is pluralized, using some basic pluralization rules
      * @return The plural display name of the entity
      */
-    public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : StringUtil.pluralize(getDisplayName()); }
+    public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : pluralize(getDisplayName()); }
 
     /** The API endpoint to list instances of the entity class. This always assumes a GET request. */
     @Getter @Setter private String listUri;
@@ -254,7 +252,7 @@ public class EntityConfig {
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation != null) {
-            final String baseUri = !empty(annotation.baseURI()) ? annotation.baseURI() : "/" + uncapitalize(clazz.getSimpleName());
+            final String baseUri = !empty(annotation.baseURI()) ? annotation.baseURI() : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
             if (annotation.isListDefined()) {
                 if (empty(listUri)) setListUri(baseUri);
                 if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
