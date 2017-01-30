@@ -175,7 +175,7 @@ public class EntityConfig {
         if (clazz != null) {
             clazzPackageName = clazz.getPackage().getName();
 
-            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeName.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECType.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeList.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeSearch.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeCreate.class));
@@ -196,7 +196,7 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeName annotation) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECType annotation) {
         if (annotation != null) {
             if (empty(name)) setName(!empty(annotation.name()) ? annotation.name() : clazz.getSimpleName());
             if (empty(displayName)) setDisplayName(annotation.displayName());
