@@ -11,6 +11,7 @@ import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
+import static org.cobbzilla.util.string.StringUtil.uncapitalize;
 
 /**
  * Defines API interactions for an entity.
@@ -174,13 +175,13 @@ public class EntityConfig {
         if (clazz != null) {
             clazzPackageName = clazz.getPackage().getName();
 
-            updateWithAnnotation(clazz.getAnnotation(ECTypeName.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeName.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeList.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeSearch.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeCreate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeUpdate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
-            updateWithAnnotation(clazz.getAnnotation(ECTypeURIs.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -195,9 +196,9 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(ECTypeName annotation) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeName annotation) {
         if (annotation != null) {
-            if (empty(name)) setName(annotation.name());
+            if (empty(name)) setName(!empty(annotation.name()) ? annotation.name() : clazz.getSimpleName());
             if (empty(displayName)) setDisplayName(annotation.displayName());
             if (empty(pluralDisplayName)) setPluralDisplayName(annotation.pluralDisplayName());
         }
@@ -251,15 +252,16 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(ECTypeURIs annotation) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation != null) {
+            final String baseUri = !empty(annotation.baseURI()) ? annotation.baseURI() : "/" + uncapitalize(clazz.getSimpleName());
             if (annotation.isListDefined()) {
-                if (empty(listUri)) setListUri(annotation.baseURI());
+                if (empty(listUri)) setListUri(baseUri);
                 if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
             }
-            if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(annotation.baseURI());
+            if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
 
-            String identifiableURI = annotation.baseURI() + (annotation.baseURI().endsWith("/") ? "" : "/") +
+            String identifiableURI = baseUri + (baseUri.endsWith("/") ? "" : "/") +
                                      "{" + annotation.identifierInURI() + "}";
 
             if (empty(updateUri) && annotation.isUpdateDefined()) setUpdateUri(identifiableURI);

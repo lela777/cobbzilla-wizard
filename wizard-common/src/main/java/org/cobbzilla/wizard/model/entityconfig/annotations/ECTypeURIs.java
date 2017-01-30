@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME) @Target(ElementType.TYPE)
 public @interface ECTypeURIs {
-    String baseURI(); // URIs for create and list most of the time.
+    String baseURI() default ""; // URIs for create and list most of the time.
     String identifierInURI() default "uuid"; // column name used to identify object in update and delete URIs (we got
                                              // from baseURI)
 
