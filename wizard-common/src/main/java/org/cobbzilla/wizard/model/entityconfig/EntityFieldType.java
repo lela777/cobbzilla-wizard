@@ -25,6 +25,18 @@ public enum EntityFieldType {
     /** a date value */
     date,
 
+    /** a field for age */
+    age,
+
+    /** a 4-digit year field */
+    year,
+
+    /** a 4-digit year field that starts with the current year and goes into the past */
+    year_past,
+
+    /** a 4-digit year field that starts with the current year and goes into the future */
+    year_future,
+
     /** a date or date/time value, represented as milliseconds since 1/1/1970 */
     epoch_time,
 

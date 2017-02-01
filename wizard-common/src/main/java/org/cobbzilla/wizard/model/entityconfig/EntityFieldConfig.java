@@ -61,6 +61,8 @@ public class EntityFieldConfig {
         switch (type) {
             case flag:                  return EntityFieldControl.flag;
             case epoch_time: case date: return EntityFieldControl.date;
+            case year: case year_future:
+            case year_past: case age:   return EntityFieldControl.select;
             default:                    return hasLength() && length > 200 ? EntityFieldControl.textarea : EntityFieldControl.text;
         }
     }
