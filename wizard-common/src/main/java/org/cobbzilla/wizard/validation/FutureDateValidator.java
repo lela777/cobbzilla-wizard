@@ -9,7 +9,7 @@ import javax.validation.ConstraintValidatorContext;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
-import static org.cobbzilla.util.string.StringUtil.parseDuration;
+import static org.cobbzilla.util.time.TimeUtil.parseDuration;
 
 @Slf4j
 public class FutureDateValidator implements ConstraintValidator<FutureDate, Object> {

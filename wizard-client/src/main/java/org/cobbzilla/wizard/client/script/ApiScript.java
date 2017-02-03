@@ -10,7 +10,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.string.StringUtil.ellipsis;
-import static org.cobbzilla.util.string.StringUtil.parseDuration;
+import static org.cobbzilla.util.time.TimeUtil.parseDuration;
 
 public class ApiScript {
 

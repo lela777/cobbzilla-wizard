@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
-import static org.cobbzilla.util.string.StringUtil.formatDurationFrom;
+import static org.cobbzilla.util.time.TimeUtil.formatDurationFrom;
 
 @Slf4j
 public class ShardSearchTask <E extends Shardable, D extends SingleShardDAO<E>, R> extends SimpleShardTask<E, D, List<R>> {
