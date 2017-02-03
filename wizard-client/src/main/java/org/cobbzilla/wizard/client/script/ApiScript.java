@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -17,11 +18,18 @@ public class ApiScript {
     @Getter @Setter private String comment;
     public boolean hasComment () { return !empty(comment); }
 
+    public static final String INCLUDE_DEFAULTS = "_defaults";
+    public static final String PARAM_REQUIRED = "_required";
     @Getter @Setter private String include;
     public boolean hasInclude () { return !empty(include); }
+    public boolean isIncludeDefaults () { return hasInclude() && getInclude().equals(INCLUDE_DEFAULTS); }
 
     @Getter @Setter private Map<String, Object> params;
     public boolean hasParams () { return !empty(params); }
+    public void setParam(String name, Object value) {
+        if (params == null) params = new HashMap<>();
+        params.put(name, value);
+    }
 
     @Getter @Setter private char paramStartDelim = '<';
     @Getter @Setter private char paramEndDelim = '>';
