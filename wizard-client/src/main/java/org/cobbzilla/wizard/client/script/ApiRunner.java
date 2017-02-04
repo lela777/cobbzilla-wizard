@@ -116,25 +116,27 @@ public class ApiRunner {
     public boolean run(ApiScript script) throws Exception {
         if (script.hasInclude()) {
             if (script.isIncludeDefaults()) return true; // skip this block. used in validation before running included script
-            log.info((script.hasComment() ? script.getComment()+"\n" : "") + ">>> including script: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":""));
+            final String logPrefix = (script.hasComment() ? script.getComment()+"\n" : "") + ">>> ";
+            log.info(logPrefix+"including script: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":""));
             ApiScript[] include = include(script);
             boolean paramsChanged = false;
             if (include.length > 0 && include[0].isIncludeDefaults()) {
                 final ApiScript defaults = include[0];
                 if (empty(defaults.getParams())) {
-                    log.warn("no default parameters set");
+                    log.warn(logPrefix+"no default parameters set");
                 } else {
                     for (Map.Entry<String, Object> param : defaults.getParams().entrySet()) {
                         final String pName = param.getKey();
                         final Object pValue = param.getValue();
-                        if (empty(pName)) return die("empty default param name");
+                        if (empty(pName)) return die(logPrefix+"empty default param name");
                         if (pValue != null && (!script.hasParams() || !script.getParams().containsKey(pName))) {
                             if ((pValue instanceof String) && pValue.equals(PARAM_REQUIRED)) {
-                                return die("required parameter is undefined: "+pName);
+                                return die(logPrefix+"required parameter is undefined: "+pName);
                             }
                             if ((pValue instanceof Boolean) && !((Boolean) pValue)) {
                                 continue; // boolean values already default to false, no need to change script
                             }
+                            log.info(logPrefix+"parameter '"+pName+"' undefined, using default value ("+pValue+")");
                             script.setParam(pName, pValue);
                             paramsChanged = true;
                         }
