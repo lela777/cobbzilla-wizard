@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.cobbzilla.util.http.HttpStatusCodes;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.string.StringUtil.parseDuration;
+import static org.cobbzilla.util.time.TimeUtil.parseDuration;
 
 public class ApiScriptResponse {
 

@@ -32,6 +32,7 @@ import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.system.Sleep.sleep;
+import static org.cobbzilla.wizard.client.script.ApiScript.PARAM_REQUIRED;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true) @Slf4j
 public class ApiRunner {
@@ -114,8 +115,36 @@ public class ApiRunner {
 
     public boolean run(ApiScript script) throws Exception {
         if (script.hasInclude()) {
-            log.info((script.hasComment() ? script.getComment()+"\n" : "") + ">>> including script: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":""));
-            boolean ok = run(include(script));
+            if (script.isIncludeDefaults()) return true; // skip this block. used in validation before running included script
+            final String logPrefix = (script.hasComment() ? script.getComment()+"\n" : "") + ">>> ";
+            log.info(logPrefix+"including script: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":""));
+            ApiScript[] include = include(script);
+            boolean paramsChanged = false;
+            if (include.length > 0 && include[0].isIncludeDefaults()) {
+                final ApiScript defaults = include[0];
+                if (empty(defaults.getParams())) {
+                    log.warn(logPrefix+"no default parameters set");
+                } else {
+                    for (Map.Entry<String, Object> param : defaults.getParams().entrySet()) {
+                        final String pName = param.getKey();
+                        final Object pValue = param.getValue();
+                        if (empty(pName)) return die(logPrefix+"empty default param name");
+                        if (pValue != null && (!script.hasParams() || !script.getParams().containsKey(pName))) {
+                            if ((pValue instanceof String) && pValue.equals(PARAM_REQUIRED)) {
+                                return die(logPrefix+"required parameter is undefined: "+pName);
+                            }
+                            if ((pValue instanceof Boolean) && !((Boolean) pValue)) {
+                                continue; // boolean values already default to false, no need to change script
+                            }
+                            log.info(logPrefix+"parameter '"+pName+"' undefined, using default value ("+pValue+")");
+                            script.setParam(pName, pValue);
+                            paramsChanged = true;
+                        }
+                    }
+                }
+            }
+            if (paramsChanged) include = include(script); // re-include because params have changed
+            final boolean ok = run(include);
             log.info(">>> included script completed: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":"")+", ok="+ok);
             return ok;
 

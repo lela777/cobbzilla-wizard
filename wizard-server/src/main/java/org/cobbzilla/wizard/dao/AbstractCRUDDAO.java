@@ -173,6 +173,19 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
+    public List<E> findByFieldsEqualAndFieldLike(String f1, Object v1, String f2, Object v2, String f3, Object v3, String likeField, String likeValue) {
+        final Criterion expr1 = v1 == null ? isNull(f1) : eq(f1, v1);
+        final Criterion expr2 = v2 == null ? isNull(f2) : eq(f2, v2);
+        final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
+        return list(criteria().add(and(
+                expr1,
+                expr2,
+                expr3,
+                ilike(likeField, likeValue)
+        )).addOrder(Order.asc(likeField)), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Object[] values) {
         return empty(values) ? new ArrayList<E>() : list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
     }

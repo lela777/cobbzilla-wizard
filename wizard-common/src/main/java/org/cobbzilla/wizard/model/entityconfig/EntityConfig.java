@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 import org.springframework.util.ReflectionUtils;
 
@@ -16,7 +15,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
+import static org.cobbzilla.util.string.StringUtil.*;
 
 /**
  * Defines API interactions for an entity.
@@ -65,7 +64,7 @@ public class EntityConfig {
      * Default value: the value of `displayName` is pluralized, using some basic pluralization rules
      * @return The plural display name of the entity
      */
-    public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : StringUtil.pluralize(getDisplayName()); }
+    public String getPluralDisplayName() { return !empty(pluralDisplayName) ? pluralDisplayName : pluralize(getDisplayName()); }
 
     /** The API endpoint to list instances of the entity class. This always assumes a GET request. */
     @Getter @Setter private String listUri;
@@ -180,13 +179,13 @@ public class EntityConfig {
         if (clazz != null) {
             clazzPackageName = clazz.getPackage().getName();
 
-            updateWithAnnotation(clazz.getAnnotation(ECTypeName.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECType.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeList.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeSearch.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeCreate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeUpdate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
-            updateWithAnnotation(clazz.getAnnotation(ECTypeURIs.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
             updateWithAnnotation(clazz.getAnnotation(ECTypeFields.class), clazz);
         }
@@ -203,10 +202,10 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(ECTypeName annotation) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECType annotation) {
         if (annotation == null) return this;
 
-        if (empty(name)) setName(annotation.name());
+        if (empty(name)) setName(!empty(annotation.name()) ? annotation.name() : clazz.getSimpleName());
         if (empty(displayName)) setDisplayName(annotation.displayName());
         if (empty(pluralDisplayName)) setPluralDisplayName(annotation.pluralDisplayName());
 
@@ -265,16 +264,19 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(ECTypeURIs annotation) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation == null) return this;
 
+        final String baseUri = !empty(annotation.baseURI())
+                               ? annotation.baseURI()
+                               : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
         if (annotation.isListDefined()) {
-            if (empty(listUri)) setListUri(annotation.baseURI());
+            if (empty(listUri)) setListUri(baseUri);
             if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
         }
-        if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(annotation.baseURI());
+        if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
 
-        String identifiableURI = annotation.baseURI() + (annotation.baseURI().endsWith("/") ? "" : "/") +
+        String identifiableURI = baseUri + (baseUri.endsWith("/") ? "" : "/") +
                                  "{" + annotation.identifierInURI() + "}";
 
         if (empty(updateUri) && annotation.isUpdateDefined()) setUpdateUri(identifiableURI);

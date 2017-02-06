@@ -8,7 +8,7 @@ import org.cobbzilla.util.system.Sleep;
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
-import static org.cobbzilla.util.string.StringUtil.formatDurationFrom;
+import static org.cobbzilla.util.time.TimeUtil.formatDurationFrom;
 
 @AllArgsConstructor @Slf4j
 class DAOInitializer extends Thread {

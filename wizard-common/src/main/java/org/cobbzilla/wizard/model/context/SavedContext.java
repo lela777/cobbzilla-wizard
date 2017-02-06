@@ -14,6 +14,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 import java.util.*;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENCRYPTED_STRING;
@@ -75,5 +76,17 @@ public class SavedContext {
     }
 
     @Override public int hashCode() { return getContextJson().hashCode(); }
+
+    public boolean isSame(Map<String, Object> ctx) {
+        final Map<String, Object> thisCtx = getContext();
+        if (empty(thisCtx)) return empty(ctx);
+        if (thisCtx.size() != ctx.size()) return false;
+        for (Map.Entry<String, Object> entry : thisCtx.entrySet()) {
+            final Object val = ctx.get(entry.getKey());
+            if (entry.getValue() == null && val != null) return false;
+            if (!entry.getValue().equals(val)) return false;
+        }
+        return true;
+    }
 
 }

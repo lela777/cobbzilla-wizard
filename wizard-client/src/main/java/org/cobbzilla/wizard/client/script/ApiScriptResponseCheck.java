@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import static org.cobbzilla.util.string.StringUtil.parseDuration;
+import static org.cobbzilla.util.time.TimeUtil.parseDuration;
 
 @ToString(of="condition")
 public class ApiScriptResponseCheck {
