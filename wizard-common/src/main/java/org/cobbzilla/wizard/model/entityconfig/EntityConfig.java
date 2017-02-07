@@ -323,6 +323,16 @@ public class EntityConfig {
             return cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
         }
 
+        if (field.isAnnotationPresent(Enumerated.class)) {
+            String options;
+            if (field.isAnnotationPresent(ECFieldSelect.class)) {
+                options = field.getAnnotation(ECFieldSelect.class).options();
+            } else {
+                options = "uri:qbis/" + pluralize(uncapitalize(field.getType().getSimpleName()));
+            }
+            return cfg.setControl(EntityFieldControl.select).setOptions(options);
+        }
+
         if (field.getType().equals(boolean.class)) return cfg.setType(EntityFieldType.flag);
 
         Column columnAnnotation = field.getAnnotation(Column.class);
