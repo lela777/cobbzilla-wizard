@@ -9,6 +9,7 @@ import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.validation.constraints.Size;
 import java.lang.reflect.Field;
@@ -187,7 +188,7 @@ public class EntityConfig {
             updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
-            updateWithAnnotation(clazz.getAnnotation(ECTypeFields.class), clazz);
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -285,7 +286,7 @@ public class EntityConfig {
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
-    private EntityConfig updateWithAnnotation(ECTypeFields annotation, Class<?> clazz) {
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeFields annotation) {
         if (annotation == null) return this;
 
         if (!empty(annotation.list())) {
