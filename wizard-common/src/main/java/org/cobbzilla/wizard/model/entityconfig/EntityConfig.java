@@ -5,7 +5,14 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
+import org.springframework.util.ReflectionUtils;
 
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.validation.constraints.Size;
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -180,6 +187,8 @@ public class EntityConfig {
             updateWithAnnotation(clazz.getAnnotation(ECTypeUpdate.class));
             updateWithAnnotation(clazz.getAnnotation(ECTypeDelete.class));
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
+
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -195,76 +204,165 @@ public class EntityConfig {
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECType annotation) {
-        if (annotation != null) {
-            if (empty(name)) setName(!empty(annotation.name()) ? annotation.name() : clazz.getSimpleName());
-            if (empty(displayName)) setDisplayName(annotation.displayName());
-            if (empty(pluralDisplayName)) setPluralDisplayName(annotation.pluralDisplayName());
-        }
+        if (annotation == null) return this;
+
+        if (empty(name)) setName(!empty(annotation.name()) ? annotation.name() : clazz.getSimpleName());
+        if (empty(displayName)) setDisplayName(annotation.displayName());
+        if (empty(pluralDisplayName)) setPluralDisplayName(annotation.pluralDisplayName());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(ECTypeList annotation) {
-        if (annotation != null) {
-            if (empty(listFields)) setListFields(Arrays.asList(annotation.fields()));
-            if (empty(listUri)) setListUri(annotation.uri());
-        }
+        if (annotation == null) return this;
+
+        if (empty(listFields)) setListFields(Arrays.asList(annotation.fields()));
+        if (empty(listUri)) setListUri(annotation.uri());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(ECTypeSearch annotation) {
-        if (annotation != null) {
-            if (empty(searchFields)) setSearchFields(Arrays.asList(annotation.fields()));
-            if (empty(searchMethod)) setSearchMethod(annotation.method());
-            if (empty(searchUri)) setSearchUri(annotation.uri());
-        }
+        if (annotation == null) return this;
+
+        if (empty(searchFields)) setSearchFields(Arrays.asList(annotation.fields()));
+        if (empty(searchMethod)) setSearchMethod(annotation.method());
+        if (empty(searchUri)) setSearchUri(annotation.uri());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(ECTypeCreate annotation) {
-        if (annotation != null) {
-            if (empty(createMethod)) setCreateMethod(annotation.method());
-            if (empty(createUri)) setCreateUri(annotation.uri());
-        }
+        if (annotation == null) return this;
+
+        if (empty(createMethod)) setCreateMethod(annotation.method());
+        if (empty(createUri)) setCreateUri(annotation.uri());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(ECTypeUpdate annotation) {
-        if (annotation != null) {
-            if (empty(updateMethod)) setUpdateMethod(annotation.method());
-            if (empty(updateUri)) setUpdateUri(annotation.uri());
-        }
+        if (annotation == null) return this;
+
+        if (empty(updateMethod)) setUpdateMethod(annotation.method());
+        if (empty(updateUri)) setUpdateUri(annotation.uri());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(ECTypeDelete annotation) {
-        if (annotation != null) {
-            if (empty(deleteMethod)) setDeleteMethod(annotation.method());
-            if (empty(deleteUri)) setDeleteUri(annotation.uri());
-        }
+        if (annotation == null) return this;
+
+        if (empty(deleteMethod)) setDeleteMethod(annotation.method());
+        if (empty(deleteUri)) setDeleteUri(annotation.uri());
+
         return this;
     }
 
     /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
-        if (annotation != null) {
-            final String baseUri = !empty(annotation.baseURI()) ? annotation.baseURI() : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
-            if (annotation.isListDefined()) {
-                if (empty(listUri)) setListUri(baseUri);
-                if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
-            }
-            if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
+        if (annotation == null) return this;
 
-            String identifiableURI = baseUri + (baseUri.endsWith("/") ? "" : "/") +
-                                     "{" + annotation.identifierInURI() + "}";
+        final String baseUri = !empty(annotation.baseURI())
+                               ? annotation.baseURI()
+                               : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
+        if (annotation.isListDefined()) {
+            if (empty(listUri)) setListUri(baseUri);
+            if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
+        }
+        if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
 
-            if (empty(updateUri) && annotation.isUpdateDefined()) setUpdateUri(identifiableURI);
-            if (empty(deleteUri) && annotation.isDeleteDefined()) setDeleteUri(identifiableURI);
+        String identifiableURI = baseUri + (baseUri.endsWith("/") ? "" : "/") +
+                                 "{" + annotation.identifierInURI() + "}";
+
+        if (empty(updateUri) && annotation.isUpdateDefined()) setUpdateUri(identifiableURI);
+        if (empty(deleteUri) && annotation.isDeleteDefined()) setDeleteUri(identifiableURI);
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeFields annotation) {
+        if (annotation == null) return this;
+
+        if (!empty(annotation.list())) {
+            final List<String> fieldNames = Arrays.asList(annotation.list());
+            if (fields == null) fields = new HashMap<>(fieldNames.size());
+
+            ReflectionUtils.doWithFields(
+                    clazz,
+                    new ReflectionUtils.FieldCallback() {
+                        @Override public void doWith(Field field) throws IllegalArgumentException,
+                                                                         IllegalAccessException {
+                            EntityFieldConfig cfg = buildFieldConfig(field);
+                            if (cfg != null) fields.put(field.getName(), cfg);
+                        }
+                    },
+                    new ReflectionUtils.FieldFilter() {
+                        @Override public boolean matches(Field field) {
+                            String fieldName = field.getName();
+                            return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
+                        }
+                    });
         }
         return this;
+    }
+
+    private EntityFieldConfig buildFieldConfig(Field field) {
+        String fieldName = field.getName();
+        EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
+
+        if (field.isAnnotationPresent(Embedded.class)) {
+            return cfg.setType(EntityFieldType.embedded).setObjectType(field.getType().getSimpleName());
+        }
+
+        if (field.isAnnotationPresent(Id.class)) {
+            return cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
+        }
+
+        if (field.isAnnotationPresent(Enumerated.class)) {
+            ECEnumSelect enumAnnotation = null;
+            if (field.isAnnotationPresent(ECEnumSelect.class)) {
+                enumAnnotation = field.getAnnotation(ECEnumSelect.class);
+            } else if (field.getType().isAnnotationPresent(ECEnumSelect.class)) {
+                // If annotation of the field is not present, we may use the global one set on the enum class.
+                enumAnnotation = field.getType().getAnnotation(ECEnumSelect.class);
+            }
+
+            if (enumAnnotation != null) {
+                return cfg.setControl(EntityFieldControl.select).setOptions(enumAnnotation.options());
+            }
+            // else, just continue so the field will be created (if needed according to the other specifications)
+        }
+
+        if (field.getType().equals(boolean.class)) return cfg.setType(EntityFieldType.flag);
+
+        Column columnAnnotation = field.getAnnotation(Column.class);
+        if (columnAnnotation != null) {
+            cfg.setLength(columnAnnotation.length());
+            if (!columnAnnotation.updatable()) cfg.setMode(EntityFieldMode.createOnly);
+        }
+
+        Size sizeAnnotation = field.getAnnotation(Size.class);
+        if (sizeAnnotation != null) {
+            if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
+        }
+
+        ECFieldReference refAnnotation = field.getAnnotation(ECFieldReference.class);
+        if (refAnnotation == null) return cfg;
+
+        cfg.setType(EntityFieldType.reference).setControl(EntityFieldControl.create(refAnnotation.control()));
+
+        EntityFieldReference ref = new EntityFieldReference();
+        ref.setEntity(refAnnotation.refEntity());
+        ref.setField(refAnnotation.refField());
+        ref.setDisplayField(refAnnotation.refDisplayField());
+        cfg.setReference(ref);
+
+        return cfg;
     }
 }
