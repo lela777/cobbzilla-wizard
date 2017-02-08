@@ -325,13 +325,18 @@ public class EntityConfig {
         }
 
         if (field.isAnnotationPresent(Enumerated.class)) {
-            String options;
-            if (field.isAnnotationPresent(ECFieldSelect.class)) {
-                options = field.getAnnotation(ECFieldSelect.class).options();
-            } else {
-                options = "uri:qbis/" + pluralize(uncapitalize(field.getType().getSimpleName()));
+            ECEnumSelect enumAnnotation = null;
+            if (field.isAnnotationPresent(ECEnumSelect.class)) {
+                enumAnnotation = field.getAnnotation(ECEnumSelect.class);
+            } else if (field.getType().isAnnotationPresent(ECEnumSelect.class)) {
+                // If annotation of the field is not present, we may use the global one set on the enum class.
+                enumAnnotation = field.getType().getAnnotation(ECEnumSelect.class);
             }
-            return cfg.setControl(EntityFieldControl.select).setOptions(options);
+
+            if (enumAnnotation != null) {
+                return cfg.setControl(EntityFieldControl.select).setOptions(enumAnnotation.options());
+            }
+            // else, just continue so the field will be created (if needed according to the other specifications)
         }
 
         if (field.getType().equals(boolean.class)) return cfg.setType(EntityFieldType.flag);
