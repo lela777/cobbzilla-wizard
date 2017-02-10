@@ -76,4 +76,6 @@ public class ValidationResult {
 
     @Override public String toString() { return violations.toString() + (beans.isEmpty() ? "" : ", "+beans.toString()); }
 
+    public ValidationErrors errors() { return new ValidationErrors(this.getViolationBeans()); }
+
 }
