@@ -122,7 +122,7 @@ public class ResourceUtil {
     public static SimpleViolationException invalidEx(String messageTemplate, String message, String invalidValue,
                                                      boolean logException) {
         final SimpleViolationException ex = new SimpleViolationException(messageTemplate, message, invalidValue);
-        if (logException) log.warn("invalidEx: ", ex);
+        if (logException) log.warn("invalidEx: "+ex, ex);
         return ex;
     }
 
