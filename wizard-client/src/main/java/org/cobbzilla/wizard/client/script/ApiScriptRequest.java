@@ -22,7 +22,7 @@ public class ApiScriptRequest {
     @Getter @Setter private boolean handlebarsEnabled = true;
 
     @Getter @Setter private JsonNode entity;
-    public boolean hasEntity () { return !empty(entity); }
+    public boolean hasEntity () { return entity != null; }
 
     @Getter @Setter private String session;
     public boolean hasSession () { return !empty(session); }
@@ -34,7 +34,7 @@ public class ApiScriptRequest {
 
     public String getMethod() {
         if (!empty(method)) return method;
-        if (entity != null) return HttpMethods.POST;
+        if (hasEntity() || hasData()) return HttpMethods.POST;
         return HttpMethods.GET;
     }
 
