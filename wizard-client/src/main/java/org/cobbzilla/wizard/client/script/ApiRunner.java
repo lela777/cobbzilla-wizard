@@ -43,6 +43,8 @@ public class ApiRunner {
     public static final String DEFAULT_SESSION_NAME = "default";
     public static final String NEW_SESSION = "new";
 
+    private StandardJsEngine js = new StandardJsEngine();
+
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // intended for use in debugging
     @Getter private static Map<String, ApiScript> currentScripts = new HashMap<>();
 
@@ -289,8 +291,8 @@ public class ApiRunner {
                     long checkStart = now();
                     do {
                         try {
-                            result = StandardJsEngine.evaluate(condition, localCtx, Boolean.class);
-                            if (result != null && result) break;
+                            result = js.evaluateBoolean(condition, localCtx);
+                            if (result) break;
                             if (script.isTimedOut()) {
                                 log.warn("runOnce("+script+"): condition check ("+condition+") returned false");
                             } else {
