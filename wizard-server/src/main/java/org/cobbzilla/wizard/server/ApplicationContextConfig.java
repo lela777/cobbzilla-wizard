@@ -16,6 +16,9 @@ public class ApplicationContextConfig<C extends RestServerConfiguration> {
     @Getter @Setter private CustomBeanResolver[] resolvers = null;
     public boolean hasResolvers() { return resolvers != null && resolvers.length > 0; }
 
-    public ApplicationContextConfig(C configuration) { this.config = configuration; }
+    public ApplicationContextConfig(C configuration) {
+        this.config = configuration;
+        this.springContextPath = configuration.getSpringContextPath();
+    }
 
 }
