@@ -11,7 +11,11 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 public class ApplicationContextConfig<C extends RestServerConfiguration> {
 
     @Getter @Setter private C config;
-    @Getter @Setter private String springContextPath = "spring.xml";
+    @Setter private String springContextPath = "spring.xml";
+
+    public String getSpringContextPath() {
+        return springContextPath.startsWith("classpath:/") ? springContextPath : "classpath:/" + springContextPath;
+    }
 
     @Getter @Setter private CustomBeanResolver[] resolvers = null;
     public boolean hasResolvers() { return resolvers != null && resolvers.length > 0; }
