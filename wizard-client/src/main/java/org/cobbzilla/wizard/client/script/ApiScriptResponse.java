@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.client.script;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.cobbzilla.util.http.HttpStatusCodes;
@@ -30,6 +31,6 @@ public class ApiScriptResponse {
 
     @Getter @Setter private String delay;
     public boolean hasDelay () { return !empty(delay); }
-    public long getDelayMillis () { return parseDuration(delay); }
+    @JsonIgnore public long getDelayMillis () { return parseDuration(delay); }
 
 }

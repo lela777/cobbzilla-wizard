@@ -22,7 +22,7 @@ public class ApiScript {
     public static final String PARAM_REQUIRED = "_required";
     @Getter @Setter private String include;
     public boolean hasInclude () { return !empty(include); }
-    public boolean isIncludeDefaults () { return hasInclude() && getInclude().equals(INCLUDE_DEFAULTS); }
+    @JsonIgnore public boolean isIncludeDefaults () { return hasInclude() && getInclude().equals(INCLUDE_DEFAULTS); }
 
     @Getter @Setter private Map<String, Object> params;
     public boolean hasParams () { return !empty(params); }
@@ -36,7 +36,7 @@ public class ApiScript {
 
     @Getter @Setter private String delay;
     public boolean hasDelay () { return !empty(delay); }
-    public long getDelayMillis () { return parseDuration(delay); }
+    @JsonIgnore public long getDelayMillis () { return parseDuration(delay); }
 
     @Getter @Setter private String before;
     public boolean hasBefore () { return !empty(before); }
@@ -45,7 +45,7 @@ public class ApiScript {
     public boolean hasAfter () { return !empty(after); }
 
     @Getter @Setter private String timeout;
-    public long getTimeoutMillis () { return parseDuration(timeout); }
+    @JsonIgnore public long getTimeoutMillis () { return parseDuration(timeout); }
 
     @Getter @Setter private ApiScriptRequest request;
     @Getter @Setter private ApiScriptResponse response;
@@ -53,9 +53,12 @@ public class ApiScript {
     @JsonIgnore public String getRequestLine () { return request.getMethod() + " " + request.getUri(); }
 
     @Getter @Setter private long start = now();
-    public long getAge () { return now() - start; }
+    @JsonIgnore public long getAge () { return now() - start; }
 
-    public boolean isTimedOut() { return getAge() > getTimeoutMillis(); }
+    @Getter @Setter private ApiInnerScript nested;
+    public boolean hasNested() { return nested != null && nested.hasScripts(); }
+
+    @JsonIgnore public boolean isTimedOut() { return getAge() > getTimeoutMillis(); }
 
     @Override public String toString() {
         return "{\n" +

@@ -23,6 +23,7 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ConstraintViolationList;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -174,6 +175,9 @@ public class ApiRunner {
     }
 
     public boolean runOnce(ApiScript script) throws Exception {
+
+        if (script.hasNested()) return runInner(script);
+
         final ApiScriptRequest request = script.getRequest();
         final String method = request.getMethod().toUpperCase();
         ctx.put("now", script.getStart());
@@ -275,13 +279,14 @@ public class ApiRunner {
                 }
             }
 
+            ctx.put(CTX_RESPONSE, restResponse);
+
             if (response.hasChecks()) {
                 if (response.hasDelay()) sleep(response.getDelayMillis(), "runOnce: delaying "+response.getDelay()+" before checking response conditions");
 
                 final Map<String, Object> localCtx = new HashMap<>();
                 localCtx.putAll(ctx);
                 localCtx.put(CTX_JSON, responseObject);
-                localCtx.put(CTX_RESPONSE, restResponse);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
                     if (listener != null && listener.skipCheck(script, check)) continue;
@@ -323,6 +328,16 @@ public class ApiRunner {
 
         if (listener != null) listener.scriptCompleted(script);
         return success;
+    }
+
+    private boolean runInner(ApiScript script) throws Exception {
+        final ApiInnerScript inner = script.getNested();
+        inner.setParent(script);
+        final List<ApiScript> scripts = inner.getAllScripts(js, getHandlebars(), ctx);
+        for (ApiScript s : scripts) {
+            if (!run(s)) return false;
+        }
+        return true;
     }
 
     protected String subst(ApiScriptRequest request) {
