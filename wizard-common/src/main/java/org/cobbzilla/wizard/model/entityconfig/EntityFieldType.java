@@ -25,6 +25,12 @@ public enum EntityFieldType {
     /** a date value */
     date,
 
+    /** a date value in the past (before current date) */
+    date_past,
+
+    /** a date value in the future (or current date) */
+    date_future,
+
     /** a field for age */
     age,
 
