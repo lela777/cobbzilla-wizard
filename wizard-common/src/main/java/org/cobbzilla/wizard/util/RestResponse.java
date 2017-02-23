@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
 
 @AllArgsConstructor @EqualsAndHashCode(of={"status","json","location"})
@@ -23,6 +24,7 @@ public class RestResponse {
 
     public int status;
     public String json;
+    public byte[] bytes;
     public String location;
 
     public RestResponse(int status) { this.status = status; }
@@ -30,6 +32,12 @@ public class RestResponse {
     public RestResponse(int statusCode, String responseJson, String locationHeader) {
         this.status = statusCode;
         this.json = responseJson;
+        this.location = locationHeader;
+    }
+
+    public RestResponse(int statusCode, byte[] responseBytes, String locationHeader) {
+        this.status = statusCode;
+        this.bytes = responseBytes;
         this.location = locationHeader;
     }
 
@@ -59,16 +67,18 @@ public class RestResponse {
     @Override public String toString() {
         File jsonFile;
         String displayJson = json;
-        if ((writeToFileLimit != null && json.length() > writeToFileLimit)
-            || (defaultWriteToFileLimit != null && json.length() > defaultWriteToFileLimit)) {
-            int limit = writeToFileLimit != null ? writeToFileLimit : defaultWriteToFileLimit;
-            jsonFile = new File(logDir != null ? logDir : defaultLogDir, "restResponse"+hashCode()+".json");
-            if (!jsonFile.exists()) toFileOrDie(jsonFile, json);
-            displayJson = json.substring(0, limit) + " ... (full JSON: "+jsonFile+")";
+        if (!empty(json)) {
+            if ((writeToFileLimit != null && json.length() > writeToFileLimit)
+                    || (defaultWriteToFileLimit != null && json.length() > defaultWriteToFileLimit)) {
+                int limit = writeToFileLimit != null ? writeToFileLimit : defaultWriteToFileLimit;
+                jsonFile = new File(logDir != null ? logDir : defaultLogDir, "restResponse" + hashCode() + ".json");
+                if (!jsonFile.exists()) toFileOrDie(jsonFile, json);
+                displayJson = json.substring(0, limit) + " ... (full JSON: " + jsonFile + ")";
+            }
         }
         return "RestResponse{" +
                 "status=" + status +
-                ", json='" + displayJson + '\'' +
+                (!empty(bytes) ? ", bytes=" + bytes.length : ", json='" + displayJson + '\'') +
                 ", location='" + location + '\'' +
                 ", headers=" + headers +
                 '}';

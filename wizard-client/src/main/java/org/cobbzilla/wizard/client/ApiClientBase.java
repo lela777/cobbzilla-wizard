@@ -35,6 +35,7 @@ import static org.cobbzilla.util.io.FileUtil.getDefaultTempDir;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.string.StringUtil.UTF8cs;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 
@@ -296,18 +297,25 @@ public class ApiClientBase implements Cloneable {
             try {
                 final HttpResponse response = client.execute(request, httpContext);
                 final int statusCode = response.getStatusLine().getStatusCode();
-                final String responseJson;
+                String responseJson = null;
+                byte[] responseBytes = null;
                 final HttpEntity entity = response.getEntity();
                 if (entity != null) {
                     try (InputStream in = entity.getContent()) {
-                        responseJson = IOUtils.toString(in);
-                        log.debug("response: " + responseJson);
+                        if (isCaptureHeaders() && response.containsHeader("content-disposition")) {
+                            responseBytes = IOUtils.toByteArray(in);
+                        } else {
+                            responseJson = IOUtils.toString(in, UTF8cs);
+                            log.debug("response: " + responseJson);
+                        }
                     }
                 } else {
                     responseJson = null;
                 }
 
-                restResponse = new RestResponse(statusCode, responseJson, getLocationHeader(response));
+                restResponse = empty(responseBytes)
+                        ? new RestResponse(statusCode, responseJson, getLocationHeader(response))
+                        : new RestResponse(statusCode, responseBytes, getLocationHeader(response));
                 if (isCaptureHeaders()) {
                     for (Header header : response.getAllHeaders()) {
                         restResponse.addHeader(header.getName(), header.getValue());
