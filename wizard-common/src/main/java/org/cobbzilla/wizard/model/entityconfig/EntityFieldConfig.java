@@ -60,6 +60,7 @@ public class EntityFieldConfig {
         if (control != null) return control;
         switch (type) {
             case flag:                  return EntityFieldControl.flag;
+            case date_future: case date_past:
             case epoch_time: case date: return EntityFieldControl.date;
             case year: case year_future:
             case year_past: case age:   return EntityFieldControl.select;
