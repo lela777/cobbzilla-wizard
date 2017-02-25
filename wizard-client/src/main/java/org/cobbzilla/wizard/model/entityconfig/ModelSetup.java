@@ -46,8 +46,8 @@ public class ModelSetup {
     public static final String ALLOW_UPDATE_PROPERTY = "_update";
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
 
-    // 1.5 x # processors, max of 20
-    public static int maxConcurrency = Math.min(20, processorCount() + processorCount()/2);
+    // 2 x processorCount, max of 50
+    public static int maxConcurrency = Math.min(50, 2 * processorCount());
 
     public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
