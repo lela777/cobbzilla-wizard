@@ -17,7 +17,6 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 public abstract class AbstractSessionDAO<T extends Identifiable> {
 
     @Autowired private RedisService redis;
-
     @Getter(lazy=true) private final RedisService sessionRedis = initSessionRedis();
     private RedisService initSessionRedis() { return redis.prefixNamespace(getClass().getSimpleName()); }
 
