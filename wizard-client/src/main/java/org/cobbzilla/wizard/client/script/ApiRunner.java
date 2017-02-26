@@ -20,8 +20,9 @@ import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
-import org.cobbzilla.wizard.validation.ConstraintViolationList;
+import org.cobbzilla.wizard.validation.ValidationErrors;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,7 +239,7 @@ public class ApiRunner {
             Object responseObject = responseEntity;
 
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
-                responseObject = new ConstraintViolationList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class));
+                responseObject = new ValidationErrors(Arrays.asList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class)));
             } else {
                 Class<?> storeClass = null;
                 if (response.hasType()) {
