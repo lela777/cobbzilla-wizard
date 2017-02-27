@@ -14,7 +14,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HttpContext;
 import org.cobbzilla.util.http.*;
 import org.cobbzilla.wizard.api.ApiException;
@@ -95,7 +95,7 @@ public class ApiClientBase implements Cloneable {
 
     protected HttpClient httpClient;
     public HttpClient getHttpClient() {
-        if (httpClient == null) httpClient = new DefaultHttpClient();
+        if (httpClient == null) httpClient = HttpClients.createDefault();
         return httpClient;
     }
     public void setHttpClient(HttpClient httpClient) { this.httpClient = httpClient; }
