@@ -316,7 +316,7 @@ public class ApiRunner {
 
                     if (result == null || !result) {
                         success = false;
-                        String msg = result == null ? "Exception in execution" : "Failed condition";
+                        final String msg = result == null ? "Exception in execution" : "Failed condition";
                         if (listener != null) listener.conditionCheckFailed(msg, script, restResponse, check, localCtx);
                     }
                 }
