@@ -79,6 +79,7 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
         }
         public ApiTokenClient(ApiClientBase client) {
             super(client);
+            setToken(client.getToken());
             this.tokenHeader = client.getTokenHeader();
         }
         @Override public String getTokenHeader() { return tokenHeader; }
