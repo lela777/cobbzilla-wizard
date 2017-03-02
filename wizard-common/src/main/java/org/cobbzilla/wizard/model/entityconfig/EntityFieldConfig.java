@@ -85,6 +85,11 @@ public class EntityFieldConfig {
     /** the value of the special (usually first-listed) option that indicates no selection has been made */
     @Getter @Setter private String emptyDisplayValue;
 
+    public EntityFieldConfig setOptionsList(EntityFieldOption[] options) {
+        this.options = json(options);
+        return this;
+    }
+
     /**
      * Get the options as a list. This assumes that options is set of comma-separated values. URI-based options will return null.
      * @return An array of EntityFieldOptions, or null if there were no options or options were URI-based
@@ -106,8 +111,6 @@ public class EntityFieldConfig {
             return opts.toArray(new EntityFieldOption[opts.size()]);
         }
     }
-
-    public void setOptionsList(EntityFieldOption[] options) { this.options = json(options); }
 
     /**
      * When the value of 'type' is 'reference', this provides details about how to find the referenced object.
