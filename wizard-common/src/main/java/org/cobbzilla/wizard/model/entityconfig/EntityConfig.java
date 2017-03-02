@@ -290,9 +290,14 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (!empty(annotation.list())) {
-            final List<String> fieldNames = Arrays.asList(annotation.list());
-            if (fields == null) fields = new HashMap<>(fieldNames.size());
+            // initialization of fieldNames according to the fields map (if set)
+            if (fieldNames == null) fieldNames = getFieldNames();
+            for (int i = annotation.list().length - 1; i >= 0; i--){
+                String fieldName = annotation.list()[i];
+                if (!fieldNames.contains(fieldName)) fieldNames.add(0, fieldName);
+            }
 
+            if (fields == null) fields = new HashMap<>(fieldNames.size());
             ReflectionUtils.doWithFields(
                     clazz,
                     new ReflectionUtils.FieldCallback() {
