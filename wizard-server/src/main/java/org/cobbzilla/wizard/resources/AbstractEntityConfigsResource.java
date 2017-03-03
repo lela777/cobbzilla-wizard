@@ -120,27 +120,30 @@ public abstract class AbstractEntityConfigsResource {
         @Override public long getTimeout() { return getConfigRefreshInterval(); }
     }
 
-    protected EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
-        final InputStream in;
+    private EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
+        EntityConfig entityConfig;
+
         try {
-            in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
+            final InputStream in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" +
+                                                        clazz.getSimpleName() + ".json");
+            entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
         } catch (Exception e) {
-            log.debug("getEntityConfig("+clazz.getName()+"): "+e);
-            return null;
+            log.debug("getEntityConfig(" + clazz.getName() + "): Exception while reading JSON entity config", e);
+            entityConfig = new EntityConfig();
         }
+
+        entityConfig.setClassName(clazz.getName());
+
         try {
-            final EntityConfig entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
-            entityConfig.setClassName(clazz.getName());
             return entityConfig.updateWithAnnotations(clazz);
         } catch (Exception e) {
-            return die("getEntityConfig("+clazz.getName()+"): "+e, e);
+            return die("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
         }
     }
 
-    // todo: default information can come from parsing the javax.persistence and javax.validation annotations
-    protected EntityConfig toEntityConfig(Class<?> clazz) {
+    private EntityConfig toEntityConfig(Class<?> clazz) {
 
-        final EntityConfig entityConfig;
+        EntityConfig entityConfig = new EntityConfig();
         try {
             entityConfig = getEntityConfig(clazz);
             if (entityConfig == null) return null;
@@ -153,13 +156,11 @@ public abstract class AbstractEntityConfigsResource {
             }
 
             setNames(entityConfig);
-
-            return entityConfig;
-
         } catch (Exception e) {
             log.warn("toEntityConfig("+clazz.getName()+"): "+e);
-            return null;
         }
+
+        return entityConfig;
     }
 
     protected void setNames(EntityConfig config) {
