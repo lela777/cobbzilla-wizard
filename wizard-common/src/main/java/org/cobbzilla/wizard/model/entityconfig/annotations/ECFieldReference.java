@@ -13,4 +13,5 @@ public @interface ECFieldReference {
     String refEntity() default EntityFieldReference.REF_PARENT;
     String refField() default "uuid";
     String refDisplayField() default "name";
+    String refFinder() default "";
 }
