@@ -360,7 +360,8 @@ public class EntityConfig {
         ECFieldReference refAnnotation = field.getAnnotation(ECFieldReference.class);
         if (refAnnotation == null) return cfg;
 
-        cfg.setType(EntityFieldType.reference).setControl(EntityFieldControl.create(refAnnotation.control()));
+        cfg.setType(EntityFieldType.reference);
+        if (!empty(refAnnotation.control())) cfg.setControl(EntityFieldControl.create(refAnnotation.control()));
 
         EntityFieldReference ref = new EntityFieldReference();
         ref.setEntity(refAnnotation.refEntity());
