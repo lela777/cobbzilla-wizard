@@ -292,10 +292,11 @@ public class EntityConfig {
         if (!empty(annotation.list())) {
             // initialization of fieldNames according to the fields map (if set)
             if (fieldNames == null) fieldNames = getFieldNames();
-            for (int i = annotation.list().length - 1; i >= 0; i--){
-                String fieldName = annotation.list()[i];
-                if (!fieldNames.contains(fieldName)) fieldNames.add(0, fieldName);
-            }
+            List<String> annotationFieldNames = Arrays.asList(annotation.list());
+            // remove duplicates if any ...
+            fieldNames.removeAll(annotationFieldNames);
+            // ... then add the set list in front of other fields (possibly set in JSON)
+            fieldNames.addAll(0, annotationFieldNames);
 
             if (fields == null) fields = new HashMap<>(fieldNames.size());
             ReflectionUtils.doWithFields(
