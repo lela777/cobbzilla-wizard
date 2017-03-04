@@ -20,13 +20,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
@@ -69,20 +70,13 @@ public abstract class AbstractEntityConfigsResource {
         }
 
         if (debug && config != null) {
-            // is it on the filesystem?
-            final File localFile = getLocalConfig(config);
-            if (localFile != null && localFile.exists()) {
-                try {
-                    final EntityConfig localConfig = fromJson(localFile, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
-                    if (localConfig != null) {
-                        localConfig.setClassName(config.getClassName());
-                        setNames(localConfig);
-                        return ok(localConfig.updateWithAnnotations());
-                    }
-                } catch (Exception e) {
-                    log.warn("getConfig("+name+"): debug enabled and local config exists ("+abs(localFile)+"), but error loading: "+e);
-                }
+            EntityConfig localConfig = null;
+            try {
+                localConfig = toEntityConfig(forName(config.getClassName()));
+            } catch (Exception e) {
+                log.warn("getConfig(" + name + "): error loading entity condig", e);
             }
+            if (localConfig != null) return ok(localConfig);
         }
 
         return config == null ? notFound(name) : ok(config);
@@ -126,27 +120,30 @@ public abstract class AbstractEntityConfigsResource {
         @Override public long getTimeout() { return getConfigRefreshInterval(); }
     }
 
-    protected EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
-        final InputStream in;
+    private EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
+        EntityConfig entityConfig;
+
         try {
-            in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" + clazz.getSimpleName() + ".json");
+            final InputStream in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" +
+                                                        clazz.getSimpleName() + ".json");
+            entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
         } catch (Exception e) {
-            log.debug("getEntityConfig("+clazz.getName()+"): "+e);
-            return null;
+            log.debug("getEntityConfig(" + clazz.getName() + "): Exception while reading JSON entity config", e);
+            entityConfig = new EntityConfig();
         }
+
+        entityConfig.setClassName(clazz.getName());
+
         try {
-            final EntityConfig entityConfig = fromJson(in, EntityConfig.class, FULL_MAPPER_ALLOW_COMMENTS);
-            entityConfig.setClassName(clazz.getName());
             return entityConfig.updateWithAnnotations(clazz);
         } catch (Exception e) {
-            return die("getEntityConfig("+clazz.getName()+"): "+e, e);
+            return die("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
         }
     }
 
-    // todo: default information can come from parsing the javax.persistence and javax.validation annotations
-    protected EntityConfig toEntityConfig(Class<?> clazz) {
+    private EntityConfig toEntityConfig(Class<?> clazz) {
 
-        final EntityConfig entityConfig;
+        EntityConfig entityConfig = new EntityConfig();
         try {
             entityConfig = getEntityConfig(clazz);
             if (entityConfig == null) return null;
@@ -159,13 +156,11 @@ public abstract class AbstractEntityConfigsResource {
             }
 
             setNames(entityConfig);
-
-            return entityConfig;
-
         } catch (Exception e) {
             log.warn("toEntityConfig("+clazz.getName()+"): "+e);
-            return null;
         }
+
+        return entityConfig;
     }
 
     protected void setNames(EntityConfig config) {
