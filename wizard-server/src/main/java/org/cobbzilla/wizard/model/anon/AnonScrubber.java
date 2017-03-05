@@ -52,7 +52,7 @@ public class AnonScrubber {
                         s.setMaxRows(1);
                         try {
                             @Cleanup final ResultSet rs = s.executeQuery();
-                            final Set<String> dbColumns = new CaseInsensitiveStringSet(ResultSetBean.getColumns(rs, rs.getMetaData()));
+                            final Set<String> dbColumns = new CaseInsensitiveStringSet(ResultSetBean.getColumns(rs.getMetaData()));
                             if (empty(dbColumns)) die("no columns in table " + tableName);
 
                             // Only keep columns that exist in the DB
