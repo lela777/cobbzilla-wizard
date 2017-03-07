@@ -252,8 +252,16 @@ public class ApiRunner {
                     if (storeClass == null) {
                         if (responseEntity.isArray()) {
                             storeClass = Map[].class;
-                        } else {
+                        } else if (responseEntity.isObject()) {
                             storeClass = Map.class;
+                        } else if (responseEntity.isTextual()) {
+                            storeClass = String.class;
+                        } else if (responseEntity.isIntegralNumber()) {
+                            storeClass = Long.class;
+                        } else if (responseEntity.isDouble()) {
+                            storeClass = Double.class;
+                        } else {
+                            storeClass = JsonNode.class; // punt
                         }
                     }
                     try {
