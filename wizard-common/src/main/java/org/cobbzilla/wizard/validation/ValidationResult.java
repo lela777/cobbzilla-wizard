@@ -37,7 +37,13 @@ public class ValidationResult {
     public void addViolation(String messageTemplate, String message) { addViolation(messageTemplate, message, null); }
 
     public void addViolation(String messageTemplate, String message, String invalidValue) {
-        beans.add(new ConstraintViolationBean(messageTemplate, message, invalidValue));
+        final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue);
+        for (ConstraintViolationBean bean : beans) {
+            if (bean.equals(err)) {
+                return; // already exists
+            }
+        }
+        beans.add(err);
     }
 
     public void addAll(ValidationResult result) {
@@ -77,5 +83,7 @@ public class ValidationResult {
     @Override public String toString() { return violations.toString() + (beans.isEmpty() ? "" : ", "+beans.toString()); }
 
     public ValidationErrors errors() { return new ValidationErrors(this.getViolationBeans()); }
+
+    public int violationCount() { return isEmpty() ? 0 : getViolationBeans().size(); }
 
 }
