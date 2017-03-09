@@ -185,9 +185,15 @@ public class ModelSetup {
                     case OK:
                         if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, entity);
-                            if (existing != null) ReflectionUtil.copy(existing, entity);
-                            log.info(logPrefix + " already exists, updating");
-                            entity = update(api, context, entityConfig, existing, listener);
+                            final Identifiable toUpdate;
+                            if (existing != null) {
+                                ReflectionUtil.copy(existing, entity);
+                                toUpdate = existing;
+                            } else {
+                                toUpdate = entity;
+                            }
+                            log.info(logPrefix+" already exists, updating");
+                            entity = update(api, context, entityConfig, toUpdate, listener);
                         } else {
                             log.info(logPrefix+" already exists: "+getUri);
                             entity = json(response.json, request.getEntity().getClass());
