@@ -1,17 +1,13 @@
 package org.cobbzilla.wizard.validation;
 
-import java.util.ResourceBundle;
+import org.cobbzilla.util.string.ResourceMessages;
 
-public class ValidationMessages {
+public class ValidationMessages extends ResourceMessages {
 
-    public static final String VALIDATION_MESSAGES = "ValidationMessages";
+    private static final ValidationMessages instance = new ValidationMessages();
 
-    public static String translateMessage(String messageTemplate) {
+    @Override public String getBundleName() { return "ValidationMessages"; }
 
-        // strip leading/trailing curlies if they are there
-        while (messageTemplate.startsWith("{")) messageTemplate = messageTemplate.substring(1);
-        while (messageTemplate.endsWith("}")) messageTemplate = messageTemplate.substring(0, messageTemplate.length()-1);
+    public static String translateMessage(String messageTemplate) { return instance.translate(messageTemplate); }
 
-        return ResourceBundle.getBundle(VALIDATION_MESSAGES).getString(messageTemplate);
-    }
 }
