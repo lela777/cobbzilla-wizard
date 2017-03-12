@@ -192,7 +192,7 @@ public class ModelSetup {
                             } else {
                                 toUpdate = entity;
                             }
-                            log.info(logPrefix+" already exists, updating");
+                            log.info(logPrefix+" already exists, updating: "+id(toUpdate));
                             entity = update(api, context, entityConfig, toUpdate, listener);
                         } else {
                             log.info(logPrefix+" already exists: "+getUri);
@@ -299,7 +299,7 @@ public class ModelSetup {
             }
             listener.preCreate(entityConfig, entity);
         }
-        log.info("create("+runName+"): creating " + entityConfig.getName() + (entity instanceof NamedEntity ? ": " + ((NamedEntity) entity).getName() : ""));
+        log.info("create("+runName+"): creating " + entityConfig.getName() + ": "+ id(entity));
         T created;
         try {
             switch (entityConfig.getCreateMethod().toLowerCase()) {
@@ -333,6 +333,13 @@ public class ModelSetup {
 
         if (listener != null) listener.postCreate(entityConfig, entity, created);
         return created;
+    }
+
+    private static <T extends Identifiable> String id(T entity) {
+        if (entity == null) return "null";
+        if (entity instanceof NamedEntity) return ((NamedEntity) entity).getName();
+        if (entity.getUuid() != null) return entity.getUuid();
+        return entity.toString();
     }
 
     protected static <T extends Identifiable> T update(ApiClientBase api,
