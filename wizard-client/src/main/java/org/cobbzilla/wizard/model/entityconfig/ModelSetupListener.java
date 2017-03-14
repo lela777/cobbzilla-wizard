@@ -9,7 +9,7 @@ public interface ModelSetupListener {
     void postCreate(EntityConfig entityConfig, Identifiable entity, Identifiable created);
 
     void preUpdate (EntityConfig entityConfig, Identifiable entity);
-    void postUpdate(EntityConfig entityConfig, Identifiable entity, Identifiable created);
+    void postUpdate(EntityConfig entityConfig, Identifiable entity, Identifiable updated);
 
     void preEntityConfig (String entityType);
     void postEntityConfig(String entityType, EntityConfig entityConfig);

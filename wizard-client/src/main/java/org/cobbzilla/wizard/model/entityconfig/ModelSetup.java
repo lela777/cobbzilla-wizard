@@ -1,7 +1,9 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +55,12 @@ public class ModelSetup {
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
     public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
+
+    private static boolean isVerify() { return getVerifyLog() != null; }
+
+    private static ModelVerifyLog verifyLog = null;
+    public static ModelVerifyLog getVerifyLog () { return verifyLog; }
+    public static void setVerifyLog (ModelVerifyLog vlog) { verifyLog = vlog; }
 
     public static LinkedHashMap<String, String> buildModel(File manifest) {
         final String[] models = json(FileUtil.toStringOrDie(manifest), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
@@ -141,12 +149,16 @@ public class ModelSetup {
         final ModelEntity[] entities = new ModelEntity[nodes.length];
         for (int i=0; i<nodes.length; i++) {
             final JsonNode node = nodes[i];
-            entities[i] = buildModelEntity(node, entityClass);
+            if (!(node instanceof ObjectNode)) {
+                log.error("parseEntities: not an ObjectNode, skipping: "+node);
+                continue;
+            }
+            entities[i] = buildModelEntity((ObjectNode) node, entityClass);
         }
         return entities;
     }
 
-    public static ModelEntity buildModelEntity(JsonNode node,
+    public static ModelEntity buildModelEntity(ObjectNode node,
                                                Class<? extends Identifiable> entityClass) {
         final Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(new Class[]{ModelEntity.class});
@@ -181,18 +193,24 @@ public class ModelSetup {
                 if (listener != null) listener.preLookup(entity);
                 final RestResponse response = api.doGet(getUri);
                 if (listener != null) listener.postLookup(entity, request, response);
+                final boolean verify = isVerify();
                 switch (response.status) {
                     case OK:
-                        if (request.allowUpdate()) {
+                        if (request.allowUpdate() || verify) {
                             final Identifiable existing = getCached(api, entity);
                             final Identifiable toUpdate;
                             if (existing != null) {
-                                ReflectionUtil.copy(existing, entity);
-                                toUpdate = existing;
+                                if (verify) {
+                                    getVerifyLog().logDifference(entityConfig, existing, entity);
+                                    toUpdate = existing;
+                                } else {
+                                    ReflectionUtil.copy(existing, entity);
+                                    toUpdate = existing;
+                                }
                             } else {
                                 toUpdate = entity;
                             }
-                            log.info(logPrefix+" already exists, updating: "+id(toUpdate));
+                            log.info(logPrefix + " already exists, updating: " + id(toUpdate));
                             entity = update(api, context, entityConfig, toUpdate, listener);
                         } else {
                             log.info(logPrefix+" already exists: "+getUri);
@@ -247,15 +265,11 @@ public class ModelSetup {
                     @Cleanup("shutdownNow") final ExecutorService exec = fixedPool(Math.min(children.length, maxConcurrency));
                     final Set<Future<?>> futures = new HashSet<>();
                     for (final JsonNode child : children) {
-                         futures.add(exec.submit(new Runnable() {
-                            @Override public void run() {
-                                try {
-                                    createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity(child, childClass), new LinkedHashMap<>(context), listener, runName);
-                                } catch (Exception e) {
-                                    die("run: "+e, e);
-                                }
-                            }
-                        }));
+                        if (!(child instanceof ObjectNode)) {
+                            log.error("createEntity: not an ObjectNode: "+child);
+                            continue;
+                        }
+                        futures.add(exec.submit(new CreateEntityJob(api, childConfig, child, childClass, context, listener, runName)));
                     }
                     final AwaitResult<?> result = awaitAll(futures, CHILD_TIMEOUT);
                     if (!result.allSucceeded()) die("createEntity: "+result);
@@ -288,6 +302,11 @@ public class ModelSetup {
                                                        T entity,
                                                        ModelSetupListener listener,
                                                        String runName) throws Exception {
+        if (isVerify()) {
+            log.info("create: in verify mode, not creating: " + id(entity));
+            return entity;
+        }
+
         final String uri = processUri(ctx, entity, entityConfig.getCreateUri());
 
         // if the entity has a parent, it will want that parent's UUID in that field
@@ -335,7 +354,7 @@ public class ModelSetup {
         return created;
     }
 
-    private static <T extends Identifiable> String id(T entity) {
+    public static <T extends Identifiable> String id(T entity) {
         if (entity == null) return "null";
         if (entity instanceof NamedEntity) return ((NamedEntity) entity).getName();
         if (entity.getUuid() != null) return entity.getUuid();
@@ -347,6 +366,10 @@ public class ModelSetup {
                                                        EntityConfig entityConfig,
                                                        T entity,
                                                        ModelSetupListener listener) throws Exception {
+        if (isVerify()) {
+            log.info("update: in verify mode, not updating: " + id(entity));
+            return entity;
+        }
         final String uri = processUri(ctx, entity, entityConfig.getUpdateUri());
 
         // if the entity has a parent, it will want that parent's UUID in that field
@@ -425,11 +448,13 @@ public class ModelSetup {
 
     private static class ModelEntityInvocationHandler implements InvocationHandler {
 
+        @Getter @JsonIgnore private final ObjectNode node;
         private final boolean update;
         private final boolean subst;
         @Getter private final Identifiable entity;
 
-        public ModelEntityInvocationHandler(JsonNode node, Class<? extends Identifiable> entityClass) {
+        public ModelEntityInvocationHandler(ObjectNode node, Class<? extends Identifiable> entityClass) {
+            this.node = node;
             update = hasSpecialProperty(node, ALLOW_UPDATE_PROPERTY);
             subst = hasSpecialProperty(node, PERFORM_SUBST_PROPERTY);
             this.entity = json(node, entityClass);
@@ -443,10 +468,30 @@ public class ModelSetup {
 
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
+                case "jsonNode": return node;
                 case "allowUpdate": return update;
                 case "performSubstitutions": return subst;
                 case "getEntity": return entity;
                 default: return method.invoke(entity, args);
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    private static class CreateEntityJob implements Runnable {
+        private final ApiClientBase api;
+        private final EntityConfig childConfig;
+        private final JsonNode child;
+        private final Class<? extends Identifiable> childClass;
+        private final LinkedHashMap<String, Identifiable> context;
+        private final ModelSetupListener listener;
+        private final String runName;
+
+        @Override public void run() {
+            try {
+                createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity((ObjectNode) child, childClass), new LinkedHashMap<>(context), listener, runName);
+            } catch (Exception e) {
+                die("run: "+e, e);
             }
         }
     }
