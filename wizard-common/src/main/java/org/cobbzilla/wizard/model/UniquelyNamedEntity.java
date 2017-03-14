@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.model;
 
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
@@ -9,7 +8,7 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@MappedSuperclass @NoArgsConstructor @EqualsAndHashCode(of={"name"}, callSuper=false)
+@MappedSuperclass @NoArgsConstructor
 public abstract class UniquelyNamedEntity extends IdentifiableBase implements NamedEntity {
 
     public UniquelyNamedEntity (String name) { setName(name); }
@@ -29,4 +28,17 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
     public boolean isSameName(UniquelyNamedEntity other) { return getName().equals(other.getName()); }
 
     @Override public String toString() { return "{"+getName() + ": "+super.toString()+"}"; }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UniquelyNamedEntity)) return false;
+        final UniquelyNamedEntity that = (UniquelyNamedEntity) o;
+        return getName().equals(that.getName());
+    }
+
+    @Override public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + getName().hashCode();
+        return result;
+    }
 }

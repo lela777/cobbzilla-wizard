@@ -20,6 +20,7 @@ import org.cobbzilla.wizard.model.NamedEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -472,7 +473,14 @@ public class ModelSetup {
                 case "allowUpdate": return update;
                 case "performSubstitutions": return subst;
                 case "getEntity": return entity;
-                default: return method.invoke(entity, args);
+                case "equals": return entity.equals(args[0]);
+                default:
+                    try {
+                        return method.invoke(entity, args);
+                    } catch (InvocationTargetException e) {
+                        log.error("invoke("+method.getName()+"): "+e, e);
+                        throw e;
+                    }
             }
         }
     }

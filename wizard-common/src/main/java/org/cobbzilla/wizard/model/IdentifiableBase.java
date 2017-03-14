@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
@@ -19,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 
-@MappedSuperclass @EqualsAndHashCode(of="uuid")
+@MappedSuperclass
 public class IdentifiableBase implements Identifiable {
 
     public String simpleName () { return getClass().getSimpleName(); }
@@ -84,6 +83,15 @@ public class IdentifiableBase implements Identifiable {
     @JsonIgnore @Transient public long getMtimeAge () { return now() - mtime; }
 
     @Override public String toString() { return simpleName()+"{uuid=" + uuid + "}"; }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof IdentifiableBase)) return false;
+        final IdentifiableBase that = (IdentifiableBase) o;
+        return getUuid() != null ? getUuid().equals(that.getUuid()) : that.getUuid() == null;
+    }
+
+    @Override public int hashCode() { return getUuid() != null ? getUuid().hashCode() : 0; }
 
     public static String[] toUuidArray(List<? extends Identifiable> entities) {
         return empty(entities)
