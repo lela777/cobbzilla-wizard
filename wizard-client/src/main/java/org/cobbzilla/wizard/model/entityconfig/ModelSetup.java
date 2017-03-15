@@ -55,7 +55,7 @@ public class ModelSetup {
     public static final long CHILD_TIMEOUT = TimeUnit.MINUTES.toMillis(30);
     static { log.info("ModelSetup: maxConcurrency="+maxConcurrency); }
 
-    public static final Map<Integer, Map<Identifiable, Identifiable>> entityCache = new HashMap<>();
+    public static final Map<Integer, Map<String, Identifiable>> entityCache = new HashMap<>();
 
     private static boolean isVerify() { return getVerifyLog() != null; }
 
@@ -205,7 +205,7 @@ public class ModelSetup {
                             getVerifyLog().logDifference(entityConfig, entity, request);
 
                         } else if (request.allowUpdate()) {
-                            final Identifiable existing = getCached(api, entity);
+                            final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
                             final Identifiable toUpdate;
                             if (existing != null) {
                                 ReflectionUtil.copy(existing, entity);
@@ -287,20 +287,27 @@ public class ModelSetup {
 
     private static void addToCache(ApiClientBase api, Identifiable entity) {
         synchronized (entityCache) {
-            Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
+            Map<String, Identifiable> cache = entityCache.get(api.hashCode());
             if (cache == null) {
                 cache = new HashMap<>();
                 entityCache.put(api.hashCode(), cache);
             }
-            cache.put(entity, entity);
+            final String key = cacheKey(entity);
+            cache.put(key, entity);
         }
     }
 
     private static Identifiable getCached(ApiClientBase api, Identifiable entity) {
         synchronized (entityCache) {
-            final Map<Identifiable, Identifiable> cache = entityCache.get(api.hashCode());
-            return cache == null ? null : cache.get(entity);
+            final Map<String, Identifiable> cache = entityCache.get(api.hashCode());
+            final String key = cacheKey(entity);
+            return cache == null ? null : cache.get(key);
         }
+    }
+
+    private static String cacheKey(Identifiable entity) {
+        if (entity instanceof ModelEntity) entity = ((ModelEntity) entity).getEntity();
+        return getRawClass(entity.getClass().getName())+"/"+entity.getUuid();
     }
 
     protected static <T extends Identifiable> T create(ApiClientBase api,
