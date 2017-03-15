@@ -29,6 +29,8 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     @Getter @Setter private Handlebars handlebars;
     @Getter private final List<ModelDiffEntry> diffs = new ArrayList<>();
 
+    public boolean enableTextDiffs () { return false; }
+
     public StandardModelVerifyLog (File f, Handlebars h) {
         verifyLogFile = f;
         handlebars = h;
@@ -49,15 +51,15 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final ModelEntity request = (ModelEntity) entity;
         final ObjectNode requestNode = request.jsonNode();
 
-        final String existingJson = json(existing instanceof ModelEntity ? ((ModelEntity) existing).getEntity() : existing);
-        final String requestJson = json(request.getEntity());
+        final String existingJson = toBasicJson(existing);
+        final String requestJson = toBasicJson(request);
 
         final String entityId = getEntityId(entityConfig, existing);
         final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
             calculateDiff(requestNode, existing, deltas, "");
-            if (empty(deltas)) {
+            if (empty(deltas) && enableTextDiffs()) {
                 diffEntry.setJsonDiff(StringUtil.diff(existingJson, requestJson, null));
             } else {
                 diffEntry.setDeltas(deltas);
@@ -68,6 +70,15 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 diffs.add(diffEntry);
             }
         }
+    }
+
+    private String toBasicJson(Identifiable thing) {
+        for (String f : getExcludedFields()) {
+            try {
+                ReflectionUtil.set(thing, f, null);
+            } catch (Exception ignored) {}
+        }
+        return json(thing instanceof ModelEntity ? ((ModelEntity) thing).getEntity() : thing);
     }
 
     public String getEntityId(EntityConfig entityConfig, Identifiable existing) {
@@ -81,7 +92,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     private void calculateDiff(ObjectNode requestNode, Object existing, List<String> deltas, String path) {
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
-            if (isExcludedField(fieldName)) continue; // skip children/entity fields
+            if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
             final Object requestValue = JsonUtil.getNodeAsJava(requestNode.get(fieldName), fieldName);
             final Object existingValue;
             try {
@@ -114,7 +125,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    protected boolean isExcludedField(String fieldName) {
-        return fieldName.equals("children") || fieldName.equals("entity");
-    }
+    protected static final Set<String> EXCLUDED_FIELDS = new HashSet<>(Arrays.asList("children", "entity"));
+    protected Set<String> getExcludedFields() { return EXCLUDED_FIELDS; }
+
 }
