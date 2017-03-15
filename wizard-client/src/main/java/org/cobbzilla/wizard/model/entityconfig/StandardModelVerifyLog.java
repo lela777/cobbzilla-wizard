@@ -49,14 +49,11 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final ModelEntity request = (ModelEntity) entity;
         final ObjectNode requestNode = request.jsonNode();
 
-        final String existingJson = json(existing);
-        final String requestJson = json(request);
+        final String existingJson = json(existing instanceof ModelEntity ? ((ModelEntity) existing).getEntity() : existing);
+        final String requestJson = json(request.getEntity());
 
         final String entityId = getEntityId(entityConfig, existing);
         final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
-        synchronized (diffs) {
-            diffs.add(diffEntry);
-        }
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
             calculateDiff(requestNode, existing, deltas, "");
@@ -64,6 +61,11 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 diffEntry.setJsonDiff(StringUtil.diff(existingJson, requestJson, null));
             } else {
                 diffEntry.setDeltas(deltas);
+            }
+        }
+        if (!diffEntry.isEmpty()) {
+            synchronized (diffs) {
+                diffs.add(diffEntry);
             }
         }
     }
@@ -79,7 +81,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     private void calculateDiff(ObjectNode requestNode, Object existing, List<String> deltas, String path) {
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
-            if (fieldName.equals("children") || fieldName.equals("entity")) continue; // skip children/entity fields
+            if (isExcludedField(fieldName)) continue; // skip children/entity fields
             final Object requestValue = JsonUtil.getNodeAsJava(requestNode.get(fieldName), fieldName);
             final Object existingValue;
             try {
@@ -110,5 +112,9 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 continue;
             }
         }
+    }
+
+    protected boolean isExcludedField(String fieldName) {
+        return fieldName.equals("children") || fieldName.equals("entity");
     }
 }

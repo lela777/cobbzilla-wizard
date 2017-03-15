@@ -7,6 +7,8 @@ import org.cobbzilla.wizard.model.Identifiable;
 
 import java.util.List;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 @Accessors(chain=true)
 public class ModelDiffEntry {
 
@@ -16,5 +18,7 @@ public class ModelDiffEntry {
     @Getter @Setter private String jsonDiff;
     @Getter @Setter private List<String> deltas;
     @Getter @Setter private Identifiable createEntity;
+
+    public boolean isEmpty() { return empty(jsonDiff) && empty(deltas) && empty(createEntity); }
 
 }
