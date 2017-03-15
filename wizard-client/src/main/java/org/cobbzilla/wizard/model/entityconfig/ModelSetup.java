@@ -198,8 +198,11 @@ public class ModelSetup {
                 switch (response.status) {
                     case OK:
                         if (verify) {
-                            entity = json(response.json, request.getEntity().getClass());
-                            getVerifyLog().logDifference(entityConfig, entity, entity);
+                            entity = buildModelEntity(json(response.json, ObjectNode.class), request.getEntity().getClass());
+                            if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
+                                entity = listener.subst(entity);
+                            }
+                            getVerifyLog().logDifference(entityConfig, entity, request);
 
                         } else if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, entity);
