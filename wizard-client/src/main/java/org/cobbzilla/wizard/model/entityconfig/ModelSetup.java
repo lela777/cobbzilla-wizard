@@ -197,17 +197,16 @@ public class ModelSetup {
                 final boolean verify = isVerify();
                 switch (response.status) {
                     case OK:
-                        if (request.allowUpdate() || verify) {
+                        if (verify) {
+                            entity = json(response.json, request.getEntity().getClass());
+                            getVerifyLog().logDifference(entityConfig, entity, entity);
+
+                        } else if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, entity);
                             final Identifiable toUpdate;
                             if (existing != null) {
-                                if (verify) {
-                                    getVerifyLog().logDifference(entityConfig, existing, entity);
-                                    toUpdate = existing;
-                                } else {
-                                    ReflectionUtil.copy(existing, entity);
-                                    toUpdate = existing;
-                                }
+                                ReflectionUtil.copy(existing, entity);
+                                toUpdate = existing;
                             } else {
                                 toUpdate = entity;
                             }
@@ -219,7 +218,11 @@ public class ModelSetup {
                         }
                         break;
                     case NOT_FOUND:
-                        entity = create(api, context, entityConfig, entity, listener, runName);
+                        if (verify) {
+                            getVerifyLog().logCreation(entityConfig, entity);
+                        } else {
+                            entity = create(api, context, entityConfig, entity, listener, runName);
+                        }
                         break;
                     default:
                         die(logPrefix+"error creating " + entityType + ": " + response);

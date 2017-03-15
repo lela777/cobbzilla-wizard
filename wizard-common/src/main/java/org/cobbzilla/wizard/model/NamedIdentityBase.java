@@ -13,8 +13,7 @@ import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
-@MappedSuperclass @EqualsAndHashCode(of="name") @ToString(of={"name"})
-@NoArgsConstructor @Accessors(chain=true)
+@MappedSuperclass @NoArgsConstructor @Accessors(chain=true) @ToString(of={"name"})
 public class NamedIdentityBase implements NamedEntity, Identifiable {
 
     public NamedIdentityBase (String name) { setName(name); }
@@ -42,5 +41,14 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
     public void setMtime (long time) { this.mtime = time; }
     public void setMtime () { this.mtime = now(); }
     @JsonIgnore @Transient public long getMtimeAge () { return now() - mtime; }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof NamedIdentityBase)) return false;
+        final NamedIdentityBase that = (NamedIdentityBase) o;
+        return getName().equals(that.getName());
+    }
+
+    @Override public int hashCode() { return getName().hashCode(); }
 
 }

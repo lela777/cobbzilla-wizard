@@ -6,4 +6,6 @@ public interface ModelVerifyLog {
 
     void logDifference(EntityConfig entityConfig, Identifiable existing, Identifiable entity);
 
+    void logCreation(EntityConfig entityConfig, Identifiable entity);
+
 }
