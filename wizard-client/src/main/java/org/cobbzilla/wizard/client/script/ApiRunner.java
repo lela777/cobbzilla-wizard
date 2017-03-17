@@ -19,6 +19,7 @@ import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.util.RestResponse;
+import org.cobbzilla.wizard.util.TestNames;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationErrors;
 
@@ -354,7 +355,7 @@ public class ApiRunner {
         if (json != null) {
             while (json.contains(RAND)) json = json.replaceFirst(RAND, randomAlphanumeric(10));
         }
-        return json;
+        return TestNames.replaceTestNames(json);
     }
 
     protected String requestEntityJson(ApiScriptRequest request) {

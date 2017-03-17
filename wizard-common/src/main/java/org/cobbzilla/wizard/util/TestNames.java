@@ -102,4 +102,14 @@ public class TestNames {
     public static String safeFruit(String val) { return fruit(val)+"-"+sha256_hex(val).substring(0, 8); }
     public static String safeNationality(String val) { return nationality(val)+"-"+sha256_hex(val).substring(0, 8); }
 
+    public static String replaceTestNames(String val) {
+        if (val != null) {
+            while (val.contains("~color~")) val = val.replaceFirst("~color~", safeColor());
+            while (val.contains("~animal~")) val = val.replaceFirst("~animal~", safeAnimal());
+            while (val.contains("~fruit~")) val = val.replaceFirst("~fruit~", safeFruit());
+            while (val.contains("~nationality~")) val = val.replaceFirst("~nationality~", safeNationality());
+        }
+        return val;
+    }
+
 }
