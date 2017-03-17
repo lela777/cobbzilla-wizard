@@ -18,7 +18,6 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENCRYPTED_STRING;
-import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.ENC_PAD;
 
 @Embeddable @NoArgsConstructor @Accessors(chain=true) @Slf4j
 public class SavedContext {
@@ -26,7 +25,7 @@ public class SavedContext {
     public static final int CONTEXT_JSON_MAXLEN = 10_000_000;
 
     @Size(max=CONTEXT_JSON_MAXLEN, message="err.contextJson.length")
-    @Column(columnDefinition="varchar("+(CONTEXT_JSON_MAXLEN+ENC_PAD)+") NOT NULL")
+    @Column(columnDefinition="TEXT NOT NULL")
     @JsonIgnore @Type(type=ENCRYPTED_STRING) @Getter @Setter private String contextJson = "[]";
 
     public SavedContext(Map<String, Object> context) { setContext(context); }
