@@ -461,6 +461,21 @@ public class ModelSetup {
         return className.contains("$$") ? className.substring(0, className.indexOf("$$")) : className;
     }
 
+    public static void scrubSpecialProperties(JsonNode[] nodes) {
+        for (JsonNode n : nodes) scrubSpecialProperties(n);
+    }
+    public static void scrubSpecialProperties(Collection<JsonNode> nodes) {
+        for (JsonNode n : nodes) scrubSpecialProperties(n);
+    }
+
+    public static void scrubSpecialProperties(JsonNode node) {
+        if (node instanceof ObjectNode) {
+            // clear special flags if present
+            if (node.has(ALLOW_UPDATE_PROPERTY)) ((ObjectNode) node).remove(ALLOW_UPDATE_PROPERTY);
+            if (node.has(PERFORM_SUBST_PROPERTY)) ((ObjectNode) node).remove(PERFORM_SUBST_PROPERTY);
+        }
+    }
+
     private static class ModelEntityInvocationHandler implements InvocationHandler {
 
         @Getter @JsonIgnore private final ObjectNode node;
