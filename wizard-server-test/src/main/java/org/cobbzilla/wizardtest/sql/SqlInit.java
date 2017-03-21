@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import static org.cobbzilla.util.string.StringUtil.UTF8cs;
+
 @Service @Slf4j
 public class SqlInit {
 
@@ -31,7 +33,7 @@ public class SqlInit {
                 final Resource resource = applicationContext.getResource(sqlFile);
                 try (final InputStream in = resource.getInputStream()) {
 
-                    for (final String sql : IOUtils.toString(in).split(";")) {
+                    for (final String sql : IOUtils.toString(in, UTF8cs).split(";")) {
 
                         try (Statement statement = conn.createStatement()) {
                             statement.executeUpdate(sql);

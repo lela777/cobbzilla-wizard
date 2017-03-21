@@ -42,6 +42,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClass;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
 import static org.cobbzilla.wizard.model.entityconfig.EntityConfig.URI_NOT_SUPPORTED;
+import static org.cobbzilla.wizard.model.entityconfig.EntityFieldReference.REF_PARENT;
 
 @Slf4j
 public class ModelSetup {
@@ -408,7 +409,7 @@ public class ModelSetup {
             String parentFieldName = parentField.getName();
             if (parentFieldName != null) {
                 String parentEntityType = parentField.getReference().getEntity();
-                if (parentEntityType.equals(":parent")) parentEntityType = parentFieldName;
+                if (parentEntityType.equals(REF_PARENT)) parentEntityType = parentFieldName;
 
                 boolean ok = false;
                 for (Identifiable candidate : ctx.values()) {

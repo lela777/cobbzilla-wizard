@@ -253,4 +253,15 @@ public class RestServerConfiguration {
         return r;
     }
 
+    public final Map<Class, DAO<? extends Identifiable>> daoCache = new ConcurrentHashMap<>();
+
+    public DAO getDaoForEntityClass(Class entityClass) {
+        DAO entityDao = daoCache.get(entityClass);
+        if (entityDao == null) {
+            entityDao = getBean(entityClass.getName().replace(".model.", ".dao.") + "DAO");
+            daoCache.put(entityClass, entityDao);
+        }
+        return entityDao;
+    }
+
 }

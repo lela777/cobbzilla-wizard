@@ -214,6 +214,19 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <version>2.2.2</version>
         </dependency>
 
+        <!-- Amazon SDK, for S3 -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.7.11</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- API docs -->
         <dependency>
             <groupId>com.qmino</groupId>
