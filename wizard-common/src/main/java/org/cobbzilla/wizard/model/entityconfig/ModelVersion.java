@@ -101,6 +101,8 @@ public class ModelVersion extends IdentifiableBase {
     @Column(nullable=false, length=1024)
     @Getter @Setter private String description;
 
+    public String shortString() { return getVersion()+"/"+getDescription(); }
+
     @Transient @JsonIgnore @Getter @Setter private LinkedHashMap<String, String> models;
 
     @Column(nullable=false, length=200)
