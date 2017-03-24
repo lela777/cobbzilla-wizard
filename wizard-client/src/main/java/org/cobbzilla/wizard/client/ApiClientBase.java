@@ -17,6 +17,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HttpContext;
 import org.cobbzilla.util.http.*;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -413,6 +414,7 @@ public class ApiClientBase implements Cloneable {
         return header == null ? null : header.getValue();
     }
 
-    public ApiClientBase copy() { return instantiate(getClass(), this); }
+    // call our own copy constructor, return new instance that is a copy of ourselves
+    public ApiClientBase copy() { return ReflectionUtil.copy(this); }
 
 }
