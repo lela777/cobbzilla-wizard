@@ -314,6 +314,9 @@ public class EntityConfig {
                             return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
                         }
                     });
+        } else {
+            // if existing JSON-based field names are already set, do nothing more
+            // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
         }
         return this;
     }
