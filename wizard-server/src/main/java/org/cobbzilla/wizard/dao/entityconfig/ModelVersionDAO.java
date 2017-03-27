@@ -26,7 +26,7 @@ public class ModelVersionDAO<V extends ModelVersion> extends AbstractCRUDDAO<V> 
 
     public V findCurrentVersion() {
         final List<V> all = findAll();
-        return empty(all) ? null : all.get(0);
+        return empty(all) ? null : all.get(all.size()-1);
     }
 
 }
