@@ -32,7 +32,7 @@ public class ModelMigration {
 
         for (ModelVersion localMigration : localMigrations) {
             // is there a corresponding remote migration?
-            final ModelVersion remoteMigration = findMigration(remoteMigrations, localMigration.getVersion());
+            final ModelVersion remoteMigration = findSuccessfulMigration(remoteMigrations, localMigration.getVersion());
             if (remoteMigration == null && localMigration.getVersion() > result.getCurrentRemoteVersion()) {
                 if (listener != null) listener.beforeApplyMigration(localMigration);
                 applyMigration(api, modelVersionEndpoint, entityConfigUrl, listener, localMigration, callerName);
@@ -51,8 +51,8 @@ public class ModelMigration {
         return result;
     }
 
-    private static ModelVersion findMigration(ModelVersion[] migrations, int version) {
-        for (ModelVersion v : migrations) if (v.getVersion() == version) return v;
+    private static ModelVersion findSuccessfulMigration(ModelVersion[] migrations, int version) {
+        for (ModelVersion v : migrations) if (v.getVersion() == version && v.isSuccess()) return v;
         return null;
     }
 
