@@ -7,7 +7,6 @@ import java.io.File;
 import java.util.Collection;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.realNow;
 import static org.cobbzilla.util.reflect.ReflectionUtil.arrayClass;
 
@@ -28,7 +27,7 @@ public class ModelMigration {
         final V[] remoteMigrations = api.get(modelVersionEndpoint, modelArrayClass);
 
         final ModelMigrationResult result = new ModelMigrationResult();
-        result.setCurrentRemoteVersion(empty(remoteMigrations) ? -1 : remoteMigrations[remoteMigrations.length-1].getVersion());
+        result.setCurrentRemoteVersion(findCurrentRemoteVersion(remoteMigrations));
 
         for (ModelVersion localMigration : localMigrations) {
             // is there a corresponding remote migration?
@@ -49,6 +48,12 @@ public class ModelMigration {
         }
 
         return result;
+    }
+
+    private static <V extends ModelVersion> int findCurrentRemoteVersion(V[] migrations) {
+        int latestSuccess = -1;
+        for (V migration : migrations) if (migration.isSuccess() && migration.getVersion() > latestSuccess) latestSuccess = migration.getVersion();
+        return latestSuccess;
     }
 
     private static ModelVersion findSuccessfulMigration(ModelVersion[] migrations, int version) {
