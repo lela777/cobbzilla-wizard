@@ -302,7 +302,11 @@ public class ModelSetup {
         synchronized (entityCache) {
             final Map<String, Identifiable> cache = entityCache.get(api.hashCode());
             final String key = cacheKey(entity);
-            return cache == null ? null : cache.get(key);
+            Identifiable cachedEntity = null;
+            if (cache != null) cachedEntity = cache.get(key);
+            if (cachedEntity != null) return cachedEntity;
+            addToCache(api, entity);
+            return entity;
         }
     }
 
