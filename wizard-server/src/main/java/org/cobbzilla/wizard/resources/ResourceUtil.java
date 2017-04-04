@@ -90,6 +90,11 @@ public class ResourceUtil {
                 : status(status);
     }
 
+    public static Response redirect (String location) { return redirect(HttpStatusCodes.FOUND, location); }
+    public static Response redirect (int status, String location) {
+        return Response.status(status).header(HttpHeaders.LOCATION, location).build();
+    }
+
     public static Response forbidden() { return status(Response.Status.FORBIDDEN); }
     public static ResourceHttpException forbiddenEx() { return new ResourceHttpException(HttpStatusCodes.FORBIDDEN); }
 

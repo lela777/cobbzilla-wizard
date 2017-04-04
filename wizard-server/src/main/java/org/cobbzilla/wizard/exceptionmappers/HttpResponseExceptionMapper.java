@@ -10,9 +10,7 @@ import static org.cobbzilla.wizard.resources.ResourceUtil.status;
 import static org.cobbzilla.wizard.server.RestServerBase.reportError;
 
 @Provider
-public class HttpResponseExceptionMapper
-        extends AbstractConstraintViolationExceptionMapper<ResourceHttpException>
-        implements ExceptionMapper<ResourceHttpException> {
+public class HttpResponseExceptionMapper implements ExceptionMapper<ResourceHttpException> {
 
     @Override public Response toResponse(ResourceHttpException e) {
         if (e.getStatusClass() == 5) reportError(e);
