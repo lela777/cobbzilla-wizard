@@ -27,6 +27,7 @@ public class ErrbitConfigListener extends RestServerLifecycleListenerBase {
 
         @Override public void report(Exception e) {
             if (config.hasErrorApi()) {
+                log.error(e.toString());
                 config.getErrorApi().report(e);
             } else {
                 log.warn("report: could not send exception to error reporting API: "+e, e);
@@ -35,6 +36,7 @@ public class ErrbitConfigListener extends RestServerLifecycleListenerBase {
 
         @Override public void report(String s) {
             if (config.hasErrorApi()) {
+                log.error(s);
                 config.getErrorApi().report(s);
             } else {
                 log.warn("report: could not send exception to error reporting API: "+s);
