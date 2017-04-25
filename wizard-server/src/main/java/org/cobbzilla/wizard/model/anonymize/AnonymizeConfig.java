@@ -131,7 +131,7 @@ public class AnonymizeConfig {
         return ClassUtils.convertClassNameToResourcePath(SystemPropertyUtils.resolvePlaceholders(basePackage));}
 
     private static boolean checkFieldsAndMethods(Class c){
-        Field fields[] = c.getFields();
+        Field fields[] = c.getDeclaredFields();
         for (Field f : fields) {
             if (f.getAnnotation(AnonymizeType.class) != null ||
                     f.getAnnotation(AnonymizeEmbedded.class) != null) {return true;}
