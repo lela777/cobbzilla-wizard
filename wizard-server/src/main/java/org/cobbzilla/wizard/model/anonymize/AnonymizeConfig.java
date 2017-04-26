@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model.anonymize;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.anon.AnonColumn;
+import org.cobbzilla.wizard.model.anon.AnonJsonPath;
 import org.cobbzilla.wizard.model.anon.AnonTable;
 import org.cobbzilla.wizard.model.anon.AnonType;
 import org.springframework.core.io.Resource;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @Slf4j
 public class AnonymizeConfig {
+
     public static AnonTable[] createAnonTables(String[] packageList){
         List<AnonTable> anonTablesList = new ArrayList<AnonTable>();
         for(String packageName: packageList){
@@ -102,8 +104,18 @@ public class AnonymizeConfig {
         AnonColumn anonColumn = new AnonColumn().setName(s)
                 .setValue(anonymizeType.value())
                 .setSkip(anonymizeType.skip());
-        if(anonymizeType.encrypted()){
-            anonColumn.setEncrypted(anonymizeType.encrypted());
+        if(anonymizeType.encrypted()){anonColumn.setEncrypted(anonymizeType.encrypted());}
+        if(anonymizeType.json().length > 0){
+            List<AnonJsonPath> anonJsonPathsList = new ArrayList<>();
+            for(AnonymizeJsonPath anonymizeJsonPath : anonymizeType.json()){
+                AnonType annonType = null;
+                try{annonType =AnonType.guessType(anonymizeType.type());}catch (Exception e){}
+                anonJsonPathsList.add(new AnonJsonPath().setType(annonType)
+                        .setPath(anonymizeJsonPath.path()));
+            }
+            AnonJsonPath[] anonJsonPathsArray = new AnonJsonPath[anonJsonPathsList.size()];
+            anonJsonPathsArray = anonJsonPathsList.toArray(anonJsonPathsArray);
+            anonColumn.setJson(anonJsonPathsArray);
         }
         try{anonColumn.setType(AnonType.guessType(anonymizeType.type()));}catch (Exception e){}
 

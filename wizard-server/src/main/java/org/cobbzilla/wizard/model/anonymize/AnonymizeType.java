@@ -12,4 +12,5 @@ public @interface AnonymizeType {
     String type() default "";
     String[] skip() default "";
     String value() default "";
+    AnonymizeJsonPath[] json() default {};
 }
