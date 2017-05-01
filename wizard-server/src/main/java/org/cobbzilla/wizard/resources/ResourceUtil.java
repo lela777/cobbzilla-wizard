@@ -73,7 +73,7 @@ public class ResourceUtil {
     public static EntityNotFoundException notFoundEx(String id) {
         if (id == null) id = "-unknown-";
         EntityNotFoundException e = new EntityNotFoundException(id);
-        log.warn("Object not found", e);
+        log.info("Object not found", e);
         return e;
     }
 
