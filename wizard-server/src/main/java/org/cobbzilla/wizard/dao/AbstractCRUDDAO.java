@@ -17,6 +17,7 @@ import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -42,6 +43,9 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     public List<E> findByUuids(Collection<String> uuids) {
         return empty(uuids) ? new ArrayList<E>() : findByFieldIn("uuid", uuids);
     }
+
+    @Transactional(readOnly=true)
+    public E findFirstByUuids(Collection<String> uuids) { return findFirstByFieldIn("uuid", uuids); }
 
     @Transactional(readOnly=true)
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
@@ -185,14 +189,32 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         )).addOrder(Order.asc(likeField)), 0, getFinderMaxResults());
     }
 
+    public DetachedCriteria buildFindInCriteria(String field, @NotNull Object[] values) {
+        return criteria().add(in(field, values)).addOrder(Order.asc(field));
+    }
+
+    public DetachedCriteria buildFindInCriteria(String field, @NotNull Collection<?> values) {
+        return criteria().add(in(field, values)).addOrder(Order.asc(field));
+    }
+
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Object[] values) {
-        return empty(values) ? new ArrayList<E>() : list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+        return empty(values) ? new ArrayList<E>() : list(buildFindInCriteria(field, values), 0, getFinderMaxResults());
     }
 
     @Transactional(readOnly=true)
     @Override public List<E> findByFieldIn(String field, Collection<?> values) {
-        return empty(values) ? new ArrayList<E>() : list(criteria().add(in(field, values)).addOrder(Order.asc(field)), 0, getFinderMaxResults());
+        return empty(values) ? new ArrayList<E>() : list(buildFindInCriteria(field, values), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
+    public E findFirstByFieldIn(String field, Object[] values) {
+        return empty(values) ? null : first(buildFindInCriteria(field, values));
+    }
+
+    @Transactional(readOnly=true)
+    public E findFirstByFieldIn(String field, Collection<?> values) {
+        return empty(values) ? null : first(buildFindInCriteria(field, values));
     }
 
     protected int getFinderMaxResults() { return 100; }
