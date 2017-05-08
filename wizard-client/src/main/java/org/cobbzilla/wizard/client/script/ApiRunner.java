@@ -155,8 +155,8 @@ public class ApiRunner {
 
         } else {
             setScriptForThread(script);
-            if (listener != null) listener.beforeScript(script.getBefore(), ctx);
             if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: " + script);
+            if (listener != null) listener.beforeScript(script.getBefore(), ctx);
             try {
                 script.setStart(now());
                 do {
