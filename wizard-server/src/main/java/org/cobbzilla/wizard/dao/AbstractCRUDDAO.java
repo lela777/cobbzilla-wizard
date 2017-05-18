@@ -157,6 +157,11 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Transactional(readOnly=true)
+    public List<E> findByFieldLike(String field, String value, Order order) {
+        return list(criteria().add(ilike(field, value)).addOrder(order), 0, getFinderMaxResults());
+    }
+
+    @Transactional(readOnly=true)
     @Override public List<E> findByFieldEqualAndFieldLike(String eqField, Object eqValue, String likeField, String likeValue) {
         final Criterion expr1 = eqValue == null ? isNull(eqField) : eq(eqField, eqValue);
         return list(criteria().add(and(
