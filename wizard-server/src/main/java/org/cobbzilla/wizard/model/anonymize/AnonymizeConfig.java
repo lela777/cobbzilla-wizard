@@ -57,7 +57,7 @@ public class AnonymizeConfig {
         if(anonymizetList != null){
             for(String name: anonymizetList.list()){
                 anonColumns.add(new AnonColumn().setEncrypted(true)
-                        .setName(name)
+                        .setName(StringUtil.camelCaseToSnakeCase(name))
                         .setType(AnonType.guessType("passthru")));
             }
         }
