@@ -34,6 +34,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
+import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
@@ -56,6 +57,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public void setCaptureHeaders(boolean capture) { getApi().setCaptureHeaders(capture); }
     public void logout() { getApi().logout(); }
 
+    public <T> T get(String url, Class<T> clazz) throws Exception { return json(getApi().get(url).json, clazz); }
     public RestResponse get(String url) throws Exception { return getApi().get(url); }
     public RestResponse doGet(String url) throws Exception { return getApi().doGet(url); }
 
