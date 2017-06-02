@@ -494,9 +494,9 @@ public class ModelSetup {
             this.entity = json(node, entityClass);
         }
 
-        private boolean hasSpecialProperty(JsonNode node, String prop) {
+        private boolean hasSpecialProperty(ObjectNode node, String prop) {
             boolean val = node.has(prop) && node.get(prop).booleanValue();
-            ((ObjectNode) node).remove(prop);
+            node.remove(prop);
             return val;
         }
 
