@@ -30,6 +30,10 @@ public class ApiScript {
         if (params == null) params = new HashMap<>();
         params.put(name, value);
     }
+    public void addParams(Map<String, Object> params) {
+        if (params == null) params = new HashMap<>();
+        this.params.putAll(params);
+    }
 
     @Getter @Setter private char paramStartDelim = '<';
     @Getter @Setter private char paramEndDelim = '>';
