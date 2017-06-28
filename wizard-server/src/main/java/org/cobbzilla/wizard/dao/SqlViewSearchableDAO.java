@@ -8,6 +8,8 @@ import java.util.Map;
 public interface SqlViewSearchableDAO<T> extends DAO<T> {
     String getSearchView();
 
+    String fixedFilters();
+
     String buildFilter(ResultPage resultPage, List<Object> params);
 
     String buildBound(String bound, String value, List<Object> params);
