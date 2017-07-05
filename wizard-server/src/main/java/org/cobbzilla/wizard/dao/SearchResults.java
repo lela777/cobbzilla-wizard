@@ -40,6 +40,9 @@ public class SearchResults<E> implements Scrubbable {
     @Getter @Setter private List<E> results = new ArrayList<>();
     @Getter @Setter private Integer totalCount;
 
+    public String getResultType() { return empty(results) ? null : results.get(0).getClass().getName(); }
+    public void setResultType (String val) {} // noop
+
     @JsonIgnore public int total() {
         if (totalCount == null) die("total is unknown");
         return totalCount;
