@@ -245,7 +245,11 @@ public class RestServerConfiguration {
             synchronized (resourceCache) {
                 r = resourceCache.get(cacheKey.toString());
                 if (r == null) {
-                    r = autowire(instantiate(resourceClass, args));
+                    try {
+                        r = autowire(instantiate(resourceClass, args));
+                    } catch (Exception e) {
+                        return die("subResource: "+e, e);
+                    }
                     resourceCache.put(cacheKey.toString(), r);
                 }
             }
