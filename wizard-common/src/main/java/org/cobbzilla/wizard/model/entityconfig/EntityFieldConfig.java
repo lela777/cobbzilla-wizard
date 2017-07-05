@@ -43,7 +43,8 @@ public class EntityFieldConfig {
     /**
      * The data type of the field.
      */
-    @Getter @Setter private EntityFieldType type = EntityFieldType.string;
+    @Getter @Setter private EntityFieldType type = null;
+    @JsonIgnore public EntityFieldType getTypeOrDefault () { return hasType() ? getType() : EntityFieldType.string; }
     public boolean hasType() { return !empty(type); }
 
     /**
@@ -58,14 +59,18 @@ public class EntityFieldConfig {
      */
     public EntityFieldControl getControl() {
         if (control != null) return control;
-        switch (type) {
+        switch (getTypeOrDefault()) {
             case flag:                  return EntityFieldControl.flag;
             case date_future: case date_past:
             case epoch_time: case date: return EntityFieldControl.date;
             case year: case year_future:
             case year_past: case age:   return EntityFieldControl.select;
-            default:                    return hasLength() && length > 200 ? EntityFieldControl.textarea : EntityFieldControl.text;
+            default:                    return defaultTextControl();
         }
+    }
+
+    public EntityFieldControl defaultTextControl() {
+        return hasLength() && length > 200 ? EntityFieldControl.textarea : EntityFieldControl.text;
     }
 
     /**
