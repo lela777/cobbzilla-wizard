@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.Transformer;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.cobbzilla.util.collection.NameAndValue;
@@ -29,11 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
-import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
-import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.reflect.ReflectionUtil.*;
+import static org.cobbzilla.util.string.StringUtil.replaceWithRandom;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.wizard.client.script.ApiScript.PARAM_REQUIRED;
 
@@ -103,10 +103,16 @@ public class ApiRunner {
 
     public ApiScript[] include (ApiScript script) {
         if (includeHandler != null) {
-            return jsonWithComments(handlebars(includeHandler.include(script.getInclude()), script.getParams(), script.getParamStartDelim(), script.getParamEndDelim()), ApiScript[].class);
+            return jsonWithComments(handlebars(includeHandler.include(script.getInclude()),
+                    transformStrings(script.getParams(), new Transformer() {
+                        @Override public Object transform(Object o) { return replaceRand(o); }
+                    }),
+                    script.getParamStartDelim(), script.getParamEndDelim()), ApiScript[].class);
         }
         return notSupported("include("+script.getInclude()+"): no includeHandler set");
     }
+
+    public String replaceRand(Object o) { return replaceWithRandom(o.toString(), RAND, 10); }
 
     public void run(String script) throws Exception {
         run(jsonWithComments(script, ApiScript[].class));
@@ -352,9 +358,7 @@ public class ApiRunner {
 
     protected String subst(ApiScriptRequest request) {
         String json = requestEntityJson(request);
-        if (json != null) {
-            while (json.contains(RAND)) json = json.replaceFirst(RAND, randomAlphanumeric(10));
-        }
+        if (json != null) json = replaceRand(json);
         return TestNames.replaceTestNames(json);
     }
 
