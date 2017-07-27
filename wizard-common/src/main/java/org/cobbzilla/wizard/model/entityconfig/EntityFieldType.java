@@ -68,7 +68,7 @@ public enum EntityFieldType {
         switch (this) {
             case decimal: return Double.parseDouble(value);
 
-            case integer: case epoch_time: return Long.parseLong(value);
+            case integer: case epoch_time: return value == null ? null : Long.parseLong(value);
 
             case flag: return Boolean.valueOf(value);
 
