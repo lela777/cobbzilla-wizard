@@ -359,7 +359,11 @@ public class ApiRunner {
     protected String subst(ApiScriptRequest request) {
         String json = requestEntityJson(request);
         if (json != null) json = replaceRand(json);
-        return TestNames.replaceTestNames(json);
+        json = TestNames.replaceTestNames(json);
+        if (json != null && (json.startsWith("\"") && json.endsWith("\""))) {
+            json = json.substring(1, json.length()-1);
+        }
+        return json;
     }
 
     protected String requestEntityJson(ApiScriptRequest request) {
