@@ -109,6 +109,14 @@ public class StaticAssetHandler extends CLStaticHttpHandler {
             return factory.render(configuration.getMustacheResourceRoot()+path, scope, writer);
         }
 
+        if (resourcePath.endsWith(".html/")) {
+            // strip trailing slash
+            resourcePath = resourcePath.substring(0, resourcePath.length()-1);
+        } else if (resourcePath.contains("/index.html/")) {
+            // if URI is in the form "/{pre-path}/index.html/{post-path}", then remove "index.html/"
+            resourcePath = resourcePath.replace("/index.html/", "/");
+        }
+
         // ENV takes precedence
         if (assetDirFile != null) {
             File file = new File(assetDirFile, resourcePath);
