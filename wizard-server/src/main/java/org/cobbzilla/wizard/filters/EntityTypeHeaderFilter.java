@@ -8,7 +8,7 @@ import org.cobbzilla.wizard.model.Identifiable;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -49,7 +49,7 @@ public class EntityTypeHeaderFilter implements ContainerResponseFilter {
             containerResponse.getHttpHeaders().add(getTypeHeaderName(), elementClassName + "[]");
 
         } else if (isMap) {
-            containerResponse.getHttpHeaders().add(getTypeHeaderName(), HashMap.class.getName());
+            containerResponse.getHttpHeaders().add(getTypeHeaderName(), LinkedHashMap.class.getName());
         } else {
             containerResponse.getHttpHeaders().add(getTypeHeaderName(), responseClassName);
         }
