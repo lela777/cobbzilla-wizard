@@ -55,7 +55,7 @@ public class EntityTypeHeaderFilter implements ContainerResponseFilter {
                 final Map.Entry entry = (Map.Entry) m.entrySet().iterator().next();
                 elementClassName = entry.getKey().getClass() + "->" + entry.getValue().getClass();
             }
-            containerResponse.getHttpHeaders().add(getTypeHeaderName(), Map.class.getName()+"[" + elementClassName + "]");
+            containerResponse.getHttpHeaders().add(getTypeHeaderName(), Map.class.getName());
         } else {
             containerResponse.getHttpHeaders().add(getTypeHeaderName(), responseClassName);
         }
