@@ -251,9 +251,15 @@ public class ApiRunner {
                 Class<?> storeClass = null;
                 if (response.hasType()) {
                     storeClass = forName(response.getType());
-                    storeTypes.put(response.getStore(), storeClass);
+                    if (response.hasStore()) storeTypes.put(response.getStore(), storeClass);
+
                 } else if (response.hasStore()) {
                     storeClass = storeTypes.get(response.getStore());
+
+                }
+                if (storeClass == null && restResponse.hasHeader(api.getEntityTypeHeaderName())) {
+                    storeClass = forName(restResponse.header(api.getEntityTypeHeaderName()));
+                    if (response.hasStore()) storeTypes.put(response.getStore(), storeClass);
                 }
                 if (!response.isRaw() && responseEntity != null) {
                     if (storeClass == null) {

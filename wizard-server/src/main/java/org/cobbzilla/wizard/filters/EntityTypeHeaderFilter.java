@@ -4,6 +4,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.wizard.model.Identifiable;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -15,7 +16,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 @Slf4j
 public class EntityTypeHeaderFilter implements ContainerResponseFilter {
 
-    protected String getTypeHeaderName() { return "ZZ-TYPE"; }
+    protected String getTypeHeaderName() { return Identifiable.ENTITY_TYPE_HEADER_NAME; }
 
     @Override public ContainerResponse filter(ContainerRequest containerRequest, ContainerResponse containerResponse) {
 

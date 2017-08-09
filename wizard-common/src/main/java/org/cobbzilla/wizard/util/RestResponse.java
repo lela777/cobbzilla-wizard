@@ -63,6 +63,7 @@ public class RestResponse {
         return null;
     }
     public int intHeader (String name) { return Integer.parseInt(header(name)); }
+    public boolean hasHeader (String name) { return !empty(header(name)); }
 
     @Override public String toString() {
         File jsonFile;

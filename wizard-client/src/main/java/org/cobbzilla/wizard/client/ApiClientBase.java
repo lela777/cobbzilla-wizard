@@ -22,6 +22,7 @@ import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
+import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.entityconfig.ModelEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
@@ -52,6 +53,9 @@ public class ApiClientBase implements Cloneable {
     @Getter protected String token;
 
     public String getSuperuserToken () { return null; } // subclasses may override
+
+    @Getter @Setter protected String entityTypeHeaderName = Identifiable.ENTITY_TYPE_HEADER_NAME;
+    public boolean hasEntityTypeHeaderName () { return !empty(entityTypeHeaderName); }
 
     // the server may be coming up, and either not accepting connections or issuing 503 Service Unavailable.
     @Getter @Setter protected int numTries = 5;
@@ -317,9 +321,11 @@ public class ApiClientBase implements Cloneable {
                 restResponse = empty(responseBytes)
                         ? new RestResponse(statusCode, responseJson, getLocationHeader(response))
                         : new RestResponse(statusCode, responseBytes, getLocationHeader(response));
-                if (isCaptureHeaders()) {
+                if (isCaptureHeaders() || hasEntityTypeHeaderName()) {
                     for (Header header : response.getAllHeaders()) {
-                        restResponse.addHeader(header.getName(), header.getValue());
+                        if (isCaptureHeaders() || header.getName().equals(getEntityTypeHeaderName())) {
+                            restResponse.addHeader(header.getName(), header.getValue());
+                        }
                     }
                 }
                 if (statusCode != SERVER_UNAVAILABLE) return restResponse;
