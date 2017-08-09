@@ -255,10 +255,20 @@ public class ApiRunner {
 
                 } else if (response.hasStore()) {
                     storeClass = storeTypes.get(response.getStore());
-
                 }
+
+                // if no storeClass set yet, but HTTP header is telling us the type, try to use that
                 if (storeClass == null && restResponse.hasHeader(api.getEntityTypeHeaderName())) {
-                    storeClass = forName(restResponse.header(api.getEntityTypeHeaderName()));
+                    String entityTypeHeaderValue = restResponse.header(api.getEntityTypeHeaderName());
+                    if (!empty(entityTypeHeaderValue)) {
+                        // adjust bare array if needed
+                        if (entityTypeHeaderValue.equals("[]")) entityTypeHeaderValue = "java.lang.Object[]";
+                        try {
+                            storeClass = forName(entityTypeHeaderValue);
+                        } catch (Exception e) {
+                            log.warn("runOnce: error instantiating type (will treat as JsonNode): " + entityTypeHeaderValue + ": " + e);
+                        }
+                    }
                     if (response.hasStore()) storeTypes.put(response.getStore(), storeClass);
                 }
                 if (!response.isRaw() && responseEntity != null) {
