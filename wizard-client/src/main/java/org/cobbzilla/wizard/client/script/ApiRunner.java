@@ -260,9 +260,7 @@ public class ApiRunner {
                 // if no storeClass set yet, but HTTP header is telling us the type, try to use that
                 if (storeClass == null && restResponse.hasHeader(api.getEntityTypeHeaderName())) {
                     String entityTypeHeaderValue = restResponse.header(api.getEntityTypeHeaderName());
-                    if (!empty(entityTypeHeaderValue)) {
-                        // adjust bare array if needed
-                        if (entityTypeHeaderValue.equals("[]")) entityTypeHeaderValue = "java.lang.Object[]";
+                    if (!empty(entityTypeHeaderValue) && !entityTypeHeaderValue.equals("[]")) {
                         try {
                             storeClass = forName(entityTypeHeaderValue);
                         } catch (Exception e) {
