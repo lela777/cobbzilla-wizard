@@ -86,6 +86,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected List<PreRestoreTask> preRestoreTasks = new ArrayList<>();
     protected List<Runnable> postRestoreTasks = new ArrayList<>();
 
+    public String getServerCacheKey() { return getClass().getName(); }
+
     @Override public C filterConfiguration(final C configuration) {
 
         final boolean hasDb = configuration instanceof HasDatabaseConfiguration;
@@ -95,7 +97,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (useTestSpecificDatabase()) {
                 // we'll use this to randomize the name of our database and server
                 final String rand = randomAlphanumeric(8).toLowerCase();
-                log.debug("filterConfiguration: using random token "+rand+" for test "+getClass().getName());
+                log.debug("filterConfiguration: using random token "+rand+" for test "+getServerCacheKey());
                 final String serverName = configuration.getServerName() + "-" + rand;
                 configuration.setServerName(serverName);
                 database.getPool().setName("pool_"+serverName);
@@ -187,7 +189,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     @Before public synchronized void startServer() throws Exception {
         synchronized (server) {
             if (getServer() == null) {
-                final String serverCacheKey = getClass().getName();
+                final String serverCacheKey = getServerCacheKey();
                 if (servers.containsKey(serverCacheKey)) {
                     server.set(servers.get(serverCacheKey));
                 } else {

@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.client.script;
 
+import lombok.Getter;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
 public class ApiRunnerMultiListener extends ApiRunnerListenerBase {
 
-    private List<ApiRunnerListener> apiListeners = new ArrayList<>();
+    @Getter private List<ApiRunnerListener> apiListeners = new ArrayList<>();
 
     public ApiRunnerMultiListener (String name) { super(name); }
 
@@ -19,6 +20,10 @@ public class ApiRunnerMultiListener extends ApiRunnerListenerBase {
     public ApiRunnerMultiListener (ApiRunnerMultiListener other) {
         super(other.getName());
         for (ApiRunnerListener listener : other.apiListeners) addApiListener(copy(listener));
+    }
+
+    public void apply (ListenerFunction f) {
+        for (ApiRunnerListener l : apiListeners) f.apply(l);
     }
 
     public ApiRunnerMultiListener addApiListener(ApiRunnerListener listener) { apiListeners.add(listener); return this; }
