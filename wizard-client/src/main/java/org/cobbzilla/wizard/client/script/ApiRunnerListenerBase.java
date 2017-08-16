@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.client.script;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.util.Map;
@@ -33,8 +34,8 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
             die("conditionCheckFailed(" + getId() + "): " + script.getRequestLine() + ":\n" +
                     message + "\n" +
                     "failed condition=" + check + "\n" +
-                    "server response="+restResponse+"\n" +
-                    "ctx="+ctx);
+                    "server response=" + restResponse + "\n" +
+                    "ctx=" + StringUtil.toString(ctx));
         }
     }
 
