@@ -5,7 +5,9 @@ package org.cobbzilla.wizard.dao;
  * https://github.com/dropwizard/dropwizard/blob/master/LICENSE
  */
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -19,16 +21,24 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
+import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 import static org.hibernate.criterion.Restrictions.*;
 
 @Transactional @Slf4j
 public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
+
+    public static final String NO_SUB_KEY = "__no_subkey";
 
     public <A extends AuditLog> AuditLogDAO<A> getAuditLogDAO() { return null; }
     public boolean auditingEnabled () { return getAuditLogDAO() != null; }
@@ -51,8 +61,36 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
     @Override public Object preCreate(@Valid E entity) {
+        flushQuickCache(entity);
         return auditingEnabled() ? audit(null, entity, CrudOperation.create) : entity;
     }
+
+    protected String subCacheAttribute () { return null; }
+
+    public void flushQuickCache(E entity) {
+        synchronized (ocache) {
+            if (ocache.get().isEmpty()) return;
+
+            final String subCacheAttr = subCacheAttribute();
+            final Object val = (subCacheAttr != null) ? ReflectionUtil.get(entity, subCacheAttr) : null;
+
+            if (val != null) {
+                Map<Object, Object> subCache = (Map<Object, Object>) ocache.get().get(val);
+                if (subCache != null && !subCache.isEmpty()) {
+                    subCache = new ConcurrentHashMap<>();
+                    ocache.get().put(val.toString(), subCache);
+                }
+            } else {
+                ocache.set(new ConcurrentHashMap<>());
+            }
+
+            final Map globalCache = (Map) ocache.get().get(NO_SUB_KEY);
+            if (!empty(globalCache)) {
+                ocache.get().put(NO_SUB_KEY, new ConcurrentHashMap<>());
+            }
+        }
+    }
+
     @Override public E postCreate(E entity, Object context) {
         return auditingEnabled() ? commit_audit(entity, context) : entity;
     }
@@ -81,6 +119,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Override public Object preUpdate(@Valid E entity) {
+        flushQuickCache(entity);
         return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
     }
 
@@ -106,6 +145,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
             final AuditLog auditLog = auditingEnabled() ? audit_delete(found) : null;
             getHibernateTemplate().delete(found);
             getHibernateTemplate().flush();
+            flushQuickCache(found);
             if (auditLog != null) commit_audit_delete(auditLog);
         }
     }
@@ -246,6 +286,80 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
         final Criterion expr3 = v3 == null ? isNull(f3) : eq(f3, v3);
         final Criterion expr4 = v4 == null ? isNull(f4) : eq(f4, v4);
         return list(sort(criteria().add(and(expr1, expr2, expr3, expr4))), 0, getFinderMaxResults());
+    }
+
+    @Getter private final AtomicReference<Map<String, Object>> ocache = new AtomicReference<>(new ConcurrentHashMap<>());
+
+    private static final Object NULL_OBJECT = new Object();
+    private static final AtomicInteger cacheHits = new AtomicInteger(0);
+    private static final AtomicInteger cacheMisses = new AtomicInteger(0);
+    private static final AtomicLong cacheMissTime = new AtomicLong(0);
+
+    @Transactional(readOnly=true)
+    public <T> T cacheLookup(String cacheKey, Function<Object[], T> lookup, Object... args) {
+        return cacheLookup(cacheKey, NO_SUB_KEY, lookup, args);
+    }
+
+    @Transactional(readOnly=true)
+    public <T> T cacheLookup(String cacheKey, String cacheSubKey, Function<Object[], T> lookup, Object... args) {
+        final String subCacheAttr = subCacheAttribute();
+        final Map<String, Object> c = subCacheAttr == null ? ocache.get() : (Map<String, Object>) ocache.get().computeIfAbsent(cacheSubKey, o -> new ConcurrentHashMap<String, Object>());
+        if (!c.containsKey(cacheKey)) {
+            synchronized (c) {
+                if (!c.containsKey(cacheKey)) {
+                    final long start = now();
+                    final T thing = lookup.apply(args);
+                    if (thing == null) {
+                        c.put(cacheKey, NULL_OBJECT);
+                    } else {
+                        c.put(cacheKey, cacheCopy(thing));
+                    }
+                    final long end = now();
+                    int misses = cacheMisses.incrementAndGet();
+                    long missTime = cacheMissTime.addAndGet(end - start);
+                    if (misses % 1000 == 0) log.info("DAO-cache: "+misses+" misses took "+cacheMissTime + " to look up, average of "+(missTime/misses)+"ms per lookup");
+                    return thing == NULL_OBJECT ? null : thing;
+                } else {
+                    return getOrNull(cacheKey, c);
+                }
+            }
+        } else {
+            return getOrNull(cacheKey, c);
+        }
+    }
+
+    private <T> T getOrNull(String cacheKey, Map<String, Object> c) {
+        int hits = cacheHits.incrementAndGet();
+        if (hits % 1000 == 0) log.info("DAO-cache: "+hits+" cache hits, saved "+formatDuration(hits*(cacheMissTime.get()/cacheMisses.get())));
+        return cacheCopy((T) c.get(cacheKey));
+    }
+
+    private <T> T cacheCopy(T thing) {
+        if (thing == NULL_OBJECT) return null;
+        if (empty(thing)) return thing;
+        try {
+            if (thing instanceof Collection) {
+                final Collection c = (Collection) instantiate(thing.getClass());
+                for (Iterator iter = ((Collection) thing).iterator(); iter.hasNext(); ) {
+                    final Object element = iter.next();
+                    c.add(cacheCopy(element));
+                }
+                return (T) c;
+            } else if (thing.getClass().isArray() && !empty(thing)) {
+                final Object[] a = (Object[]) instantiate(thing.getClass());
+                for (int i=0; i<((Object[]) thing).length; i++) {
+                    a[i] = cacheCopy(((Object[]) thing)[i]);
+                }
+                return (T) a;
+            } else {
+                // force set uuid
+                final T copyOfThing = instantiate((Class<T>) thing.getClass());
+                ReflectionUtil.copy(copyOfThing, thing);
+                return copyOfThing;
+            }
+        } catch (Exception e) {
+            return die("cacheCopy: error copying: " + thing + ": " + e, e);
+        }
     }
 
     @Transactional(readOnly=true)
