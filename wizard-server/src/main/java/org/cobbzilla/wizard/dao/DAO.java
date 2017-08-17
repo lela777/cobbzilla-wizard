@@ -39,5 +39,6 @@ public interface DAO<E> {
     E postUpdate(E entity, Object context);
 
     void delete(String uuid);
+    void deleteAll(Collection<E> entities);
 
 }
