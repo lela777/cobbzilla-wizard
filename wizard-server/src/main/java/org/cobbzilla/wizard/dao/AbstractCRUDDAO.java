@@ -61,13 +61,16 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
     @Override public Object preCreate(@Valid E entity) {
-        flushQuickCache(entity);
-        return auditingEnabled() ? audit(null, entity, CrudOperation.create) : entity;
+        try {
+            return auditingEnabled() ? audit(null, entity, CrudOperation.create) : entity;
+        } finally {
+            flushObjectCache(entity);
+        }
     }
 
     protected String subCacheAttribute () { return null; }
 
-    public void flushQuickCache(E entity) {
+    public void flushObjectCache(E entity) {
         synchronized (ocache) {
             if (ocache.get().isEmpty()) return;
 
@@ -119,8 +122,11 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     }
 
     @Override public Object preUpdate(@Valid E entity) {
-        flushQuickCache(entity);
-        return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
+        try {
+            return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
+        } finally {
+            flushObjectCache(entity);
+        }
     }
 
     @Override public E postUpdate(E entity, Object context) {
@@ -145,7 +151,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
             final AuditLog auditLog = auditingEnabled() ? audit_delete(found) : null;
             getHibernateTemplate().delete(found);
             getHibernateTemplate().flush();
-            flushQuickCache(found);
+            flushObjectCache(found);
             if (auditLog != null) commit_audit_delete(auditLog);
         }
     }
