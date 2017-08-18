@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
-import org.cobbzilla.wizard.server.RestServer;
-import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
-import org.cobbzilla.wizard.server.RestServerHarness;
-import org.cobbzilla.wizard.server.RestServerLifecycleListener;
+import org.cobbzilla.wizard.server.*;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasQuartzConfiguration;
@@ -198,11 +195,15 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                     serverHarness.setConfigurations(getConfigurations());
                     serverHarness.addConfigurationFilter(this);
                     serverHarness.init(getServerEnvironment());
-                    server.set(serverHarness.getServer());
+
+                    final RestServer restServer = serverHarness.getServer();
+                    restServer.getConfiguration().setTestMode(true);
+
+                    this.server.set(restServer);
                     getServer().addLifecycleListener(this);
                     getServer().addLifecycleListener(new DbPoolShutdownListener());
                     serverHarness.startServer();
-                    servers.put(serverCacheKey, server.get());
+                    servers.put(serverCacheKey, restServer);
                 }
             }
         }

@@ -52,6 +52,7 @@ public class RestServerConfiguration {
     @Getter @Setter private String springContextPath = "classpath:/spring.xml";
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
+    @Getter @Setter private boolean testMode = false;
 
     private String appendPathToUriBase(String base, String... pathParts) {
         try {
