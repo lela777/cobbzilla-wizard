@@ -314,7 +314,12 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
             synchronized (c) {
                 if (!c.containsKey(cacheKey)) {
                     final long start = now();
-                    final T thing = lookup.apply(args);
+                    final T thing;
+                    try {
+                        thing = lookup.apply(args);
+                    } catch (Exception e) {
+                        return die("cacheLookup: lookup failed: "+e, e);
+                    }
                     if (thing == null) {
                         c.put(cacheKey, NULL_OBJECT);
                     } else {
