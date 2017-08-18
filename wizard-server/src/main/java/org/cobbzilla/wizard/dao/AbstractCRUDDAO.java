@@ -320,16 +320,13 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                     } catch (Exception e) {
                         return die("cacheLookup: lookup failed: "+e, e);
                     }
-                    if (thing == null) {
-                        c.put(cacheKey, NULL_OBJECT);
-                    } else {
-                        c.put(cacheKey, cacheCopy(thing));
-                    }
                     final long end = now();
                     int misses = cacheMisses.incrementAndGet();
                     long missTime = cacheMissTime.addAndGet(end - start);
                     if (misses % 1000 == 0) log.info("DAO-cache: "+misses+" misses took "+cacheMissTime + " to look up, average of "+(missTime/misses)+"ms per lookup");
-                    return thing == NULL_OBJECT ? null : thing;
+
+                    c.put(cacheKey, thing == null ? NULL_OBJECT : cacheCopy(thing));
+                    return thing;
                 } else {
                     return getOrNull(cacheKey, c);
                 }
@@ -342,7 +339,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     private <T> T getOrNull(String cacheKey, Map<String, Object> c) {
         int hits = cacheHits.incrementAndGet();
         if (hits % 1000 == 0) log.info("DAO-cache: "+hits+" cache hits, saved "+formatDuration(hits*(cacheMissTime.get()/cacheMisses.get())));
-        return cacheCopy((T) c.get(cacheKey));
+        final T thing = (T) c.get(cacheKey);
+        return thing == NULL_OBJECT ? null : thing;
     }
 
     private <T> T cacheCopy(T thing) {
