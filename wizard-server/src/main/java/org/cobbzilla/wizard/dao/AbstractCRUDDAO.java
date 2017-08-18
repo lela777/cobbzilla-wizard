@@ -31,6 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.reflect.ReflectionUtil.mirror;
 import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 import static org.hibernate.criterion.Restrictions.*;
@@ -325,22 +326,17 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                     long missTime = cacheMissTime.addAndGet(end - start);
                     if (misses % 1000 == 0) log.info("DAO-cache: "+misses+" misses took "+cacheMissTime + " to look up, average of "+(missTime/misses)+"ms per lookup");
 
-                    c.put(cacheKey, thing == null ? NULL_OBJECT : cacheCopy(thing));
-                    return thing;
-                } else {
-                    return getOrNull(cacheKey, c);
+                    c.put(cacheKey, thing == null ? NULL_OBJECT : thing);
                 }
             }
-        } else {
-            return getOrNull(cacheKey, c);
         }
+        return getOrNull(cacheKey, c);
     }
 
     private <T> T getOrNull(String cacheKey, Map<String, Object> c) {
         int hits = cacheHits.incrementAndGet();
         if (hits % 1000 == 0) log.info("DAO-cache: "+hits+" cache hits, saved "+formatDuration(hits*(cacheMissTime.get()/cacheMisses.get())));
-        final T thing = (T) c.get(cacheKey);
-        return thing == NULL_OBJECT ? null : thing;
+        return cacheCopy((T) c.get(cacheKey));
     }
 
     private <T> T cacheCopy(T thing) {
@@ -354,17 +350,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
                     c.add(cacheCopy(element));
                 }
                 return (T) c;
-            } else if (thing.getClass().isArray() && !empty(thing)) {
-                final Object[] a = (Object[]) instantiate(thing.getClass());
-                for (int i=0; i<((Object[]) thing).length; i++) {
-                    a[i] = cacheCopy(((Object[]) thing)[i]);
-                }
-                return (T) a;
             } else {
-                // force set uuid
-                final T copyOfThing = instantiate((Class<T>) thing.getClass());
-                ReflectionUtil.copy(copyOfThing, thing);
-                return copyOfThing;
+                return mirror(thing);
             }
         } catch (Exception e) {
             return die("cacheCopy: error copying: " + thing + ": " + e, e);
