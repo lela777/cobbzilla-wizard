@@ -327,7 +327,6 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         }
 
         final RestServerHarness<C, S> serverHarness = new RestServerHarness<>(mainClass);
-
         serverHarness.addConfigurations(configSources);
         serverHarness.init(env != null ? env : System.getenv());
 
@@ -339,15 +338,12 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
         final String serverName = server.getConfiguration().getServerName();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
-            @Override
-            public void run() {
-                log.info("stopping "+serverName);
-                server.stopServer();
-                synchronized (mainThreadLock) {
-                    mainThread.interrupt();
-                    mainThreadLock.notify();
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("stopping "+serverName);
+            server.stopServer();
+            synchronized (mainThreadLock) {
+                mainThread.interrupt();
+                mainThreadLock.notify();
             }
         }));
 
