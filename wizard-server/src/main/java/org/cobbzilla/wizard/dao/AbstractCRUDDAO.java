@@ -160,7 +160,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Override public void delete(Collection<E> entities) {
         if (empty(entities)) return;
         setFlushMode();
-        final List<AuditLog> logs = auditingEnabled() ? new ArrayList<AuditLog>() : null;
+        final List<AuditLog> logs = auditingEnabled() ? new ArrayList<>() : null;
         if (logs != null) {
             for (E e : entities) {
                 logs.add(audit_delete(checkNotNull(e)));
