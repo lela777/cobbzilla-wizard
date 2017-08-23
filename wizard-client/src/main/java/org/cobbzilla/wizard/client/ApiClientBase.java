@@ -166,7 +166,7 @@ public class ApiClientBase implements Cloneable {
     }
 
     public RestResponse doGet(String path) throws Exception {
-        HttpClient client = getHttpClient();
+        final HttpClient client = getHttpClient();
         final String url = getUrl(path, getBaseUri());
         @Cleanup("releaseConnection") HttpGet httpGet = new HttpGet(url);
         return getResponse(client, httpGet);
