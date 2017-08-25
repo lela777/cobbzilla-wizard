@@ -71,9 +71,20 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     protected String subCacheAttribute () { return null; }
 
+    public boolean flushObjectCache() {
+        synchronized (ocache) {
+            if (empty(ocache.get())) {
+                return false;
+            } else {
+                ocache.set(new ConcurrentHashMap<>());
+                return true;
+            }
+        }
+    }
+
     public void flushObjectCache(E entity) {
         synchronized (ocache) {
-            if (ocache.get().isEmpty()) return;
+            if (empty(ocache.get())) return;
 
             final String subCacheAttr = subCacheAttribute();
             final Object val = (subCacheAttr != null) ? ReflectionUtil.get(entity, subCacheAttr) : null;
@@ -328,7 +339,10 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     @Transactional(readOnly=true)
     public <T> T cacheLookup(String cacheKey, String cacheSubKey, Function<Object[], T> lookup, Object... args) {
         final String subCacheAttr = subCacheAttribute();
-        final Map<String, Object> c = subCacheAttr == null ? ocache.get() : (Map<String, Object>) ocache.get().computeIfAbsent(cacheSubKey, o -> new ConcurrentHashMap<String, Object>());
+        final Map<String, Object> c;
+        synchronized (ocache) {
+            c = subCacheAttr == null ? ocache.get() : (Map<String, Object>) ocache.get().computeIfAbsent(cacheSubKey, o -> new ConcurrentHashMap<String, Object>());
+        }
         if (!c.containsKey(cacheKey)) {
             synchronized (c) {
                 if (!c.containsKey(cacheKey)) {

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
@@ -38,6 +39,10 @@ public class SpringUtil {
 
     public static <T> T getBean (ApplicationContext applicationContext, Class<T> clazz) {
         return applicationContext.getBean(clazz);
+    }
+
+    public static <T> Map<String, T> getBeans (ApplicationContext applicationContext, Class<T> clazz) {
+        return applicationContext.getBeansOfType(clazz);
     }
 
     public static <T> T getBean (ApplicationContext applicationContext, String clazz) {

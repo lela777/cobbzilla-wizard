@@ -81,6 +81,7 @@ public class RestServerConfiguration {
     public <T> T autowire (T bean) { return SpringUtil.autowire(applicationContext, bean); }
     public <T> T getBean (Class<T> clazz) { return SpringUtil.getBean(applicationContext, clazz); }
     public <T> T getBean (String clazz) { return (T) SpringUtil.getBean(applicationContext, forName(clazz)); }
+    public <T> Map<String, T> getBeans (Class<T> clazz) { return SpringUtil.getBeans(applicationContext, clazz); }
 
     @Getter @Setter private StaticHttpConfiguration staticAssets;
     public boolean hasStaticAssets () { return staticAssets != null && staticAssets.hasAssetRoot(); }
@@ -235,6 +236,10 @@ public class RestServerConfiguration {
             }
             if (o instanceof Identifiable) {
                 cacheKey.append(":").append(o.getClass().getName()).append("(").append(((Identifiable) o).getUuid()).append(")");
+            } else if (o instanceof String) {
+                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
+            } else if (o instanceof Number) {
+                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
             } else if (!(o instanceof DAO)) {
                 log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
             }
