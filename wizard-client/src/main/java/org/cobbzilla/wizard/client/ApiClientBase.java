@@ -45,6 +45,7 @@ import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 public class ApiClientBase implements Cloneable {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
+    public static final long INITIAL_RETRY_DELAY = TimeUnit.SECONDS.toMillis(1);
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // subclasses must have a copy constructor
     @Override public Object clone() { return instantiate(getClass(), this); }
@@ -59,7 +60,7 @@ public class ApiClientBase implements Cloneable {
 
     // the server may be coming up, and either not accepting connections or issuing 503 Service Unavailable.
     @Getter @Setter protected int numTries = 5;
-    @Getter @Setter protected long retryDelay = TimeUnit.SECONDS.toMillis(1);
+    @Getter @Setter protected long retryDelay = INITIAL_RETRY_DELAY;
 
     @Getter @Setter protected boolean captureHeaders = false;
     @Getter @Setter private HttpContext httpContext = null;
@@ -294,6 +295,7 @@ public class ApiClientBase implements Cloneable {
         request = beforeSend(request);
         RestResponse restResponse = null;
         IOException exception = null;
+        retryDelay = INITIAL_RETRY_DELAY;
         for (int i=0; i<numTries; i++) {
             if (i > 0) {
                 sleep(retryDelay);
