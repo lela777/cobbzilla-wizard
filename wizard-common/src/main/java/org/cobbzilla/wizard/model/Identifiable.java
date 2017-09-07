@@ -6,6 +6,8 @@ public interface Identifiable {
 
     int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
 
+    String ENTITY_TYPE_HEADER_NAME = "ZZ-TYPE";
+
     String getUuid();
     void setUuid(String uuid);
 

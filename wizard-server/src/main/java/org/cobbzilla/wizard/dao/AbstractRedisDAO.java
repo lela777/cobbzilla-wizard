@@ -76,6 +76,10 @@ public abstract class AbstractRedisDAO<E extends ExpirableBase> implements DAO<E
     // delete something
     @Override public void delete(String uuid) { getRedis().del(uuid); }
 
+    @Override public void delete(Collection<E> entities) {
+        for (E entity : entities) getRedis().del(entity.getUuid());
+    }
+
     public String getMetadata (String key) { return getRedis().get("__metadata_"+key); }
     public void setMetadata (String key, String value) { getRedis().set("__metadata_"+key, value); }
 

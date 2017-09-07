@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 
 import javax.validation.Valid;
@@ -7,7 +8,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
-public interface DAO<E> {
+public interface DAO<E extends Identifiable> {
 
     String SQL_QUERY = "SQL:";
 
@@ -39,5 +40,6 @@ public interface DAO<E> {
     E postUpdate(E entity, Object context);
 
     void delete(String uuid);
+    void delete(Collection<E> entities);
 
 }

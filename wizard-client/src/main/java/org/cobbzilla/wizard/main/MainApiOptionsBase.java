@@ -46,7 +46,7 @@ public abstract class MainApiOptionsBase extends BaseMainOptions {
     @Getter private final String password = initPassword();
     public boolean hasPassword () { return !empty(getPassword()) && password != INVALID_PASSWORD; }
 
-    protected boolean requireAccount() { return true; }
+    public boolean requireAccount() { return true; }
 
     private static final String INVALID_PASSWORD = " -- password not set -- ";
 

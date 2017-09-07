@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
-import org.cobbzilla.wizard.server.RestServer;
-import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
-import org.cobbzilla.wizard.server.RestServerHarness;
-import org.cobbzilla.wizard.server.RestServerLifecycleListener;
+import org.cobbzilla.wizard.server.*;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasQuartzConfiguration;
@@ -34,6 +31,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
+import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToSnakeCase;
 import static org.cobbzilla.util.string.StringUtil.truncate;
@@ -56,6 +54,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     public void setCaptureHeaders(boolean capture) { getApi().setCaptureHeaders(capture); }
     public void logout() { getApi().logout(); }
 
+    public <T> T get(String url, Class<T> clazz) throws Exception { return json(getApi().get(url).json, clazz); }
     public RestResponse get(String url) throws Exception { return getApi().get(url); }
     public RestResponse doGet(String url) throws Exception { return getApi().doGet(url); }
 
@@ -84,6 +83,8 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     protected List<PreRestoreTask> preRestoreTasks = new ArrayList<>();
     protected List<Runnable> postRestoreTasks = new ArrayList<>();
 
+    public String getServerCacheKey() { return getClass().getName(); }
+
     @Override public C filterConfiguration(final C configuration) {
 
         final boolean hasDb = configuration instanceof HasDatabaseConfiguration;
@@ -93,7 +94,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             if (useTestSpecificDatabase()) {
                 // we'll use this to randomize the name of our database and server
                 final String rand = randomAlphanumeric(8).toLowerCase();
-                log.debug("filterConfiguration: using random token "+rand+" for test "+getClass().getName());
+                log.debug("filterConfiguration: using random token "+rand+" for test "+getServerCacheKey());
                 final String serverName = configuration.getServerName() + "-" + rand;
                 configuration.setServerName(serverName);
                 database.getPool().setName("pool_"+serverName);
@@ -185,7 +186,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
     @Before public synchronized void startServer() throws Exception {
         synchronized (server) {
             if (getServer() == null) {
-                final String serverCacheKey = getClass().getName();
+                final String serverCacheKey = getServerCacheKey();
                 if (servers.containsKey(serverCacheKey)) {
                     server.set(servers.get(serverCacheKey));
                 } else {
@@ -194,11 +195,15 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
                     serverHarness.setConfigurations(getConfigurations());
                     serverHarness.addConfigurationFilter(this);
                     serverHarness.init(getServerEnvironment());
-                    server.set(serverHarness.getServer());
+
+                    final RestServer restServer = serverHarness.getServer();
+                    restServer.getConfiguration().setTestMode(true);
+
+                    this.server.set(restServer);
                     getServer().addLifecycleListener(this);
                     getServer().addLifecycleListener(new DbPoolShutdownListener());
                     serverHarness.startServer();
-                    servers.put(serverCacheKey, server.get());
+                    servers.put(serverCacheKey, restServer);
                 }
             }
         }

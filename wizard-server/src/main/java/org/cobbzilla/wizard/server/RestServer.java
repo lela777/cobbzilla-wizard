@@ -37,5 +37,4 @@ public interface RestServer<C extends RestServerConfiguration> {
     ApplicationContext getApplicationContext();
 
     URI getBaseUri();
-
 }

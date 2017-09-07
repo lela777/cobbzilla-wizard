@@ -35,7 +35,10 @@ public enum EntityFieldControl {
     autocomplete,
 
     /** a hidden field (do not display to user) */
-    hidden;
+    hidden,
+
+    /** a label field (read-only display) */
+    label;
 
     /** Jackson-hook to create a new instance based on a string, case-insensitively */
     @JsonCreator public static EntityFieldControl create (String val) { return valueOf(val.toLowerCase()); }

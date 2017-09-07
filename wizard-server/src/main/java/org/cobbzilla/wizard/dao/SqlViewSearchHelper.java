@@ -28,7 +28,7 @@ public class SqlViewSearchHelper {
                             HibernatePBEStringEncryptor hibernateEncryptor,
                             RestServerConfiguration configuration) {
 
-        final StringBuilder sql = new StringBuilder("from " + dao.getSearchView() + " where 1=1 ");
+        final StringBuilder sql = new StringBuilder("from " + dao.getSearchView() + " where (").append(dao.fixedFilters()).append(") ");
 
         final List<Object> params = new ArrayList<>();
         if (resultPage.getHasFilter()) {

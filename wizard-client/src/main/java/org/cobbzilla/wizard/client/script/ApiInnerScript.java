@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.client.script;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.jknack.handlebars.Handlebars;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +79,8 @@ public class ApiInnerScript {
                 resolved.addAll(Arrays.asList((Object[]) var));
             } else if (var instanceof Collection) {
                 resolved.addAll((Collection<?>) var);
+            } else if (var instanceof ScriptObjectMirror && ((ScriptObjectMirror) var).isArray()) {
+                resolved.addAll(Arrays.asList(((ScriptObjectMirror) var).to(Object[].class)));
             } else {
                 resolved.add(var);
             }

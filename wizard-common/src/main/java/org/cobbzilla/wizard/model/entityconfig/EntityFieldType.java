@@ -46,6 +46,12 @@ public enum EntityFieldType {
     /** a date or date/time value, represented as milliseconds since 1/1/1970 */
     epoch_time,
 
+    /** a 2-letter US state abbreviation */
+    us_state,
+
+    /** a US ZIP code */
+    us_zip,
+
     /** a reference to another EntityConfig instance */
     reference,
 
@@ -62,7 +68,7 @@ public enum EntityFieldType {
         switch (this) {
             case decimal: return Double.parseDouble(value);
 
-            case integer: case epoch_time: return Long.parseLong(value);
+            case integer: case epoch_time: return value == null ? null : Long.parseLong(value);
 
             case flag: return Boolean.valueOf(value);
 
