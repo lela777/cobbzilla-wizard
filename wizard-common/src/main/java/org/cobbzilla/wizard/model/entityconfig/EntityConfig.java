@@ -191,6 +191,7 @@ public class EntityConfig {
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeChildren.class));
         }
 
@@ -325,6 +326,16 @@ public class EntityConfig {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
         }
+        return this;
+    }
+
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
+        if (annotation == null) return this;
+
+        fields.put(annotation.fieldName(),
+                   updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldName()),
+                                                   annotation.fieldDef()));
+
         return this;
     }
 
