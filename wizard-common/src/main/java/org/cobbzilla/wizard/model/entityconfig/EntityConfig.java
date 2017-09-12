@@ -111,6 +111,8 @@ public class EntityConfig {
     }
     public boolean hasParentField () { return getParentField() != null; }
 
+    private String uriPrefix = "";
+
     /** The HTTP method to use when creating a new entity. Default value: `PUT` */
     @Getter @Setter private String createMethod = "PUT";
     /** The API endpoint to use when creating a new entity. Default value: none */
@@ -276,9 +278,9 @@ public class EntityConfig {
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation == null) return this;
 
-        final String baseUri = !empty(annotation.baseURI())
-                               ? annotation.baseURI()
-                               : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
+        final String baseUri = this.uriPrefix + (!empty(annotation.baseURI())
+                                                 ? annotation.baseURI()
+                                                 : "/" + pluralize(uncapitalize(clazz.getSimpleName())));
         if (annotation.isListDefined()) {
             if (empty(listUri)) setListUri(baseUri);
             if (empty(listFields) && !empty(annotation.listFields())) {
@@ -354,6 +356,11 @@ public class EntityConfig {
         for (ECTypeChild annotationChild : annotationChildren) {
             updateWithAnnotation(clazz, annotationChild);
         }
+
+        if (annotation != null && !empty(annotation.uriPrefix())) {
+            children.forEach((childName, childCfg) -> childCfg.uriPrefix = this.uriPrefix + annotation.uriPrefix());
+        }
+
         return this;
     }
 
