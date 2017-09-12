@@ -16,6 +16,6 @@ public class InfluxDataConfiguration {
 
     public String getServerUrl() { return host + ":" + port; }
     public String getWriteUrl() {
-        return getServerUrl() + "/write?db=" + databaseName + "&u=" + username + "&p=" + password;
+        return getServerUrl() + "/write?db=" + databaseName + "&u=" + username + "&p=" + password + "&precision=ms";
     }
 }
