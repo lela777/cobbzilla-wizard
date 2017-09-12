@@ -202,10 +202,6 @@ public class EntityConfig {
             if (empty(childConfig.getClassName()) && clazzPackageName != null) {
                 childConfig.setClassName(clazzPackageName + "." + childConfigEntry.getKey());
             }
-            // TODO: Update child with specific stuff read from ECTypeChildren annotation (may override any settings
-            // read before this line, and will not be overridden by any setting from the following line).
-            // The method for this might be called something like `updateChildWithAnnotation` to remark separated logic
-            // from other `updateWithAnnotation` methods.
             childConfig.updateWithAnnotations();
         }
 
