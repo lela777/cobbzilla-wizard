@@ -281,7 +281,9 @@ public class EntityConfig {
                                : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
         if (annotation.isListDefined()) {
             if (empty(listUri)) setListUri(baseUri);
-            if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
+            if (empty(listFields) && !empty(annotation.listFields())) {
+                setListFields(Arrays.asList(annotation.listFields()));
+            }
         }
         if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
 
