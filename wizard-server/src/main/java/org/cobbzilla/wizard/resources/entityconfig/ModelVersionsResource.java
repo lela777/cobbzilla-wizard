@@ -54,7 +54,13 @@ public abstract class ModelVersionsResource<V extends ModelVersion> {
                 }
             }
         }
-        return ok(getVersionDAO().create(getVersionDAO().newEntity(request)));
+        final V existing = getVersionDAO().findByUuidOrVersion(request.getVersion());
+        if (existing != null) {
+            existing.update(request);
+            return ok(getVersionDAO().update(existing));
+        } else {
+            return ok(getVersionDAO().create(getVersionDAO().newEntity(request)));
+        }
     }
 
 }
