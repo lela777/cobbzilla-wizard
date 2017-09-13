@@ -224,7 +224,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(listFields)) setListFields(Arrays.asList(annotation.fields()));
-        if (empty(listUri)) setListUri(annotation.uri());
+        if (empty(listUri)) setListUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -235,7 +235,7 @@ public class EntityConfig {
 
         if (empty(searchFields)) setSearchFields(Arrays.asList(annotation.fields()));
         if (empty(searchMethod)) setSearchMethod(annotation.method());
-        if (empty(searchUri)) setSearchUri(annotation.uri());
+        if (empty(searchUri)) setSearchUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -245,7 +245,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(createMethod)) setCreateMethod(annotation.method());
-        if (empty(createUri)) setCreateUri(annotation.uri());
+        if (empty(createUri)) setCreateUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -255,7 +255,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(updateMethod)) setUpdateMethod(annotation.method());
-        if (empty(updateUri)) setUpdateUri(annotation.uri());
+        if (empty(updateUri)) setUpdateUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -265,7 +265,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(deleteMethod)) setDeleteMethod(annotation.method());
-        if (empty(deleteUri)) setDeleteUri(annotation.uri());
+        if (empty(deleteUri)) setDeleteUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
