@@ -31,8 +31,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
         final String key = getKey(request);
         //maybe check if user uses invalidated api-token
         long timestamp = now();
-        Bucket bucket = getBuckets().getObject(key, Bucket.class);
-
+        Bucket bucket = getBuckets().getObject(key, getBucketClass());
         if (empty(bucket)) {
             bucket = buildBucket(timestamp);
         }
@@ -45,6 +44,8 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
             throw new WebApplicationException(Response.status(429).build());
         return request;
     }
+
+    protected abstract Class<? extends Bucket>  getBucketClass();
 
     protected abstract void useBucket(Bucket bucket, ContainerRequest request, long timestamp);
 
