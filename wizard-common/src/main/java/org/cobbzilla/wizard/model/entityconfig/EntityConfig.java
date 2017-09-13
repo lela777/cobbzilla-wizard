@@ -443,6 +443,19 @@ public class EntityConfig {
     }
 
     private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
+        final ECField fieldAnnotation = accessor.getAnnotation(ECField.class);
+        if (fieldAnnotation != null) {
+            return new EntityFieldConfig().setName(fieldAnnotation.name())
+                                          .setDisplayName(fieldAnnotation.displayName())
+                                          .setMode(fieldAnnotation.mode())
+                                          .setType(fieldAnnotation.type())
+                                          .setLength(fieldAnnotation.length())
+                                          .setControl(fieldAnnotation.control())
+                                          .setOptions(fieldAnnotation.options())
+                                          .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
+                                          .setObjectType(fieldAnnotation.objectType());
+        }
+
         String fieldName = fieldNameFromAccessor(accessor);
         EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
 
