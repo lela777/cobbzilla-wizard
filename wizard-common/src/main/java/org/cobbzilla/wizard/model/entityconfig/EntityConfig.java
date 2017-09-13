@@ -11,6 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -149,8 +150,21 @@ public class EntityConfig {
     }
 
     /** Describes child resources of the entity. This is a map of EntityConfig name to EntityConfig. */
-    @Getter @Setter private Map<String, EntityConfig> children = new HashMap<>();
+    @NotNull @Getter @Setter private Map<String, EntityConfig> children = new HashMap<>();
     public boolean hasChildren () { return !children.isEmpty(); }
+
+    private static Class<?> getClassSafe(String className) {
+        if (!empty(className)) {
+            // Use Java's Class.forName method so we can catch (and ignore) ClassNotFoundException.
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                log.warn("Cannot find class with name " + className + " for entity config", e);
+            }
+        }
+
+        return null;
+    }
 
     /* -------------------------------------------------- */
     /* ----- Config updates from class annotations: ----- */
@@ -159,19 +173,7 @@ public class EntityConfig {
      *  non-empty values!
      */
     public EntityConfig updateWithAnnotations() {
-        String className = getClassName();
-
-        Class<?> clazz = null;
-        if (!empty(className)) {
-            try {
-                // Use Java's Class.forName method so we can catch (and ignore) ClassNotFoundException.
-                clazz = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                log.warn("Cannot find class with name " + className + " for entity condig");
-            }
-        }
-
-        return updateWithAnnotations(clazz);
+        return updateWithAnnotations(getClassSafe(getClassName()));
     }
 
     /** Update properties with values from the class' annotation. Doesn't override existing non-empty values! */
@@ -189,6 +191,7 @@ public class EntityConfig {
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeChildren.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -196,6 +199,10 @@ public class EntityConfig {
             if (empty(childConfig.getClassName()) && clazzPackageName != null) {
                 childConfig.setClassName(clazzPackageName + "." + childConfigEntry.getKey());
             }
+            // TODO: Update child with specific stuff read from ECTypeChildren annotation (may override any settings
+            // read before this line, and will not be overridden by any setting from the following line).
+            // The method for this might be called something like `updateChildWithAnnotation` to remark separated logic
+            // from other `updateWithAnnotation` methods.
             childConfig.updateWithAnnotations();
         }
 
@@ -321,6 +328,68 @@ public class EntityConfig {
         return this;
     }
 
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeChildren annotation) {
+        // This annotation (container for repeatable annotations) can be either with a list of those annotations, or
+        // the class might be annotations with some number of those repeatable annotations (`@ECTypeChild` in this
+        // case). Java itself doesn't allow to have both of there annotation types on a single class, so it's safe to
+        // have following processing of those:
+        final ECTypeChild[] annotationChildren = annotation != null ? annotation.value()
+                                                                    : clazz.getAnnotationsByType(ECTypeChild.class);
+        if (empty(annotationChildren)) return this;
+
+        for (ECTypeChild annotationChild : annotationChildren) {
+            updateWithAnnotation(clazz, annotationChild);
+        }
+        return this;
+    }
+
+    private void updateWithAnnotation(Class<?> clazz, ECTypeChild annotationChild) {
+        final Class childClazz = getClassSafe(annotationChild.className());
+
+        String childName = annotationChild.name();
+        if (empty(childName) && childClazz != null) {
+            childName = childClazz.getSimpleName();
+        } else {
+            log.warn("A child without name nor class added to parent class " + clazz.getName() + " - ignoring it");
+            return;
+        }
+
+        EntityConfig child = children.get(childName);
+        if (child == null) {
+            child = new EntityConfig();
+            children.put(childName, child);
+        }
+        if (empty(child.getClassName())) child.setClassName(childClazz.getName());
+
+        // Not that even id `parentField` is not set in `child`, if existing, field (from `fields` list) which is set to
+        // contain `reference` to `:parent` will be returned by `getParentField` method above!
+        if (child.getParentField() == null) {
+            child.parentField = new EntityFieldConfig();
+
+            updateFieldCfgWithRefAnnotation(child.parentField, annotationChild.parentFieldRef());
+            if (child.parentField.getReference().getEntity().equals(EntityFieldReference.REF_PARENT)) {
+                child.parentField.getReference().setEntity(clazz.getSimpleName());
+            }
+
+            // Overriding the existing field with the same name. Note that its current config is not set to be `:parent`
+            // reference (as we already checked if this child has parent field above), so overrinding it is ok to do
+            // here.
+            if (child.fields.containsKey(child.parentField.getName())) {
+                log.info("Parent field's name " + child.parentField.getName() +
+                         " was in fields list. Overriding its config");
+            }
+
+            if (empty(child.parentField.getName()) && !empty(annotationChild.backref())) {
+                child.parentField.setName(annotationChild.backref());
+                // Add parent field as a regular field of reference type `:parent` (not sure how current frontends work,
+                // so this is the safest way (note the comment above, so `getParentField will still return the parent
+                // field set here).
+                child.fields.put(child.parentField.getName(), child.parentField);
+            }
+        }
+    }
+
     private EntityFieldConfig buildFieldConfig(Field field) {
         String fieldName = field.getName();
         EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
@@ -348,7 +417,9 @@ public class EntityConfig {
             // else, just continue so the field will be created (if needed according to the other specifications)
         }
 
-        if (field.getType().equals(boolean.class)) return cfg.setType(EntityFieldType.flag);
+        if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
+            return cfg.setType(EntityFieldType.flag);
+        }
 
         Column columnAnnotation = field.getAnnotation(Column.class);
         if (columnAnnotation != null) {
@@ -361,16 +432,20 @@ public class EntityConfig {
             if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
         }
 
-        ECFieldReference refAnnotation = field.getAnnotation(ECFieldReference.class);
+        return updateFieldCfgWithRefAnnotation(cfg, field.getAnnotation(ECFieldReference.class));
+    }
+
+    private EntityFieldConfig updateFieldCfgWithRefAnnotation(EntityFieldConfig cfg, ECFieldReference refAnnotation) {
         if (refAnnotation == null) return cfg;
 
         cfg.setType(EntityFieldType.reference);
         if (!empty(refAnnotation.control())) cfg.setControl(EntityFieldControl.create(refAnnotation.control()));
+        if (!empty(refAnnotation.options())) cfg.setOptions(refAnnotation.options());
 
         EntityFieldReference ref = new EntityFieldReference();
         ref.setEntity(refAnnotation.refEntity());
         ref.setField(refAnnotation.refField());
-        ref.setDisplayField(refAnnotation.refDisplayField());
+        if (!empty(refAnnotation.refDisplayField())) ref.setDisplayField(refAnnotation.refDisplayField());
         if (!empty(refAnnotation.refFinder())) ref.setFinder(refAnnotation.refFinder());
         cfg.setReference(ref);
 
