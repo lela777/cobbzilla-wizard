@@ -13,7 +13,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -309,24 +311,58 @@ public class EntityConfig {
             if (fields == null) fields = new HashMap<>(fieldNames.size());
             ReflectionUtils.doWithFields(
                     clazz,
-                    new ReflectionUtils.FieldCallback() {
-                        @Override public void doWith(Field field) throws IllegalArgumentException,
-                                                                         IllegalAccessException {
-                            EntityFieldConfig cfg = buildFieldConfig(field);
-                            if (cfg != null) fields.put(field.getName(), cfg);
-                        }
-                    },
-                    new ReflectionUtils.FieldFilter() {
-                        @Override public boolean matches(Field field) {
-                            String fieldName = field.getName();
-                            return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
-                        }
-                    });
+                    field -> updateFieldWithAnnotations(field),
+                    field -> isFieldUnprocessed(field));
+            // Also check getter methods:
+            ReflectionUtils.doWithMethods(
+                    clazz,
+                    method -> updateFieldWithAnnotations(method),
+                    method -> isFieldUnprocessed(method));
         } else {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
         }
         return this;
+    }
+
+    private boolean isFieldUnprocessed(AccessibleObject accessor) {
+        String fieldName;
+        try {
+            fieldName = fieldNameFromAccessor(accessor);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
+    }
+
+    private String fieldNameFromAccessor(AccessibleObject accessor) throws IllegalArgumentException {
+        if (accessor instanceof Field) return ((Field) accessor).getName();
+
+        if (accessor instanceof Method) {
+            final String methodName = ((Method) accessor).getName();
+            if (!methodName.startsWith("get") && !methodName.startsWith("is")) {
+                throw new IllegalArgumentException("Not a getter method");
+            }
+            final String fieldInGetterName = methodName.startsWith("get") ? methodName.substring(3)
+                                                                          : methodName.substring(2); // "is..." case
+            final String fieldName = uncapitalize(fieldInGetterName);
+            if (fieldInGetterName.equals(fieldName)) throw new IllegalArgumentException("Not a true getter method");
+            return fieldName;
+        }
+
+        throw new IllegalArgumentException("Not a Field not Method");
+    }
+
+    private void updateFieldWithAnnotations(AccessibleObject accessor) {
+        EntityFieldConfig cfg = buildFieldConfig(accessor);
+        if (cfg != null) {
+            cfg = updateFieldCfgWithRefAnnotation(cfg, accessor.getAnnotation(ECFieldReference.class));
+            try {
+                fields.put(fieldNameFromAccessor(accessor), cfg);
+            } catch (IllegalArgumentException e) {
+                log.warn("Ignoring field accessor because of exception", e);
+            }
+        }
     }
 
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
@@ -406,25 +442,33 @@ public class EntityConfig {
         }
     }
 
-    private EntityFieldConfig buildFieldConfig(Field field) {
-        String fieldName = field.getName();
+    private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
+        String fieldName = fieldNameFromAccessor(accessor);
         EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
 
-        if (field.isAnnotationPresent(Embedded.class)) {
-            return cfg.setType(EntityFieldType.embedded).setObjectType(field.getType().getSimpleName());
+        if (!(accessor instanceof Field) && !(accessor instanceof Method)) {
+            log.warn("Cannot build Field config for accessor which is not Field or Method");
+            return cfg;
         }
 
-        if (field.isAnnotationPresent(Id.class)) {
+        Class<?> fieldType = accessor instanceof Field ? ((Field) accessor).getType()
+                                                       : ((Method) accessor).getReturnType();
+
+        if (accessor.isAnnotationPresent(Embedded.class)) {
+            return cfg.setType(EntityFieldType.embedded).setObjectType(fieldType.getSimpleName());
+        }
+
+        if (accessor.isAnnotationPresent(Id.class)) {
             return cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
         }
 
-        if (field.isAnnotationPresent(Enumerated.class)) {
+        if (accessor.isAnnotationPresent(Enumerated.class)) {
             ECEnumSelect enumAnnotation = null;
-            if (field.isAnnotationPresent(ECEnumSelect.class)) {
-                enumAnnotation = field.getAnnotation(ECEnumSelect.class);
-            } else if (field.getType().isAnnotationPresent(ECEnumSelect.class)) {
+            if (accessor.isAnnotationPresent(ECEnumSelect.class)) {
+                enumAnnotation = accessor.getAnnotation(ECEnumSelect.class);
+            } else if (fieldType.isAnnotationPresent(ECEnumSelect.class)) {
                 // If annotation of the field is not present, we may use the global one set on the enum class.
-                enumAnnotation = field.getType().getAnnotation(ECEnumSelect.class);
+                enumAnnotation = fieldType.getAnnotation(ECEnumSelect.class);
             }
 
             if (enumAnnotation != null) {
@@ -433,22 +477,22 @@ public class EntityConfig {
             // else, just continue so the field will be created (if needed according to the other specifications)
         }
 
-        if (field.getType().equals(boolean.class) || field.getType().equals(Boolean.class)) {
+        if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
             return cfg.setType(EntityFieldType.flag);
         }
 
-        Column columnAnnotation = field.getAnnotation(Column.class);
+        Column columnAnnotation = accessor.getAnnotation(Column.class);
         if (columnAnnotation != null) {
             cfg.setLength(columnAnnotation.length());
             if (!columnAnnotation.updatable()) cfg.setMode(EntityFieldMode.createOnly);
         }
 
-        Size sizeAnnotation = field.getAnnotation(Size.class);
+        Size sizeAnnotation = accessor.getAnnotation(Size.class);
         if (sizeAnnotation != null) {
             if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
         }
 
-        return updateFieldCfgWithRefAnnotation(cfg, field.getAnnotation(ECFieldReference.class));
+        return cfg;
     }
 
     private EntityFieldConfig updateFieldCfgWithRefAnnotation(EntityFieldConfig cfg, ECFieldReference refAnnotation) {
