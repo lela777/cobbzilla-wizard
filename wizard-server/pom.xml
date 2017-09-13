@@ -70,7 +70,7 @@ This code is available under the Apache License, version 2: http://www.apache.or
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-spring</artifactId>
             <version>${jersey.version}</version>
-            <!-- these wil clash with our spring -->
+            <!-- these will clash with our spring -->
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework</groupId>
