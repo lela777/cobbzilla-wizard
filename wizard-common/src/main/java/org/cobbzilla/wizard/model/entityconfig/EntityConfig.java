@@ -414,6 +414,8 @@ public class EntityConfig {
         }
         if (empty(child.getClassName())) child.setClassName(childClazz.getName());
 
+        if (empty(child.getDisplayName())) child.setDisplayName(annotationChild.displayName());
+
         // Not that even id `parentField` is not set in `child`, if existing, field (from `fields` list) which is set to
         // contain `reference` to `:parent` will be returned by `getParentField` method above!
         if (child.getParentField() == null) {
