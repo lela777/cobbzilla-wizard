@@ -40,7 +40,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
 
         getBuckets().setObject(key, bucket);
 
-        if (bucket.tooMany || bucket.blocked)
+        if (bucket.tooManyRequests || bucket.blocked)
             throw new WebApplicationException(Response.status(429).build());
         return request;
     }
@@ -57,15 +57,15 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
     protected static class Bucket {
         @Getter @Setter protected Integer tokens;
         @Getter @Setter protected int breach = 0;
-        @Getter @Setter protected long last_refresh;
+        @Getter @Setter protected long lastRefresh;
         @Getter @Setter protected Queue<Long> triggers;
-        @Getter @Setter protected long block_time = 0;
-        @Getter @Setter protected boolean tooMany = false;
+        @Getter @Setter protected long blockTimestamp = 0;
+        @Getter @Setter protected boolean tooManyRequests = false;
         @Getter @Setter protected boolean blocked = false;
 
         protected Bucket(int tokens, long timestamp) {
             this.tokens = tokens;
-            last_refresh = timestamp;
+            lastRefresh = timestamp;
             triggers = new LinkedList<>();
         }
 
