@@ -207,12 +207,15 @@ public class ModelSetup {
 
                         } else if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
-                            final Identifiable toUpdate;
+                            Identifiable toUpdate;
                             if (existing != null) {
                                 ReflectionUtil.copy(existing, entity);
                                 toUpdate = existing;
                             } else {
                                 toUpdate = entity;
+                            }
+                            if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
+                                toUpdate = listener.subst(toUpdate);
                             }
                             log.info(logPrefix + " already exists, updating: " + id(toUpdate));
                             entity = update(api, context, entityConfig, toUpdate, listener);
