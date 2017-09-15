@@ -195,7 +195,6 @@ public class EntityConfig {
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
-            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeChildren.class));
         }
 
@@ -206,6 +205,8 @@ public class EntityConfig {
             }
             childConfig.updateWithAnnotations();
         }
+
+        if (clazz != null) updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
 
         return this;
     }
@@ -365,12 +366,25 @@ public class EntityConfig {
         }
     }
 
+    /** Call this method only after all children entity-configs are fully updated. */
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
         if (annotation == null) return this;
 
-        fields.put(annotation.fieldName(),
-                   updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldName()),
-                                                   annotation.fieldDef()));
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = this;
+        for (int i = 0; i < fieldPathParts.size() - 1; i++) {
+            final String part = fieldPathParts.get(i);
+            if (!empty(part)) {
+                ecToUpdate = ecToUpdate.getChildren().get(part);
+                if (ecToUpdate == null) {
+                    log.warn("EC child " + part + " not found for path " + annotation.fieldPath());
+                    return this;
+                }
+            }
+        }
+        ecToUpdate.fields.put(fieldPathParts.get(fieldPathParts.size() - 1),
+                              updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldPath()),
+                                                              annotation.fieldDef()));
 
         return this;
     }

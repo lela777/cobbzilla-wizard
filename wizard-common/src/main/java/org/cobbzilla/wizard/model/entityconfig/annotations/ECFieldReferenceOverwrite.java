@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME) @Target(ElementType.TYPE)
 public @interface ECFieldReferenceOverwrite {
-    String fieldName();
+    String fieldPath(); // field's path through the children tree (dot separated), or annotated class field's name.
     ECFieldReference fieldDef();
 }
