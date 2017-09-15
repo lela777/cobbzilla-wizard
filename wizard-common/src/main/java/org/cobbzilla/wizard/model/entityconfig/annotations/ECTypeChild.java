@@ -7,6 +7,7 @@ import java.lang.annotation.*;
 public @interface ECTypeChild {
     String className();
     String name() default "";
+    String displayName() default "";
     String backref();
     ECFieldReference parentFieldRef() default @ECFieldReference();
 }

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  */
 public enum EntityFieldControl {
 
+    /** instead of using null - constant required in annotation definition */
+    unset,
+
     /** a standard text input field */
     text,
 
