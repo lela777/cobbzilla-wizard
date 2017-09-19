@@ -4,13 +4,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,7 +25,34 @@ public class RedisService {
 
     public static final int MAX_RETRIES = 5;
 
+    private static final String SCRIPT = "\n" +
+            "local limits = ARGV\n" +
+            "local len = #ARGV\n" +
+            "local split = math.floor(len / 2)\n" +
+            "local now = tonumber(ARGV[len])\n" +
+            "local ret = {}\n" +
+            "for i=1,split do\n" +
+            "    local dur = tonumber(ARGV[split+i])\n" +
+            "    local fullkey = KEYS[1] .. ':' .. limits[i]\n" +
+            "    local bucket = redis.call('GET', fullkey)\n" +
+            "    if ( (bucket ~= false) and ( tonumber(bucket) > tonumber(limits[i])) ) then\n" +
+            "        ret[i] = i\n" +
+            "    else\n" +
+            "        local count = redis.call('INCR', fullkey)\n" +
+            "        if tonumber(count) > tonumber(limits[i]) then\n" +
+            "            redis.call('PEXPIRE', fullkey, 10 * dur )\n" +
+            "            ret[i] = i\n" +
+            "        else if count == 1 then\n" +
+            "            redis.call('PEXPIRE', fullkey, dur)\n" +
+            "        end\n" +
+            "            ret[i] = 0\n" +
+            "        end\n" +
+            "    end\n" +
+            "end\n" +
+            "return ret\n";
+
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
+    @Getter(lazy=true) private final String scriptSha = getRedis().scriptLoad(SCRIPT);
 
     @Getter @Setter private String key;
     protected boolean hasKey () { return !empty(getKey()); }
@@ -60,6 +86,10 @@ public class RedisService {
         }
         return r;
 
+    }
+
+    public List<Long> checkOverflow(String key, List<String> limitsAndIntervals) {
+        return (List<Long>)getRedis().evalsha(getScriptSha(), new SingletonList<>(key), limitsAndIntervals);
     }
 
     public void reconnect () {
@@ -133,6 +163,8 @@ public class RedisService {
     public Long decrBy(String key, long value) { return __decrBy(key, value, 0, MAX_RETRIES); }
 
     public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
+
+    public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
     // override these for full control
     protected String encrypt(String data) {
@@ -284,6 +316,28 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__list");
             return __list(key, attempt + 1, maxRetries);
+        }
+    }
+
+    private Collection<String> __keys(String key, int attempt, int maxRetries) {
+        try {
+            final Set<String> keys;
+            synchronized (redis) {
+                keys = getRedis().keys(prefix(key));
+            }
+            return keys;
+
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__keys");
+            return __list(key, attempt + 1, maxRetries);
+        }
+    }
+
+    public void flush() {
+        final Collection<String> keys = keys(prefix("*"));
+        for (String key : keys) {
+            del(key);
         }
     }
 
