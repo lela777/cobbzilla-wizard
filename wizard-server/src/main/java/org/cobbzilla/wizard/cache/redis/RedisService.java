@@ -164,8 +164,6 @@ public class RedisService {
 
     public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
 
-    public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
-
     // override these for full control
     protected String encrypt(String data) {
         if (!hasKey()) return data;
