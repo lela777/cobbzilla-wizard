@@ -284,9 +284,17 @@ public class EntityConfig {
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation == null) return this;
 
-        final String baseUri = this.uriPrefix + (!empty(annotation.baseURI())
-                                                 ? annotation.baseURI()
-                                                 : "/" + pluralize(uncapitalize(clazz.getSimpleName())));
+        final StringBuilder b = new StringBuilder(this.uriPrefix);
+        if (!empty(annotation.baseURI())) {
+            final String annotationBase = annotation.baseURI().startsWith(this.uriPrefix)
+                    ? annotation.baseURI().substring(this.uriPrefix.length())
+                    : annotation.baseURI();
+            b.append(annotationBase);
+        } else {
+            b.append("/").append(pluralize(uncapitalize(clazz.getSimpleName())));
+        }
+        final String baseUri = b.toString();
+
         if (annotation.isListDefined()) {
             if (empty(listUri)) setListUri(baseUri);
             if (empty(listFields) && !empty(annotation.listFields())) {
