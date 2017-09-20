@@ -20,7 +20,6 @@ import javax.ws.rs.ext.Provider;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Provider @Service @NoArgsConstructor
 public abstract class RateLimitFilter implements ContainerRequestFilter {
 
