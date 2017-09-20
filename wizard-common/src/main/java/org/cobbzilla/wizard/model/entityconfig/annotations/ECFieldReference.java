@@ -1,5 +1,7 @@
 package org.cobbzilla.wizard.model.entityconfig.annotations;
 
+import org.cobbzilla.wizard.model.entityconfig.EntityFieldMode;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,7 +11,11 @@ import static org.cobbzilla.wizard.model.entityconfig.EntityFieldReference.REF_P
 
 @Retention(RetentionPolicy.RUNTIME) @Target(ElementType.FIELD)
 public @interface ECFieldReference {
+    EntityFieldMode mode() default EntityFieldMode.readOnly;
     String control() default "hidden";
+    // `type` is `reference` of course!
+    String options() default "";
+
     String refEntity() default REF_PARENT;
     String refField() default "uuid";
     String refDisplayField() default "name";

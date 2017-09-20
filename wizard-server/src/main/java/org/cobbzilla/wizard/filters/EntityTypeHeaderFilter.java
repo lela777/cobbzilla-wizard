@@ -37,15 +37,23 @@ public class EntityTypeHeaderFilter implements ContainerResponseFilter {
         boolean isCollection = Collection.class.isAssignableFrom(responseClass);
         boolean isMap = Map.class.isAssignableFrom(responseClass);
         boolean isArray = responseClass.isArray();
-        final String elementClassName;
+        String elementClassName;
         if (isCollection) {
             final Collection c = (Collection) containerResponse.getEntity();
-            elementClassName = empty(c) ? "" : c.iterator().next().getClass().getName();
+            try {
+                elementClassName = empty(c) ? "" : c.iterator().next().getClass().getName();
+            } catch (Exception e) {
+                elementClassName = "";
+            }
             containerResponse.getHttpHeaders().add(getTypeHeaderName(), elementClassName+"[]");
 
         } else if (isArray) {
             final Object[] a = (Object[]) containerResponse.getEntity();
-            elementClassName = empty(a) ? "" : a[0].getClass().getName();
+            try {
+                elementClassName = empty(a) ? "" : a[0].getClass().getName();
+            } catch (Exception e) {
+                elementClassName = "";
+            }
             containerResponse.getHttpHeaders().add(getTypeHeaderName(), elementClassName + "[]");
 
         } else if (isMap) {

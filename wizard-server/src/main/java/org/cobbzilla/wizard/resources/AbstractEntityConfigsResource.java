@@ -49,6 +49,8 @@ public abstract class AbstractEntityConfigsResource {
     protected File getLocalConfig(EntityConfig name) { return null; }
 
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
+    public boolean refresh() { configs.set(null); return true; }
+    public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configs) { return refresh(configs); }
 
     @GET
     @Path("/{name}")
@@ -59,14 +61,16 @@ public abstract class AbstractEntityConfigsResource {
 
         if (!authorized(ctx)) return forbidden();
 
+        final AutoRefreshingReference<Map<String, EntityConfig>> configs = getConfigs();
         if (debug || refresh) {
             log.info("getConfig: refreshing");
-            configs.set(null);
+            refresh(configs);
         }
+        final Map<String, EntityConfig> configMap = configs.get();
 
         final EntityConfig config;
-        synchronized (configs) {
-            config = configs.get().get(capitalize(name));
+        synchronized (configMap) {
+            config = configMap.get(capitalize(name));
         }
 
         if (debug && config != null) {
@@ -74,7 +78,7 @@ public abstract class AbstractEntityConfigsResource {
             try {
                 localConfig = toEntityConfig(forName(config.getClassName()));
             } catch (Exception e) {
-                log.warn("getConfig(" + name + "): error loading entity condig", e);
+                log.warn("getConfig(" + name + "): error loading entity config", e);
             }
             if (localConfig != null) return ok(localConfig);
         }
@@ -89,7 +93,7 @@ public abstract class AbstractEntityConfigsResource {
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
             scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
-            HashSet<Class<?>> classesWithoutConfigs = new HashSet<>();
+            final HashSet<Class<?>> classesWithoutConfigs = new HashSet<>();
             for (String pkg : getConfiguration().getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
@@ -122,7 +126,6 @@ public abstract class AbstractEntityConfigsResource {
 
     private EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
         EntityConfig entityConfig;
-
         try {
             final InputStream in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" +
                                                         clazz.getSimpleName() + ".json");
@@ -150,7 +153,7 @@ public abstract class AbstractEntityConfigsResource {
 
             Class<?> parent = clazz.getSuperclass();
             while (!parent.getName().equals(Object.class.getName())) {
-                EntityConfig parentConfig = getEntityConfig(clazz.getSuperclass());
+                final EntityConfig parentConfig = getEntityConfig(clazz.getSuperclass());
                 if (parentConfig != null) entityConfig.addParent(parentConfig);
                 parent = parent.getSuperclass();
             }

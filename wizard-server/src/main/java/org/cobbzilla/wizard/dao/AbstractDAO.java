@@ -23,6 +23,7 @@ import org.springframework.orm.hibernate4.HibernateTemplate;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -35,7 +36,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
  *
  * @param <E> the class which this DAO manages
  */
-public abstract class AbstractDAO<E> implements DAO<E> {
+public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
 
     @Autowired @Getter @Setter private HibernateTemplate hibernateTemplate;
 
@@ -224,6 +225,10 @@ public abstract class AbstractDAO<E> implements DAO<E> {
             Hibernate.initialize(proxy);
         }
         return proxy;
+    }
+
+    public void delete(Collection<E> entities) {
+        for (E entity : entities) delete(entity.getUuid());
     }
 
     public static final String entityAlias = "x";

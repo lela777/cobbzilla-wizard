@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.FileUtil.listDirs;
 import static org.cobbzilla.util.json.JsonUtil.json;
@@ -76,7 +77,11 @@ public class ModelVersion extends IdentifiableBase {
         setVersion(Integer.parseInt(m.group(1)));
         setDescription(m.group(2).replace("_", " "));
 
-        final String[] migrationFiles = json(FileUtil.toStringOrDie(new File(dir, "manifest.json")), String[].class);
+        final File manifestFile = new File(dir, "manifest.json");
+        if (!manifestFile.exists() || !manifestFile.canRead()) die(errPrefix+" manifest file does not exist or is unreadable: "+abs(manifestFile));
+        final String[] migrationFiles = json(FileUtil.toStringOrDie(manifestFile), String[].class);
+        if (empty(migrationFiles)) die(errPrefix+"manifest had no model files");
+
         final StringBuilder b = new StringBuilder();
         final LinkedHashMap<String, String> migrations = new LinkedHashMap<>();
         for (String file : migrationFiles) {

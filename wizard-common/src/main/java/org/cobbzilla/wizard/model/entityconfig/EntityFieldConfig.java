@@ -51,14 +51,14 @@ public class EntityFieldConfig {
      * For data types like 'string', this is the length of the field.
      */
     @Getter @Setter private Integer length = null;
-    public boolean hasLength () { return length != null; }
+    public boolean hasLength () { return length != null && length >= 0; }
 
     @Setter private EntityFieldControl control;
     /**
      * The preferred kind of UI control to use when displaying the field.
      */
     public EntityFieldControl getControl() {
-        if (control != null) return control;
+        if (control != null && control != EntityFieldControl.unset) return control;
         switch (getTypeOrDefault()) {
             case flag:                  return EntityFieldControl.flag;
             case date_future: case date_past:

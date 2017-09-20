@@ -11,8 +11,11 @@ import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -110,6 +113,8 @@ public class EntityConfig {
     }
     public boolean hasParentField () { return getParentField() != null; }
 
+    private String uriPrefix = "";
+
     /** The HTTP method to use when creating a new entity. Default value: `PUT` */
     @Getter @Setter private String createMethod = "PUT";
     /** The API endpoint to use when creating a new entity. Default value: none */
@@ -149,8 +154,21 @@ public class EntityConfig {
     }
 
     /** Describes child resources of the entity. This is a map of EntityConfig name to EntityConfig. */
-    @Getter @Setter private Map<String, EntityConfig> children = new HashMap<>();
+    @NotNull @Getter @Setter private Map<String, EntityConfig> children = new HashMap<>();
     public boolean hasChildren () { return !children.isEmpty(); }
+
+    private static Class<?> getClassSafe(String className) {
+        if (!empty(className)) {
+            // Use Java's Class.forName method so we can catch (and ignore) ClassNotFoundException.
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                log.warn("Cannot find class with name " + className + " for entity config", e);
+            }
+        }
+
+        return null;
+    }
 
     /* -------------------------------------------------- */
     /* ----- Config updates from class annotations: ----- */
@@ -159,19 +177,7 @@ public class EntityConfig {
      *  non-empty values!
      */
     public EntityConfig updateWithAnnotations() {
-        String className = getClassName();
-
-        Class<?> clazz = null;
-        if (!empty(className)) {
-            try {
-                // Use Java's Class.forName method so we can catch (and ignore) ClassNotFoundException.
-                clazz = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                log.warn("Cannot find class with name " + className + " for entity condig");
-            }
-        }
-
-        return updateWithAnnotations(clazz);
+        return updateWithAnnotations(getClassSafe(getClassName()));
     }
 
     /** Update properties with values from the class' annotation. Doesn't override existing non-empty values! */
@@ -189,6 +195,7 @@ public class EntityConfig {
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeURIs.class));
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeFields.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECTypeChildren.class));
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
@@ -198,6 +205,8 @@ public class EntityConfig {
             }
             childConfig.updateWithAnnotations();
         }
+
+        if (clazz != null) updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
 
         return this;
     }
@@ -218,7 +227,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(listFields)) setListFields(Arrays.asList(annotation.fields()));
-        if (empty(listUri)) setListUri(annotation.uri());
+        if (empty(listUri)) setListUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -229,7 +238,7 @@ public class EntityConfig {
 
         if (empty(searchFields)) setSearchFields(Arrays.asList(annotation.fields()));
         if (empty(searchMethod)) setSearchMethod(annotation.method());
-        if (empty(searchUri)) setSearchUri(annotation.uri());
+        if (empty(searchUri)) setSearchUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -239,7 +248,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(createMethod)) setCreateMethod(annotation.method());
-        if (empty(createUri)) setCreateUri(annotation.uri());
+        if (empty(createUri)) setCreateUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -249,7 +258,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(updateMethod)) setUpdateMethod(annotation.method());
-        if (empty(updateUri)) setUpdateUri(annotation.uri());
+        if (empty(updateUri)) setUpdateUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -259,7 +268,7 @@ public class EntityConfig {
         if (annotation == null) return this;
 
         if (empty(deleteMethod)) setDeleteMethod(annotation.method());
-        if (empty(deleteUri)) setDeleteUri(annotation.uri());
+        if (empty(deleteUri)) setDeleteUri((annotation.uri().startsWith(":") ? "" : uriPrefix) + annotation.uri());
 
         return this;
     }
@@ -268,12 +277,22 @@ public class EntityConfig {
     private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeURIs annotation) {
         if (annotation == null) return this;
 
-        final String baseUri = !empty(annotation.baseURI())
-                               ? annotation.baseURI()
-                               : "/" + pluralize(uncapitalize(clazz.getSimpleName()));
+        final StringBuilder b = new StringBuilder(this.uriPrefix);
+        if (!empty(annotation.baseURI())) {
+            final String annotationBase = annotation.baseURI().startsWith(this.uriPrefix)
+                    ? annotation.baseURI().substring(this.uriPrefix.length())
+                    : annotation.baseURI();
+            b.append(annotationBase);
+        } else {
+            b.append("/").append(pluralize(uncapitalize(clazz.getSimpleName())));
+        }
+        final String baseUri = b.toString();
+
         if (annotation.isListDefined()) {
             if (empty(listUri)) setListUri(baseUri);
-            if (empty(listFields)) setListFields(Arrays.asList(annotation.listFields()));
+            if (empty(listFields) && !empty(annotation.listFields())) {
+                setListFields(Arrays.asList(annotation.listFields()));
+            }
         }
         if (empty(createUri) && annotation.isCreateDefined()) setCreateUri(baseUri);
 
@@ -301,19 +320,13 @@ public class EntityConfig {
             if (fields == null) fields = new HashMap<>(fieldNames.size());
             ReflectionUtils.doWithFields(
                     clazz,
-                    new ReflectionUtils.FieldCallback() {
-                        @Override public void doWith(Field field) throws IllegalArgumentException,
-                                                                         IllegalAccessException {
-                            EntityFieldConfig cfg = buildFieldConfig(field);
-                            if (cfg != null) fields.put(field.getName(), cfg);
-                        }
-                    },
-                    new ReflectionUtils.FieldFilter() {
-                        @Override public boolean matches(Field field) {
-                            String fieldName = field.getName();
-                            return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
-                        }
-                    });
+                    field -> updateFieldWithAnnotations(field),
+                    field -> isFieldUnprocessed(field));
+            // Also check getter methods:
+            ReflectionUtils.doWithMethods(
+                    clazz,
+                    method -> updateFieldWithAnnotations(method),
+                    method -> isFieldUnprocessed(method));
         } else {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
@@ -321,25 +334,178 @@ public class EntityConfig {
         return this;
     }
 
-    private EntityFieldConfig buildFieldConfig(Field field) {
-        String fieldName = field.getName();
-        EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
+    private boolean isFieldUnprocessed(AccessibleObject accessor) {
+        String fieldName;
+        try {
+            fieldName = fieldNameFromAccessor(accessor);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
+    }
 
-        if (field.isAnnotationPresent(Embedded.class)) {
-            return cfg.setType(EntityFieldType.embedded).setObjectType(field.getType().getSimpleName());
+    private String fieldNameFromAccessor(AccessibleObject accessor) throws IllegalArgumentException {
+        if (accessor instanceof Field) return ((Field) accessor).getName();
+
+        if (accessor instanceof Method) {
+            final String methodName = ((Method) accessor).getName();
+            if (!methodName.startsWith("get") && !methodName.startsWith("is")) {
+                throw new IllegalArgumentException("Not a getter method");
+            }
+            final String fieldInGetterName = methodName.startsWith("get") ? methodName.substring(3)
+                                                                          : methodName.substring(2); // "is..." case
+            final String fieldName = uncapitalize(fieldInGetterName);
+            if (fieldInGetterName.equals(fieldName)) throw new IllegalArgumentException("Not a true getter method");
+            return fieldName;
         }
 
-        if (field.isAnnotationPresent(Id.class)) {
+        throw new IllegalArgumentException("Not a Field not Method");
+    }
+
+    private void updateFieldWithAnnotations(AccessibleObject accessor) {
+        EntityFieldConfig cfg = buildFieldConfig(accessor);
+        if (cfg != null) {
+            cfg = updateFieldCfgWithRefAnnotation(cfg, accessor.getAnnotation(ECFieldReference.class));
+            try {
+                fields.put(fieldNameFromAccessor(accessor), cfg);
+            } catch (IllegalArgumentException e) {
+                log.warn("Ignoring field accessor because of exception", e);
+            }
+        }
+    }
+
+    /** Call this method only after all children entity-configs are fully updated. */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
+        if (annotation == null) return this;
+
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = this;
+        for (int i = 0; i < fieldPathParts.size() - 1; i++) {
+            final String part = fieldPathParts.get(i);
+            if (!empty(part)) {
+                ecToUpdate = ecToUpdate.getChildren().get(part);
+                if (ecToUpdate == null) {
+                    log.warn("EC child " + part + " not found for path " + annotation.fieldPath());
+                    return this;
+                }
+            }
+        }
+        ecToUpdate.fields.put(fieldPathParts.get(fieldPathParts.size() - 1),
+                              updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldPath()),
+                                                              annotation.fieldDef()));
+
+        return this;
+    }
+
+    /** Update properties with values from the given annotation. Doesn't override existing non-empty values! */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECTypeChildren annotation) {
+        // This annotation (container for repeatable annotations) can be either with a list of those annotations, or
+        // the class might be annotations with some number of those repeatable annotations (`@ECTypeChild` in this
+        // case). Java itself doesn't allow to have both of there annotation types on a single class, so it's safe to
+        // have following processing of those:
+        final ECTypeChild[] annotationChildren = annotation != null ? annotation.value()
+                                                                    : clazz.getAnnotationsByType(ECTypeChild.class);
+        if (empty(annotationChildren)) return this;
+
+        for (ECTypeChild annotationChild : annotationChildren) {
+            updateWithAnnotation(clazz, annotationChild);
+        }
+
+        if (annotation != null && !empty(annotation.uriPrefix())) {
+            children.forEach((childName, childCfg) -> childCfg.uriPrefix = this.uriPrefix + annotation.uriPrefix());
+        }
+
+        return this;
+    }
+
+    private void updateWithAnnotation(Class<?> clazz, ECTypeChild annotationChild) {
+        final Class childClazz = getClassSafe(annotationChild.className());
+
+        String childName = annotationChild.name();
+        if (empty(childName) && childClazz != null) {
+            childName = childClazz.getSimpleName();
+        } else {
+            log.warn("A child without name nor class added to parent class " + clazz.getName() + " - ignoring it");
+            return;
+        }
+
+        EntityConfig child = children.get(childName);
+        if (child == null) {
+            child = new EntityConfig();
+            children.put(childName, child);
+        }
+        if (empty(child.getClassName())) child.setClassName(childClazz.getName());
+
+        if (empty(child.getDisplayName())) child.setDisplayName(annotationChild.displayName());
+
+        // Not that even id `parentField` is not set in `child`, if existing, field (from `fields` list) which is set to
+        // contain `reference` to `:parent` will be returned by `getParentField` method above!
+        if (child.getParentField() == null) {
+            child.parentField = new EntityFieldConfig();
+
+            updateFieldCfgWithRefAnnotation(child.parentField, annotationChild.parentFieldRef());
+            if (child.parentField.getReference().getEntity().equals(EntityFieldReference.REF_PARENT)) {
+                child.parentField.getReference().setEntity(clazz.getSimpleName());
+            }
+
+            // Overriding the existing field with the same name. Note that its current config is not set to be `:parent`
+            // reference (as we already checked if this child has parent field above), so overrinding it is ok to do
+            // here.
+            if (child.fields.containsKey(child.parentField.getName())) {
+                log.info("Parent field's name " + child.parentField.getName() +
+                         " was in fields list. Overriding its config");
+            }
+
+            if (empty(child.parentField.getName()) && !empty(annotationChild.backref())) {
+                child.parentField.setName(annotationChild.backref());
+                // Add parent field as a regular field of reference type `:parent` (not sure how current frontends work,
+                // so this is the safest way (note the comment above, so `getParentField will still return the parent
+                // field set here).
+                child.fields.put(child.parentField.getName(), child.parentField);
+            }
+        }
+    }
+
+    private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
+        final ECField fieldAnnotation = accessor.getAnnotation(ECField.class);
+        if (fieldAnnotation != null) {
+            return new EntityFieldConfig().setName(fieldAnnotation.name())
+                                          .setDisplayName(fieldAnnotation.displayName())
+                                          .setMode(fieldAnnotation.mode())
+                                          .setType(fieldAnnotation.type())
+                                          .setLength(fieldAnnotation.length())
+                                          .setControl(fieldAnnotation.control())
+                                          .setOptions(fieldAnnotation.options())
+                                          .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
+                                          .setObjectType(fieldAnnotation.objectType());
+        }
+
+        String fieldName = fieldNameFromAccessor(accessor);
+        EntityFieldConfig cfg = EntityFieldConfig.field(fieldName);
+
+        if (!(accessor instanceof Field) && !(accessor instanceof Method)) {
+            log.warn("Cannot build Field config for accessor which is not Field or Method");
+            return cfg;
+        }
+
+        Class<?> fieldType = accessor instanceof Field ? ((Field) accessor).getType()
+                                                       : ((Method) accessor).getReturnType();
+
+        if (accessor.isAnnotationPresent(Embedded.class)) {
+            return cfg.setType(EntityFieldType.embedded).setObjectType(fieldType.getSimpleName());
+        }
+
+        if (accessor.isAnnotationPresent(Id.class)) {
             return cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
         }
 
-        if (field.isAnnotationPresent(Enumerated.class)) {
+        if (accessor.isAnnotationPresent(Enumerated.class)) {
             ECEnumSelect enumAnnotation = null;
-            if (field.isAnnotationPresent(ECEnumSelect.class)) {
-                enumAnnotation = field.getAnnotation(ECEnumSelect.class);
-            } else if (field.getType().isAnnotationPresent(ECEnumSelect.class)) {
+            if (accessor.isAnnotationPresent(ECEnumSelect.class)) {
+                enumAnnotation = accessor.getAnnotation(ECEnumSelect.class);
+            } else if (fieldType.isAnnotationPresent(ECEnumSelect.class)) {
                 // If annotation of the field is not present, we may use the global one set on the enum class.
-                enumAnnotation = field.getType().getAnnotation(ECEnumSelect.class);
+                enumAnnotation = fieldType.getAnnotation(ECEnumSelect.class);
             }
 
             if (enumAnnotation != null) {
@@ -348,29 +514,35 @@ public class EntityConfig {
             // else, just continue so the field will be created (if needed according to the other specifications)
         }
 
-        if (field.getType().equals(boolean.class)) return cfg.setType(EntityFieldType.flag);
+        if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
+            return cfg.setType(EntityFieldType.flag);
+        }
 
-        Column columnAnnotation = field.getAnnotation(Column.class);
+        Column columnAnnotation = accessor.getAnnotation(Column.class);
         if (columnAnnotation != null) {
             cfg.setLength(columnAnnotation.length());
             if (!columnAnnotation.updatable()) cfg.setMode(EntityFieldMode.createOnly);
         }
 
-        Size sizeAnnotation = field.getAnnotation(Size.class);
+        Size sizeAnnotation = accessor.getAnnotation(Size.class);
         if (sizeAnnotation != null) {
             if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
         }
 
-        ECFieldReference refAnnotation = field.getAnnotation(ECFieldReference.class);
+        return cfg;
+    }
+
+    private EntityFieldConfig updateFieldCfgWithRefAnnotation(EntityFieldConfig cfg, ECFieldReference refAnnotation) {
         if (refAnnotation == null) return cfg;
 
         cfg.setType(EntityFieldType.reference);
         if (!empty(refAnnotation.control())) cfg.setControl(EntityFieldControl.create(refAnnotation.control()));
+        if (!empty(refAnnotation.options())) cfg.setOptions(refAnnotation.options());
 
         EntityFieldReference ref = new EntityFieldReference();
         ref.setEntity(refAnnotation.refEntity());
         ref.setField(refAnnotation.refField());
-        ref.setDisplayField(refAnnotation.refDisplayField());
+        if (!empty(refAnnotation.refDisplayField())) ref.setDisplayField(refAnnotation.refDisplayField());
         if (!empty(refAnnotation.refFinder())) ref.setFinder(refAnnotation.refFinder());
         cfg.setReference(ref);
 

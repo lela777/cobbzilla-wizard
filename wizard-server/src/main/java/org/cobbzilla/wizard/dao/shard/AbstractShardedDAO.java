@@ -528,6 +528,10 @@ public abstract class AbstractShardedDAO<E extends Shardable, D extends SingleSh
         flushShardCache(uuid);
     }
 
+    @Override public void delete(Collection<E> entities) {
+        for (E entity : entities) delete(entity.getUuid());
+    }
+
     public void deleteAll (String hashField, String value) {
         final List<D> daos = hashOn.equals(hashField) ? getAllDAOs(value) : getAllDAOs();
         for (D dao : daos) {
