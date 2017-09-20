@@ -50,6 +50,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
     @Override public ContainerRequest filter(@Context ContainerRequest request) {
         Long i = checkOverflow(request);
         if (!ZillaRuntime.empty(i)) {
+            //handleRejection(i); To be implemented
             throw new WebApplicationException(Response.status(429).build());
         }
         return request;
