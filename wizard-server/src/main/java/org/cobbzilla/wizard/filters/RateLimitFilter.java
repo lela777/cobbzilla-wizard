@@ -4,7 +4,9 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.collection.SingletonList;
+import org.cobbzilla.util.daemon.ZillaRuntime;
+import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Provider @Service @NoArgsConstructor
 public abstract class RateLimitFilter implements ContainerRequestFilter {
@@ -22,16 +24,23 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
     protected abstract RedisService initCache();
 
     @Getter(lazy=true) private final String scriptSha = initScript();
-    protected abstract String initScript();
+    public String initScript() {
+        return getBuckets().loadScript(StreamUtil.loadResourceAsStringOrDie("api/api_limiter_redis.lua"));
+    }
 
+    protected abstract  List<String> getList();
+
+    protected abstract String getKey(ContainerRequest request);
 
     @Override public ContainerRequest filter(@Context ContainerRequest request) {
-        final List<Long> fail = checkOverflow(request).stream().filter(x->x!=0).collect(Collectors.toList());
-        if (!fail.isEmpty()) {
-            throw new WebApplicationException(Response.status(429).entity(JsonUtil.toJsonOrDie(fail)).build());
+        Long i = checkOverflow(request);
+        if (!ZillaRuntime.empty(i)) {
+            throw new WebApplicationException(Response.status(429).build());
         }
         return request;
     }
 
-    public abstract List<Long> checkOverflow(ContainerRequest request);
+    public Long checkOverflow(ContainerRequest request) {
+        return (Long)getBuckets().eval(getScriptSha(), new SingletonList<>(getKey(request)), getList());
+    }
 }
