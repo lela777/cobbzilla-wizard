@@ -26,9 +26,7 @@ public class RedisService {
 
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
 
-    public String loadScript(String script) {
-        return getRedis().scriptLoad(script);
-    }
+    public String loadScript(String script) { return getRedis().scriptLoad(script); }
 
     public Object eval(String scriptsha, List<String> keys, List<String> args) {
         return getRedis().evalsha(scriptsha, keys, args);
