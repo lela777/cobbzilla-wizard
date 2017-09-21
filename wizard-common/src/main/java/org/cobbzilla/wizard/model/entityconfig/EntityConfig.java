@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 import org.springframework.util.ReflectionUtils;
 
@@ -206,7 +207,10 @@ public class EntityConfig {
             childConfig.updateWithAnnotations();
         }
 
-        if (clazz != null) updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
+        if (clazz != null) {
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldOverwrite.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
+        }
 
         return this;
     }
@@ -375,26 +379,45 @@ public class EntityConfig {
         }
     }
 
-    /** Call this method only after all children entity-configs are fully updated. */
-    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
-        if (annotation == null) return this;
-
-        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+    private EntityConfig findECChildToUpdate(List<String> fieldPathParts) {
         EntityConfig ecToUpdate = this;
         for (int i = 0; i < fieldPathParts.size() - 1; i++) {
             final String part = fieldPathParts.get(i);
             if (!empty(part)) {
                 ecToUpdate = ecToUpdate.getChildren().get(part);
                 if (ecToUpdate == null) {
-                    log.warn("EC child " + part + " not found for path " + annotation.fieldPath());
-                    return this;
+                    log.warn("EC child " + part + " not found for path " + StringUtil.toString(fieldPathParts, "."));
+                    return null;
                 }
             }
         }
-        ecToUpdate.fields.put(fieldPathParts.get(fieldPathParts.size() - 1),
-                              updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldPath()),
-                                                              annotation.fieldDef()));
+        return ecToUpdate;
+    }
 
+    /** Call this method only after all children entity-configs are fully updated. */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
+        if (annotation == null) return this;
+
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
+        if (ecToUpdate == null) return this;
+
+        final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
+        ecToUpdate.fields.put(fieldName, updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(fieldName),
+                                                                         annotation.fieldDef()));
+        return this;
+    }
+
+    /** Call this method only after all children entity-configs are fully updated. */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldOverwrite annotation) {
+        if (annotation == null) return this;
+
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
+        if (ecToUpdate == null) return this;
+
+        final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
+        ecToUpdate.fields.put(fieldName, buildFieldCfgFromAnnotation(annotation.fieldDef()));
         return this;
     }
 
@@ -467,18 +490,22 @@ public class EntityConfig {
         }
     }
 
+    private EntityFieldConfig buildFieldCfgFromAnnotation(ECField fieldAnnotation) {
+        return new EntityFieldConfig().setName(fieldAnnotation.name())
+                                      .setDisplayName(fieldAnnotation.displayName())
+                                      .setMode(fieldAnnotation.mode())
+                                      .setType(fieldAnnotation.type())
+                                      .setLength(fieldAnnotation.length())
+                                      .setControl(fieldAnnotation.control())
+                                      .setOptions(fieldAnnotation.options())
+                                      .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
+                                      .setObjectType(fieldAnnotation.objectType());
+    }
+
     private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
         final ECField fieldAnnotation = accessor.getAnnotation(ECField.class);
         if (fieldAnnotation != null) {
-            return new EntityFieldConfig().setName(fieldAnnotation.name())
-                                          .setDisplayName(fieldAnnotation.displayName())
-                                          .setMode(fieldAnnotation.mode())
-                                          .setType(fieldAnnotation.type())
-                                          .setLength(fieldAnnotation.length())
-                                          .setControl(fieldAnnotation.control())
-                                          .setOptions(fieldAnnotation.options())
-                                          .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
-                                          .setObjectType(fieldAnnotation.objectType());
+            return buildFieldCfgFromAnnotation(fieldAnnotation);
         }
 
         String fieldName = fieldNameFromAccessor(accessor);
