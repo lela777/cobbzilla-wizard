@@ -141,7 +141,7 @@ public abstract class AbstractEntityConfigsResource {
         entityConfig.setClassName(clazz.getName());
 
         try {
-            return entityConfig.updateWithAnnotations(clazz);
+            return entityConfig.updateWithAnnotations(clazz, true);
         } catch (Exception e) {
             return die("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
         }
