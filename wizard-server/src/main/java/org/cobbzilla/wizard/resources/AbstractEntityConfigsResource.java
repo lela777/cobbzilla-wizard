@@ -49,8 +49,11 @@ public abstract class AbstractEntityConfigsResource {
     protected File getLocalConfig(EntityConfig name) { return null; }
 
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
-    public boolean refresh() { configs.set(null); return true; }
-    public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configs) { return refresh(configs); }
+    public boolean refresh() { return refresh(configs); }
+    public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configsToReset) {
+        configsToReset.set(null);
+        return true;
+    }
 
     @GET
     @Path("/{name}")
