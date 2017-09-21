@@ -517,6 +517,10 @@ public class EntityConfig {
         if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
             return cfg.setType(EntityFieldType.flag);
         }
+        if (fieldType.equals(int.class) || fieldType.equals(Integer.class) ||
+                fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+            return cfg.setType(EntityFieldType.integer);
+        }
 
         Column columnAnnotation = accessor.getAnnotation(Column.class);
         if (columnAnnotation != null) {
