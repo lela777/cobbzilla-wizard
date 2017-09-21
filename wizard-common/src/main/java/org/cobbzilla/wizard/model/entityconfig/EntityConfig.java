@@ -318,15 +318,16 @@ public class EntityConfig {
             fieldNames.addAll(0, annotationFieldNames);
 
             if (fields == null) fields = new HashMap<>(fieldNames.size());
-            ReflectionUtils.doWithFields(
-                    clazz,
-                    field -> updateFieldWithAnnotations(field),
-                    field -> isFieldUnprocessed(field));
-            // Also check getter methods:
+            // First check getter methods (as getter might be overridden):
             ReflectionUtils.doWithMethods(
                     clazz,
                     method -> updateFieldWithAnnotations(method),
                     method -> isFieldUnprocessed(method));
+            // then check the property itself (without overwriting existing field setup).
+            ReflectionUtils.doWithFields(
+                    clazz,
+                    field -> updateFieldWithAnnotations(field),
+                    field -> isFieldUnprocessed(field));
         } else {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
