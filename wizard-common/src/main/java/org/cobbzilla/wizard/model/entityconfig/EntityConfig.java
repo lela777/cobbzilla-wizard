@@ -439,8 +439,8 @@ public class EntityConfig {
 
         if (empty(child.getDisplayName())) child.setDisplayName(annotationChild.displayName());
 
-        // Not that even id `parentField` is not set in `child`, if existing, field (from `fields` list) which is set to
-        // contain `reference` to `:parent` will be returned by `getParentField` method above!
+        // Note that even if `parentField` is not set in `child`, if existing, field (from `fields` list) which is set
+        // to contain `reference` to `:parent` will be returned by `getParentField` method above!
         if (child.getParentField() == null) {
             child.parentField = new EntityFieldConfig();
 
@@ -450,7 +450,7 @@ public class EntityConfig {
             }
 
             // Overriding the existing field with the same name. Note that its current config is not set to be `:parent`
-            // reference (as we already checked if this child has parent field above), so overrinding it is ok to do
+            // reference (as we already checked if this child has parent field above), so overriding it is ok to do
             // here.
             if (child.fields.containsKey(child.parentField.getName())) {
                 log.info("Parent field's name " + child.parentField.getName() +
