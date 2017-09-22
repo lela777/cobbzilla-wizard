@@ -178,13 +178,20 @@ public class EntityConfig {
      *  non-empty values!
      */
     public EntityConfig updateWithAnnotations() {
-        return updateWithAnnotations(getClassSafe(getClassName()));
+        return updateWithAnnotations(getClassSafe(getClassName()), false);
     }
 
     /** Update properties with values from the class' annotation. Doesn't override existing non-empty values! */
-    public EntityConfig updateWithAnnotations(Class<?> clazz) {
+    public EntityConfig updateWithAnnotations(Class<?> clazz, boolean isRootECCall) {
+        if (isRootECCall && clazz == null) throw new NullPointerException("Root class cannot be null");
+
         String clazzPackageName = null;
         if (clazz != null) {
+            ECType mainECAnnotation = clazz.getAnnotation(ECType.class);
+            if (isRootECCall && (mainECAnnotation == null || !mainECAnnotation.isRootECClass())) {
+                throw new IllegalArgumentException(clazz.getName() + " is not marked as entity-config root class");
+            }
+
             clazzPackageName = clazz.getPackage().getName();
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECType.class));

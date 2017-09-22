@@ -49,8 +49,11 @@ public abstract class AbstractEntityConfigsResource {
     protected File getLocalConfig(EntityConfig name) { return null; }
 
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
-    public boolean refresh() { configs.set(null); return true; }
-    public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configs) { return refresh(configs); }
+    public boolean refresh() { return refresh(configs); }
+    public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configsToReset) {
+        configsToReset.set(null);
+        return true;
+    }
 
     @GET
     @Path("/{name}")
@@ -138,7 +141,7 @@ public abstract class AbstractEntityConfigsResource {
         entityConfig.setClassName(clazz.getName());
 
         try {
-            return entityConfig.updateWithAnnotations(clazz);
+            return entityConfig.updateWithAnnotations(clazz, true);
         } catch (Exception e) {
             return die("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
         }
