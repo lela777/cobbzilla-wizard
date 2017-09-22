@@ -8,6 +8,7 @@ import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
+import org.cobbzilla.wizard.model.entityconfig.annotations.ECType;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -96,10 +97,14 @@ public abstract class AbstractEntityConfigsResource {
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
             scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
+            scanner.addIncludeFilter(new AnnotationTypeFilter(ECType.class));
             final HashSet<Class<?>> classesWithoutConfigs = new HashSet<>();
             for (String pkg : getConfiguration().getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
+                    // Skip classes which are not marked as root EC classes.
+                    final ECType ecTypeAnnotation = clazz.getAnnotation(ECType.class);
+                    if (ecTypeAnnotation == null || !ecTypeAnnotation.isRootECClass()) continue;
                     final EntityConfig config = toEntityConfig(clazz);
                     if (config != null) {
                         configMap.put(clazz.getName(), config);
