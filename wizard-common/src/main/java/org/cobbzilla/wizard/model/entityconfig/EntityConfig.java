@@ -507,15 +507,15 @@ public class EntityConfig {
     }
 
     private EntityFieldConfig buildFieldCfgFromAnnotation(ECField fieldAnnotation) {
-        return new EntityFieldConfig().setName(fieldAnnotation.name())
-                                      .setDisplayName(fieldAnnotation.displayName())
-                                      .setMode(fieldAnnotation.mode())
-                                      .setType(fieldAnnotation.type())
-                                      .setLength(fieldAnnotation.length())
-                                      .setControl(fieldAnnotation.control())
-                                      .setOptions(fieldAnnotation.options())
-                                      .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
-                                      .setObjectType(fieldAnnotation.objectType());
+        EntityFieldConfig cfg = new EntityFieldConfig().setMode(fieldAnnotation.mode()).setType(fieldAnnotation.type());
+        if (!empty(fieldAnnotation.name())) cfg.setName(fieldAnnotation.name());
+        if (!empty(fieldAnnotation.displayName())) cfg.setDisplayName(fieldAnnotation.displayName());
+        if (fieldAnnotation.length() > 0) cfg.setLength(fieldAnnotation.length());
+        if (!EntityFieldControl.unset.equals(fieldAnnotation.control())) cfg.setControl(fieldAnnotation.control());
+        if (!empty(fieldAnnotation.options())) cfg.setOptions(fieldAnnotation.options());
+        if (!empty(fieldAnnotation.emptyDisplayValue())) cfg.setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue());
+        if (!empty(fieldAnnotation.objectType())) cfg.setObjectType(fieldAnnotation.objectType());
+        return cfg;
     }
 
     private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
