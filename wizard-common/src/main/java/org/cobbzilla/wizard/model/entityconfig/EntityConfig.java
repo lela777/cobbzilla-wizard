@@ -322,31 +322,40 @@ public class EntityConfig {
             fieldNames.addAll(0, annotationFieldNames);
 
             if (fields == null) fields = new HashMap<>(fieldNames.size());
-            // First check getter methods (as getter might be overridden):
-            ReflectionUtils.doWithMethods(
-                    clazz,
-                    method -> updateFieldWithAnnotations(method),
-                    method -> isFieldUnprocessed(method));
-            // then check the property itself (without overwriting existing field setup).
+            final Set<String> initiallyDefinedFields = new HashSet<>(fields.keySet());
+            // The config for fields can be taken (built) bellow first from the class property...
             ReflectionUtils.doWithFields(
                     clazz,
                     field -> updateFieldWithAnnotations(field),
-                    field -> isFieldUnprocessed(field));
+                    field -> fieldNames.contains(field.getName()) && !initiallyDefinedFields.contains(field.getName()));
+            // ... and then can be overridden with annotation put over getter method (i.e. overridden getter in
+            // a subclass). Of course, all this is done only if the field is not defined in the JSON (which overrides
+            // everything here).
+            ReflectionUtils.doWithMethods(
+                    clazz,
+                    method -> updateFieldWithAnnotations(method),
+                    method -> {
+                        String fieldName;
+                        try {
+                            fieldName = fieldNameFromAccessor(method);
+                        } catch (IllegalArgumentException e) {
+                            return false;
+                        }
+                        // ECField annotation over getter will override entity config only if it is built above (by
+                        // previous ReflectionUtils call for properties). So the field was not initially configured, and
+                        // ECField annotation exists here.
+                        boolean isOverridingAnnotation = !initiallyDefinedFields.contains(fieldName) &&
+                                                         method.getAnnotation(ECField.class) != null;
+                        // Take this config into consideration either if there's no other, or if the overriding
+                        // annotation is set on this getter method:
+                        return fieldNames.contains(fieldName) &&
+                               (!fields.containsKey(fieldName) || isOverridingAnnotation);
+                    });
         } else {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
         }
         return this;
-    }
-
-    private boolean isFieldUnprocessed(AccessibleObject accessor) {
-        String fieldName;
-        try {
-            fieldName = fieldNameFromAccessor(accessor);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-        return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
     }
 
     private String fieldNameFromAccessor(AccessibleObject accessor) throws IllegalArgumentException {
