@@ -7,6 +7,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.cobbzilla.util.collection.FieldTransformer;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.model.entityconfig.EntityFieldMode;
+import org.cobbzilla.wizard.model.entityconfig.EntityFieldType;
+import org.cobbzilla.wizard.model.entityconfig.annotations.ECField;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 
 import javax.persistence.Column;
@@ -72,11 +75,13 @@ public class IdentifiableBase implements Identifiable {
     }
 
     @Column(updatable=false, nullable=false)
+    @ECField(type=EntityFieldType.epoch_time, mode=EntityFieldMode.readOnly)
     @Getter @JsonIgnore private long ctime = now();
     public void setCtime (long time) { /*noop*/ }
     @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
 
     @Column(nullable=false)
+    @ECField(type=EntityFieldType.epoch_time)
     @Getter @JsonIgnore private long mtime = now();
     public void setMtime (long time) { this.mtime = time; }
     public void setMtime () { this.mtime = now(); }
