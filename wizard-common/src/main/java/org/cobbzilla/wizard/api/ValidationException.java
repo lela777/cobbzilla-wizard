@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.api;
 import lombok.Getter;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 
@@ -20,6 +21,8 @@ public class ValidationException extends ApiException {
         super(request, response);
         this.violations = mapViolations(response.json);
     }
+
+    @Override public String getMessage() { return StringUtil.toString(violations.values()); }
 
     protected Map<String, ConstraintViolationBean> mapViolations(String json) {
         final Map<String, ConstraintViolationBean> map = new HashMap<>();
