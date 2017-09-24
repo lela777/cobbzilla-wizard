@@ -38,6 +38,7 @@ import static org.cobbzilla.util.string.StringUtil.*;
  */
 @ToString(of="name") @Slf4j
 public class EntityConfig {
+
     public static final String URI_CUSTOM = ":custom";
     public static final String URI_NOT_SUPPORTED = ":notSupported";
 
