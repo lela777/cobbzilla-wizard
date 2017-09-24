@@ -103,7 +103,7 @@ public abstract class AbstractEntityConfigsResource {
                     final Class<?> clazz = forName(def.getBeanClassName());
                     // Skip classes which are not marked as root EC classes.
                     final ECType ecTypeAnnotation = clazz.getAnnotation(ECType.class);
-                    if (ecTypeAnnotation == null || !ecTypeAnnotation.isRootECClass()) continue;
+                    if (ecTypeAnnotation == null || !ecTypeAnnotation.root()) continue;
                     final EntityConfig config = toEntityConfig(clazz);
                     if (config != null) {
                         configMap.put(clazz.getName(), config);
