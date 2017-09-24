@@ -186,8 +186,8 @@ public class EntityConfig {
 
         String clazzPackageName = null;
         if (clazz != null) {
-            ECType mainECAnnotation = clazz.getAnnotation(ECType.class);
-            if (isRootECCall && (mainECAnnotation == null || !mainECAnnotation.isRootECClass())) {
+            final ECType mainECAnnotation = clazz.getAnnotation(ECType.class);
+            if (isRootECCall && (mainECAnnotation == null || !mainECAnnotation.root())) {
                 throw new IllegalArgumentException(clazz.getName() + " is not marked as entity-config root class");
             }
 
@@ -206,7 +206,7 @@ public class EntityConfig {
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
-            EntityConfig childConfig = childConfigEntry.getValue();
+            final EntityConfig childConfig = childConfigEntry.getValue();
             if (empty(childConfig.getClassName()) && clazzPackageName != null) {
                 childConfig.setClassName(clazzPackageName + "." + childConfigEntry.getKey());
             }

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME) @Target(ElementType.TYPE)
 public @interface ECType {
-    boolean isRootECClass() default false;
+    boolean root() default false;
     String name() default "";
     String displayName() default "";
     String pluralDisplayName() default "";
