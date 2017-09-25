@@ -31,15 +31,16 @@ public abstract class LogRelayMemoryTarget implements LogRelayAppenderTarget {
     public String[] getLines () {
         final String[] copy;
         synchronized (index) {
-            int i = index.get();
+            int i = index.get() - 1;
+            if (i == 0) return StringUtil.EMPTY_ARRAY;
             copy = new String[i > lines.length ? lines.length : i];
             if (i < lines.length) {
                 System.arraycopy(lines, 0, copy, 0, i);
             } else {
                 i %= lines.length;
-                // we have wrapped. copy lines from index to end, then from 0 to index
-                System.arraycopy(lines, i, copy, 0, lines.length-i);
-                if (lines.length - i > 0) System.arraycopy(lines, 0, copy, i, i);
+                // we have wrapped. copy lines from just after index to end, then from 0 to index
+                System.arraycopy(lines, i+1, copy, 0, lines.length-i-1);
+                if (lines.length - i > 0) System.arraycopy(lines, 0, copy, lines.length-i-1, i+1);
             }
         }
         return copy;
