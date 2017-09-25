@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.processorCount;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
@@ -101,8 +102,10 @@ public class ModelSetup {
                                                            ModelSetupListener listener,
                                                            String runName) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
-            String modelName = model.getKey();
+            final String modelName = model.getKey();
             final String json = model.getValue();
+            if (empty(json)) return die("JSON file not found or empty: "+modelName+".json");
+
             final String entityType = getEntityTypeFromString(modelName);
 
             setupJson(api, entityConfigsEndpoint, entityType, json, listener, runName);

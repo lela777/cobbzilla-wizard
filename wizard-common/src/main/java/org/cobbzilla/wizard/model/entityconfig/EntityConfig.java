@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 import org.springframework.util.ReflectionUtils;
 
@@ -37,6 +38,7 @@ import static org.cobbzilla.util.string.StringUtil.*;
  */
 @ToString(of="name") @Slf4j
 public class EntityConfig {
+
     public static final String URI_CUSTOM = ":custom";
     public static final String URI_NOT_SUPPORTED = ":notSupported";
 
@@ -177,13 +179,20 @@ public class EntityConfig {
      *  non-empty values!
      */
     public EntityConfig updateWithAnnotations() {
-        return updateWithAnnotations(getClassSafe(getClassName()));
+        return updateWithAnnotations(getClassSafe(getClassName()), false);
     }
 
     /** Update properties with values from the class' annotation. Doesn't override existing non-empty values! */
-    public EntityConfig updateWithAnnotations(Class<?> clazz) {
+    public EntityConfig updateWithAnnotations(Class<?> clazz, boolean isRootECCall) {
+        if (isRootECCall && clazz == null) throw new NullPointerException("Root class cannot be null");
+
         String clazzPackageName = null;
         if (clazz != null) {
+            final ECType mainECAnnotation = clazz.getAnnotation(ECType.class);
+            if (isRootECCall && (mainECAnnotation == null || !mainECAnnotation.root())) {
+                throw new IllegalArgumentException(clazz.getName() + " is not marked as entity-config root class");
+            }
+
             clazzPackageName = clazz.getPackage().getName();
 
             updateWithAnnotation(clazz, clazz.getAnnotation(ECType.class));
@@ -199,14 +208,17 @@ public class EntityConfig {
         }
 
         for (Map.Entry<String, EntityConfig> childConfigEntry : getChildren().entrySet()) {
-            EntityConfig childConfig = childConfigEntry.getValue();
+            final EntityConfig childConfig = childConfigEntry.getValue();
             if (empty(childConfig.getClassName()) && clazzPackageName != null) {
                 childConfig.setClassName(clazzPackageName + "." + childConfigEntry.getKey());
             }
             childConfig.updateWithAnnotations();
         }
 
-        if (clazz != null) updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
+        if (clazz != null) {
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldOverwrite.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
+        }
 
         return this;
     }
@@ -318,30 +330,40 @@ public class EntityConfig {
             fieldNames.addAll(0, annotationFieldNames);
 
             if (fields == null) fields = new HashMap<>(fieldNames.size());
+            final Set<String> initiallyDefinedFields = new HashSet<>(fields.keySet());
+            // The config for fields can be taken (built) bellow first from the class property...
             ReflectionUtils.doWithFields(
                     clazz,
                     field -> updateFieldWithAnnotations(field),
-                    field -> isFieldUnprocessed(field));
-            // Also check getter methods:
+                    field -> fieldNames.contains(field.getName()) && !initiallyDefinedFields.contains(field.getName()));
+            // ... and then can be overridden with annotation put over getter method (i.e. overridden getter in
+            // a subclass). Of course, all this is done only if the field is not defined in the JSON (which overrides
+            // everything here).
             ReflectionUtils.doWithMethods(
                     clazz,
                     method -> updateFieldWithAnnotations(method),
-                    method -> isFieldUnprocessed(method));
+                    method -> {
+                        String fieldName;
+                        try {
+                            fieldName = fieldNameFromAccessor(method);
+                        } catch (IllegalArgumentException e) {
+                            return false;
+                        }
+                        // ECField annotation over getter will override entity config only if it is built above (by
+                        // previous ReflectionUtils call for properties). So the field was not initially configured, and
+                        // ECField annotation exists here.
+                        boolean isOverridingAnnotation = !initiallyDefinedFields.contains(fieldName) &&
+                                                         method.getAnnotation(ECField.class) != null;
+                        // Take this config into consideration either if there's no other, or if the overriding
+                        // annotation is set on this getter method:
+                        return fieldNames.contains(fieldName) &&
+                               (!fields.containsKey(fieldName) || isOverridingAnnotation);
+                    });
         } else {
             // if existing JSON-based field names are already set, do nothing more
             // but if those are empty too, then scan the class for any @Column annotations, generate Fields for them
         }
         return this;
-    }
-
-    private boolean isFieldUnprocessed(AccessibleObject accessor) {
-        String fieldName;
-        try {
-            fieldName = fieldNameFromAccessor(accessor);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-        return fieldNames.contains(fieldName) && !fields.containsKey(fieldName);
     }
 
     private String fieldNameFromAccessor(AccessibleObject accessor) throws IllegalArgumentException {
@@ -374,26 +396,45 @@ public class EntityConfig {
         }
     }
 
-    /** Call this method only after all children entity-configs are fully updated. */
-    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
-        if (annotation == null) return this;
-
-        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+    private EntityConfig findECChildToUpdate(List<String> fieldPathParts) {
         EntityConfig ecToUpdate = this;
         for (int i = 0; i < fieldPathParts.size() - 1; i++) {
             final String part = fieldPathParts.get(i);
             if (!empty(part)) {
                 ecToUpdate = ecToUpdate.getChildren().get(part);
                 if (ecToUpdate == null) {
-                    log.warn("EC child " + part + " not found for path " + annotation.fieldPath());
-                    return this;
+                    log.warn("EC child " + part + " not found for path " + StringUtil.toString(fieldPathParts, "."));
+                    return null;
                 }
             }
         }
-        ecToUpdate.fields.put(fieldPathParts.get(fieldPathParts.size() - 1),
-                              updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(annotation.fieldPath()),
-                                                              annotation.fieldDef()));
+        return ecToUpdate;
+    }
 
+    /** Call this method only after all children entity-configs are fully updated. */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
+        if (annotation == null) return this;
+
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
+        if (ecToUpdate == null) return this;
+
+        final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
+        ecToUpdate.fields.put(fieldName, updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(fieldName),
+                                                                         annotation.fieldDef()));
+        return this;
+    }
+
+    /** Call this method only after all children entity-configs are fully updated. */
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldOverwrite annotation) {
+        if (annotation == null) return this;
+
+        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
+        if (ecToUpdate == null) return this;
+
+        final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
+        ecToUpdate.fields.put(fieldName, buildFieldCfgFromAnnotation(annotation.fieldDef()));
         return this;
     }
 
@@ -438,8 +479,8 @@ public class EntityConfig {
 
         if (empty(child.getDisplayName())) child.setDisplayName(annotationChild.displayName());
 
-        // Not that even id `parentField` is not set in `child`, if existing, field (from `fields` list) which is set to
-        // contain `reference` to `:parent` will be returned by `getParentField` method above!
+        // Note that even if `parentField` is not set in `child`, if existing, field (from `fields` list) which is set
+        // to contain `reference` to `:parent` will be returned by `getParentField` method above!
         if (child.getParentField() == null) {
             child.parentField = new EntityFieldConfig();
 
@@ -449,7 +490,7 @@ public class EntityConfig {
             }
 
             // Overriding the existing field with the same name. Note that its current config is not set to be `:parent`
-            // reference (as we already checked if this child has parent field above), so overrinding it is ok to do
+            // reference (as we already checked if this child has parent field above), so overriding it is ok to do
             // here.
             if (child.fields.containsKey(child.parentField.getName())) {
                 log.info("Parent field's name " + child.parentField.getName() +
@@ -466,18 +507,22 @@ public class EntityConfig {
         }
     }
 
+    private EntityFieldConfig buildFieldCfgFromAnnotation(ECField fieldAnnotation) {
+        EntityFieldConfig cfg = new EntityFieldConfig().setMode(fieldAnnotation.mode()).setType(fieldAnnotation.type());
+        if (!empty(fieldAnnotation.name())) cfg.setName(fieldAnnotation.name());
+        if (!empty(fieldAnnotation.displayName())) cfg.setDisplayName(fieldAnnotation.displayName());
+        if (fieldAnnotation.length() > 0) cfg.setLength(fieldAnnotation.length());
+        if (!EntityFieldControl.unset.equals(fieldAnnotation.control())) cfg.setControl(fieldAnnotation.control());
+        if (!empty(fieldAnnotation.options())) cfg.setOptions(fieldAnnotation.options());
+        if (!empty(fieldAnnotation.emptyDisplayValue())) cfg.setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue());
+        if (!empty(fieldAnnotation.objectType())) cfg.setObjectType(fieldAnnotation.objectType());
+        return cfg;
+    }
+
     private EntityFieldConfig buildFieldConfig(AccessibleObject accessor) {
         final ECField fieldAnnotation = accessor.getAnnotation(ECField.class);
         if (fieldAnnotation != null) {
-            return new EntityFieldConfig().setName(fieldAnnotation.name())
-                                          .setDisplayName(fieldAnnotation.displayName())
-                                          .setMode(fieldAnnotation.mode())
-                                          .setType(fieldAnnotation.type())
-                                          .setLength(fieldAnnotation.length())
-                                          .setControl(fieldAnnotation.control())
-                                          .setOptions(fieldAnnotation.options())
-                                          .setEmptyDisplayValue(fieldAnnotation.emptyDisplayValue())
-                                          .setObjectType(fieldAnnotation.objectType());
+            return buildFieldCfgFromAnnotation(fieldAnnotation);
         }
 
         String fieldName = fieldNameFromAccessor(accessor);
@@ -516,6 +561,10 @@ public class EntityConfig {
 
         if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
             return cfg.setType(EntityFieldType.flag);
+        }
+        if (fieldType.equals(int.class) || fieldType.equals(Integer.class) ||
+                fieldType.equals(long.class) || fieldType.equals(Long.class)) {
+            return cfg.setType(EntityFieldType.integer);
         }
 
         Column columnAnnotation = accessor.getAnnotation(Column.class);

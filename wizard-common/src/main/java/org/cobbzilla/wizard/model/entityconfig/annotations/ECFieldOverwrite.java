@@ -6,9 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME) @Target(ElementType.TYPE)
-public @interface ECType {
-    boolean root() default false;
-    String name() default "";
-    String displayName() default "";
-    String pluralDisplayName() default "";
+public @interface ECFieldOverwrite {
+    String fieldPath(); // field's path through the children tree (dot separated), or annotated class field's name.
+    ECField fieldDef();
 }

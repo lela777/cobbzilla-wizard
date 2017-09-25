@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -53,6 +54,7 @@ public class RestServerConfiguration {
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
     @Getter @Setter private boolean testMode = false;
+    @Getter @Setter private LogRelayAppenderConfig logRelay;
 
     private String appendPathToUriBase(String base, String... pathParts) {
         try {
