@@ -34,11 +34,11 @@ public abstract class LogRelayMemoryTarget implements LogRelayAppenderTarget {
     public String[] getLines () {
         final String[] copy;
         synchronized (index) {
-            if (indexAtLastGetLines.get() == index.get()) {
+            int i = index.get();
+            if (indexAtLastGetLines.get() == i) {
                 return lastLines.get();
             }
-            int i = index.get();
-            indexAtLastGetLines.set(index.get());
+            indexAtLastGetLines.set(i);
             i--;
             if (i == 0) return StringUtil.EMPTY_ARRAY;
             copy = new String[i > lines.length ? lines.length : i];
