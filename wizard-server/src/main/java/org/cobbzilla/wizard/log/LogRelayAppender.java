@@ -30,6 +30,9 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
         super.stop();
     }
 
+    // allows lambda to call our superclass's start method
+    private void superStart () { super.start(); }
+
     @Override public void start() {
         final String simpleClass = getClass().getSimpleName();
         try {
@@ -40,7 +43,6 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
             stop();
             throw new IllegalStateException("start: error setting up pipes: "+e, e);
         }
-        super.start();
         daemon(() -> {
             final long start = now();
 
@@ -78,12 +80,16 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
             try {
                 // cast shouldn't be required, but a compilation error occurs if we remove it
                 relayTarget = (LogRelayAppenderTarget) config.getBean(relayTo);
-                relayTarget.init(logRelayConfig.getParams());
+                if (!relayTarget.init(logRelayConfig.getParams())) {
+                    log.warn(simpleClass+": relayTo ("+ relayTo +") disabled, exiting");
+                    stop(); return;
+                }
             } catch (Exception e) {
                 log.warn(simpleClass+": error initializing relayTo ("+ relayTo +"), exiting: "+e);
                 stop(); return;
             }
 
+            superStart();
             String line = null;
             try {
                 while ((line = reader.readLine()) != null) relayTarget.relay(line);
