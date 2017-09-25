@@ -5,6 +5,7 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.system.Bytes;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 
 import java.io.*;
@@ -19,10 +20,11 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
 
     @Getter @Setter private static volatile RestServerConfiguration config;
 
+    public static final long STARTUP_TIMEOUT = SECONDS.toMillis(30);
+    private static final int PIPE_BUFSIZ = (int) (8*Bytes.MB);
+
     private PipedInputStream in;
     private PipedOutputStream out;
-
-    public static final long STARTUP_TIMEOUT = SECONDS.toMillis(30);
 
     @Override public void stop() {
         if (in != null) closeQuietly(in);
@@ -36,7 +38,7 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
     @Override public void start() {
         final String simpleClass = getClass().getSimpleName();
         try {
-            in = new PipedInputStream();
+            in = new PipedInputStream(PIPE_BUFSIZ);
             out = new PipedOutputStream(in);
             setOutputStream(out);
         } catch (IOException e) {
@@ -90,11 +92,14 @@ public class LogRelayAppender<E> extends OutputStreamAppender<E> {
             }
 
             superStart();
+
+            log.info(simpleClass+": starting log lines relay to LogRelayAppenderTarget spring bean: "+relayTarget.getClass().getName());
             String line = null;
             try {
                 while ((line = reader.readLine()) != null) relayTarget.relay(line);
             } catch (Exception e) {
                 stop();
+                log.info(simpleClass+": stopping log lines relay to LogRelayAppenderTarget spring bean: "+relayTarget.getClass().getName());
                 throw new IllegalStateException(simpleClass+": error relaying line ("+line+"), exiting: "+e);
             }
         });
