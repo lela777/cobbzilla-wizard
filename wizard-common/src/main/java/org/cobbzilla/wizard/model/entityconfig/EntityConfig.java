@@ -411,17 +411,18 @@ public class EntityConfig {
     }
 
     /** Call this method only after all children entity-configs are fully updated. */
-    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrites annotations) {
-        if (annotations == null) return this;
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrites annotation) {
+        final ECFieldReferenceOverwrite[] annotationOverwrites =
+                annotation != null ? annotation.value() : clazz.getAnnotationsByType(ECFieldReferenceOverwrite.class);
 
-        for (ECFieldReferenceOverwrite annotation : annotations.value()) {
-            final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+        for (ECFieldReferenceOverwrite annotationOverwrite : annotationOverwrites) {
+            final List<String> fieldPathParts = split(annotationOverwrite.fieldPath(), ".");
             EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
             if (ecToUpdate == null) return this;
 
             final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
             ecToUpdate.fields.put(fieldName, updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(fieldName),
-                                                                             annotation.fieldDef()));
+                                                                             annotationOverwrite.fieldDef()));
         }
         return this;
     }
