@@ -8,13 +8,12 @@ import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
+import org.cobbzilla.wizard.model.entityconfig.annotations.ECType;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -94,12 +93,14 @@ public abstract class AbstractEntityConfigsResource {
         @Override public Map<String, EntityConfig> refresh() {
             final Map<String, EntityConfig> configMap = new HashMap<>();
             final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-            scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
-            scanner.addIncludeFilter(new AnnotationTypeFilter(Embeddable.class));
+            scanner.addIncludeFilter(new AnnotationTypeFilter(ECType.class));
             final HashSet<Class<?>> classesWithoutConfigs = new HashSet<>();
             for (String pkg : getConfiguration().getDatabase().getHibernate().getEntityPackages()) {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
+                    // Skip classes which are not marked as root EC classes.
+                    if (!clazz.getAnnotation(ECType.class).isRootECClass()) continue;
+
                     final EntityConfig config = toEntityConfig(clazz);
                     if (config != null) {
                         configMap.put(clazz.getName(), config);
@@ -156,8 +157,11 @@ public abstract class AbstractEntityConfigsResource {
 
             Class<?> parent = clazz.getSuperclass();
             while (!parent.getName().equals(Object.class.getName())) {
-                final EntityConfig parentConfig = getEntityConfig(clazz.getSuperclass());
-                if (parentConfig != null) entityConfig.addParent(parentConfig);
+                ECType parentECType = parent.getAnnotation(ECType.class);
+                if (parentECType != null && parentECType.isRootECClass()) {
+                    final EntityConfig parentConfig = getEntityConfig(parent);
+                    if (parentConfig != null) entityConfig.addParent(parentConfig);
+                }
                 parent = parent.getSuperclass();
             }
 
