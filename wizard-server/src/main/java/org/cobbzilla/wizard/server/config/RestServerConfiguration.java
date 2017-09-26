@@ -104,7 +104,7 @@ public class RestServerConfiguration {
 
     @Getter(lazy=true) private final AnalyticsHandler analyticsHandler = initAnalyticsHandler();
     private AnalyticsHandler initAnalyticsHandler() {
-        if (analytics == null) return null;
+        if (analytics == null || !analytics.valid()) return null;
         final AnalyticsHandler handler = instantiate(analytics.getHandler());
         handler.init(analytics);
         return handler;

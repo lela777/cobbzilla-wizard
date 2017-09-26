@@ -33,11 +33,16 @@ public class AnalyticsQueueService {
 
         final AnalyticsConfiguration analyticsConfig = configuration.getAnalytics();
         if (analyticsConfig == null || !analyticsConfig.valid()) {
-            log.info("startSendingAnalytics: config was null or invalid, not sending analytics data");
+            log.info("startSendingAnalytics: config was null or invalid, not sending analytics");
             return;
         }
 
         final AnalyticsHandler handler = configuration.getAnalyticsHandler();
+        if (handler == null) {
+            log.info("startSendingAnalytics: configuration.getAnalyticsHandler returned null, not sending analytics");
+            return;
+        }
+
         final String writeUrl = handler.getWriteUrl();
         final int httpSuccess = handler.getHttpSuccess();
         final String simpleClass = getClass().getSimpleName();
