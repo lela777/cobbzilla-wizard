@@ -537,13 +537,14 @@ public class EntityConfig {
         Class<?> fieldType = accessor instanceof Field ? ((Field) accessor).getType()
                                                        : ((Method) accessor).getReturnType();
 
-        if (accessor.isAnnotationPresent(Embedded.class)) {
-            return cfg.setType(EntityFieldType.embedded).setObjectType(fieldType.getSimpleName());
+        if (accessor.isAnnotationPresent(Id.class)) {
+            cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
         }
 
-        if (accessor.isAnnotationPresent(Id.class)) {
-            return cfg.setMode(EntityFieldMode.readOnly).setControl(EntityFieldControl.hidden);
+        if (accessor.isAnnotationPresent(Embedded.class)) {
+            cfg.setType(EntityFieldType.embedded).setObjectType(fieldType.getSimpleName());
         }
+
 
         if (accessor.isAnnotationPresent(Enumerated.class)) {
             ECEnumSelect enumAnnotation = null;
@@ -555,28 +556,38 @@ public class EntityConfig {
             }
 
             if (enumAnnotation != null) {
-                return cfg.setControl(EntityFieldControl.select).setOptions(enumAnnotation.options());
+                cfg.setControl(EntityFieldControl.select).setOptions(enumAnnotation.options());
             }
-            // else, just continue so the field will be created (if needed according to the other specifications)
         }
 
         if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
-            return cfg.setType(EntityFieldType.flag);
-        }
-        if (fieldType.equals(int.class) || fieldType.equals(Integer.class) ||
+            cfg.setType(EntityFieldType.flag);
+        } else if (fieldType.equals(int.class) || fieldType.equals(Integer.class) ||
                 fieldType.equals(long.class) || fieldType.equals(Long.class)) {
-            return cfg.setType(EntityFieldType.integer);
+            cfg.setType(EntityFieldType.integer);
+        } else if (fieldType.equals(String.class)) {
+            cfg.setType(EntityFieldType.string);
         }
+
+        boolean isFieldTypeWithLength = !EntityFieldType.flag.equals(cfg.getType()) &&
+                                        !EntityFieldType.reference.equals(cfg.getType()) &&
+                                        !EntityFieldControl.hidden.equals(cfg.getControl()) &&
+                                        !EntityFieldControl.select.equals(cfg.getControl()) &&
+                                        !EntityFieldControl.multi_select.equals(cfg.getControl());
 
         Column columnAnnotation = accessor.getAnnotation(Column.class);
         if (columnAnnotation != null) {
-            cfg.setLength(columnAnnotation.length());
-            if (!columnAnnotation.updatable()) cfg.setMode(EntityFieldMode.createOnly);
+            if (isFieldTypeWithLength) cfg.setLength(columnAnnotation.length());
+            if (!columnAnnotation.updatable() && !EntityFieldMode.readOnly.equals(cfg.getMode())) {
+                cfg.setMode(EntityFieldMode.createOnly);
+            }
         }
 
-        Size sizeAnnotation = accessor.getAnnotation(Size.class);
-        if (sizeAnnotation != null) {
-            if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
+        if (isFieldTypeWithLength) {
+            Size sizeAnnotation = accessor.getAnnotation(Size.class);
+            if (sizeAnnotation != null) {
+                if (!cfg.hasLength() || cfg.getLength() > sizeAnnotation.max()) cfg.setLength(sizeAnnotation.max());
+            }
         }
 
         return cfg;
@@ -586,6 +597,7 @@ public class EntityConfig {
         if (refAnnotation == null) return cfg;
 
         cfg.setType(EntityFieldType.reference);
+        cfg.setMode(refAnnotation.mode());
         if (!empty(refAnnotation.control())) cfg.setControl(EntityFieldControl.create(refAnnotation.control()));
         if (!empty(refAnnotation.options())) cfg.setOptions(refAnnotation.options());
 
