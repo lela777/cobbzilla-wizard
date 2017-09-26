@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static net.sf.cglib.core.CollectionUtils.transform;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
@@ -25,12 +26,6 @@ public class RedisService {
     public static final int MAX_RETRIES = 5;
 
     @Autowired @Getter @Setter private HasRedisConfiguration configuration;
-
-    public String loadScript(String script) { return getRedis().scriptLoad(script); }
-
-    public Object eval(String scriptsha, List<String> keys, List<String> args) {
-        return getRedis().evalsha(scriptsha, keys, args);
-    }
 
     @Getter @Setter private String key;
     protected boolean hasKey () { return !empty(getKey()); }
@@ -140,9 +135,14 @@ public class RedisService {
 
     public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
-    public String prefix (String key) {
-        return empty(prefix) ? key : prefix + "." + key;
+    public String loadScript(String script) { return getRedis().scriptLoad(script); }
+
+    public Object eval(String scriptsha, List<String> keys, List<String> args) {
+        return getRedis().evalsha(scriptsha, prefix(keys), args);
     }
+
+    public String prefix (String key) { return empty(prefix) ? key : prefix + "." + key; }
+    public List<String> prefix(Collection<String> keys) { return transform(keys, o -> prefix(o.toString())); }
 
     // override these for full control
     protected String encrypt(String data) {
