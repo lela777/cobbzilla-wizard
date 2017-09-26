@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @NoArgsConstructor @AllArgsConstructor
 public class ApiRateLimit {
-        @Getter @Setter int limit;
-        @Getter @Setter long interval;
-        @Getter @Setter long block;
+    @Getter @Setter int limit;
+    @Getter @Setter long interval;
+    @Getter @Setter long block;
 }
