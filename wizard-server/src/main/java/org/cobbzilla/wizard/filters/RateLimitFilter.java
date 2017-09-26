@@ -47,6 +47,13 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
 
     protected abstract List<ApiRateLimit> getLimits();
 
+    @Getter(lazy=true) private final List<String> limitsAsStrings = initLimitsAsStrings();
+    protected List<String> initLimitsAsStrings() {
+        return getLimits().stream().map(x->new String[]{String.valueOf(x.getLimit()), String.valueOf(x.getInterval()),
+                                                        String.valueOf(x.getBlock())})
+                          .flatMap(Arrays::stream).collect(Collectors.toList());
+    }
+
     @Override public ContainerRequest filter(@Context ContainerRequest request) {
         Long i = checkOverflow(request);
         if (i != null) {
@@ -57,9 +64,6 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
     }
 
     public Long checkOverflow(ContainerRequest request) {
-        return (Long) getCache().eval(getScriptSha(), getKey(request), getLimits().stream().map(
-                x->new String[]{String.valueOf(x.limit), String.valueOf(x.interval), String.valueOf(x.block)})
-                                                                                  .flatMap(Arrays::stream)
-                                                                                  .collect(Collectors.toList()));
+        return (Long) getCache().eval(getScriptSha(), getKey(request), getLimitsAsStrings());
     }
 }

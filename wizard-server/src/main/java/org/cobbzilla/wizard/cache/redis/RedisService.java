@@ -140,6 +140,10 @@ public class RedisService {
 
     public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
+    public String prefix (String key) {
+        return empty(prefix) ? key : prefix + "." + key;
+    }
+
     // override these for full control
     protected String encrypt(String data) {
         if (!hasKey()) return data;
@@ -155,10 +159,6 @@ public class RedisService {
     private void resetForRetry(int attempt, String reason) {
         reconnect();
         sleep(attempt * 10, reason);
-    }
-
-    private String prefix (String key) {
-        return empty(prefix) ? key : prefix + "." + key;
     }
 
     private String __get(String key, int attempt, int maxRetries) {
