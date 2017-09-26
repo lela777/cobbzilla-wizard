@@ -216,7 +216,7 @@ public class EntityConfig {
 
         if (clazz != null) {
             updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldOverwrite.class));
-            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrite.class));
+            updateWithAnnotation(clazz, clazz.getAnnotation(ECFieldReferenceOverwrites.class));
         }
 
         return this;
@@ -411,16 +411,18 @@ public class EntityConfig {
     }
 
     /** Call this method only after all children entity-configs are fully updated. */
-    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrite annotation) {
-        if (annotation == null) return this;
+    private EntityConfig updateWithAnnotation(Class<?> clazz, ECFieldReferenceOverwrites annotations) {
+        if (annotations == null) return this;
 
-        final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
-        EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
-        if (ecToUpdate == null) return this;
+        for (ECFieldReferenceOverwrite annotation : annotations.value()) {
+            final List<String> fieldPathParts = split(annotation.fieldPath(), ".");
+            EntityConfig ecToUpdate = findECChildToUpdate(fieldPathParts);
+            if (ecToUpdate == null) return this;
 
-        final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
-        ecToUpdate.fields.put(fieldName, updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(fieldName),
-                                                                         annotation.fieldDef()));
+            final String fieldName = fieldPathParts.get(fieldPathParts.size() - 1);
+            ecToUpdate.fields.put(fieldName, updateFieldCfgWithRefAnnotation(EntityFieldConfig.field(fieldName),
+                                                                             annotation.fieldDef()));
+        }
         return this;
     }
 
