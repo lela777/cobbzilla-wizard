@@ -1,13 +1,10 @@
 package org.cobbzilla.wizard.filters;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import static org.cobbzilla.util.time.TimeUtil.parseDuration;
 
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor @ToString(of={"limit", "interval", "block"})
 public class ApiRateLimit {
 
     @Getter @Setter int limit;

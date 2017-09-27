@@ -7,8 +7,10 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.io.StreamUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,8 @@ import java.util.stream.Collectors;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.getPackagePath;
 
-@Provider @Service @NoArgsConstructor
+@NoArgsConstructor @Slf4j
+@Provider @Service
 public abstract class RateLimitFilter implements ContainerRequestFilter {
 
     @Getter(lazy=true) private final RedisService cache = initCache();
@@ -43,9 +46,12 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
                             public List<String> load(String key) { return new SingletonList<>(key); }
                         });
 
-    protected abstract List<String> getKey(ContainerRequest request);
+    protected abstract List<String> getKeys(ContainerRequest request);
 
     protected abstract List<ApiRateLimit> getLimits();
+
+    @Getter(lazy=true) private final List<ApiRateLimit> _limits = initLimits();
+    private List<ApiRateLimit> initLimits() { return getLimits(); }
 
     @Getter(lazy=true) private final List<String> limitsAsStrings = initLimitsAsStrings();
     protected List<String> initLimitsAsStrings() {
@@ -62,9 +68,15 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
 
         if (getLimitsAsStrings() == null) return request; // noop
 
-        final Long i = (Long) getCache().eval(getScriptSha(), getKey(request), getLimitsAsStrings());
+        final List<String> keys = getKeys(request);
+        final Long i = (Long) getCache().eval(getScriptSha(), keys, getLimitsAsStrings());
         if (i != null) {
-            //handleRejection(i); To be implemented
+            final List<ApiRateLimit> limits = get_limits();
+            if (i < 0 || i >= limits.size()) {
+                log.warn("filter: unknown limit ("+i+") exceeded for keys: "+StringUtil.toString(keys));
+            } else {
+                log.warn("filter: limit ("+limits.get(i.intValue())+") exceeded for keys: "+StringUtil.toString(keys));
+            }
             throw new WebApplicationException(Response.status(429).build());
         }
 

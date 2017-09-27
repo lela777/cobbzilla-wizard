@@ -19,5 +19,8 @@ for i=1,len,3 do    --iterate over arguments from 1 to len, step 3
         end
     end
 end
-return ret
 
+if not(ret == nil) and type(ret) == "number" then
+    return (ret - 1) / 3
+end
+return ret
