@@ -9,17 +9,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.SingletonList;
-import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
@@ -28,22 +25,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.string.StringUtil.getPackagePath;
 
 @NoArgsConstructor @Slf4j
-@Provider @Service
 public abstract class RateLimitFilter implements ContainerRequestFilter {
 
     @Autowired public RestServerConfiguration configuration;
+    @Autowired public RedisService redis;
 
     @Getter(lazy=true) private final RedisService cache = initCache();
-    protected RedisService initCache() {
-        return configuration.getBean(RedisService.class).prefixNamespace("RateLimitFilter_bucketCache");
-    }
+    private RedisService initCache() { return redis.prefixNamespace(getClass().getSimpleName()); }
 
     @Getter(lazy=true) private final String scriptSha = initScript();
     public String initScript() {
-        return getCache().loadScript(StreamUtil.stream2string(getPackagePath(RateLimitFilter.class)+"/api_limiter_redis.lua"));
+        return getCache().loadScript(stream2string(getPackagePath(RateLimitFilter.class)+"/api_limiter_redis.lua"));
     }
 
     @Getter private final static LoadingCache<String, List<String>> keys =
@@ -55,7 +51,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
                         });
 
     protected String getToken(ContainerRequest request) {
-        return null;
+        return request.getHeaderValue("X-Forwarded-For");
     }
 
     protected List<String> getKeys(ContainerRequest request) {
