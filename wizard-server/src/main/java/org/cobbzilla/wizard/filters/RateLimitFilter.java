@@ -12,14 +12,18 @@ import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.cache.redis.RedisService;
+import org.cobbzilla.wizard.server.config.RestServerConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -30,8 +34,12 @@ import static org.cobbzilla.util.string.StringUtil.getPackagePath;
 @Provider @Service
 public abstract class RateLimitFilter implements ContainerRequestFilter {
 
+    @Autowired public RestServerConfiguration configuration;
+
     @Getter(lazy=true) private final RedisService cache = initCache();
-    protected abstract RedisService initCache();
+    protected RedisService initCache() {
+        return configuration.getBean(RedisService.class).prefixNamespace("RateLimitFilter_bucketCache");
+    }
 
     @Getter(lazy=true) private final String scriptSha = initScript();
     public String initScript() {
@@ -46,12 +54,33 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
                             public List<String> load(String key) { return new SingletonList<>(key); }
                         });
 
-    protected abstract List<String> getKeys(ContainerRequest request);
+    protected String getToken(ContainerRequest request) {
+        return null;
+    }
 
-    protected abstract List<ApiRateLimit> getLimits();
+    protected List<String> getKeys(ContainerRequest request) {
+        String key;
+        final Principal user = empty(request.getSecurityContext()) ? null : request.getUserPrincipal();
+        if (!empty(user)) key = user.getName();
+        else {
+            final String token = getToken(request);
+            if (!empty(token)) key = token;
+            else {
+                final String ip = request.getHeaderValue("X-Forwarded-For");
+                key = empty(ip) ? "0.0.0.0" : ip;
+            }
+        }
+        try {
+            return getKeys().get(getCache().prefix(key));
+        } catch (ExecutionException e) {
+            return new SingletonList<>(key);
+        }
+    }
 
-    @Getter(lazy=true) private final List<ApiRateLimit> _limits = initLimits();
-    private List<ApiRateLimit> initLimits() { return getLimits(); }
+    @Getter(lazy=true) private final List<ApiRateLimit> limits = initLimits();
+    private List<ApiRateLimit> initLimits() {
+        return configuration.hasRateLimits() ? Arrays.asList(configuration.getRateLimits()) : null;
+    }
 
     @Getter(lazy=true) private final List<String> limitsAsStrings = initLimitsAsStrings();
     protected List<String> initLimitsAsStrings() {
@@ -71,7 +100,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
         final List<String> keys = getKeys(request);
         final Long i = (Long) getCache().eval(getScriptSha(), keys, getLimitsAsStrings());
         if (i != null) {
-            final List<ApiRateLimit> limits = get_limits();
+            final List<ApiRateLimit> limits = getLimits();
             if (i < 0 || i >= limits.size()) {
                 log.warn("filter: unknown limit ("+i+") exceeded for keys: "+StringUtil.toString(keys));
             } else {
