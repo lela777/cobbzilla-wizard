@@ -21,27 +21,27 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.string.StringUtil.getPackagePath;
+
 @Provider @Service @NoArgsConstructor
 public abstract class RateLimitFilter implements ContainerRequestFilter {
 
-    @Getter(lazy = true) private final RedisService cache = initCache();
+    @Getter(lazy=true) private final RedisService cache = initCache();
     protected abstract RedisService initCache();
 
-    @Getter(lazy = true) private final String scriptSha = initScript();
+    @Getter(lazy=true) private final String scriptSha = initScript();
     public String initScript() {
-        return getCache().loadScript(StreamUtil.stream2string("org/cobbzilla/wizard/filters/api_limiter_redis.lua"));
+        return getCache().loadScript(StreamUtil.stream2string(getPackagePath(RateLimitFilter.class)+"/api_limiter_redis.lua"));
     }
 
     @Getter private final static LoadingCache<String, List<String>> keys =
             CacheBuilder.newBuilder()
                         .maximumSize(1000)
                         .expireAfterAccess(5, TimeUnit.MINUTES)
-                        .build(
-                                new CacheLoader<String, List<String>>() {
-                                    public List<String> load(String key) {
-                                        return new SingletonList<>(key);
-                                    }
-                                });
+                        .build(new CacheLoader<String, List<String>>() {
+                            public List<String> load(String key) { return new SingletonList<>(key); }
+                        });
 
     protected abstract List<String> getKey(ContainerRequest request);
 
@@ -49,21 +49,26 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
 
     @Getter(lazy=true) private final List<String> limitsAsStrings = initLimitsAsStrings();
     protected List<String> initLimitsAsStrings() {
-        return getLimits().stream().map(x->new String[]{String.valueOf(x.getLimit()), String.valueOf(x.getInterval()),
-                                                        String.valueOf(x.getBlock())})
-                          .flatMap(Arrays::stream).collect(Collectors.toList());
+        final List<ApiRateLimit> limits = getLimits();
+        if (empty(limits)) return null;
+        return limits.stream().map(x->new String[] {
+                String.valueOf(x.getLimit()),
+                String.valueOf(x.getIntervalDuration()),
+                String.valueOf(x.getBlockDuration())
+        }).flatMap(Arrays::stream).collect(Collectors.toList());
     }
 
     @Override public ContainerRequest filter(@Context ContainerRequest request) {
-        Long i = checkOverflow(request);
+
+        if (getLimitsAsStrings() == null) return request; // noop
+
+        final Long i = (Long) getCache().eval(getScriptSha(), getKey(request), getLimitsAsStrings());
         if (i != null) {
             //handleRejection(i); To be implemented
             throw new WebApplicationException(Response.status(429).build());
         }
+
         return request;
     }
 
-    public Long checkOverflow(ContainerRequest request) {
-        return (Long) getCache().eval(getScriptSha(), getKey(request), getLimitsAsStrings());
-    }
 }

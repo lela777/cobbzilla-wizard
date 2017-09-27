@@ -14,6 +14,7 @@ import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.analytics.AnalyticsConfiguration;
 import org.cobbzilla.wizard.analytics.AnalyticsHandler;
 import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.filters.ApiRateLimit;
 import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
@@ -99,6 +100,9 @@ public class RestServerConfiguration {
     @JsonIgnore @Getter @Setter private Validator validator;
 
     @Getter @Setter private ThriftConfiguration[] thrift;
+
+    @Getter @Setter private ApiRateLimit[] rateLimits;
+    public boolean hasRateLimits () { return !empty(rateLimits); }
 
     @Getter @Setter private AnalyticsConfiguration analytics;
 

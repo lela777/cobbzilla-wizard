@@ -135,10 +135,35 @@ public class RedisService {
 
     public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
-    public String loadScript(String script) { return getRedis().scriptLoad(script); }
+    public String loadScript(String script) { return __loadScript(script, 0, MAX_RETRIES); }
+
+    private String __loadScript(String script, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().scriptLoad(script);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__loadScript");
+            return __loadScript(script, attempt+1, maxRetries);
+        }
+    }
+
 
     public Object eval(String scriptsha, List<String> keys, List<String> args) {
-        return getRedis().evalsha(scriptsha, prefix(keys), args);
+        return __eval(scriptsha, prefix(keys), args, 0, MAX_RETRIES);
+    }
+
+    private Object __eval(String scriptsha, List<String> keys, List<String> args, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().evalsha(scriptsha, keys, args);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__eval");
+            return __eval(scriptsha, keys, args, attempt+1, maxRetries);
+        }
     }
 
     public String prefix (String key) { return empty(prefix) ? key : prefix + "." + key; }
