@@ -68,8 +68,9 @@ public class ModelSetup {
     public static LinkedHashMap<String, String> buildModel(File manifest) {
         final String[] models = json(FileUtil.toStringOrDie(manifest), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
         final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
+        final File parent = empty(manifest.getParent()) ? new File(System.getProperty("user.dir")) : manifest.getParentFile();
         for (String model : models) {
-            modelJson.put(model, FileUtil.toStringOrDie(abs(manifest.getParentFile()) + "/" + model + ".json"));
+            modelJson.put(model, FileUtil.toStringOrDie(abs(parent) + "/" + model + ".json"));
         }
         return modelJson;
     }
