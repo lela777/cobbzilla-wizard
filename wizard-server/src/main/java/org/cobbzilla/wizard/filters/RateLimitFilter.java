@@ -57,7 +57,10 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
     protected List<String> getKeys(ContainerRequest request) {
         String key;
         final Principal user = empty(request.getSecurityContext()) ? null : request.getUserPrincipal();
-        if (!empty(user)) key = user.getName();
+        if (!empty(user)) {
+            if (allowUnlimitedUse(user)) return null;
+            key = user.getName();
+        }
         else {
             final String token = getToken(request);
             if (!empty(token)) key = token;
@@ -72,6 +75,8 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
             return new SingletonList<>(key);
         }
     }
+
+    protected boolean allowUnlimitedUse(Principal user) { return false; }
 
     @Getter(lazy=true) private final List<ApiRateLimit> limits = initLimits();
     private List<ApiRateLimit> initLimits() {
@@ -94,6 +99,7 @@ public abstract class RateLimitFilter implements ContainerRequestFilter {
         if (getLimitsAsStrings() == null) return request; // noop
 
         final List<String> keys = getKeys(request);
+        if (keys == null || keys.isEmpty()) return request; // noop
         final Long i = (Long) getCache().eval(getScriptSha(), keys, getLimitsAsStrings());
         if (i != null) {
             final List<ApiRateLimit> limits = getLimits();
