@@ -557,7 +557,10 @@ public class EntityConfig {
             }
 
             if (enumAnnotation != null) {
-                cfg.setControl(EntityFieldControl.select).setOptions(enumAnnotation.options());
+                cfg.setControl(EntityFieldControl.select)
+                   .setMode(enumAnnotation.mode())
+                   .setOptions(enumAnnotation.options());
+                if (!empty(enumAnnotation.displayName())) cfg.setDisplayName(enumAnnotation.displayName());
             }
         }
 
