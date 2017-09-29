@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static net.sf.cglib.core.CollectionUtils.transform;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
@@ -134,6 +135,40 @@ public class RedisService {
 
     public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
+    public String loadScript(String script) { return __loadScript(script, 0, MAX_RETRIES); }
+
+    private String __loadScript(String script, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().scriptLoad(script);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__loadScript");
+            return __loadScript(script, attempt+1, maxRetries);
+        }
+    }
+
+
+    public Object eval(String scriptsha, List<String> keys, List<String> args) {
+        return __eval(scriptsha, prefix(keys), args, 0, MAX_RETRIES);
+    }
+
+    private Object __eval(String scriptsha, List<String> keys, List<String> args, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().evalsha(scriptsha, keys, args);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__eval");
+            return __eval(scriptsha, keys, args, attempt+1, maxRetries);
+        }
+    }
+
+    public String prefix (String key) { return empty(prefix) ? key : prefix + "." + key; }
+    public List<String> prefix(Collection<String> keys) { return transform(keys, o -> prefix(o.toString())); }
+
     // override these for full control
     protected String encrypt(String data) {
         if (!hasKey()) return data;
@@ -149,10 +184,6 @@ public class RedisService {
     private void resetForRetry(int attempt, String reason) {
         reconnect();
         sleep(attempt * 10, reason);
-    }
-
-    private String prefix (String key) {
-        return empty(prefix) ? key : prefix + "." + key;
     }
 
     private String __get(String key, int attempt, int maxRetries) {

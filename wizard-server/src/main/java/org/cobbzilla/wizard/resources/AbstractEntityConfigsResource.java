@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.capitalize;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStream;
 import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
@@ -50,7 +49,7 @@ public abstract class AbstractEntityConfigsResource {
     @Getter(AccessLevel.PROTECTED) private final AutoRefreshingReference<Map<String, EntityConfig>> configs = new EntityConfigsMap();
     public boolean refresh() { return refresh(configs); }
     public boolean refresh(AutoRefreshingReference<Map<String, EntityConfig>> configsToReset) {
-        configsToReset.set(null);
+        configsToReset.flush();
         return true;
     }
 
@@ -99,7 +98,7 @@ public abstract class AbstractEntityConfigsResource {
                 for (BeanDefinition def : scanner.findCandidateComponents(pkg)) {
                     final Class<?> clazz = forName(def.getBeanClassName());
                     // Skip classes which are not marked as root EC classes.
-                    if (!clazz.getAnnotation(ECType.class).isRootECClass()) continue;
+                    if (!clazz.getAnnotation(ECType.class).root()) continue;
 
                     final EntityConfig config = toEntityConfig(clazz);
                     if (config != null) {
@@ -128,7 +127,9 @@ public abstract class AbstractEntityConfigsResource {
         @Override public long getTimeout() { return getConfigRefreshInterval(); }
     }
 
-    private EntityConfig getEntityConfig(Class<?> clazz) throws Exception {
+    private EntityConfig getEntityConfig(Class<?> clazz) throws Exception { return getEntityConfig(clazz, true); }
+
+    private EntityConfig getEntityConfig(Class<?> clazz, boolean root) throws Exception {
         EntityConfig entityConfig;
         try {
             final InputStream in = loadResourceAsStream(ENTITY_CONFIG_BASE + "/" + packagePath(clazz) + "/" +
@@ -142,9 +143,10 @@ public abstract class AbstractEntityConfigsResource {
         entityConfig.setClassName(clazz.getName());
 
         try {
-            return entityConfig.updateWithAnnotations(clazz, true);
+            return entityConfig.updateWithAnnotations(clazz, root);
         } catch (Exception e) {
-            return die("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
+            log.warn("getEntityConfig(" + clazz.getName() + "): Exception while reading entity cfg annotations", e);
+            return null;
         }
     }
 
@@ -158,7 +160,7 @@ public abstract class AbstractEntityConfigsResource {
             Class<?> parent = clazz.getSuperclass();
             while (!parent.getName().equals(Object.class.getName())) {
                 ECType parentECType = parent.getAnnotation(ECType.class);
-                if (parentECType != null && parentECType.isRootECClass()) {
+                if (parentECType != null && parentECType.root()) {
                     final EntityConfig parentConfig = getEntityConfig(parent);
                     if (parentConfig != null) entityConfig.addParent(parentConfig);
                 }

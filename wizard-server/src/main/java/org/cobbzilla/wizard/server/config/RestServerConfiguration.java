@@ -11,7 +11,11 @@ import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.analytics.AnalyticsConfiguration;
+import org.cobbzilla.wizard.analytics.AnalyticsHandler;
 import org.cobbzilla.wizard.dao.DAO;
+import org.cobbzilla.wizard.filters.ApiRateLimit;
+import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.util.SpringUtil;
@@ -53,6 +57,7 @@ public class RestServerConfiguration {
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
     @Getter @Setter private boolean testMode = false;
+    @Getter @Setter private LogRelayAppenderConfig logRelay;
 
     private String appendPathToUriBase(String base, String... pathParts) {
         try {
@@ -95,6 +100,19 @@ public class RestServerConfiguration {
     @JsonIgnore @Getter @Setter private Validator validator;
 
     @Getter @Setter private ThriftConfiguration[] thrift;
+
+    @Getter @Setter private ApiRateLimit[] rateLimits;
+    public boolean hasRateLimits () { return !empty(rateLimits); }
+
+    @Getter @Setter private AnalyticsConfiguration analytics;
+
+    @Getter(lazy=true) private final AnalyticsHandler analyticsHandler = initAnalyticsHandler();
+    private AnalyticsHandler initAnalyticsHandler() {
+        if (analytics == null || !analytics.valid()) return null;
+        final AnalyticsHandler handler = instantiate(analytics.getHandler());
+        handler.init(analytics);
+        return handler;
+    }
 
     public String getApiUriBase() { return getPublicUriBase() + getHttp().getBaseUri(); }
 
