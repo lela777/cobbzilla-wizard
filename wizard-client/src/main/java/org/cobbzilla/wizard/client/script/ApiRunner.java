@@ -9,12 +9,20 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Transformer;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.javascript.StandardJsEngine;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
@@ -24,16 +32,20 @@ import org.cobbzilla.wizard.util.TestNames;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationErrors;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
+import static org.apache.http.entity.ContentType.create;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.http.HttpContentTypes.contentType;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.string.StringUtil.replaceWithRandom;
+import static org.cobbzilla.util.string.StringUtil.splitAndTrim;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.wizard.client.script.ApiScript.PARAM_REQUIRED;
 
@@ -222,7 +234,15 @@ public class ApiRunner {
                 break;
 
             case HttpMethods.POST:
-                restResponse = api.doPost(uri, subst(request));
+                if (request.hasHeaders()
+                        && request.getHeaders().has("Content-Type")
+                        && request.getHeaders().get("Content-Type").toString().contains(MULTIPART_FORM_DATA.getMimeType())) {
+                    File file = new File(getClass()
+                            .getClassLoader().getResource(request.getEntity().get("file").textValue()).toURI());
+                    restResponse = api.doPost(uri, file);
+                } else {
+                    restResponse = api.doPost(uri, subst(request));
+                }
                 api.removeHeaders();
                 break;
 
