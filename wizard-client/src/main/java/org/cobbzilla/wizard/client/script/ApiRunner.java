@@ -24,12 +24,14 @@ import org.cobbzilla.wizard.util.TestNames;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationErrors;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
@@ -222,7 +224,16 @@ public class ApiRunner {
                 break;
 
             case HttpMethods.POST:
-                restResponse = api.doPost(uri, subst(request));
+                if (request.hasHeaders()
+                        && request.getHeaders().has("Content-Type")
+                        && request.getHeaders().get("Content-Type")
+                        .toString().contains(MULTIPART_FORM_DATA.getMimeType())) {
+                    File file = new File(getClass()
+                            .getClassLoader().getResource(request.getEntity().get("file").textValue()).toURI());
+                    restResponse = api.doPost(uri, file);
+                } else {
+                    restResponse = api.doPost(uri, subst(request));
+                }
                 api.removeHeaders();
                 break;
 
