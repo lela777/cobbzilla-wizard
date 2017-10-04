@@ -51,6 +51,7 @@ public class ApiClientBase implements Cloneable {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
     public static final long INITIAL_RETRY_DELAY = TimeUnit.SECONDS.toMillis(1);
+    public static final String CRLF = "\r\n";
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // subclasses must have a copy constructor
     @Override public Object clone() { return instantiate(getClass(), this); }
@@ -221,7 +222,6 @@ public class ApiClientBase implements Cloneable {
 
     public RestResponse doPost(String path, File uploadFile) throws Exception {
         String url = getUrl(path, getBaseUri());
-        String CRLF = "\r\n";
         HttpURLConnection connection = null;
         final String boundary = hexnow();
 
@@ -242,7 +242,7 @@ public class ApiClientBase implements Cloneable {
         Files.copy(uploadFile.toPath(), output);
         output.flush();
 
-        writer.append(CRLF).flush();
+        writer.append(CRLF);
         writer.append("--" + boundary + "--").append(CRLF).flush();
         return new RestResponse(connection.getResponseCode());
     }
