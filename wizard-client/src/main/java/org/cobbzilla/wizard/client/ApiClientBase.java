@@ -244,7 +244,10 @@ public class ApiClientBase implements Cloneable {
 
         writer.append(CRLF);
         writer.append("--" + boundary + "--").append(CRLF).flush();
-        return new RestResponse(connection.getResponseCode());
+        return new RestResponse(connection.getResponseCode(),
+                IOUtils.toString(connection.getInputStream(),
+                Charset.defaultCharset()),
+                null);
     }
 
     public <T> T post(String path, T request) throws Exception {
