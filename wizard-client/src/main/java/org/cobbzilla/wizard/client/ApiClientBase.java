@@ -27,6 +27,11 @@ import org.cobbzilla.wizard.model.entityconfig.ModelEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +51,7 @@ public class ApiClientBase implements Cloneable {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
     public static final long INITIAL_RETRY_DELAY = TimeUnit.SECONDS.toMillis(1);
+    public static final String CRLF = "\r\n";
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // subclasses must have a copy constructor
     @Override public Object clone() { return instantiate(getClass(), this); }
@@ -212,6 +218,36 @@ public class ApiClientBase implements Cloneable {
         if (request instanceof String) return post(path, request, responseClass);
         if (request instanceof ModelEntity) return post(path, ((ModelEntity) request).getEntity(), responseClass);
         return fromJson(post(path, toJson(request)).json, responseClass);
+    }
+
+    public RestResponse doPost(String path, File uploadFile) throws Exception {
+        String url = getUrl(path, getBaseUri());
+        HttpURLConnection connection = null;
+        final String boundary = hexnow();
+
+        connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+        connection.setRequestProperty(getTokenHeader(), token);
+
+        @Cleanup final OutputStream output = connection.getOutputStream();
+        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, Charset.defaultCharset()), true);
+        writer.append("--" + boundary).append(CRLF);
+
+        writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + uploadFile.getName() + "\"")
+                .append(CRLF)
+                .append("Content-Type: " + URLConnection.guessContentTypeFromName(uploadFile.getName()))
+                .append(CRLF).append(CRLF)
+                .flush();
+        Files.copy(uploadFile.toPath(), output);
+        output.flush();
+
+        writer.append(CRLF);
+        writer.append("--" + boundary + "--").append(CRLF).flush();
+        return new RestResponse(connection.getResponseCode(),
+                IOUtils.toString(connection.getInputStream(),
+                Charset.defaultCharset()),
+                null);
     }
 
     public <T> T post(String path, T request) throws Exception {

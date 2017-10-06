@@ -24,12 +24,14 @@ import org.cobbzilla.wizard.util.TestNames;
 import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationErrors;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
@@ -222,7 +224,20 @@ public class ApiRunner {
                 break;
 
             case HttpMethods.POST:
-                restResponse = api.doPost(uri, subst(request));
+                if (request.hasHeaders() && request.hasHeader("Content-Type")) {
+                    if (!request.getHeader("Content-Type").equals(MULTIPART_FORM_DATA.getMimeType())) {
+                        return die("run("+script+"): invalid request content type");
+                    }
+
+                    String filePath = request.getEntity().get("file").textValue();
+                    if (empty(filePath)) die("run("+script+"): file path doesn't exist");
+                    File file = new File(filePath);
+                    if (!file.exists()) die("run("+script+"): file doesn't exist");
+
+                    restResponse = api.doPost(uri, file);
+                } else {
+                    restResponse = api.doPost(uri, subst(request));
+                }
                 api.removeHeaders();
                 break;
 

@@ -30,6 +30,17 @@ public class ApiScriptRequest {
     @Getter @Setter private JsonNode headers;
     public boolean hasHeaders () { return !empty(headers); }
 
+    boolean hasHeader(String headerName) {
+        return hasHeaders() && getHeaders().has(headerName);
+    }
+
+    String getHeader(String headerName) {
+        if (hasHeaders() && hasHeader(headerName)) {
+            return getHeaders().get(headerName).textValue();
+        }
+        return null;
+    }
+
     @Setter private String method;
 
     public String getMethod() {
