@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
@@ -16,6 +13,7 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HttpContext;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.http.*;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.api.ApiException;
@@ -27,16 +25,13 @@ import org.cobbzilla.wizard.model.entityconfig.ModelEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.http.HttpHeaders.LOCATION;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.http.HttpMethods.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.*;
 import static org.cobbzilla.util.io.FileUtil.getDefaultTempDir;
 import static org.cobbzilla.util.json.JsonUtil.fromJson;
@@ -51,7 +46,6 @@ public class ApiClientBase implements Cloneable {
 
     public static final ContentType CONTENT_TYPE_JSON = ContentType.APPLICATION_JSON;
     public static final long INITIAL_RETRY_DELAY = TimeUnit.SECONDS.toMillis(1);
-    public static final String CRLF = "\r\n";
 
     @SuppressWarnings("CloneDoesntCallSuperClone") // subclasses must have a copy constructor
     @Override public Object clone() { return instantiate(getClass(), this); }
@@ -114,13 +108,13 @@ public class ApiClientBase implements Cloneable {
 
     public RestResponse process(HttpRequestBean requestBean) throws Exception {
         switch (requestBean.getMethod()) {
-            case HttpMethods.GET:
+            case GET:
                 return doGet(requestBean.getUri());
-            case HttpMethods.POST:
+            case POST:
                 return doPost(requestBean.getUri(), getJson(requestBean));
-            case HttpMethods.PUT:
+            case PUT:
                 return doPut(requestBean.getUri(), getJson(requestBean));
-            case HttpMethods.DELETE:
+            case DELETE:
                 return doDelete(requestBean.getUri());
             default:
                 return die("Unsupported request method: "+requestBean.getMethod());
@@ -129,13 +123,13 @@ public class ApiClientBase implements Cloneable {
 
     public RestResponse process_raw(HttpRequestBean requestBean) throws Exception {
         switch (requestBean.getMethod()) {
-            case HttpMethods.GET:
+            case GET:
                 return doGet(requestBean.getUri());
-            case HttpMethods.POST:
+            case POST:
                 return doPost(requestBean.getUri(), requestBean.getEntity(), requestBean.getContentType());
-            case HttpMethods.PUT:
+            case PUT:
                 return doPut(requestBean.getUri(), requestBean.getEntity(), requestBean.getContentType());
-            case HttpMethods.DELETE:
+            case DELETE:
                 return doDelete(requestBean.getUri());
             default:
                 return die("Unsupported request method: "+requestBean.getMethod());
@@ -143,9 +137,9 @@ public class ApiClientBase implements Cloneable {
     }
 
     protected void assertStatusOK(RestResponse response) {
-        if (response.status != HttpStatusCodes.OK
-                && response.status != HttpStatusCodes.CREATED
-                && response.status != HttpStatusCodes.NO_CONTENT) throw new ApiException(response);
+        if (response.status != OK
+                && response.status != CREATED
+                && response.status != NO_CONTENT) throw new ApiException(response);
     }
 
     private String getJson(HttpRequestBean requestBean) throws Exception {
@@ -221,33 +215,15 @@ public class ApiClientBase implements Cloneable {
     }
 
     public RestResponse doPost(String path, File uploadFile) throws Exception {
-        String url = getUrl(path, getBaseUri());
-        HttpURLConnection connection = null;
-        final String boundary = hexnow();
 
-        connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-        connection.setRequestProperty(getTokenHeader(), token);
+        final String url = getUrl(path, getBaseUri());
+        final NameAndValue[] headers = { new NameAndValue(getTokenHeader(), token) };
 
-        @Cleanup final OutputStream output = connection.getOutputStream();
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, Charset.defaultCharset()), true);
-        writer.append("--" + boundary).append(CRLF);
+        @Cleanup final InputStream in = new FileInputStream(uploadFile);
+        final HttpRequestBean request = new HttpRequestBean(POST, url, in, uploadFile.getName(), headers);
+        final HttpResponseBean response = HttpUtil.getStreamResponse(request);
 
-        writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + uploadFile.getName() + "\"")
-                .append(CRLF)
-                .append("Content-Type: " + URLConnection.guessContentTypeFromName(uploadFile.getName()))
-                .append(CRLF).append(CRLF)
-                .flush();
-        Files.copy(uploadFile.toPath(), output);
-        output.flush();
-
-        writer.append(CRLF);
-        writer.append("--" + boundary + "--").append(CRLF).flush();
-        return new RestResponse(connection.getResponseCode(),
-                IOUtils.toString(connection.getInputStream(),
-                Charset.defaultCharset()),
-                null);
+        return new RestResponse(response);
     }
 
     public <T> T post(String path, T request) throws Exception {
@@ -452,7 +428,7 @@ public class ApiClientBase implements Cloneable {
         }
     }
 
-    public static final String LOCATION_HEADER = "Location";
+    public static final String LOCATION_HEADER = LOCATION;
     private String getLocationHeader(HttpResponse response) {
         final Header header = response.getFirstHeader(LOCATION_HEADER);
         return header == null ? null : header.getValue();

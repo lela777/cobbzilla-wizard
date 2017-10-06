@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
@@ -224,8 +225,8 @@ public class ApiRunner {
                 break;
 
             case HttpMethods.POST:
-                if (request.hasHeaders() && request.hasHeader("Content-Type")) {
-                    if (!request.getHeader("Content-Type").equals(MULTIPART_FORM_DATA.getMimeType())) {
+                if (request.hasHeaders() && request.hasHeader(CONTENT_TYPE)) {
+                    if (!request.getHeader(CONTENT_TYPE).equals(MULTIPART_FORM_DATA.getMimeType())) {
                         return die("run("+script+"): invalid request content type");
                     }
 

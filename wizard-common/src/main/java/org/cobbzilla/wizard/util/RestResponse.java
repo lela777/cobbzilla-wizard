@@ -3,6 +3,8 @@ package org.cobbzilla.wizard.util;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import org.cobbzilla.util.collection.NameAndValue;
+import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.util.io.TempDir;
 
 import javax.persistence.Transient;
@@ -39,6 +41,13 @@ public class RestResponse {
         this.status = statusCode;
         this.bytes = responseBytes;
         this.location = locationHeader;
+    }
+
+    public RestResponse(HttpResponseBean response) {
+        this.status = response.getStatus();
+        this.bytes = response.getEntity();
+        this.headers = new ArrayList<>();
+        for (NameAndValue h : response.getHeaders()) this.headers.add(new RestResponseHeader(h));
     }
 
     public String getLocationUuid () { return location.substring(location.lastIndexOf("/")+1); }
