@@ -463,7 +463,7 @@ public class EntityConfig {
     }
 
     private void updateWithAnnotation(Class<?> clazz, ECTypeChild annotationChild) {
-        final Class childClazz = getClassSafe(annotationChild.className());
+        final Class childClazz = annotationChild.type();
 
         String childName = annotationChild.name();
         if (empty(childName) && childClazz != null) {
