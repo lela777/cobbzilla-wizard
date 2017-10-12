@@ -25,13 +25,13 @@ public class RedisService {
 
     public static final int MAX_RETRIES = 5;
 
-    @Autowired @Getter @Setter private RedisConfiguration configuration;
+    @Autowired @Getter @Setter private HasRedisConfiguration configuration;
 
     @Getter @Setter private String key;
     protected boolean hasKey () { return !empty(getKey()); }
 
     private final AtomicReference<Jedis> redis = new AtomicReference<>();
-    private Jedis newJedis() { return new Jedis(configuration.getHost(), configuration.getPort()); }
+    private Jedis newJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
 
     @Getter @Setter private String prefix = null;
 
@@ -44,19 +44,19 @@ public class RedisService {
     }
 
     public RedisService(RedisConfiguration configuration, String prefix, String key) {
-        this.configuration = configuration;
+        this.configuration = () -> configuration;
         this.prefix = prefix;
         this.key = key;
     }
 
     private Map<String, RedisService> prefixServiceCache = new ConcurrentHashMap<>();
 
-    public RedisService prefixNamespace(String prefix) { return prefixNamespace(prefix, configuration.getKey()); }
+    public RedisService prefixNamespace(String prefix) { return prefixNamespace(prefix, configuration.getRedis().getKey()); }
 
     public RedisService prefixNamespace(String prefix, String key) {
         RedisService r = prefixServiceCache.get(prefix);
         if (r == null) {
-            String basePrefix = (this.prefix != null) ? this.prefix : configuration.getPrefix();
+            String basePrefix = (this.prefix != null) ? this.prefix : configuration.getRedis().getPrefix();
             basePrefix = empty(basePrefix) ? "" : basePrefix + ".";
             r = new RedisService(configuration, basePrefix + prefix, key);
             prefixServiceCache.put(prefix, r);
