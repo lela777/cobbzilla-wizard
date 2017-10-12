@@ -6,6 +6,8 @@ import lombok.ToString;
 import org.cobbzilla.util.http.HttpRequestBean;
 import org.cobbzilla.wizard.util.RestResponse;
 
+import static org.cobbzilla.util.json.JsonUtil.json;
+
 @AllArgsConstructor @ToString
 public class ApiException extends RuntimeException {
 
@@ -16,5 +18,7 @@ public class ApiException extends RuntimeException {
         super(response.status+": "+response.json);
         this.response = response;
     }
+
+    @Override public String getMessage () { return (response.status / 100 == 2) ? json(response.json) : json(response); }
 
 }
