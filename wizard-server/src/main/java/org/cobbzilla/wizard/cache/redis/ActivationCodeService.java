@@ -46,7 +46,7 @@ public class ActivationCodeService {
         final RedisService redis = new RedisService();
         final String redisKey = (args.length == 4) ? args[3] : null;
 
-        redis.setConfiguration(new RedisConfiguration(redisKey));
+        redis.setConfiguration(() -> new RedisConfiguration(redisKey));
 
         final ActivationCodeService acService = new ActivationCodeService();
         acService.setRedis(redis);
