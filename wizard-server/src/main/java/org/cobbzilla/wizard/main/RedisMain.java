@@ -13,23 +13,24 @@ public class RedisMain extends BaseMain<RedisOptions> {
         final RedisOptions options = getOptions();
         final RedisConfiguration config = options.getRedisConfiguration();
         final RedisService redisService = new RedisService(config, config.getPrefix(), config.getKey());
+        final boolean quiet = options.isQuiet();
         switch (options.getCommand()) {
             case "get":
                 for (String key : options.getArguments()) {
-                    out(key+":\n");
+                    if (!quiet) out(key+":\n");
                     out(redisService.get(key));
                 }
                 break;
 
             case "exists":
                 for (String key : options.getArguments()) {
-                    out(key+": "+(redisService.exists(key) ? "exists" : "not found")+"\n");
+                    out(key+" : "+(redisService.exists(key) ? "exists" : "not found")+"\n");
                 }
                 break;
 
             case "list":
                 for (String key : options.getArguments()) {
-                    out(key+":\n");
+                    if (!quiet) out(key+":\n");
                     out("["+StringUtil.toString(redisService.list(key),", ")+"]");
                 }
                 break;
@@ -37,7 +38,7 @@ public class RedisMain extends BaseMain<RedisOptions> {
             case "lpush":
                 final String lpushKey = options.firstArgument();
                 for (String arg : options.getArgumentsAfterFirst()) {
-                    out("pushing "+arg+" on to list "+lpushKey+"\n");
+                    if (!quiet) out("pushing "+arg+" on to list "+lpushKey+"\n");
                     redisService.lpush(lpushKey, arg);
                 }
                 break;
@@ -54,7 +55,7 @@ public class RedisMain extends BaseMain<RedisOptions> {
                 final String first = options.firstArgument();
                 final String second = options.secondArgument();
                 redisService.set(first, second);
-                out(first+"="+second);
+                if (!quiet) out(first+" = "+second);
 
             case "keys":
                 out(StringUtil.toString(redisService.keys(getKeysArg(options)), "\n"));
@@ -62,7 +63,7 @@ public class RedisMain extends BaseMain<RedisOptions> {
 
             case "del":
                 for (String key : options.getArguments()) {
-                    out("deleting "+key+"\n");
+                    if (!quiet) out("deleting "+key+"\n");
                     redisService.del(key);
                 }
                 break;

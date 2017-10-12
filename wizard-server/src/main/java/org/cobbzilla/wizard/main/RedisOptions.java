@@ -37,6 +37,12 @@ public class RedisOptions extends BaseMainOptions {
     @Option(name=OPT_PREFIX, aliases=LONGOPT_PREFIX, usage=USAGE_PREFIX)
     @Getter @Setter private String prefix = "";
 
+    public static final String USAGE_QUIET = "Quiet output";
+    public static final String OPT_QUIET = "-q";
+    public static final String LONGOPT_QUIET= "--quiet";
+    @Option(name=OPT_QUIET, aliases=LONGOPT_QUIET, usage=USAGE_QUIET)
+    @Getter @Setter private boolean quiet = false;
+
     public static final String USAGE_DISABLE_KEYS_WC = "By default, the argument to the 'keys' command is enclosed in '*' characters. Enable this flag to disable that behavior.";
     public static final String OPT_DISABLE_KEYS_WC = "-w";
     public static final String LONGOPT_DISABLE_KEYS_WC= "--disable-keys-wildcard";
