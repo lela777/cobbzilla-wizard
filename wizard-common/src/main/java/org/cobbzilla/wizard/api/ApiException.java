@@ -19,6 +19,6 @@ public class ApiException extends RuntimeException {
         this.response = response;
     }
 
-    @Override public String getMessage () { return (response.status / 100 == 2) ? json(response.json) : json(response); }
+    @Override public String getMessage () { return response.json; }
 
 }
