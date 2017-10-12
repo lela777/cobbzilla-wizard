@@ -25,13 +25,13 @@ public class RedisService {
 
     public static final int MAX_RETRIES = 5;
 
-    @Autowired @Getter @Setter private HasRedisConfiguration configuration;
+    @Autowired @Getter @Setter private RedisConfiguration configuration;
 
     @Getter @Setter private String key;
     protected boolean hasKey () { return !empty(getKey()); }
 
     private final AtomicReference<Jedis> redis = new AtomicReference<>();
-    private Jedis newJedis() { return new Jedis(configuration.getRedis().getHost(), configuration.getRedis().getPort()); }
+    private Jedis newJedis() { return new Jedis(configuration.getHost(), configuration.getPort()); }
 
     @Getter @Setter private String prefix = null;
 
@@ -40,6 +40,10 @@ public class RedisService {
     }
 
     public RedisService(HasRedisConfiguration configuration, String prefix, String key) {
+        this(configuration.getRedis(), prefix, key);
+    }
+
+    public RedisService(RedisConfiguration configuration, String prefix, String key) {
         this.configuration = configuration;
         this.prefix = prefix;
         this.key = key;
@@ -47,12 +51,12 @@ public class RedisService {
 
     private Map<String, RedisService> prefixServiceCache = new ConcurrentHashMap<>();
 
-    public RedisService prefixNamespace(String prefix) { return prefixNamespace(prefix, configuration.getRedis().getKey()); }
+    public RedisService prefixNamespace(String prefix) { return prefixNamespace(prefix, configuration.getKey()); }
 
     public RedisService prefixNamespace(String prefix, String key) {
         RedisService r = prefixServiceCache.get(prefix);
         if (r == null) {
-            String basePrefix = (this.prefix != null) ? this.prefix : configuration.getRedis().getPrefix();
+            String basePrefix = (this.prefix != null) ? this.prefix : configuration.getPrefix();
             basePrefix = empty(basePrefix) ? "" : basePrefix + ".";
             r = new RedisService(configuration, basePrefix + prefix, key);
             prefixServiceCache.put(prefix, r);
@@ -88,6 +92,16 @@ public class RedisService {
 
     public boolean exists(String key) { return __exists(key, 0, MAX_RETRIES); }
 
+    public boolean anyExists(Collection<String> keys) {
+        for (String k : keys) if (exists(k)) return true;
+        return false;
+    }
+
+    public boolean allExist(Collection<String> keys) {
+        for (String k : keys) if (!exists(k)) return false;
+        return true;
+    }
+
     public <T> T getObject(String key, Class<T> clazz) {
         final String json = get(key);
         return empty(json) ? null : fromJsonOrDie(json, clazz);
@@ -109,6 +123,10 @@ public class RedisService {
     }
 
     public void set(String key, String value) { __set(key, value, 0, MAX_RETRIES); }
+
+    public void setAll(Collection<String> keys, String value, String expx, long time) {
+        for (String k : keys) set(k, value, expx, time);
+    }
 
     public <T> void setObject(String key, T thing) { __set(key, toJsonOrDie(thing), 0, MAX_RETRIES); }
 
