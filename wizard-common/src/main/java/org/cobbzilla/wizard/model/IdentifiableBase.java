@@ -33,12 +33,8 @@ public class IdentifiableBase implements Identifiable {
     public String columnName () { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName()); }
     public String columnName (String propName) { return ImprovedNamingStrategy.INSTANCE.propertyToColumnName(propName); }
 
-    public static final Comparator<IdentifiableBase> CTIME_DESC = new Comparator<IdentifiableBase>() {
-        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) { return Long.compare(o2.getCtime(), o1.getCtime()); }
-    };
-    public static final Comparator<IdentifiableBase> CTIME_ASC = new Comparator<IdentifiableBase>() {
-        @Override public int compare(IdentifiableBase o1, IdentifiableBase o2) { return Long.compare(o1.getCtime(), o2.getCtime()); }
-    };
+    public static final Comparator<IdentifiableBase> CTIME_DESC = (o1, o2) -> Long.compare(o2.getCtime(), o1.getCtime());
+    public static final Comparator<IdentifiableBase> CTIME_ASC = (o1, o2) -> Long.compare(o1.getCtime(), o2.getCtime());
 
     @Id @Column(unique=true, updatable=false, nullable=false, length=UUID_MAXLEN)
     @Getter @Setter private volatile String uuid = null;
@@ -76,15 +72,13 @@ public class IdentifiableBase implements Identifiable {
 
     @Column(updatable=false, nullable=false)
     @ECField(type=EntityFieldType.epoch_time, mode=EntityFieldMode.readOnly)
-    @Getter @JsonIgnore private long ctime = now();
-    public void setCtime (long time) { /*noop*/ }
+    @Getter @Setter @JsonIgnore private long ctime = now();
     @JsonIgnore @Transient public long getCtimeAge () { return now() - ctime; }
 
     @Column(nullable=false)
     @ECField(type=EntityFieldType.epoch_time)
-    @Getter @JsonIgnore private long mtime = now();
-    public void setMtime (long time) { this.mtime = time; }
-    public void setMtime () { this.mtime = now(); }
+    @Getter @Setter @JsonIgnore private long mtime = now();
+    public void setMtime () { setMtime(now()); }
     @JsonIgnore @Transient public long getMtimeAge () { return now() - mtime; }
 
     @Override public String toString() { return simpleName()+"{uuid=" + uuid + "}"; }
