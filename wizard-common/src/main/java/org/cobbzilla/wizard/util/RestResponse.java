@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.util.io.TempDir;
+import org.cobbzilla.util.string.StringUtil;
 
 import javax.persistence.Transient;
 import java.io.File;
@@ -88,9 +89,9 @@ public class RestResponse {
         }
         return "RestResponse{" +
                 "status=" + status +
-                (!empty(bytes) ? ", bytes=" + bytes.length : ", json='" + displayJson + '\'') +
-                ", location='" + location + '\'' +
-                ", headers=" + headers +
+                (!empty(bytes) ? ", bytes=" + bytes.length : (!empty(json) ? ", json='" + displayJson + '\'' : "")) +
+                (!empty(location) ? ", location='" + location + '\'' : "") +
+                (!empty(headers) ? ", headers=" + StringUtil.toString(headers, ", ") : "") +
                 '}';
     }
 }
