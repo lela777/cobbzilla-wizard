@@ -611,6 +611,7 @@ public class EntityConfig {
         ref.setField(refAnnotation.refField());
         if (!empty(refAnnotation.refDisplayField())) ref.setDisplayField(refAnnotation.refDisplayField());
         if (!empty(refAnnotation.refFinder())) ref.setFinder(refAnnotation.refFinder());
+        if (!empty(refAnnotation.emptyDisplayValue())) cfg.setEmptyDisplayValue(refAnnotation.emptyDisplayValue());
         cfg.setReference(ref);
 
         return cfg;
