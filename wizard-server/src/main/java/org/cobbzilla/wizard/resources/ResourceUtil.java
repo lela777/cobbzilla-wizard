@@ -3,9 +3,7 @@ package org.cobbzilla.wizard.resources;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.NameAndValue;
-import org.cobbzilla.util.http.HttpContentTypes;
 import org.cobbzilla.util.http.HttpResponseBean;
-import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
@@ -14,8 +12,6 @@ import org.cobbzilla.wizard.util.RestResponse;
 import org.cobbzilla.wizard.validation.*;
 
 import javax.persistence.EntityNotFoundException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
@@ -24,8 +20,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static javax.ws.rs.core.HttpHeaders.*;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.http.HttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.cobbzilla.util.http.HttpContentTypes.APPLICATION_JSON;
+import static org.cobbzilla.util.http.HttpContentTypes.fileExt;
+import static org.cobbzilla.util.http.HttpStatusCodes.*;
 
 @Slf4j
 public class ResourceUtil {
@@ -41,9 +40,9 @@ public class ResourceUtil {
     }
 
     public static Response send(StreamingOutput out, String name, String contentType, Long contentLength, Boolean forceDownload) {
-        Response.ResponseBuilder builder = Response.ok(out).header(HttpHeaders.CONTENT_TYPE, contentType);
+        Response.ResponseBuilder builder = Response.ok(out).header(CONTENT_TYPE, contentType);
         if (name != null) {
-            final String ext = HttpContentTypes.fileExt(contentType);
+            final String ext = fileExt(contentType);
             if (!name.endsWith(ext)) name += ext;
             if (forceDownload == null || !forceDownload) {
                 builder = builder.header("Content-Disposition", "inline; filename=\"" + name + "\"");
@@ -51,11 +50,11 @@ public class ResourceUtil {
                 builder = builder.header("Content-Disposition", "attachment; filename=\"" + name + "\"");
             }
         }
-        if (contentLength != null) builder = builder.header(HttpHeaders.CONTENT_LENGTH, contentLength);
+        if (contentLength != null) builder = builder.header(CONTENT_LENGTH, contentLength);
         return builder.build();
     }
 
-    public static Response accepted() { return Response.status(HttpStatusCodes.ACCEPTED).build(); }
+    public static Response accepted() { return Response.status(ACCEPTED).build(); }
 
     public static Response serverError() { return Response.serverError().build(); }
 
@@ -66,7 +65,7 @@ public class ResourceUtil {
         return status(Response.Status.NOT_FOUND, Collections.singletonMap("resource", id));
     }
 
-    public static Response notFound_blank() { return status(Response.Status.NOT_FOUND); }
+    public static Response notFound_blank() { return status(NOT_FOUND); }
 
     public static EntityNotFoundException notFoundEx() { return notFoundEx("-unknown-"); }
 
@@ -86,17 +85,17 @@ public class ResourceUtil {
     }
     public static Response status (int status, Object entity) {
         return entity != null
-                ? Response.status(status).type(MediaType.APPLICATION_JSON).entity(entity).build()
+                ? Response.status(status).type(APPLICATION_JSON).entity(entity).build()
                 : status(status);
     }
 
-    public static Response redirect (String location) { return redirect(HttpStatusCodes.FOUND, location); }
+    public static Response redirect (String location) { return redirect(FOUND, location); }
     public static Response redirect (int status, String location) {
-        return Response.status(status).header(HttpHeaders.LOCATION, location).build();
+        return Response.status(status).header(LOCATION, location).build();
     }
 
-    public static Response forbidden() { return status(Response.Status.FORBIDDEN); }
-    public static ResourceHttpException forbiddenEx() { return new ResourceHttpException(HttpStatusCodes.FORBIDDEN); }
+    public static Response forbidden() { return status(FORBIDDEN); }
+    public static ResourceHttpException forbiddenEx() { return new ResourceHttpException(FORBIDDEN); }
 
     public static Response invalid() { return status(UNPROCESSABLE_ENTITY); }
     public static Response invalid(List<ConstraintViolationBean> violations) { return status(UNPROCESSABLE_ENTITY, violations); }
@@ -137,11 +136,11 @@ public class ResourceUtil {
         return new MultiViolationException(result.getViolationBeans());
     }
 
-    public static Response timeout () { return status(HttpStatusCodes.GATEWAY_TIMEOUT); }
-    public static ResourceHttpException timeoutEx () { return new ResourceHttpException(HttpStatusCodes.GATEWAY_TIMEOUT); }
+    public static Response timeout () { return status(GATEWAY_TIMEOUT); }
+    public static ResourceHttpException timeoutEx () { return new ResourceHttpException(GATEWAY_TIMEOUT); }
 
-    public static Response unavailable() { return status(HttpStatusCodes.SERVER_UNAVAILABLE); }
-    public static ResourceHttpException unavailableEx() { return new ResourceHttpException(HttpStatusCodes.SERVER_UNAVAILABLE); }
+    public static Response unavailable() { return status(SERVER_UNAVAILABLE); }
+    public static ResourceHttpException unavailableEx() { return new ResourceHttpException(SERVER_UNAVAILABLE); }
 
     public static <T> T userPrincipal(HttpContext context) { return userPrincipal(context, true); }
 
@@ -175,12 +174,12 @@ public class ResourceUtil {
     public static Response toResponse (RestResponse response) {
         Response.ResponseBuilder builder = Response.status(response.status);
         if (response.status/100 == 3) {
-            builder = builder.header(HttpHeaders.LOCATION, response.location);
+            builder = builder.header(LOCATION, response.location);
         }
         if (!empty(response.json)) {
             builder = builder.entity(response.json)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                    .header(HttpHeaders.CONTENT_LENGTH, response.json.length());
+                    .header(CONTENT_TYPE, APPLICATION_JSON)
+                    .header(CONTENT_LENGTH, response.json.length());
         }
         return builder.build();
     }
@@ -206,8 +205,8 @@ public class ResourceUtil {
         if (!f.canRead()) return forbidden();
 
         return Response.ok(new FileStreamingOutput(f))
-                .header(HttpHeaders.CONTENT_TYPE, URLConnection.guessContentTypeFromName(f.getName()))
-                .header(HttpHeaders.CONTENT_LENGTH, f.length())
+                .header(CONTENT_TYPE, URLConnection.guessContentTypeFromName(f.getName()))
+                .header(CONTENT_LENGTH, f.length())
                 .build();
     }
 
