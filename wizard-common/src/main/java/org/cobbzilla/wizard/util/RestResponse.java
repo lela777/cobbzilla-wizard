@@ -47,6 +47,7 @@ public class RestResponse {
     public RestResponse(HttpResponseBean response) {
         this.status = response.getStatus();
         this.bytes = response.getEntity();
+        this.json = response.getEntityString();
         this.headers = new ArrayList<>();
         for (NameAndValue h : response.getHeaders()) this.headers.add(new RestResponseHeader(h));
     }

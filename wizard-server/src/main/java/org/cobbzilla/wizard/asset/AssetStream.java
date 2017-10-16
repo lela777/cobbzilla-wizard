@@ -23,6 +23,7 @@ public class AssetStream implements Closeable {
             {"jpg", "jpg"},
             {"jpeg", "jpg"},
             {"gif", "gif"},
+            {"pdf", "pdf"}
     };
     @JsonIgnore public String getFormatName() {
         for (String[] format : FORMAT_MAP) {
