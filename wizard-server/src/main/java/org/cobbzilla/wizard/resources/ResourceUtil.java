@@ -3,18 +3,21 @@ package org.cobbzilla.wizard.resources;
 import com.sun.jersey.api.core.HttpContext;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.NameAndValue;
+import org.cobbzilla.util.http.HttpContentTypes;
 import org.cobbzilla.util.http.HttpResponseBean;
 import org.cobbzilla.wizard.api.ApiException;
 import org.cobbzilla.wizard.api.ForbiddenException;
 import org.cobbzilla.wizard.api.NotFoundException;
 import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.util.RestResponse;
+import org.cobbzilla.wizard.util.StreamStreamingOutput;
 import org.cobbzilla.wizard.validation.*;
 
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -207,6 +210,13 @@ public class ResourceUtil {
         return Response.ok(new FileStreamingOutput(f))
                 .header(CONTENT_TYPE, URLConnection.guessContentTypeFromName(f.getName()))
                 .header(CONTENT_LENGTH, f.length())
+                .build();
+    }
+
+    public static Response stream(String contentType, InputStream s) {
+        if (contentType == null) contentType = HttpContentTypes.UNKNOWN;
+        return Response.ok(new StreamStreamingOutput(s))
+                .header(CONTENT_TYPE, contentType)
                 .build();
     }
 
