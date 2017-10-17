@@ -109,7 +109,12 @@ public class ModelSetup {
 
             final String entityType = getEntityTypeFromString(modelName);
 
-            setupJson(api, entityConfigsEndpoint, entityType, json, listener, runName);
+            try {
+                setupJson(api, entityConfigsEndpoint, entityType, json, listener, runName);
+            } catch (Exception e) {
+                log.error("setupModel: api="+api.getBaseUri()+", model="+modelName+", exception="+e.getClass().getSimpleName()+": "+e.getMessage());
+                throw e;
+            }
         }
         return models;
     }
