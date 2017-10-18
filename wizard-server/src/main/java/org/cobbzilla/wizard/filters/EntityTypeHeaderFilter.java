@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.filters;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.wizard.dao.SearchResults;
 import org.cobbzilla.wizard.model.Identifiable;
 
 import java.util.Collection;
@@ -21,18 +22,18 @@ public class EntityTypeHeaderFilter extends EntityFilter<Object> {
                                               String responseClassName,
                                               Class<?> responseClass) {
 
-        boolean isCollection = Collection.class.isAssignableFrom(responseClass);
-        boolean isMap = Map.class.isAssignableFrom(responseClass);
-        boolean isArray = responseClass.isArray();
+        final boolean isSearchResults = SearchResults.class.isAssignableFrom(responseClass);
+        final boolean isCollection = Collection.class.isAssignableFrom(responseClass);
+        final boolean isMap = Map.class.isAssignableFrom(responseClass);
+        final boolean isArray = responseClass.isArray();
         String elementClassName;
-        if (isCollection) {
-            final Collection c = (Collection) response.getEntity();
-            try {
-                elementClassName = empty(c) ? "" : c.iterator().next().getClass().getName();
-            } catch (Exception e) {
-                elementClassName = "";
-            }
-            response.getHttpHeaders().add(getTypeHeaderName(), elementClassName+"[]");
+        if (isSearchResults) {
+            final SearchResults searchResults = (SearchResults) response.getEntity();
+            response.getHttpHeaders().add(getTypeHeaderName(),
+                                       SearchResults.class.getName() + (searchResults.hasResults() ? "<" + getCollectionElementClass(searchResults.getResults()) + ">" : ""));
+
+        } else if (isCollection) {
+            response.getHttpHeaders().add(getTypeHeaderName(), getCollectionElementClass((Collection) response.getEntity())+"[]");
 
         } else if (isArray) {
             final Object[] a = (Object[]) response.getEntity();
@@ -49,6 +50,14 @@ public class EntityTypeHeaderFilter extends EntityFilter<Object> {
             response.getHttpHeaders().add(getTypeHeaderName(), responseClassName);
         }
         return response;
+    }
+
+    protected String getCollectionElementClass(Collection c) {
+        try {
+            return empty(c) ? "" : c.iterator().next().getClass().getName();
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
 }
