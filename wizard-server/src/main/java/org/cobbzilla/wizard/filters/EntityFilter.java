@@ -3,17 +3,19 @@ package org.cobbzilla.wizard.filters;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.collection.ArrayUtil;
-import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import java.lang.reflect.Type;
 
-import static org.cobbzilla.util.reflect.ReflectionUtil.EMPTY_CLASS_ARRAY;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 @Slf4j
-public abstract class EntityTypeFilter implements ContainerResponseFilter {
+public abstract class EntityFilter<T> implements ContainerResponseFilter {
+
+    @Getter(lazy=true) private final Class<T> matchEntityClass = initMatchEntityClass();
+    private Class<T> initMatchEntityClass() { return getFirstTypeParam(getClass()); }
 
     @Override public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
 
@@ -35,11 +37,8 @@ public abstract class EntityTypeFilter implements ContainerResponseFilter {
                 : response;
     }
 
-    protected Class<?>[] filterTypes () { return EMPTY_CLASS_ARRAY; }
-
     protected boolean shouldFilter(ContainerRequest request, ContainerResponse response, String responseClassName, Class<?> responseClass) {
-        for (Class<?> c : filterTypes()) if (c.isAssignableFrom(responseClass)) return true;
-        return false;
+        return getMatchEntityClass().isAssignableFrom(responseClass);
     }
 
     protected ContainerResponse filter(ContainerRequest request, ContainerResponse response, String responseClassName, Class<?> responseClass) {

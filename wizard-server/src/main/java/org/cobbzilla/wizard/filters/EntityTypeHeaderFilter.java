@@ -12,7 +12,7 @@ import java.util.Map;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
-public class EntityTypeHeaderFilter extends EntityTypeFilter {
+public class EntityTypeHeaderFilter extends EntityFilter<Object> {
 
     protected String getTypeHeaderName() { return Identifiable.ENTITY_TYPE_HEADER_NAME; }
 
