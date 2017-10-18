@@ -5,9 +5,11 @@ import com.sun.jersey.spi.container.ContainerResponse;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.ArrayUtil;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import java.lang.reflect.Type;
 
+import static org.cobbzilla.util.reflect.ReflectionUtil.EMPTY_CLASS_ARRAY;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 
 @Slf4j
@@ -33,16 +35,15 @@ public abstract class EntityTypeFilter implements ContainerResponseFilter {
                 : response;
     }
 
-    protected Class<?>[] filterTypes () { return (Class<?>[]) ArrayUtil.EMPTY_OBJECT_ARRAY; }
+    protected Class<?>[] filterTypes () { return EMPTY_CLASS_ARRAY; }
 
     protected boolean shouldFilter(ContainerRequest request, ContainerResponse response, String responseClassName, Class<?> responseClass) {
         for (Class<?> c : filterTypes()) if (c.isAssignableFrom(responseClass)) return true;
         return false;
     }
 
-    protected abstract ContainerResponse filter(ContainerRequest request,
-                                                ContainerResponse response,
-                                                String responseClassName,
-                                                Class<?> responseClass);
+    protected ContainerResponse filter(ContainerRequest request, ContainerResponse response, String responseClassName, Class<?> responseClass) {
+        return response;
+    }
 
 }
