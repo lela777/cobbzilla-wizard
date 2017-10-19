@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -281,15 +282,26 @@ public class RestServerConfiguration {
         return r;
     }
 
-    public final Map<Class, DAO<? extends Identifiable>> daoCache = new ConcurrentHashMap<>();
+    private final Map<String, DAO<? extends Identifiable>> daoCache = new ConcurrentHashMap<>();
+
+    @Getter(lazy=true) private final Collection<DAO> allDAOs = initAllDAOs();
+    private Collection<DAO> initAllDAOs() { return getBeans(DAO.class).values(); }
 
     public DAO getDaoForEntityClass(Class entityClass) {
-        DAO entityDao = daoCache.get(entityClass);
-        if (entityDao == null) {
-            entityDao = getBean(entityClass.getName().replace(".model.", ".dao.") + "DAO");
-            daoCache.put(entityClass, entityDao);
-        }
-        return entityDao;
+        final String name = entityClass.getName();
+        return daoCache.computeIfAbsent(name, k -> getBean(name.replace(".model.", ".dao.") + "DAO"));
+    }
+
+    public DAO getDaoForEntityClass(String className) {
+        return daoCache.computeIfAbsent(className, k -> {
+            for (DAO dao : getAllDAOs()) {
+                if ( dao.getEntityClass().getSimpleName().equalsIgnoreCase(className) ||
+                     dao.getEntityClass().getName().equalsIgnoreCase(className) ) {
+                    return dao;
+                }
+            }
+            return die("getDaoForEntityClass("+className+"): DAO not found");
+        });
     }
 
 }
