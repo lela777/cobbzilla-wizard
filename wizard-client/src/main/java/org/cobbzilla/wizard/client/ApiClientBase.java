@@ -215,12 +215,19 @@ public class ApiClientBase implements Cloneable {
     }
 
     public RestResponse doPost(String path, File uploadFile) throws Exception {
+        return uploadFile(path, uploadFile, POST);
+    }
 
-        final String url = getUrl(path, getBaseUri());
+    public RestResponse doPut(String path, File uploadFile) throws Exception {
+        return uploadFile(path, uploadFile, PUT);
+    }
+
+    private RestResponse uploadFile(String path, File uploadFile, String method) throws Exception {
+         final String url = getUrl(path, getBaseUri());
         final NameAndValue[] headers = { new NameAndValue(getTokenHeader(), token) };
 
         @Cleanup final InputStream in = new FileInputStream(uploadFile);
-        final HttpRequestBean request = new HttpRequestBean(POST, url, in, uploadFile.getName(), headers);
+        final HttpRequestBean request = new HttpRequestBean(method, url, in, uploadFile.getName(), headers);
         final HttpResponseBean response = HttpUtil.getStreamResponse(request);
 
         return new RestResponse(response);
