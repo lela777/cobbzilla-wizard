@@ -223,7 +223,7 @@ public class ApiClientBase implements Cloneable {
     }
 
     private RestResponse uploadFile(String path, File uploadFile, String method) throws Exception {
-         final String url = getUrl(path, getBaseUri());
+        final String url = getUrl(path, getBaseUri());
         final NameAndValue[] headers = { new NameAndValue(getTokenHeader(), token) };
 
         @Cleanup final InputStream in = new FileInputStream(uploadFile);
