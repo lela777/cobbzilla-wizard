@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model.anonymize;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.anon.AnonColumn;
 import org.cobbzilla.wizard.model.anon.AnonJsonPath;
@@ -21,6 +22,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
 
 @Slf4j
 public class AnonymizeConfig {
@@ -101,8 +104,11 @@ public class AnonymizeConfig {
     }
 
     private static AnonColumn createAnonColumn(String s, AnonymizeType anonymizeType) {
+        String value = anonymizeType.value();
+        if (value.startsWith("classpath:")) value = loadResourceAsStringOrDie(value.substring("classpath:".length()));
+
         AnonColumn anonColumn = new AnonColumn().setName(s)
-                .setValue(anonymizeType.value())
+                .setValue(value)
                 .setSkip(anonymizeType.skip());
         if(anonymizeType.encrypted()){anonColumn.setEncrypted(anonymizeType.encrypted());}
         if(anonymizeType.json().length > 0){
