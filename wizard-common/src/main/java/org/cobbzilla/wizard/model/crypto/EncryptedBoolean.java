@@ -20,6 +20,9 @@ public class EncryptedBoolean {
 
     public static final int COLUMN_MAXLEN = 20 + ENC_PAD;
 
+    public static EncryptedBoolean trueValue  () { return new EncryptedBoolean(true); }
+    public static EncryptedBoolean falseValue () { return new EncryptedBoolean(false); }
+
     public EncryptedBoolean (Boolean val) { set(val); }
 
     private EncryptedBoolean set(Boolean val) { return val == null ? setNull() : val ? setTrue() : setFalse(); }
