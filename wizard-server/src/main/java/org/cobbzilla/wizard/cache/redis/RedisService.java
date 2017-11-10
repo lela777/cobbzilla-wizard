@@ -142,6 +142,19 @@ public class RedisService {
         __set(key, value, 0, MAX_RETRIES);
     }
 
+    public Long sadd(String key, String value) { return sadd(key, new String[]{value}); }
+    public Long sadd(String key, String[] values) { return __sadd(key, values, 0, MAX_RETRIES); }
+
+    public Long srem(String key, String value) { return srem(key, new String[]{value}); }
+    public Long srem(String key, String[] values) { return __srem(key, values, 0, MAX_RETRIES); }
+
+    public String spop(String key) {
+        final Set<String> popped = spop(key, 1);
+        return empty(popped) ? null : popped.iterator().next();
+    }
+    public Set<String> spop(String key, long count) { return __spop(key, count, 0, MAX_RETRIES); }
+    public long scard(String key) { return __scard(key, 0, MAX_RETRIES); }
+
     public Long incr(String key) { return __incrBy(key, 1, 0, MAX_RETRIES); }
 
     public Long incrBy(String key, long value) { return __incrBy(key, value, 0, MAX_RETRIES); }
@@ -285,6 +298,54 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__del");
             return __del(key, attempt+1, maxRetries);
+        }
+    }
+
+    private Long __sadd(String key, String[] members, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().sadd(prefix(key), members);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__sadd");
+            return __sadd(key, members, attempt+1, maxRetries);
+        }
+    }
+
+    private Long __srem(String key, String[] members, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().srem(prefix(key), members);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__srem");
+            return __srem(key, members, attempt+1, maxRetries);
+        }
+    }
+
+    private Set<String> __spop(String key, long count, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().spop(prefix(key), count);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__spop");
+            return __spop(key, count, attempt+1, maxRetries);
+        }
+    }
+
+    private Long __scard(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().scard(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__scard");
+            return __scard(key, attempt+1, maxRetries);
         }
     }
 
