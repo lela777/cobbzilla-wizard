@@ -148,11 +148,20 @@ public class RedisService {
     public Long srem(String key, String value) { return srem(key, new String[]{value}); }
     public Long srem(String key, String[] values) { return __srem(key, values, 0, MAX_RETRIES); }
 
+    public Set<String> smembers(String key) { return __smembers(key, 0, MAX_RETRIES); }
+
+    public List<String> srandmembers(String key, int count) { return __srandmember(key, count, 0, MAX_RETRIES); }
+    public String srandmember(String key) {
+        final List<String> rand = srandmembers(key, 1);
+        return empty(rand) ? null : rand.get(0);
+    }
+
     public String spop(String key) {
         final Set<String> popped = spop(key, 1);
         return empty(popped) ? null : popped.iterator().next();
     }
     public Set<String> spop(String key, long count) { return __spop(key, count, 0, MAX_RETRIES); }
+
     public long scard(String key) { return __scard(key, 0, MAX_RETRIES); }
 
     public Long incr(String key) { return __incrBy(key, 1, 0, MAX_RETRIES); }
@@ -322,6 +331,30 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__srem");
             return __srem(key, members, attempt+1, maxRetries);
+        }
+    }
+
+    private Set<String> __smembers(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().smembers(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__smembers");
+            return __smembers(key, attempt+1, maxRetries);
+        }
+    }
+
+    private List<String> __srandmember(String key, int count, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().srandmember(prefix(key), count);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__srandmember");
+            return __srandmember(key, count, attempt+1, maxRetries);
         }
     }
 
