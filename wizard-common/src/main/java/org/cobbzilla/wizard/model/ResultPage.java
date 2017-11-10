@@ -177,6 +177,9 @@ public class ResultPage {
     @JsonIgnore @Getter @Setter private SearchScrubber scrubber;
     public boolean hasScrubber () { return scrubber != null; }
 
+    @Getter @Setter private Long fromTime;
+    @Getter @Setter private Long toTime;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

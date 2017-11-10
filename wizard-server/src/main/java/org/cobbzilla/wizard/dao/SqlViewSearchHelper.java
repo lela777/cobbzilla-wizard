@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 @Slf4j
@@ -38,6 +40,12 @@ public class SqlViewSearchHelper {
             for (String bound : resultPage.getBounds().keySet()) {
                 sql.append(" AND (").append(dao.buildBound(bound, resultPage.getBounds().get(bound), params)).append(") ");
             }
+        }
+
+        if (!empty(resultPage.getFromTime()) && !empty(resultPage.getToTime())) {
+            sql.append(" AND ctime BETWEEN ? AND ?");
+            params.add(resultPage.getFromTime());
+            params.add(resultPage.getToTime());
         }
 
         final String sort;
