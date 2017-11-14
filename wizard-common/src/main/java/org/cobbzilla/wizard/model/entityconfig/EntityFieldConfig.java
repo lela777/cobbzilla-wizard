@@ -6,19 +6,21 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 
 /**
  * Defines how to work with a particular field defined in an EntityConfig
  */
 @Slf4j @Accessors(chain=true) @ToString
-public class EntityFieldConfig {
+public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
 
     public static EntityFieldConfig field(String name) { return new EntityFieldConfig().setName(name); } // convenience method
 
@@ -131,4 +133,10 @@ public class EntityFieldConfig {
      */
     @Getter @Setter private String objectType;
 
+    @Override public EntityFieldConfig beforeDiff(EntityFieldConfig thing) {
+        final EntityFieldConfig e = new EntityFieldConfig();
+        copy(e, thing);
+        e.setType(e.getTypeOrDefault());
+        return e;
+    }
 }
