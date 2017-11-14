@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +17,7 @@ import static org.cobbzilla.util.string.StringUtil.camelCaseToString;
 /**
  * Defines how to work with a particular field defined in an EntityConfig
  */
-@Slf4j @Accessors(chain=true)
+@Slf4j @Accessors(chain=true) @ToString
 public class EntityFieldConfig {
 
     public static EntityFieldConfig field(String name) { return new EntityFieldConfig().setName(name); } // convenience method

@@ -20,6 +20,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
 import static org.cobbzilla.util.json.JsonUtil.getNodeAsJava;
 import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.json_html;
 import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 
 @Slf4j
@@ -107,16 +108,16 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
             }
             if (empty(requestValue)) {
                 if (empty(existingValue)) continue; // both are nothing
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(existingValue).append(" => [absent]").toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <b>&#8594;</b> [absent]").toString());
 
             } else if (empty(existingValue)) {
-                deltas.add(new StringBuilder().append(fieldName).append(": [absent] => ").append(requestValue).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": [absent] <b>&#8594;</b> ").append(json_html(requestValue)).toString());
 
             } else if (requestValue instanceof ObjectNode) {
                 calculateDiff((ObjectNode) requestValue, existingValue, deltas, (empty(path) ? fieldName : path + "." + fieldName));
 
             } else if (!existingValue.equals(requestValue)) {
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(existingValue).append(" => ").append(requestValue).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <br/><b>&#8594;</b> ").append(json_html(requestValue)).toString());
 
             } else {
                 // nothing changed
