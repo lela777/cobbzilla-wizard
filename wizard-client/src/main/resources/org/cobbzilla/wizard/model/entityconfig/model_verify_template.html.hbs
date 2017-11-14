@@ -11,7 +11,9 @@
         <h2>{{entityId}}</h2>
       {{#if createEntity}}
           <h4>create</h4>
-          <p>{{createEntity}}</p>
+          <p><pre>
+{{{json createEntity}}}
+          </pre></p>
       {{else}}
           {{#if deltas}}
               <h4>deltas</h4>
