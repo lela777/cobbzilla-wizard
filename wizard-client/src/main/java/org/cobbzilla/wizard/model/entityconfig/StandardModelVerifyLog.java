@@ -94,27 +94,19 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     }
 
     private void calculateDiff(ApiClientBase api, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        Object modelRequest = json(requestNode, forName(entityConfig.getClassName()));
-        if (modelRequest instanceof VerifyLogAware) {
-            modelRequest = ((VerifyLogAware) modelRequest).beforeDiff(modelRequest, api);
-        }
-        if (existing instanceof VerifyLogAware) {
-            existing = ((VerifyLogAware) existing).beforeDiff(existing, api);
-        }
+        Object modelRequest = aware(api, json(requestNode, forName(entityConfig.getClassName())));
+        existing = aware(api, existing);
 
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
-            Object requestValue = ReflectionUtil.get(modelRequest, fieldName);
-            if (requestValue != null && requestValue instanceof VerifyLogAware) {
-                requestValue = ((VerifyLogAware) requestValue).beforeDiff(requestValue, api);
-            }
+            Object requestValue = aware(api, ReflectionUtil.get(modelRequest, fieldName));
             Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
                     existingValue = json(((ObjectNode) existing).get(fieldName), ReflectionUtil.getterType(requestValue, fieldName));
                 } else {
-                    existingValue = ReflectionUtil.get(existing, fieldName);
+                    existingValue = aware(api, ReflectionUtil.get(existing, fieldName));
                 }
             } catch (Exception e) {
                 log.warn("calculateDiff: error fetching " + fieldName + ": " + e);
@@ -136,6 +128,10 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 continue;
             }
         }
+    }
+
+    private Object aware(ApiClientBase api, Object o) {
+        return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, api) : o;
     }
 
     protected static final String[] EXCLUDED = {"children", "entity"};
