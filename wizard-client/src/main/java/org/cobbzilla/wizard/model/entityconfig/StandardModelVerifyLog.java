@@ -18,7 +18,9 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
 import static org.cobbzilla.util.json.JsonUtil.*;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 
 @Slf4j
@@ -72,12 +74,14 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     }
 
     private String toBasicJson(Identifiable thing) {
+        final Identifiable copy = instantiate((Class<? extends Identifiable>) ReflectionUtil.getSimpleClass(thing));
+        copy(copy, thing, null, EXCLUDED);
         for (String f : getExcludedFields()) {
             try {
-                ReflectionUtil.set(thing, f, null);
+                ReflectionUtil.set(copy, f, null);
             } catch (Exception ignored) {}
         }
-        return json(thing instanceof ModelEntity ? ((ModelEntity) thing).getEntity() : thing);
+        return json(copy instanceof ModelEntity ? ((ModelEntity) copy).getEntity() : copy);
     }
 
     public String getEntityId(EntityConfig entityConfig, Identifiable existing) {
@@ -125,7 +129,8 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    protected static final Set<String> EXCLUDED_FIELDS = new HashSet<>(Arrays.asList("children", "entity"));
+    protected static final String[] EXCLUDED = {"children", "entity"};
+    protected static final Set<String> EXCLUDED_FIELDS = new HashSet<>(Arrays.asList(EXCLUDED));
     protected Set<String> getExcludedFields() { return EXCLUDED_FIELDS; }
 
 }

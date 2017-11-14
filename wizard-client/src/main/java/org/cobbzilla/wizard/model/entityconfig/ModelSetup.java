@@ -212,6 +212,7 @@ public class ModelSetup {
                             if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
                                 entity = listener.subst(entity);
                             }
+                            log.info(logPrefix + " diffing: " + id(entity));
                             getVerifyLog().logDifference(entityConfig, entity, request);
 
                         } else if (request.allowUpdate()) {
