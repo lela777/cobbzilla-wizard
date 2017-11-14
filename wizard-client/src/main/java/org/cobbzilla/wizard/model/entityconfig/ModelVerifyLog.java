@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
 
 public interface ModelVerifyLog {
@@ -9,7 +10,7 @@ public interface ModelVerifyLog {
 
     void startLog();
 
-    void logDifference(EntityConfig entityConfig, Identifiable existing, Identifiable entity);
+    void logDifference(ApiClientBase api, EntityConfig entityConfig, Identifiable existing, Identifiable entity);
 
     void logCreation(EntityConfig entityConfig, Identifiable entity);
 

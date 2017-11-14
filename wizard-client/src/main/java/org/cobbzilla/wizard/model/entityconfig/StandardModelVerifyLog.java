@@ -9,6 +9,7 @@ import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
 
 import java.io.File;
@@ -45,7 +46,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         FileUtil.toFileOrDie(verifyLogFile, HandlebarsUtil.apply(handlebars, loadResourceAsStringOrDie(ModelVerifyLog.HTML_TEMPLATE), ctx));
     }
 
-    @Override public void logDifference(EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
+    @Override public void logDifference(ApiClientBase api, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
         if (!(entity instanceof ModelEntity)) {
             die("logDifference: not a ModelEntity: " + id(entity) + " (is a " + entity.getClass().getName() + ")");
         }
@@ -59,7 +60,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
-            calculateDiff(entityConfig, requestNode, existing, deltas);
+            calculateDiff(api, entityConfig, requestNode, existing, deltas);
             if (empty(deltas) && enableTextDiffs()) {
                 diffEntry.setJsonDiff(StringUtil.diff(existingJson, requestJson, null));
             } else {
@@ -92,16 +93,23 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         diffs.add(new ModelDiffEntry(getEntityId(entityConfig, entity)).setCreateEntity(entity));
     }
 
-    private void calculateDiff(EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        final Object modelRequest = json(requestNode, forName(entityConfig.getClassName()));
+    private void calculateDiff(ApiClientBase api, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
+        Object modelRequest = json(requestNode, forName(entityConfig.getClassName()));
+        if (modelRequest instanceof VerifyLogAware) {
+            modelRequest = ((VerifyLogAware) modelRequest).beforeDiff(modelRequest, api);
+        }
+        if (existing instanceof VerifyLogAware) {
+            existing = ((VerifyLogAware) existing).beforeDiff(existing, api);
+        }
+
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
             Object requestValue = ReflectionUtil.get(modelRequest, fieldName);
             if (requestValue != null && requestValue instanceof VerifyLogAware) {
-                requestValue = ((VerifyLogAware) requestValue).beforeDiff(requestValue);
+                requestValue = ((VerifyLogAware) requestValue).beforeDiff(requestValue, api);
             }
-            final Object existingValue;
+            Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
                     existingValue = json(((ObjectNode) existing).get(fieldName), ReflectionUtil.getterType(requestValue, fieldName));
@@ -112,6 +120,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 log.warn("calculateDiff: error fetching " + fieldName + ": " + e);
                 continue;
             }
+
             if (empty(requestValue)) {
                 if (empty(existingValue)) continue; // both are nothing
                 deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <b>&#8594;</b> [absent]").toString());

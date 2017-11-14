@@ -133,7 +133,7 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
      */
     @Getter @Setter private String objectType;
 
-    @Override public EntityFieldConfig beforeDiff(EntityFieldConfig thing) {
+    @Override public EntityFieldConfig beforeDiff(EntityFieldConfig thing, Object context) {
         final EntityFieldConfig e = new EntityFieldConfig();
         copy(e, thing);
         e.setType(e.getTypeOrDefault());

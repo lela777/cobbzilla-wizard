@@ -213,7 +213,7 @@ public class ModelSetup {
                                 entity = listener.subst(entity);
                             }
                             log.info(logPrefix + " diffing: " + id(entity));
-                            getVerifyLog().logDifference(entityConfig, entity, request);
+                            getVerifyLog().logDifference(api, entityConfig, entity, request);
 
                         } else if (request.allowUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
