@@ -7,7 +7,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.io.FileUtil;
-import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -18,9 +17,7 @@ import java.util.*;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
-import static org.cobbzilla.util.json.JsonUtil.getNodeAsJava;
-import static org.cobbzilla.util.json.JsonUtil.json;
-import static org.cobbzilla.util.json.JsonUtil.json_html;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 
 @Slf4j
@@ -59,7 +56,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
-            calculateDiff(requestNode, existing, deltas, "");
+            calculateDiff(entityConfig, requestNode, existing, deltas, "");
             if (empty(deltas) && enableTextDiffs()) {
                 diffEntry.setJsonDiff(StringUtil.diff(existingJson, requestJson, null));
             } else {
@@ -90,11 +87,11 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         diffs.add(new ModelDiffEntry(getEntityId(entityConfig, entity)).setCreateEntity(entity));
     }
 
-    private void calculateDiff(ObjectNode requestNode, Object existing, List<String> deltas, String path) {
+    private void calculateDiff(EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas, String path) {
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
-            final Object requestValue = JsonUtil.getNodeAsJava(requestNode.get(fieldName), fieldName);
+            final Object requestValue = getNodeAsJava(requestNode.get(fieldName), fieldName);
             final Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
@@ -114,7 +111,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 deltas.add(new StringBuilder().append(fieldName).append(": [absent] <b>&#8594;</b> ").append(json_html(requestValue)).toString());
 
             } else if (requestValue instanceof ObjectNode) {
-                calculateDiff((ObjectNode) requestValue, existingValue, deltas, (empty(path) ? fieldName : path + "." + fieldName));
+                calculateDiff(entityConfig, (ObjectNode) requestValue, existingValue, deltas, (empty(path) ? fieldName : path + "." + fieldName));
 
             } else if (!existingValue.equals(requestValue)) {
                 deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <br/><b>&#8594;</b> ").append(json_html(requestValue)).toString());
