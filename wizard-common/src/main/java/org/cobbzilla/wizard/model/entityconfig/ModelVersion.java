@@ -20,6 +20,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.FileUtil.listDirs;
+import static org.cobbzilla.util.json.JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
@@ -79,7 +80,7 @@ public class ModelVersion extends IdentifiableBase {
 
         final File manifestFile = new File(dir, "manifest.json");
         if (!manifestFile.exists() || !manifestFile.canRead()) die(errPrefix+" manifest file does not exist or is unreadable: "+abs(manifestFile));
-        final String[] migrationFiles = json(FileUtil.toStringOrDie(manifestFile), String[].class);
+        final String[] migrationFiles = json(FileUtil.toStringOrDie(manifestFile), String[].class, FULL_MAPPER_ALLOW_COMMENTS);
         if (empty(migrationFiles)) die(errPrefix+"manifest had no model files");
 
         final StringBuilder b = new StringBuilder();
