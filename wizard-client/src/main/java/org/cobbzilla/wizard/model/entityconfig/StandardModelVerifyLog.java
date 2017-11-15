@@ -27,6 +27,8 @@ import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 @Slf4j
 public class StandardModelVerifyLog implements ModelVerifyLog {
 
+    public static final String BOLD_RIGHT_ARROW = " <b>&#8594;</b> ";
+
     @Getter @Setter private File verifyLogFile;
     @Getter @Setter private Handlebars handlebars;
     @Getter private final List<ModelDiffEntry> diffs = new ArrayList<>();
@@ -115,13 +117,13 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
 
             if (empty(requestValue)) {
                 if (empty(existingValue)) continue; // both are nothing
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <b>&#8594;</b> [absent]").toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(BOLD_RIGHT_ARROW).append("[absent]").toString());
 
             } else if (empty(existingValue)) {
-                deltas.add(new StringBuilder().append(fieldName).append(": [absent] <b>&#8594;</b> ").append(json_html(requestValue)).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": [absent]").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
 
             } else if (!json(existingValue).equals(json(requestValue))) {
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <br/><b>&#8594;</b> ").append(json_html(requestValue)).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <br/>").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
 
             } else {
                 // nothing changed
@@ -131,7 +133,11 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     }
 
     private Object aware(ApiClientBase api, Object o) {
-        return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, api) : o;
+        try {
+            return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, api) : o;
+        } catch (Exception e) {
+            return die("aware("+o+"): "+e, e);
+        }
     }
 
     protected static final String[] EXCLUDED = {"children", "entity"};

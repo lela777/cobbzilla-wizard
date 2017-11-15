@@ -36,8 +36,7 @@ import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
-import static org.cobbzilla.util.json.JsonUtil.json;
-import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClass;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
@@ -527,7 +526,7 @@ public class ModelSetup {
 
     private static class ModelEntityInvocationHandler implements InvocationHandler {
 
-        @Getter @JsonIgnore private final ObjectNode node;
+        @Getter @JsonIgnore private ObjectNode node;
         private final boolean update;
         private final boolean subst;
         @Getter private final Identifiable entity;
@@ -548,6 +547,7 @@ public class ModelSetup {
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
                 case "jsonNode": return node;
+                case "updateNode": node = json(json(entity), ObjectNode.class); return null;
                 case "allowUpdate": return update;
                 case "performSubstitutions": return subst;
                 case "getEntity": return entity;
