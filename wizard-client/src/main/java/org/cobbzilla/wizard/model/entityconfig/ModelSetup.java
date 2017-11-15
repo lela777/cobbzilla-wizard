@@ -102,6 +102,15 @@ public class ModelSetup {
                                                            LinkedHashMap<String, String> models,
                                                            ModelSetupListener listener,
                                                            String runName) throws Exception {
+        return setupModel(api, entityConfigsEndpoint, models, listener, false, runName);
+    }
+
+    public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
+                                                           String entityConfigsEndpoint,
+                                                           LinkedHashMap<String, String> models,
+                                                           ModelSetupListener listener,
+                                                           boolean update,
+                                                           String runName) throws Exception {
         for (Map.Entry<String, String> model : models.entrySet()) {
             final String modelName = model.getKey();
             final String json = model.getValue();
@@ -110,7 +119,7 @@ public class ModelSetup {
             final String entityType = getEntityTypeFromString(modelName);
 
             try {
-                setupJson(api, entityConfigsEndpoint, entityType, json, listener, runName);
+                setupJson(api, entityConfigsEndpoint, entityType, json, listener, update, runName);
             } catch (Exception e) {
                 log.error("setupModel: api="+api.getBaseUri()+", model="+modelName+", exception="+e.getClass().getSimpleName()+": "+e.getMessage());
                 throw e;
@@ -142,6 +151,16 @@ public class ModelSetup {
                                  String json,
                                  ModelSetupListener listener,
                                  String runName) throws Exception {
+        setupJson(api, entityConfigsEndpoint, entityType, json, listener, false, runName);
+    }
+
+    public static void setupJson(ApiClientBase api,
+                                 String entityConfigsEndpoint,
+                                 String entityType,
+                                 String json,
+                                 ModelSetupListener listener,
+                                 boolean update,
+                                 String runName) throws Exception {
         if (listener != null) listener.preEntityConfig(entityType);
         final EntityConfig entityConfig = api.get(entityConfigsEndpoint + "/" + entityType, EntityConfig.class);
         if (listener != null) listener.postEntityConfig(entityType, entityConfig);
@@ -150,7 +169,7 @@ public class ModelSetup {
         final ModelEntity[] entities = parseEntities(json, entityClass);
         for (ModelEntity entity : entities) {
             final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
-            createEntity(api, entityConfig, entity, context, listener, runName);
+            createEntity(api, entityConfig, entity, context, listener, update, runName);
         }
     }
 
@@ -191,6 +210,16 @@ public class ModelSetup {
                                        final LinkedHashMap<String, Identifiable> context,
                                        final ModelSetupListener listener,
                                        final String runName) throws Exception {
+        createEntity(api, entityConfig, request, context, listener, false, runName);
+    }
+
+    protected static void createEntity(final ApiClientBase api,
+                                       EntityConfig entityConfig,
+                                       ModelEntity request,
+                                       final LinkedHashMap<String, Identifiable> context,
+                                       final ModelSetupListener listener,
+                                       boolean update,
+                                       final String runName) throws Exception {
 
         Identifiable entity = request;
 
@@ -215,7 +244,7 @@ public class ModelSetup {
                             log.info(logPrefix + " diffing: " + id(entity));
                             getVerifyLog().logDifference(api, entityConfig, entity, request);
 
-                        } else if (request.allowUpdate()) {
+                        } else if (update || request.allowUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
                             Identifiable toUpdate;
                             if (existing != null) {
@@ -290,7 +319,7 @@ public class ModelSetup {
                             log.error("createEntity: not an ObjectNode: "+child);
                             continue;
                         }
-                        futures.add(exec.submit(new CreateEntityJob(api, childConfig, child, childClass, context, listener, runName)));
+                        futures.add(exec.submit(new CreateEntityJob(api, childConfig, child, childClass, context, listener, update, runName)));
                     }
                     final AwaitResult<?> result = awaitAll(futures, CHILD_TIMEOUT);
                     if (!result.allSucceeded()) die("createEntity: "+result);
@@ -539,11 +568,12 @@ public class ModelSetup {
         private final Class<? extends Identifiable> childClass;
         private final LinkedHashMap<String, Identifiable> context;
         private final ModelSetupListener listener;
+        private final boolean update;
         private final String runName;
 
         @Override public void run() {
             try {
-                createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity((ObjectNode) child, childClass), new LinkedHashMap<>(context), listener, runName);
+                createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity((ObjectNode) child, childClass), new LinkedHashMap<>(context), listener, update, runName);
             } catch (Exception e) {
                 die("run: "+e, e);
             }
