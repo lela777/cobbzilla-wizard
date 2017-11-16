@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
-import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
@@ -17,11 +16,11 @@ import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
-import static org.cobbzilla.util.json.JsonUtil.*;
-import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
-import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
-import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.json_html;
+import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 
 @Slf4j
@@ -45,7 +44,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     @Override public void endLog() {
         final Map<String, Object> ctx = new HashMap<>();
         ctx.put("diffs", diffs);
-        FileUtil.toFileOrDie(verifyLogFile, HandlebarsUtil.apply(handlebars, loadResourceAsStringOrDie(ModelVerifyLog.HTML_TEMPLATE), ctx));
+        toFileOrDie(verifyLogFile, HandlebarsUtil.apply(handlebars, loadResourceAsStringOrDie(ModelVerifyLog.HTML_TEMPLATE), ctx));
     }
 
     @Override public void logDifference(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
@@ -124,13 +123,13 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
 
             if (empty(requestValue)) {
                 if (empty(existingValue)) continue; // both are nothing
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(BOLD_RIGHT_ARROW).append("[absent]").toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(BOLD_RIGHT_ARROW).append(" [absent]").toString());
 
             } else if (empty(existingValue)) {
-                deltas.add(new StringBuilder().append(fieldName).append(": [absent]").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": [absent] ").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
 
             } else if (!json(existingValue).equals(json(requestValue))) {
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(" <br/>").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append("<br/>").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
 
             } else {
                 // nothing changed
