@@ -366,7 +366,7 @@ public class ModelSetup {
                                                        ModelSetupListener listener,
                                                        String runName) throws Exception {
         if (isVerify()) {
-            log.info("create: in verify mode, not creating: " + id(entity));
+            log.info("create: in verify mode, not creating "+getSimpleClass(entity).getSimpleName()+": " + id(entity));
             return entity;
         }
 
