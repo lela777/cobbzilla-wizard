@@ -6,10 +6,11 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.model.Identifiable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
@@ -133,7 +134,7 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
      */
     @Getter @Setter private String objectType;
 
-    @Override public EntityFieldConfig beforeDiff(EntityFieldConfig thing, Object context) {
+    @Override public EntityFieldConfig beforeDiff(EntityFieldConfig thing, Map<String, Identifiable> context, Object resolver) {
         final EntityFieldConfig e = new EntityFieldConfig();
         copy(e, thing);
         e.setType(e.getTypeOrDefault());

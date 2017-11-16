@@ -244,7 +244,7 @@ public class ModelSetup {
                             if (listener != null && request.performSubstitutions()) {
                                 request = listener.subst(request);
                             }
-                            getVerifyLog().logDifference(api, entityConfig, entity, request);
+                            getVerifyLog().logDifference(api, context, entityConfig, entity, request);
 
                         } else if (update || request.allowUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));

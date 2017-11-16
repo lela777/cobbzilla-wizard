@@ -48,7 +48,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         FileUtil.toFileOrDie(verifyLogFile, HandlebarsUtil.apply(handlebars, loadResourceAsStringOrDie(ModelVerifyLog.HTML_TEMPLATE), ctx));
     }
 
-    @Override public void logDifference(ApiClientBase api, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
+    @Override public void logDifference(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
         if (!(entity instanceof ModelEntity)) {
             die("logDifference: not a ModelEntity: " + id(entity) + " (is a " + entity.getClass().getName() + ")");
         }
@@ -62,7 +62,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
-            calculateDiff(api, entityConfig, requestNode, existing, deltas);
+            calculateDiff(api, context, entityConfig, requestNode, existing, deltas);
             if (empty(deltas) && enableTextDiffs()) {
                 diffEntry.setJsonDiff(StringUtil.diff(existingJson, requestJson, null));
             } else {
@@ -95,20 +95,27 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         diffs.add(new ModelDiffEntry(getEntityId(entityConfig, entity)).setCreateEntity(entity));
     }
 
-    private void calculateDiff(ApiClientBase api, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        Object modelRequest = aware(api, json(requestNode, forName(entityConfig.getClassName())));
-        existing = aware(api, existing);
+    private void calculateDiff(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
+        Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
+        existing = aware(api, context, existing);
 
         for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
             final String fieldName = iter.next();
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
-            Object requestValue = aware(api, ReflectionUtil.get(modelRequest, fieldName));
+            final Object fieldValue;
+            try {
+                fieldValue = ReflectionUtil.get(modelRequest, fieldName);
+            } catch (Exception e) {
+                log.info("calculateDiff: fieldValue could not be found ("+fieldName+"), maybe no getter? skipping: "+e);
+                continue;
+            }
+            Object requestValue = aware(api, context, fieldValue);
             Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
                     existingValue = json(((ObjectNode) existing).get(fieldName), ReflectionUtil.getterType(requestValue, fieldName));
                 } else {
-                    existingValue = aware(api, ReflectionUtil.get(existing, fieldName));
+                    existingValue = aware(api, context, ReflectionUtil.get(existing, fieldName));
                 }
             } catch (Exception e) {
                 log.warn("calculateDiff: error fetching " + fieldName + ": " + e);
@@ -132,9 +139,9 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    private Object aware(ApiClientBase api, Object o) {
+    private Object aware(ApiClientBase api, Map<String, Identifiable> context, Object o) {
         try {
-            return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, api) : o;
+            return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, context, api) : o;
         } catch (Exception e) {
             return die("aware("+o+"): "+e, e);
         }
