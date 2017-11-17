@@ -267,7 +267,7 @@ public class ModelSetup {
                         break;
                     case NOT_FOUND:
                         if (verify) {
-                            getVerifyLog().logCreation(entityConfig, entity);
+                            getVerifyLog().logCreation(entityConfig, entity instanceof ModelEntity ? ((ModelEntity) entity).getEntity() : entity);
                         } else {
                             entity = create(api, context, entityConfig, entity, listener, runName);
                         }
