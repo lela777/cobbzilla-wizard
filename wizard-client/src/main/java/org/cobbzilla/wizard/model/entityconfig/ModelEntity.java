@@ -6,8 +6,8 @@ import org.cobbzilla.wizard.model.Identifiable;
 public interface ModelEntity extends Identifiable {
     ObjectNode jsonNode();
     void updateNode();
-    boolean allowUpdate();
+    boolean forceUpdate();
     boolean performSubstitutions();
     Identifiable getEntity();
-
+    boolean hasData();
 }

@@ -1,7 +1,10 @@
 package org.cobbzilla.wizard.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.cobbzilla.wizard.validation.HasValue;
 
@@ -10,15 +13,16 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
-
 import java.util.Comparator;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
 @MappedSuperclass @NoArgsConstructor @Accessors(chain=true) @ToString(of={"name"})
 public class NamedIdentityBase implements NamedEntity, Identifiable {
 
     public static final Comparator<? extends NamedEntity> SORT_NAME_ASC = (Comparator<NamedEntity>) (o1, o2) -> o1.getName().compareTo(o2.getName());
+
     public static Comparator<? super NamedEntity> sortNameAsc() { return (Comparator<? super NamedEntity>) SORT_NAME_ASC; }
 
     public static final Comparator<? extends NamedEntity> SORT_NAME_DESC = (Comparator<NamedEntity>) (o1, o2) -> o2.getName().compareTo(o1.getName());
@@ -30,6 +34,7 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
 
     @Override public void beforeCreate() {}
     @Override public void beforeUpdate() { setMtime(); }
+    @Override public void update(Identifiable thing) { copy(this, thing, null, NAME_FIELD_ARRAY); }
 
     @HasValue(message="err.name.empty")
     @Id @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)

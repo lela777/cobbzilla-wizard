@@ -52,9 +52,9 @@ public class IdentifiableBase implements Identifiable {
 
     @Override public void beforeUpdate() { setMtime(); }
 
-    public void initUuid() { setUuid(UUID.randomUUID().toString()); }
+    public void initUuid() { setUuid(java.util.UUID.randomUUID().toString()); }
 
-    public void update(Identifiable thing) { update(thing, null); }
+    @Override public void update(Identifiable thing) { update(thing, null); }
 
     public void update(Identifiable thing, String[] fields) {
         String existingUuid = getUuid();

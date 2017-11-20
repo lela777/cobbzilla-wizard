@@ -14,6 +14,7 @@ import org.cobbzilla.wizard.model.Identifiable;
 import java.io.File;
 import java.util.*;
 
+import static org.cobbzilla.util.collection.FieldTransformer.TO_NAME;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
@@ -97,9 +98,8 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     private void calculateDiff(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
         Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
         existing = aware(api, context, existing);
-
-        for (Iterator<String> iter = requestNode.fieldNames(); iter.hasNext(); ) {
-            final String fieldName = iter.next();
+        final Set<String> fields = TO_NAME.collectSet(entityConfig.getFields().values());
+        for (String fieldName : fields) {
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
             final Object fieldValue;
             try {
@@ -146,7 +146,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    protected static final String[] EXCLUDED = {"children", "entity"};
+    protected static final String[] EXCLUDED = {"uuid", "children", "entity", "ctime", "ctimeAge", "mtime", "mtimeAge", "entity"};
     protected static final Set<String> EXCLUDED_FIELDS = new HashSet<>(Arrays.asList(EXCLUDED));
     protected Set<String> getExcludedFields() { return EXCLUDED_FIELDS; }
 

@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.daemon.AwaitResult;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
@@ -235,7 +237,7 @@ public class ModelSetup {
                 final boolean verify = isVerify();
                 switch (response.status) {
                     case OK:
-                        if (verify) {
+                        if (verify && request.hasData()) {
                             entity = buildModelEntity(json(response.json, ObjectNode.class), request.getEntity().getClass());
                             if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
                                 entity = listener.subst(entity);
@@ -246,11 +248,11 @@ public class ModelSetup {
                             }
                             getVerifyLog().logDifference(api, context, entityConfig, entity, request);
 
-                        } else if (update || request.allowUpdate()) {
+                        } else if ((update && request.hasData()) || request.forceUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
                             Identifiable toUpdate;
                             if (existing != null) {
-                                ReflectionUtil.copy(existing, entity);
+                                existing.update(entity);
                                 toUpdate = existing;
                             } else {
                                 toUpdate = entity;
@@ -544,12 +546,15 @@ public class ModelSetup {
             return val;
         }
 
+        private static final String[] STANDARD_FIELDS = { "uuid", "name", "children" };
+
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
                 case "jsonNode": return node;
                 case "updateNode": node = json(json(entity), ObjectNode.class); return null;
-                case "allowUpdate": return update;
+                case "forceUpdate": return update;
                 case "performSubstitutions": return subst;
+                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(STANDARD_FIELDS, n)).count() > 0;
                 case "getEntity": return entity;
                 case "equals": return entity.equals(args[0]);
                 default:

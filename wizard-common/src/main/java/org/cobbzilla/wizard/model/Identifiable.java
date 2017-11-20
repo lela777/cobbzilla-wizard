@@ -2,7 +2,8 @@ package org.cobbzilla.wizard.model;
 
 public interface Identifiable {
 
-    String[] UUID_ARRAY = {"uuid"};
+    String UUID = "uuid";
+    String[] UUID_ARRAY = {UUID};
 
     int UUID_MAXLEN = BasicConstraintConstants.UUID_MAXLEN;
 
@@ -13,4 +14,6 @@ public interface Identifiable {
 
     void beforeCreate();
     void beforeUpdate();
+    void update(Identifiable thing);
+
 }

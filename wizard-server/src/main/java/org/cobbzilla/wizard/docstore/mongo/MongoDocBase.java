@@ -6,17 +6,20 @@ import com.github.jmkgreen.morphia.annotations.Indexed;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
+import org.cobbzilla.util.collection.ArrayUtil;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.wizard.model.BasicConstraintConstants.ERR_UUID_LENGTH;
 
 public class MongoDocBase implements Identifiable {
 
-    public static final String UUID = "uuid";
+    private static final String[] UPDATE_EXCLUDES = ArrayUtil.append(UUID_ARRAY, "id");
 
     @Id @JsonIgnore @Getter @Setter
     private ObjectId id;
@@ -31,6 +34,8 @@ public class MongoDocBase implements Identifiable {
     }
 
     @Override public void beforeUpdate() {}
+
+    @Override public void update(Identifiable thing) { copy(this, thing, null, UPDATE_EXCLUDES); }
 
     @NotNull @Setter private long ctime = now();
     @JsonIgnore public long getCtime () { return ctime; }
