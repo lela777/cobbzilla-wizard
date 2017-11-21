@@ -96,7 +96,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     }
 
     private void calculateDiff(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
+        final Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
         existing = aware(api, context, existing);
         final Set<String> fields = TO_NAME.collectSet(entityConfig.getFields().values());
         for (String fieldName : fields) {
