@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
+import static org.cobbzilla.util.json.JsonUtil.json;
 
 @AllArgsConstructor @EqualsAndHashCode(of={"status","json","location"})
 public class RestResponse {
@@ -75,6 +76,8 @@ public class RestResponse {
     }
     public int intHeader (String name) { return Integer.parseInt(header(name)); }
     public boolean hasHeader (String name) { return !empty(header(name)); }
+
+    public <T> T jsonObject (Class<T> clazz) { return json(json, clazz); }
 
     @Override public String toString() {
         File jsonFile;
