@@ -11,10 +11,5 @@ public interface ModelEntity extends Identifiable {
     boolean forceUpdate();
     boolean performSubstitutions();
     Identifiable getEntity();
-
-    default boolean hasData() { return hasData(false); }
-
-    default boolean hasData(boolean strict) {
-        return IteratorUtils.toList(jsonNode().fieldNames()).stream().filter((n) -> !ArrayUtils.contains(excludeUpdateFields(strict), n)).count() > 0;
-    }
+    boolean hasData(final boolean strict);
 }

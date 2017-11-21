@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.daemon.AwaitResult;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
@@ -554,6 +556,10 @@ public class ModelSetup {
             return val;
         }
 
+        public boolean hasData(final boolean strict) {
+            return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(entity.excludeUpdateFields(strict), n)).count() > 0;
+        }
+
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
                 case "jsonNode": return node;
@@ -561,6 +567,7 @@ public class ModelSetup {
                 case "forceUpdate": return update;
                 case "performSubstitutions": return subst;
                 case "getEntity": return entity;
+                case "hasData": return hasData((Boolean) args[0]);
                 case "equals": return entity.equals(args[0]);
                 default:
                     try {
