@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.wizard.validation.HasValue;
 
 import javax.persistence.Column;
@@ -31,6 +32,9 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
     public NamedIdentityBase (String name) { setName(name); }
 
     public NamedIdentityBase update(NamedIdentityBase other) { return setName(other.getName()); }
+
+    public static final String[] NI_IGNORABLE_UPDATE_FIELDS = ArrayUtil.append(IGNORABLE_UPDATE_FIELDS, "name");
+    @Override public String[] getIgnorableUpdateFields() { return NI_IGNORABLE_UPDATE_FIELDS; }
 
     @Override public void beforeCreate() {}
     @Override public void beforeUpdate() { setMtime(); }

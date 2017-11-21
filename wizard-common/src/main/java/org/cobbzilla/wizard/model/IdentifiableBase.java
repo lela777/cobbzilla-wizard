@@ -45,6 +45,8 @@ public class IdentifiableBase implements Identifiable {
     @Transient public String getShortId () { return !hasUuid() ? null : getUuid().length() < getShortIdLength() ? getUuid() : getUuid().substring(0, getShortIdLength()); }
     public void setShortId (String id) {} // noop
 
+    @Override public String[] getIgnorableUpdateFields() { return IGNORABLE_UPDATE_FIELDS; }
+
     public void beforeCreate() {
         if (uuid != null) die("uuid already initialized on "+getClass().getName());
         initUuid();

@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.cobbzilla.util.collection.ArrayUtil;
-import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 
 import javax.validation.constraints.NotNull;
@@ -27,6 +26,8 @@ public class MongoDocBase implements Identifiable {
     @Getter @Setter @Indexed
     @Size(max=UUID_MAXLEN, message=ERR_UUID_LENGTH)
     private String uuid;
+
+    @Override public String[] getIgnorableUpdateFields() { return UPDATE_EXCLUDES; }
 
     @Override public void beforeCreate() {
         if (uuid != null) return; // caller is supplying it to link to something else

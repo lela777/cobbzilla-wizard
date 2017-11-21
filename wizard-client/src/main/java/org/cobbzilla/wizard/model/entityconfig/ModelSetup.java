@@ -546,15 +546,13 @@ public class ModelSetup {
             return val;
         }
 
-        private static final String[] STANDARD_FIELDS = { "uuid", "name", "children" };
-
         @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             switch (method.getName()) {
                 case "jsonNode": return node;
                 case "updateNode": node = json(json(entity), ObjectNode.class); return null;
                 case "forceUpdate": return update;
                 case "performSubstitutions": return subst;
-                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(STANDARD_FIELDS, n)).count() > 0;
+                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(entity.getIgnorableUpdateFields(), n)).count() > 0;
                 case "getEntity": return entity;
                 case "equals": return entity.equals(args[0]);
                 default:
