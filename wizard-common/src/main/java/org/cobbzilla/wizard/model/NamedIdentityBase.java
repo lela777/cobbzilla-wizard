@@ -34,7 +34,7 @@ public class NamedIdentityBase implements NamedEntity, Identifiable {
     public NamedIdentityBase update(NamedIdentityBase other) { return setName(other.getName()); }
 
     public static final String[] NI_IGNORABLE_UPDATE_FIELDS = ArrayUtil.append(IGNORABLE_UPDATE_FIELDS, "name");
-    @Override public String[] getIgnorableUpdateFields() { return NI_IGNORABLE_UPDATE_FIELDS; }
+    @Override public String[] excludeUpdateFields() { return NI_IGNORABLE_UPDATE_FIELDS; }
 
     @Override public void beforeCreate() {}
     @Override public void beforeUpdate() { setMtime(); }

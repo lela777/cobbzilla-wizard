@@ -552,7 +552,7 @@ public class ModelSetup {
                 case "updateNode": node = json(json(entity), ObjectNode.class); return null;
                 case "forceUpdate": return update;
                 case "performSubstitutions": return subst;
-                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(entity.getIgnorableUpdateFields(), n)).count() > 0;
+                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(entity.excludeUpdateFields(), n)).count() > 0;
                 case "getEntity": return entity;
                 case "equals": return entity.equals(args[0]);
                 default:
