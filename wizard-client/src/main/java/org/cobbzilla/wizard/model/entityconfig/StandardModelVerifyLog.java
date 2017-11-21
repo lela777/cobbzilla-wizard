@@ -10,6 +10,7 @@ import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
+import org.cobbzilla.wizard.model.ExcludeUpdates;
 import org.cobbzilla.wizard.model.Identifiable;
 
 import java.io.File;
@@ -20,9 +21,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
-import static org.cobbzilla.util.json.JsonUtil.NOTNULL_MAPPER_ALLOW_EMPTY;
-import static org.cobbzilla.util.json.JsonUtil.json;
-import static org.cobbzilla.util.json.JsonUtil.json_html;
+import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.wizard.model.entityconfig.ModelSetup.id;
 
@@ -108,6 +107,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
             final Set<String> existingFields = ReflectionUtil.toMap(existing).keySet();
             requestFields.addAll(existingFields);
             fields = requestFields;
+            if (modelRequest instanceof ExcludeUpdates) fields.removeIf((f) -> ArrayUtils.contains(((ExcludeUpdates) modelRequest).excludeUpdateFields(), f));
         }
 
         for (String fieldName : fields) {
