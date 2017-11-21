@@ -9,8 +9,8 @@ public interface Identifiable {
 
     String ENTITY_TYPE_HEADER_NAME = "ZZ-TYPE";
 
-    String[] IGNORABLE_UPDATE_FIELDS = { "uuid", "name", "children" };
-    String[] excludeUpdateFields();
+    String[] IGNORABLE_UPDATE_FIELDS = { "uuid", "name", "children", "ctime", "mtime" };
+    String[] excludeUpdateFields(boolean strict);
 
     String getUuid();
     void setUuid(String uuid);

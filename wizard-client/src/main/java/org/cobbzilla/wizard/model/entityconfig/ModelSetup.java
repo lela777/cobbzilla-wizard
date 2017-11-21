@@ -9,8 +9,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.daemon.AwaitResult;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
@@ -31,14 +29,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.processorCount;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
-import static org.cobbzilla.util.json.JsonUtil.*;
+import static org.cobbzilla.util.json.JsonUtil.json;
+import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getSimpleClass;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
@@ -221,6 +218,17 @@ public class ModelSetup {
                                        final ModelSetupListener listener,
                                        boolean update,
                                        final String runName) throws Exception {
+        createEntity(api, entityConfig, request, context, listener, false, false, runName);
+    }
+
+    protected static void createEntity(final ApiClientBase api,
+                                       EntityConfig entityConfig,
+                                       ModelEntity request,
+                                       final LinkedHashMap<String, Identifiable> context,
+                                       final ModelSetupListener listener,
+                                       boolean update,
+                                       boolean strict,
+                                       final String runName) throws Exception {
 
         Identifiable entity = request;
 
@@ -237,7 +245,7 @@ public class ModelSetup {
                 final boolean verify = isVerify();
                 switch (response.status) {
                     case OK:
-                        if (verify && request.hasData()) {
+                        if (verify && request.hasData(strict)) {
                             entity = buildModelEntity(json(response.json, ObjectNode.class), request.getEntity().getClass());
                             if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
                                 entity = listener.subst(entity);
@@ -248,7 +256,7 @@ public class ModelSetup {
                             }
                             getVerifyLog().logDifference(getUri, api, context, entityConfig, entity, request);
 
-                        } else if ((update && request.hasData()) || request.forceUpdate()) {
+                        } else if ((update && request.hasData(strict)) || request.forceUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
                             Identifiable toUpdate;
                             if (existing != null) {
@@ -552,7 +560,6 @@ public class ModelSetup {
                 case "updateNode": node = json(json(entity), ObjectNode.class); return null;
                 case "forceUpdate": return update;
                 case "performSubstitutions": return subst;
-                case "hasData": return IteratorUtils.toList(node.fieldNames()).stream().filter((n) -> !ArrayUtils.contains(entity.excludeUpdateFields(), n)).count() > 0;
                 case "getEntity": return entity;
                 case "equals": return entity.equals(args[0]);
                 default:

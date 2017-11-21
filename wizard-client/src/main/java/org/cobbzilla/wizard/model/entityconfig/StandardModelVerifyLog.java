@@ -33,13 +33,15 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
 
     @Getter @Setter private File verifyLogFile;
     @Getter @Setter private Handlebars handlebars;
+    @Getter @Setter private boolean strict;
     @Getter private final List<ModelDiffEntry> diffs = new ArrayList<>();
 
     public boolean enableTextDiffs () { return false; }
 
-    public StandardModelVerifyLog (File f, Handlebars h) {
+    public StandardModelVerifyLog (File f, Handlebars h, boolean isStrict) {
         verifyLogFile = f;
         handlebars = h;
+        strict = isStrict;
     }
 
     @Override public void startLog() {}
@@ -100,7 +102,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         if (modelRequest instanceof Identifiable) {
             fields = TO_NAME.collectSet(entityConfig.getFields().values());
             // remove fields that we should ignore for update purposes
-            fields.removeIf((f) -> ArrayUtils.contains(((Identifiable) modelRequest).excludeUpdateFields(), f));
+            fields.removeIf((f) -> ArrayUtils.contains(((Identifiable) modelRequest).excludeUpdateFields(strict), f));
         } else {
             final Set<String> requestFields = ReflectionUtil.toMap(modelRequest).keySet();
             final Set<String> existingFields = ReflectionUtil.toMap(existing).keySet();

@@ -27,7 +27,7 @@ public class MongoDocBase implements Identifiable {
     @Size(max=UUID_MAXLEN, message=ERR_UUID_LENGTH)
     private String uuid;
 
-    @Override public String[] excludeUpdateFields() { return UPDATE_EXCLUDES; }
+    @Override public String[] excludeUpdateFields(boolean strict) { return UPDATE_EXCLUDES; }
 
     @Override public void beforeCreate() {
         if (uuid != null) return; // caller is supplying it to link to something else
