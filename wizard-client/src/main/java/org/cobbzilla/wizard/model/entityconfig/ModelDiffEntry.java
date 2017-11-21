@@ -12,7 +12,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @Accessors(chain=true)
 public class ModelDiffEntry {
 
-    public ModelDiffEntry(String entityId) { this.entityId = entityId; }
+    public ModelDiffEntry(String entityId) { this.entityId = entityId.startsWith("/") ? entityId.substring(1) : entityId; }
 
     @Getter private final String entityId;
     @Getter @Setter private String jsonDiff;

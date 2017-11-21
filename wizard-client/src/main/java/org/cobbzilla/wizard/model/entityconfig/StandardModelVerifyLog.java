@@ -20,6 +20,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
+import static org.cobbzilla.util.json.JsonUtil.NOTNULL_MAPPER_ALLOW_EMPTY;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.json.JsonUtil.json_html;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
@@ -92,10 +93,21 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
     }
 
     private void calculateDiff(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        final Identifiable modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
+        final Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
         existing = aware(api, context, existing);
-        final Set<String> fields = TO_NAME.collectSet(entityConfig.getFields().values());
-        fields.removeIf((f) -> ArrayUtils.contains(modelRequest.excludeUpdateFields(), f)); // remove fields that we should ignore for update purposes
+
+        final Set<String> fields;
+        if (modelRequest instanceof Identifiable) {
+            fields = TO_NAME.collectSet(entityConfig.getFields().values());
+            // remove fields that we should ignore for update purposes
+            fields.removeIf((f) -> ArrayUtils.contains(((Identifiable) modelRequest).excludeUpdateFields(), f));
+        } else {
+            final Set<String> requestFields = ReflectionUtil.toMap(modelRequest).keySet();
+            final Set<String> existingFields = ReflectionUtil.toMap(existing).keySet();
+            requestFields.addAll(existingFields);
+            fields = requestFields;
+        }
+
         for (String fieldName : fields) {
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
             final Object fieldValue;
@@ -105,7 +117,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 log.info("calculateDiff: fieldValue could not be found ("+fieldName+"), maybe no getter? skipping: "+e);
                 continue;
             }
-            Identifiable requestValue = aware(api, context, fieldValue);
+            Object requestValue = aware(api, context, fieldValue);
             Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
@@ -120,12 +132,12 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
 
             if (empty(requestValue)) {
                 if (empty(existingValue)) continue; // both are nothing
-                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append(BOLD_RIGHT_ARROW).append(" [absent]").toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue, NOTNULL_MAPPER_ALLOW_EMPTY)).append(BOLD_RIGHT_ARROW).append(" [absent]").toString());
 
             } else if (empty(existingValue)) {
-                deltas.add(new StringBuilder().append(fieldName).append(": [absent] ").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
+                deltas.add(new StringBuilder().append(fieldName).append(": [absent] ").append(BOLD_RIGHT_ARROW).append(json_html(requestValue, NOTNULL_MAPPER_ALLOW_EMPTY)).toString());
 
-            } else if (!json(existingValue).equals(json(requestValue))) {
+            } else if (!json(existingValue, NOTNULL_MAPPER_ALLOW_EMPTY).equals(json(requestValue, NOTNULL_MAPPER_ALLOW_EMPTY))) {
                 deltas.add(new StringBuilder().append(fieldName).append(": ").append(json_html(existingValue)).append("<br/>").append(BOLD_RIGHT_ARROW).append(json_html(requestValue)).toString());
 
             } else {
@@ -135,9 +147,9 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    private Identifiable aware(ApiClientBase api, Map<String, Identifiable> context, Object o) {
+    private Object aware(ApiClientBase api, Map<String, Identifiable> context, Object o) {
         try {
-            return (Identifiable) (o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, context, api) : o);
+            return (o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, context, api) : o);
         } catch (Exception e) {
             return die("aware("+o+"): "+e, e);
         }
