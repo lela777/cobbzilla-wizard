@@ -12,9 +12,9 @@ public interface ModelVerifyLog {
 
     void startLog();
 
-    void logDifference(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity);
+    void logDifference(String uri, ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity);
 
-    void logCreation(EntityConfig entityConfig, Identifiable entity);
+    void logCreation(String uri, Identifiable entity);
 
     void endLog();
 

@@ -246,7 +246,7 @@ public class ModelSetup {
                             if (listener != null && request.performSubstitutions()) {
                                 request = listener.subst(request);
                             }
-                            getVerifyLog().logDifference(api, context, entityConfig, entity, request);
+                            getVerifyLog().logDifference(getUri, api, context, entityConfig, entity, request);
 
                         } else if ((update && request.hasData()) || request.forceUpdate()) {
                             final Identifiable existing = getCached(api, json(response.json, request.getEntity().getClass()));
@@ -269,7 +269,7 @@ public class ModelSetup {
                         break;
                     case NOT_FOUND:
                         if (verify) {
-                            getVerifyLog().logCreation(entityConfig, entity instanceof ModelEntity ? ((ModelEntity) entity).getEntity() : entity);
+                            getVerifyLog().logCreation(getUri, entity instanceof ModelEntity ? ((ModelEntity) entity).getEntity() : entity);
                         } else {
                             entity = create(api, context, entityConfig, entity, listener, runName);
                         }

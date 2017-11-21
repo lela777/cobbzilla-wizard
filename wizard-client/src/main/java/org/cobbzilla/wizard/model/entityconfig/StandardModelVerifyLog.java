@@ -5,6 +5,7 @@ import com.github.jknack.handlebars.Handlebars;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
@@ -48,7 +49,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         toFileOrDie(verifyLogFile, HandlebarsUtil.apply(handlebars, loadResourceAsStringOrDie(ModelVerifyLog.HTML_TEMPLATE), ctx));
     }
 
-    @Override public void logDifference(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
+    @Override public void logDifference(String uri, ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, Identifiable existing, Identifiable entity) {
         if (!(entity instanceof ModelEntity)) {
             die("logDifference: not a ModelEntity: " + id(entity) + " (is a " + entity.getClass().getName() + ")");
         }
@@ -58,8 +59,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         final String existingJson = toBasicJson(existing);
         final String requestJson = toBasicJson(request);
 
-        final String entityId = getEntityId(entityConfig, existing);
-        final ModelDiffEntry diffEntry = new ModelDiffEntry(entityId);
+        final ModelDiffEntry diffEntry = new ModelDiffEntry(uri);
         if (!existingJson.equals(requestJson)) {
             final List<String> deltas = new ArrayList<>();
             calculateDiff(api, context, entityConfig, requestNode, existing, deltas);
@@ -87,18 +87,15 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         return json(copy instanceof ModelEntity ? ((ModelEntity) copy).getEntity() : copy);
     }
 
-    public String getEntityId(EntityConfig entityConfig, Identifiable existing) {
-        return entityConfig.getClassName() + "/" + id(existing);
-    }
-
-    @Override public void logCreation(EntityConfig entityConfig, Identifiable entity) {
-        diffs.add(new ModelDiffEntry(getEntityId(entityConfig, entity)).setCreateEntity(entity));
+    @Override public void logCreation(String uri, Identifiable entity) {
+        diffs.add(new ModelDiffEntry(uri).setCreateEntity(entity));
     }
 
     private void calculateDiff(ApiClientBase api, Map<String, Identifiable> context, EntityConfig entityConfig, ObjectNode requestNode, Object existing, List<String> deltas) {
-        final Object modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
+        final Identifiable modelRequest = aware(api, context, json(requestNode, forName(entityConfig.getClassName())));
         existing = aware(api, context, existing);
         final Set<String> fields = TO_NAME.collectSet(entityConfig.getFields().values());
+        fields.removeIf((f) -> ArrayUtils.contains(modelRequest.excludeUpdateFields(), f)); // remove fields that we should ignore for update purposes
         for (String fieldName : fields) {
             if (getExcludedFields().contains(fieldName)) continue; // skip children/entity fields
             final Object fieldValue;
@@ -108,7 +105,7 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
                 log.info("calculateDiff: fieldValue could not be found ("+fieldName+"), maybe no getter? skipping: "+e);
                 continue;
             }
-            Object requestValue = aware(api, context, fieldValue);
+            Identifiable requestValue = aware(api, context, fieldValue);
             Object existingValue;
             try {
                 if (existing instanceof ObjectNode) {
@@ -138,9 +135,9 @@ public class StandardModelVerifyLog implements ModelVerifyLog {
         }
     }
 
-    private Object aware(ApiClientBase api, Map<String, Identifiable> context, Object o) {
+    private Identifiable aware(ApiClientBase api, Map<String, Identifiable> context, Object o) {
         try {
-            return o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, context, api) : o;
+            return (Identifiable) (o != null && (o instanceof VerifyLogAware) ? ((VerifyLogAware) o).beforeDiff(o, context, api) : o);
         } catch (Exception e) {
             return die("aware("+o+"): "+e, e);
         }
