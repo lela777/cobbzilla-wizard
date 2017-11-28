@@ -11,13 +11,8 @@ public class RelatedEntities extends HashMap<String, Identifiable> {
         return entity(clazz, uncapitalize(clazz.getSimpleName()));
     }
 
-    public Identifiable entity(Class<? extends Identifiable> clazz, String name) {
-        Identifiable found = get(name);
-        if (found == null) {
-            found = instantiate(clazz);
-            put(name, found);
-        }
-        return found;
+    public Identifiable entity(final Class<? extends Identifiable> clazz, String name) {
+        return computeIfAbsent(name, k -> instantiate(clazz));
     }
 
 }
