@@ -30,9 +30,7 @@ import java.util.function.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
-import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
-import static org.cobbzilla.util.reflect.ReflectionUtil.mirror;
-import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
+import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 import static org.hibernate.criterion.Restrictions.*;
 
@@ -398,6 +396,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
 
     protected void setFlushMode() { setFlushMode(getHibernateTemplate()); }
     public static void setFlushMode(HibernateTemplate template) { template.getSessionFactory().getCurrentSession().setFlushMode(FlushMode.COMMIT); }
+
+    public void refresh(E entity) { getHibernateTemplate().getSessionFactory().getCurrentSession().refresh(entity); }
 
     private static final String PROP_AUDIT_LOG = "__auditLog";
 
