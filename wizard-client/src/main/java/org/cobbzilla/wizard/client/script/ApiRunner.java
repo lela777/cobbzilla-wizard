@@ -13,6 +13,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
+import org.cobbzilla.util.handlebars.SimpleJurisdictionResolver;
 import org.cobbzilla.util.http.HttpMethods;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.javascript.StandardJsEngine;
@@ -91,6 +92,7 @@ public class ApiRunner {
         HandlebarsUtil.registerUtilityHelpers(hb);
         HandlebarsUtil.registerCurrencyHelpers(hb);
         HandlebarsUtil.registerDateHelpers(hb);
+        HandlebarsUtil.registerJurisdictionHelpers(hb, SimpleJurisdictionResolver.instance);
         return hb;
     }
 
