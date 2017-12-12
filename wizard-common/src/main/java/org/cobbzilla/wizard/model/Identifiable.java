@@ -1,5 +1,9 @@
 package org.cobbzilla.wizard.model;
 
+import org.cobbzilla.util.string.StringUtil;
+
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
+
 public interface Identifiable {
 
     String UUID = "uuid";
@@ -10,13 +14,13 @@ public interface Identifiable {
     String ENTITY_TYPE_HEADER_NAME = "ZZ-TYPE";
 
     String[] IGNORABLE_UPDATE_FIELDS = { "uuid", "name", "children", "ctime", "mtime" };
-    String[] excludeUpdateFields(boolean strict);
+    default String[] excludeUpdateFields(boolean strict) { return StringUtil.EMPTY_ARRAY; }
 
     String getUuid();
     void setUuid(String uuid);
 
     void beforeCreate();
     void beforeUpdate();
-    void update(Identifiable thing);
+    default void update(Identifiable thing) { copy(this, thing, null, excludeUpdateFields(true)); }
 
 }
