@@ -54,6 +54,12 @@ public abstract class AbstractEntityConfigsResource {
     }
 
     @GET
+    public Response getConfigNames (@Context HttpContext ctx) {
+        if (!authorized(ctx)) return forbidden();
+        return ok(getConfigs().get().keySet());
+    }
+
+    @GET
     @Path("/{name}")
     public Response getConfig (@Context HttpContext ctx,
                                @PathParam("name") String name,
