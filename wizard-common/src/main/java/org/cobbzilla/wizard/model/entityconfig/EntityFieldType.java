@@ -2,6 +2,8 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 public enum EntityFieldType {
 
     /** a string of characters */
@@ -66,9 +68,9 @@ public enum EntityFieldType {
 
     public Object toObject(String value) {
         switch (this) {
-            case decimal: return Double.parseDouble(value);
+            case decimal: return empty(value) ? null : Double.parseDouble(value);
 
-            case integer: case epoch_time: return value == null ? null : Long.parseLong(value);
+            case integer: case epoch_time: return empty(value) ? null : Long.parseLong(value);
 
             case flag: return Boolean.valueOf(value);
 
