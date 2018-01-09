@@ -50,6 +50,7 @@ public class ModelSetup {
 
     public static final String ALLOW_UPDATE_PROPERTY = "_update";
     public static final String PERFORM_SUBST_PROPERTY = "_subst";
+    public static final String PERFORM_JSON_SUBST_PROPERTY = "_jsonSubst";
 
     // 2 x processorCount, max of 50
     public static int maxConcurrency = Math.min(50, 2 * processorCount());
@@ -166,7 +167,7 @@ public class ModelSetup {
         if (listener != null) listener.postEntityConfig(entityType, entityConfig);
 
         final Class<? extends Identifiable> entityClass = forName(entityConfig.getClassName());
-        final ModelEntity[] entities = parseEntities(json, entityClass);
+        final ModelEntity[] entities = parseEntities(json, entityClass, listener);
         for (ModelEntity entity : entities) {
             final LinkedHashMap<String, Identifiable> context = new LinkedHashMap<>();
             createEntity(api, entityConfig, entity, context, listener, update, runName);
@@ -174,7 +175,8 @@ public class ModelSetup {
     }
 
     public static ModelEntity[] parseEntities(String json,
-                                              Class<? extends Identifiable> entityClass) {
+                                              Class<? extends Identifiable> entityClass,
+                                              ModelSetupListener listener) {
         final JsonNode[] nodes = jsonWithComments(json, JsonNode[].class);
         final ModelEntity[] entities = new ModelEntity[nodes.length];
         for (int i=0; i<nodes.length; i++) {
@@ -183,17 +185,17 @@ public class ModelSetup {
                 log.error("parseEntities: not an ObjectNode, skipping: "+node);
                 continue;
             }
-            entities[i] = buildModelEntity((ObjectNode) node, entityClass);
+            entities[i] = buildModelEntity((ObjectNode) node, entityClass, listener);
         }
         return entities;
     }
 
     public static ModelEntity buildModelEntity(ObjectNode node,
-                                               Class<? extends Identifiable> entityClass) {
+                                               Class<? extends Identifiable> entityClass, ModelSetupListener listener) {
         final Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(new Class[]{ModelEntity.class});
         enhancer.setSuperclass(entityClass);
-        enhancer.setCallback(new ModelEntityInvocationHandler(node, entityClass));
+        enhancer.setCallback(new ModelEntityInvocationHandler(node, entityClass, listener));
         return (ModelEntity) enhancer.create();
     }
 
@@ -248,7 +250,7 @@ public class ModelSetup {
                 switch (response.status) {
                     case OK:
                         if (verify && request.hasData(strict)) {
-                            entity = buildModelEntity(json(response.json, ObjectNode.class), request.getEntity().getClass());
+                            entity = buildModelEntity(json(response.json, ObjectNode.class), request.getEntity().getClass(), listener);
                             if (listener != null && ((ModelEntity) entity).performSubstitutions()) {
                                 entity = listener.subst(entity);
                             }
@@ -541,12 +543,15 @@ public class ModelSetup {
         @Getter @JsonIgnore private ObjectNode node;
         private final boolean update;
         private final boolean subst;
+        private final boolean jsonSubst;
         @Getter private final Identifiable entity;
 
-        public ModelEntityInvocationHandler(ObjectNode node, Class<? extends Identifiable> entityClass) {
+        public ModelEntityInvocationHandler(ObjectNode node, Class<? extends Identifiable> entityClass, ModelSetupListener listener) {
             this.node = node;
             update = hasSpecialProperty(node, ALLOW_UPDATE_PROPERTY);
             subst = hasSpecialProperty(node, PERFORM_SUBST_PROPERTY);
+            jsonSubst = hasSpecialProperty(node, PERFORM_JSON_SUBST_PROPERTY);
+            if (listener != null && jsonSubst) node = listener.jsonSubst(node);
             this.entity = json(node, entityClass);
         }
 
@@ -593,7 +598,7 @@ public class ModelSetup {
 
         @Override public void run() {
             try {
-                createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity((ObjectNode) child, childClass), new LinkedHashMap<>(context), listener, update, runName);
+                createEntity((ApiClientBase) api.clone(), childConfig, buildModelEntity((ObjectNode) child, childClass, listener), new LinkedHashMap<>(context), listener, update, runName);
             } catch (Exception e) {
                 die("run: "+e, e);
             }

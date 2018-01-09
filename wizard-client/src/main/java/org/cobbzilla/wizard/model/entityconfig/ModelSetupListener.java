@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.util.RestResponse;
 
@@ -18,5 +19,5 @@ public interface ModelSetupListener {
     void postLookup(Identifiable entity, Identifiable request, RestResponse response);
 
     <T extends Identifiable> T subst(T entity);
-
+    ObjectNode jsonSubst(ObjectNode node);
 }
