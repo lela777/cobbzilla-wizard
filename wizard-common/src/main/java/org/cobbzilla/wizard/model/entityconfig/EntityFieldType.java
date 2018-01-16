@@ -1,81 +1,86 @@
 package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.AllArgsConstructor;
+import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_boolean;
+import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_decimal;
+import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_integer;
+import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_string;
+import org.cobbzilla.wizard.validation.ValidationResult;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import java.util.Locale;
 
+@AllArgsConstructor
 public enum EntityFieldType {
 
     /** a string of characters */
-    string,
+    string (new EntityConfigFieldValidator_string()),
 
     /** an integer-valued number */
-    integer,
+    integer (new EntityConfigFieldValidator_integer()),
 
     /** a real number */
-    decimal,
+    decimal  (new EntityConfigFieldValidator_decimal()),
 
     /** an integer-valued monetary amount */
-    money_integer,
+    money_integer  (null),
 
     /** a real-valued monetary amount */
-    money_decimal,
+    money_decimal  (null),
 
     /** a boolean value */
-    flag,
+    flag  (new EntityConfigFieldValidator_boolean()),
 
     /** a date value */
-    date,
+    date  (null),
 
     /** a date value in the past (before current date) */
-    date_past,
+    date_past  (null),
 
     /** a date value in the future (or current date) */
-    date_future,
+    date_future  (null),
 
     /** a field for age */
-    age,
+    age  (null),
 
     /** a 4-digit year field */
-    year,
+    year  (null),
 
     /** a 4-digit year field that starts with the current year and goes into the past */
-    year_past,
+    year_past  (null),
 
     /** a 4-digit year field that starts with the current year and goes into the future */
-    year_future,
+    year_future  (null),
 
-    /** a date or date/time value, represented as milliseconds since 1/1/1970 */
-    epoch_time,
+    /** a date or date/time value  (null), represented as milliseconds since 1/1/1970 */
+    epoch_time  (new EntityConfigFieldValidator_integer()),
 
     /** a 2-letter US state abbreviation */
-    us_state,
+    us_state  (null),
 
     /** a US ZIP code */
-    us_zip,
+    us_zip  (null),
 
     /** a reference to another EntityConfig instance */
-    reference,
+    reference  (null),
 
     /** a base64-encoded PNG image  */
-    base64_png,
+    base64_png  (null),
 
     /** an embedded sub-object */
-    embedded;
+    embedded  (null);
+
+    private EntityConfigFieldValidator fieldValidator;
 
     /** Jackson-hook to create a new instance based on a string, case-insensitively */
     @JsonCreator public static EntityFieldType create (String val) { return valueOf(val.toLowerCase()); }
 
-    public Object toObject(String value) {
-        switch (this) {
-            case decimal: return empty(value) ? null : Double.parseDouble(value);
-
-            case integer: case epoch_time: return empty(value) ? null : Long.parseLong(value);
-
-            case flag: return Boolean.valueOf(value);
-
-            case string: case date: case reference: case base64_png: case embedded:
-            default: return value;
-        }
+    public Object toObject(Locale locale, String value) {
+        return fieldValidator == null ? value : fieldValidator.toObject(locale, value);
     }
+
+    public ValidationResult validate(Locale locale, EntityFieldConfig fieldConfig, Object value) {
+        return fieldValidator == null ? null : fieldValidator.validate(locale, fieldConfig, value);
+    }
+
 }

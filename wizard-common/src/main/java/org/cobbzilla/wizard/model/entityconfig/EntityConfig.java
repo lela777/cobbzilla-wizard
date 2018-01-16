@@ -4,8 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.util.string.HasLocale;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
+import org.cobbzilla.wizard.validation.ValidationResult;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Column;
@@ -615,5 +618,21 @@ public class EntityConfig {
         cfg.setReference(ref);
 
         return cfg;
+    }
+
+    public ValidationResult validate(Object o) {
+        ValidationResult validation = null;
+        final Locale locale = (o instanceof HasLocale) ? ((HasLocale) o).getLocale() : Locale.getDefault();
+        for (EntityFieldConfig field : getFields().values()) {
+            final Object value = ReflectionUtil.get(o, field.getName());
+            if (value != null) {
+                ValidationResult fieldValidation = field.validate(locale, value);
+                if (fieldValidation != null) {
+                    if (validation == null) validation = new ValidationResult();
+                    validation.addAll(fieldValidation);
+                }
+            }
+        }
+        return validation;
     }
 }

@@ -20,6 +20,8 @@ import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.network.NetworkUtil;
 import org.cobbzilla.util.network.PortPicker;
 import org.cobbzilla.util.security.bcrypt.BCryptUtil;
+import org.cobbzilla.wizard.model.entityconfig.EntityConfigSource;
+import org.cobbzilla.wizard.model.entityconfig.EntityConfigValidator;
 import org.cobbzilla.wizard.server.config.*;
 import org.cobbzilla.wizard.server.config.factory.ConfigurationSource;
 import org.cobbzilla.wizard.server.config.factory.FileConfigurationSource;
@@ -123,6 +125,13 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         httpServer.start();
         // httpServer = GrizzlyServerFactory.createHttpServer(getBaseUri(), rc, factory);
         log.info(serverName+" started.");
+
+        // try to use an EntityConfigValidator if we have an EntityConfigSource
+        final EntityConfigSource entityConfigSource = getBean(EntityConfigSource.class);
+        if (entityConfigSource != null) {
+            configuration.setValidator(new EntityConfigValidator(entityConfigSource));
+        }
+
         for (RestServerLifecycleListener<C> listener : listeners.values()) listener.onStart(this);
         return httpServer;
     }

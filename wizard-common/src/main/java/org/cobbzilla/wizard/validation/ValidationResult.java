@@ -20,6 +20,9 @@ public class ValidationResult {
     private final AtomicReference<List<ConstraintViolation>> violations = new AtomicReference<>(new ArrayList<>());
     private final AtomicReference<List<ConstraintViolationBean>> beans = new AtomicReference<>(new ArrayList<>());
 
+    public ValidationResult (String violation) { addViolation(violation); }
+    public ValidationResult (String violation, String message, String invalidValue) { addViolation(violation, message, invalidValue); }
+
     public ValidationResult (List<ConstraintViolation> violations) {
         synchronized (this.violations) { this.violations.get().addAll(violations); }
     }
@@ -46,6 +49,7 @@ public class ValidationResult {
     }
 
     public void addAll(ValidationResult result) {
+        if (result == null) return;
         for (ConstraintViolationBean violationBean : result.getViolationBeans()) {
             addViolation(violationBean);
         }

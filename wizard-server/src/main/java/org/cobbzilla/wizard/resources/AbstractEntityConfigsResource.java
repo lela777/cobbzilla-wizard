@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.cache.AutoRefreshingReference;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfig;
+import org.cobbzilla.wizard.model.entityconfig.EntityConfigSource;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.model.entityconfig.annotations.ECType;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
@@ -36,7 +37,7 @@ import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Slf4j
-public abstract class AbstractEntityConfigsResource {
+public abstract class AbstractEntityConfigsResource implements EntityConfigSource {
 
     public static final String ENTITY_CONFIG_BASE = "entity-config";
 
@@ -57,6 +58,20 @@ public abstract class AbstractEntityConfigsResource {
     public Response getConfigNames (@Context HttpContext ctx) {
         if (!authorized(ctx)) return forbidden();
         return ok(getConfigs().get().keySet());
+    }
+
+    @Override public EntityConfig getEntityConfig(Object thing) {
+        final AutoRefreshingReference<Map<String, EntityConfig>> configs = getConfigs();
+        final Map<String, EntityConfig> configMap = configs.get();
+        synchronized (configMap) {
+            Class<?> clazz = thing.getClass();
+            do {
+                final EntityConfig entityConfig = configMap.get(clazz.getName());
+                if (entityConfig != null) return entityConfig;
+                clazz = clazz.getSuperclass();
+            } while (!clazz.equals(Object.class));
+        }
+        return null;
     }
 
     @GET
