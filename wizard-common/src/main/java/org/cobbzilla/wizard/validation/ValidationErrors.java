@@ -45,4 +45,10 @@ public class ValidationErrors implements List<ConstraintViolationBean> {
         for (ConstraintViolationBean c : errors) if (c.getMessageTemplate().equals(messageTemplate)) return c;
         return null;
     }
+
+    public ValidationResult toValidationResult () {
+        final ValidationResult validation = new ValidationResult();
+        for (ConstraintViolationBean error : getErrors()) validation.addViolation(error);
+        return validation;
+    }
 }
