@@ -70,7 +70,7 @@ public class ResourceUtil {
 
     public static Response notFound_blank() { return status(NOT_FOUND); }
 
-    public static EntityNotFoundException notFoundEx() { return notFoundEx("-unknown-"); }
+    public static EntityNotFoundException notFoundEx() { return notFoundEx(null); }
 
     public static EntityNotFoundException notFoundEx(String id) {
         if (id == null) id = "-unknown-";
