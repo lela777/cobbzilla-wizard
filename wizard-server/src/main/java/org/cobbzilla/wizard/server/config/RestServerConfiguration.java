@@ -17,6 +17,7 @@ import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.filters.ApiRateLimit;
 import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.resources.ParentResource;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
@@ -258,6 +259,8 @@ public class RestServerConfiguration {
             } else if (o instanceof String) {
                 cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
             } else if (o instanceof Number) {
+                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
+            } else if (o instanceof ParentResource) {
                 cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
             } else if (!(o instanceof DAO)) {
                 log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
