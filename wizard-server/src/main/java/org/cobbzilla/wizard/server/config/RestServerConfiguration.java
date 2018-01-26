@@ -23,6 +23,7 @@ import org.cobbzilla.wizard.util.SpringUtil;
 import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.context.ApplicationContext;
 
+import javax.persistence.Transient;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -128,6 +129,8 @@ public class RestServerConfiguration {
         return execSql(conn, sql, args);
     }
 
+    @Transient @JsonIgnore @Getter @Setter private Boolean execSqlStrictStrings = null;
+
     public ResultSetBean execSql(Connection conn, String sql, Object[] args) throws SQLException {
         @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
         if (args != null) {
@@ -137,7 +140,17 @@ public class RestServerConfiguration {
                     die("null arguments not supported. null value at parameter index=" + i + ", sql=" + sql);
                 }
                 if (o instanceof String) {
-                    ps.setString(i++, (String) o);
+                    if (execSqlStrictStrings == null || execSqlStrictStrings == false) {
+                        if (o.toString().equalsIgnoreCase(Boolean.TRUE.toString())) {
+                            ps.setBoolean(i++, true);
+                        } else if (o.toString().equalsIgnoreCase(Boolean.FALSE.toString())) {
+                            ps.setBoolean(i++, false);
+                        } else {
+                            ps.setString(i++, (String) o);
+                        }
+                    } else {
+                        ps.setString(i++, (String) o);
+                    }
                 } else if (o instanceof Long) {
                     ps.setLong(i++, (Long) o);
                 } else if (o instanceof Integer) {
