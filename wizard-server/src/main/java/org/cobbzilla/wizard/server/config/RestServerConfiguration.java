@@ -142,6 +142,8 @@ public class RestServerConfiguration {
                     ps.setLong(i++, (Long) o);
                 } else if (o instanceof Integer) {
                     ps.setInt(i++, (Integer) o);
+                } else if (o instanceof Boolean) {
+                    ps.setBoolean(i++, (Boolean) o);
                 } else {
                     die("unsupported argument type: " + o.getClass().getName());
                 }
