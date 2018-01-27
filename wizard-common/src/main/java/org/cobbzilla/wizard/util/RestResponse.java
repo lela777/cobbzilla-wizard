@@ -98,4 +98,10 @@ public class RestResponse {
                 (!empty(headers) ? ", headers=" + StringUtil.toString(headers, ", ") : "") +
                 '}';
     }
+
+    public String shortString () {
+        if (!empty(json)) return json;
+        return toString();
+    }
+
 }
