@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.Transformer;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.cobbzilla.util.collection.NameAndValue;
@@ -109,9 +108,7 @@ public class ApiRunner {
     public ApiScript[] include (ApiScript script) {
         if (includeHandler != null) {
             return jsonWithComments(handlebars(includeHandler.include(script.getInclude()),
-                    transformStrings(script.getParams(), new Transformer() {
-                        @Override public Object transform(Object o) { return replaceRand(o); }
-                    }),
+                    transformStrings(HandlebarsUtil.apply(getHandlebars(), script.getParams(), getContext()), o -> replaceRand(o)),
                     script.getParamStartDelim(), script.getParamEndDelim()), ApiScript[].class);
         }
         return notSupported("include("+script.getInclude()+"): no includeHandler set");
