@@ -98,6 +98,11 @@ This code is available under the Apache License, version 2: http://www.apache.or
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.glassfish.grizzly</groupId>
