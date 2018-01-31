@@ -3,7 +3,6 @@ package org.cobbzilla.wizard.dao;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.ResultPage;
 import org.cobbzilla.wizard.model.SqlViewField;
@@ -13,6 +12,7 @@ import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.util.*;
 
+import static java.lang.Integer.min;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
@@ -50,7 +50,7 @@ public class SqlViewSearchHelper {
             }
         }
 
-        boolean searchByEncryptedField = Arrays.stream(fields).filter(SqlViewField::isUsedForFiltering).findAny().isPresent();
+        boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(SqlViewField::isUsedForFiltering);
         final String sort;
         final String sortedField;
         if (resultPage.getHasSortField()) {
@@ -61,21 +61,28 @@ public class SqlViewSearchHelper {
             sortedField = "ctime";
         }
 
-        final String offset = !searchByEncryptedField ? " OFFSET " + resultPage.getPageOffset() : "";
-        final int limit = !searchByEncryptedField ? resultPage.getPageSize() : resultPage.getPageSize() + resultPage.getPageOffset();
-        final String count = "select uuid " + sql.toString();
+        final String offset;
+        final int limit;
+        if (searchByEncryptedField) {
+             offset =  "";
+             limit = resultPage.getPageSize() + resultPage.getPageOffset();
+        } else {
+            offset = " OFFSET " + resultPage.getPageOffset();
+            limit = resultPage.getPageSize();
+        }
+
+        final String uuidsSql = "select uuid " + sql.toString();
         final String query = "select * " + sql.toString()
                 + " ORDER BY " + sort
                 + " LIMIT " + limit
                 + offset;
-
         Integer totalCount = null;
         final List<E> things = new ArrayList<>();
         final Set<String> allUuids = new HashSet<>();
         try {
             final Object[] args = params.toArray();
-            ResultSetBean countResult = configuration.execSql(count, args);
-            allUuids.addAll(countResult.getColumnValues("uuid"));
+            ResultSetBean uuidsResult = configuration.execSql(uuidsSql, args);
+            allUuids.addAll(uuidsResult.getColumnValues("uuid"));
 
             final ResultSetBean rs = configuration.execSql(query, args);
             for (Map<String, Object> row : rs.getRows()) {
@@ -83,11 +90,13 @@ public class SqlViewSearchHelper {
             }
 
             if (searchByEncryptedField) {
+                paramsForEncrypted.add(allUuids.toArray());
                 final Object[] argsForEncrypted = paramsForEncrypted.toArray();
                 final String queryForEncrypted = "select * " + sqlWithoutFilters.toString()
-                        + "AND uuid NOT IN ( '" + StringUtil.toString(allUuids).replace(",", "', '") + "' )"
+                        + "AND uuid NOT IN (SELECT * FROM unnest( ? )) "
                         + " ORDER BY " + sort
-                        + " LIMIT " + resultPage.getPageSize() + resultPage.getPageOffset();
+                        + " LIMIT " + resultPage.getPageSize()
+                        + resultPage.getPageOffset();
 
                 final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
                 for (Map<String, Object> row : rsEncrypted.getRows()) {
@@ -103,21 +112,18 @@ public class SqlViewSearchHelper {
 
                 if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
                     things.sort(new Comparator<E>() {
-                        @Override public int compare(E o1, E o2) {
-                            return compareSelectedItems(o1, o2, sortedField);
-                        }
+                        @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
                     });
                 } else {
                     things.sort(new Comparator<E>() {
-                        @Override public int compare(E o1, E o2) {
-                            return compareSelectedItems(o1, o2, sortedField);
-                        }
+                        @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
                     }.reversed());
                 }
             }
 
         } catch (Exception e) {
             log.warn("error determining total count: "+e);
+            System.out.println("e.getMessage() = " + e.getMessage());
         }
 
         totalCount = allUuids.size();
@@ -125,8 +131,7 @@ public class SqlViewSearchHelper {
             return new SearchResults<>(new ArrayList<>(), totalCount);
         } else {
             int startIndex = resultPage.getPageOffset();
-            int endIndex = (resultPage.getPageOffset() + resultPage.getPageSize()) > things.size()
-                    ? things.size() : resultPage.getPageOffset() + resultPage.getPageSize();
+            int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), things.size());
             return new SearchResults<>(things.subList(startIndex, endIndex), totalCount);
         }
     }
@@ -136,13 +141,17 @@ public class SqlViewSearchHelper {
         Class sortedFieldClass = ReflectionUtil.getSimpleClass(fieldObject1);
 
         if (sortedFieldClass.equals(String.class)) {
-            return ((String) ReflectionUtil.get(o1, sortedField)).compareTo((String) ReflectionUtil.get(o2, sortedField));
+            return ((String) ReflectionUtil.get(o1, sortedField)).compareTo((String) ReflectionUtil.get(o2,
+                                                                                                        sortedField));
         } else if (sortedFieldClass.equals(Long.class)) {
-            return ((Long) ReflectionUtil.get(o1, sortedField)).compareTo((Long) ReflectionUtil.get(o2, sortedField));
+            return ((Long) ReflectionUtil.get(o1, sortedField)).compareTo((Long) ReflectionUtil.get(o2,
+                                                                                                    sortedField));
         } else if (sortedFieldClass.equals(Integer.class)) {
-            return ((Integer) ReflectionUtil.get(o1, sortedField)).compareTo((Integer) ReflectionUtil.get(o2, sortedField));
+            return ((Integer) ReflectionUtil.get(o1, sortedField)).compareTo((Integer) ReflectionUtil.get(o2,
+                                                                                                          sortedField));
         } else if (sortedFieldClass.equals(Boolean.class)) {
-            return ((Boolean) ReflectionUtil.get(o1, sortedField)).compareTo((Boolean) ReflectionUtil.get(o2, sortedField));
+            return ((Boolean) ReflectionUtil.get(o1, sortedField)).compareTo((Boolean) ReflectionUtil.get(o2,
+                                                                                                          sortedField));
         }
         throw invalidEx("Sort field has invalid type");
     }
@@ -161,7 +170,9 @@ public class SqlViewSearchHelper {
                 target = thing.getRelated().entity(type, field.getEntity());
             }
             final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
-            if (!empty(value) && field.isUsedForFiltering() && value.toString().toLowerCase().contains(filter.toLowerCase())) {
+            if (!empty(value)
+                && field.isUsedForFiltering()
+                && value.toString().toLowerCase().contains(filter.toLowerCase())) {
                 containsFilterValue = true;
             }
             if (field.hasSetter()) {

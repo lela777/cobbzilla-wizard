@@ -21,11 +21,21 @@ public class SqlViewField {
 
     public SqlViewField(String name) { this(null, name, snakeCaseToCamelCase(name), false, false, null, null); }
     public SqlViewField(String name, String property)   { this(null, name, property, false, false, null, null); }
-    public SqlViewField(String name, SqlViewFieldSetter setter)   { this(null, name, snakeCaseToCamelCase(name), false, false, setter, null); }
-    public SqlViewField(String name, boolean encrypted) { this(null, name, snakeCaseToCamelCase(name), encrypted, false, null, null); }
-    public SqlViewField(String name, boolean encrypted, boolean usedForFiltering) { this(null, name, snakeCaseToCamelCase(name), encrypted, usedForFiltering, null, null); }
-    public SqlViewField(String name, String property, boolean encrypted) { this(null, name, property, encrypted, false, null, null); }
-    public SqlViewField(String name, String property, boolean encrypted, boolean usedForFiltering) { this(null, name, property, encrypted, usedForFiltering, null, null); }
+    public SqlViewField(String name, SqlViewFieldSetter setter)   {
+        this(null, name, snakeCaseToCamelCase(name), false, false, setter, null);
+    }
+    public SqlViewField(String name, boolean encrypted) {
+        this(null, name, snakeCaseToCamelCase(name), encrypted, false, null, null);
+    }
+    public SqlViewField(String name, boolean encrypted, boolean usedForFiltering) {
+        this(null, name, snakeCaseToCamelCase(name), encrypted, usedForFiltering, null, null);
+    }
+    public SqlViewField(String name, String property, boolean encrypted) {
+        this(null, name, property, encrypted, false, null, null);
+    }
+    public SqlViewField(String name, String property, boolean encrypted, boolean usedForFiltering) {
+        this(null, name, property, encrypted, usedForFiltering, null, null);
+    }
 
     public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted) {
         this(type, name, property, encrypted, false, null, null);
@@ -39,10 +49,12 @@ public class SqlViewField {
     public SqlViewField(Class<? extends Identifiable> type, String name, boolean encrypted) {
         this(type, name, snakeCaseToCamelCase(name), encrypted, false, null, null);
     }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted, boolean usedForFiltering) {
+    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
+                        boolean usedForFiltering) {
         this(type, name, property, encrypted, usedForFiltering, null, null);
     }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted, boolean usedForFiltering, String entity) {
+    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
+                        boolean usedForFiltering, String entity) {
         this(type, name, property, encrypted, usedForFiltering, null, entity);
     }
 
