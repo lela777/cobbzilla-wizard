@@ -106,14 +106,14 @@ public class SqlViewSearchHelper {
                     if (things.size() == resultPage.getPageOffset() + resultPage.getPageSize()) break;
                 }
 
+                final Comparator<E> comparator = new Comparator<E>() {
+                    @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
+                };
+
                 if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
-                    things.sort(new Comparator<E>() {
-                        @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
-                    });
+                    things.sort(comparator);
                 } else {
-                    things.sort(new Comparator<E>() {
-                        @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
-                    }.reversed());
+                    things.sort(comparator.reversed());
                 }
             }
 
