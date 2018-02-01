@@ -20,8 +20,8 @@ public class SqlViewField {
     public boolean hasSetter () { return setter != null; }
 
     public SqlViewField(String name) { this(null, name, snakeCaseToCamelCase(name), false, false, null, null); }
-    public SqlViewField(String name, String property)   { this(null, name, property, false, false, null, null); }
-    public SqlViewField(String name, SqlViewFieldSetter setter)   {
+    public SqlViewField(String name, String property) { this(null, name, property, false, false, null, null); }
+    public SqlViewField(String name, SqlViewFieldSetter setter) {
         this(null, name, snakeCaseToCamelCase(name), false, false, setter, null);
     }
     public SqlViewField(String name, boolean encrypted) {

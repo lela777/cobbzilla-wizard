@@ -50,7 +50,7 @@ public class SqlViewSearchHelper {
             }
         }
 
-        boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(SqlViewField::isUsedForFiltering);
+        boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
         final String sort;
         final String sortedField;
         if (resultPage.getHasSortField()) {
@@ -61,14 +61,11 @@ public class SqlViewSearchHelper {
             sortedField = "ctime";
         }
 
-        final String offset;
-        final int limit;
+        String offset = " OFFSET " + resultPage.getPageOffset();
+        int limit = resultPage.getPageSize();
         if (searchByEncryptedField) {
-             offset =  "";
-             limit = resultPage.getPageSize() + resultPage.getPageOffset();
-        } else {
-            offset = " OFFSET " + resultPage.getPageOffset();
-            limit = resultPage.getPageSize();
+            offset =  "";
+            limit += resultPage.getPageSize();
         }
 
         final String uuidsSql = "select uuid " + sql.toString();
@@ -94,9 +91,7 @@ public class SqlViewSearchHelper {
                 final Object[] argsForEncrypted = paramsForEncrypted.toArray();
                 final String queryForEncrypted = "select * " + sqlWithoutFilters.toString()
                         + "AND uuid NOT IN (SELECT * FROM unnest( ? )) "
-                        + " ORDER BY " + sort
-                        + " LIMIT " + resultPage.getPageSize()
-                        + resultPage.getPageOffset();
+                        + " ORDER BY " + sort;
 
                 final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
                 for (Map<String, Object> row : rsEncrypted.getRows()) {
@@ -123,14 +118,14 @@ public class SqlViewSearchHelper {
 
         } catch (Exception e) {
             log.warn("error determining total count: "+e);
-            System.out.println("e.getMessage() = " + e.getMessage());
         }
 
         totalCount = allUuids.size();
-        if (things.size() < resultPage.getPageOffset()) {
+        int startIndex = resultPage.getPageOffset();
+        if (things.size() < startIndex) {
             return new SearchResults<>(new ArrayList<>(), totalCount);
         } else {
-            int startIndex = resultPage.getPageOffset();
+
             int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), things.size());
             return new SearchResults<>(things.subList(startIndex, endIndex), totalCount);
         }
@@ -138,39 +133,34 @@ public class SqlViewSearchHelper {
 
     private static <E extends Identifiable> int compareSelectedItems(E o1, E o2, String sortedField) {
         Object fieldObject1 = ReflectionUtil.get(o1, sortedField);
+        Object fieldObject2 = ReflectionUtil.get(o2, sortedField);
         Class sortedFieldClass = ReflectionUtil.getSimpleClass(fieldObject1);
 
         if (sortedFieldClass.equals(String.class)) {
-            return ((String) ReflectionUtil.get(o1, sortedField)).compareTo((String) ReflectionUtil.get(o2,
-                                                                                                        sortedField));
+            return ((String) fieldObject1).compareTo((String) fieldObject2);
         } else if (sortedFieldClass.equals(Long.class)) {
-            return ((Long) ReflectionUtil.get(o1, sortedField)).compareTo((Long) ReflectionUtil.get(o2,
-                                                                                                    sortedField));
+            return ((Long) fieldObject1).compareTo((Long) fieldObject2);
         } else if (sortedFieldClass.equals(Integer.class)) {
-            return ((Integer) ReflectionUtil.get(o1, sortedField)).compareTo((Integer) ReflectionUtil.get(o2,
-                                                                                                          sortedField));
+            return ((Integer) fieldObject1).compareTo((Integer) fieldObject2);
         } else if (sortedFieldClass.equals(Boolean.class)) {
-            return ((Boolean) ReflectionUtil.get(o1, sortedField)).compareTo((Boolean) ReflectionUtil.get(o2,
-                                                                                                          sortedField));
+            return ((Boolean) fieldObject1).compareTo((Boolean) fieldObject2);
         }
         throw invalidEx("Sort field has invalid type");
     }
 
     public static <T extends SqlViewSearchResult, E extends Identifiable> T populateAndFilter(T thing,
-                                                                                              Map<String, Object> row,
-                                                                                              SqlViewField[] fields,
-                                                                                              HibernatePBEStringEncryptor hibernateEncryptor,
-                                                                                              String filter) {
+        Map<String, Object> row, SqlViewField[] fields, HibernatePBEStringEncryptor hibernateEncryptor, String filter) {
         boolean containsFilterValue = false;
         for (SqlViewField field : fields) {
             final Class<? extends Identifiable> type = field.getType();
             Object target = thing;
             if (type != null) {
-                if (!field.hasEntity()) die("populate: type was "+type.getName()+" but entity was null: "+field); // sanity check, should never happen
+                // sanity check, should never happen
+                if (!field.hasEntity()) die("populate: type was "+type.getName()+" but entity was null: "+field);
                 target = thing.getRelated().entity(type, field.getEntity());
             }
             final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
-            if (!empty(value)
+            if (!containsFilterValue && !empty(value)
                 && field.isUsedForFiltering()
                 && value.toString().toLowerCase().contains(filter.toLowerCase())) {
                 containsFilterValue = true;
