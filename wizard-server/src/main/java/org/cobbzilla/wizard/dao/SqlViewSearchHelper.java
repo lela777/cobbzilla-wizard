@@ -103,6 +103,7 @@ public class SqlViewSearchHelper {
                             allUuids.add(thing.getUuid());
                         }
                     }
+                    if (things.size() == resultPage.getPageOffset() + resultPage.getPageSize()) break;
                 }
 
                 if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
