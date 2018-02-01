@@ -13,6 +13,8 @@ import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.analytics.AnalyticsConfiguration;
 import org.cobbzilla.wizard.analytics.AnalyticsHandler;
+import org.cobbzilla.wizard.asset.AssetStorageConfiguration;
+import org.cobbzilla.wizard.asset.AssetStorageService;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.filters.ApiRateLimit;
 import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
@@ -96,6 +98,10 @@ public class RestServerConfiguration {
     public boolean hasWebapps () { return !empty(webapps); }
 
     @JsonIgnore @Getter @Setter private Validator validator;
+
+    @Getter @Setter private AssetStorageConfiguration assetStorage;
+    @Getter(lazy=true) private final AssetStorageService assetStorageService = initStorageService();
+    public AssetStorageService initStorageService () { return AssetStorageService.build(assetStorage); }
 
     @Getter @Setter private ThriftConfiguration[] thrift;
 
