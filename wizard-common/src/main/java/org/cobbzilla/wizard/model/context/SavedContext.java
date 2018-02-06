@@ -39,8 +39,11 @@ public class SavedContext {
     }
 
     public void putAll (Map<String, Object> values) {
+        if (empty(values)) return;
         final Map<String, Object> ctx = new HashMap<>(getContext());
-        ctx.putAll(values);
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            if (entry.getValue() != null) ctx.put(entry.getKey(), entry.getValue());
+        }
         setContext(ctx);
     }
 
