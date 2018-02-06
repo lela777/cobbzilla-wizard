@@ -38,6 +38,12 @@ public class SavedContext {
         setContext(ctx);
     }
 
+    public void putAll (Map<String, Object> values) {
+        final Map<String, Object> ctx = new HashMap<>(getContext());
+        ctx.putAll(values);
+        setContext(ctx);
+    }
+
     @Transient public Map<String, Object> getContext () {
         final ContextEntry[] entries = json(contextJson, ContextEntry[].class);
         final Map<String, Object> map = new LinkedHashMap<>();
