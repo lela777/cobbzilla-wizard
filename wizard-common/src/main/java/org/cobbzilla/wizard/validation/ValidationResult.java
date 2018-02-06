@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
+import org.cobbzilla.util.string.StringUtil;
 
 import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 // forked from dropwizard-- https://github.com/codahale/dropwizard
 
@@ -25,6 +28,25 @@ public class ValidationResult {
 
     public ValidationResult (List<ConstraintViolation> violations) {
         synchronized (this.violations) { this.violations.get().addAll(violations); }
+    }
+
+    public static ValidationResult fromMessages(List<String> messages) { return fromMessages(messages, null); }
+
+    public static ValidationResult fromMessages(List<String> messages, String delim) {
+        final ValidationResult result = new ValidationResult();
+        if (delim == null) delim = "\t\n";
+        for (String message : messages) {
+            if (empty(message)) continue;
+            final List<String> parts = StringUtil.split(message, delim);
+            switch (parts.size()) {
+                case 0: continue;
+                case 1: result.addViolation(message); break;
+                case 2: result.addViolation(parts.get(0), parts.get(1)); break;
+                case 3: result.addViolation(parts.get(0), parts.get(1), parts.get(2)); break;
+                default: result.addViolation(message); break;
+            }
+        }
+        return result;
     }
 
     @JsonIgnore public List<ConstraintViolation> getViolations() { return violations.get(); }
