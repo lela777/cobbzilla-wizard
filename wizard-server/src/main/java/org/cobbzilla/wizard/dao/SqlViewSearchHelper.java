@@ -68,7 +68,7 @@ public class SqlViewSearchHelper {
             sort = sortedField + " " + resultPage.getSortOrder();
         } else {
             sort = dao.getDefaultSort();
-            sortedField = "ctime";
+            sortedField = sort.split(" ")[0];
         }
 
         String offset = " OFFSET " + resultPage.getPageOffset();
@@ -97,7 +97,7 @@ public class SqlViewSearchHelper {
             if (allUuids.size() > 0) {
                 final ResultSetBean rs = configuration.execSql(query, args);
                 final List<Future<?>> results = new ArrayList<>(rs.rowCount());
-                final ExecutorService exec = fixedPool(Math.min(20, rs.rowCount()));
+                final ExecutorService exec = fixedPool(Math.min(16, rs.rowCount()));
 
                 for (Map<String, Object> row : rs.getRows()) {
                     results.add(exec.submit(() -> {
@@ -118,7 +118,7 @@ public class SqlViewSearchHelper {
                 final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
 
                 if (!rsEncrypted.isEmpty()) {
-                    int threadCount = Math.min(rsEncrypted.rowCount(), 20);
+                    int threadCount = Math.min(rsEncrypted.rowCount(), 16);
                     final List<Future<?>> resultsEncrypted = new ArrayList<>(rsEncrypted.rowCount());
                     final ExecutorService execEncrypted = fixedPool(threadCount);
 
@@ -146,8 +146,8 @@ public class SqlViewSearchHelper {
         SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
 
         if (searchByEncryptedField) {
-            final Comparator<E> comparator = new Comparator<E>() {
-                @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField, sqlViewField); }
+            final Comparator<E> comparator = (E o1, E o2) -> {
+                return compareSelectedItems(o1, o2, sortedField, sqlViewField);
             };
 
             if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
@@ -203,7 +203,10 @@ public class SqlViewSearchHelper {
     }
 
     public static <T extends SqlViewSearchResult, E extends Identifiable> T populateAndFilter(T thing,
-        Map<String, Object> row, SqlViewField[] fields, HibernatePBEStringEncryptor hibernateEncryptor, String filter) {
+                                                                                              Map<String, Object> row,
+                                                                                              SqlViewField[] fields,
+                                                                                              HibernatePBEStringEncryptor hibernateEncryptor,
+                                                                                              String filter) {
         boolean containsFilterValue = false;
         for (SqlViewField field : fields) {
             final Class<? extends Identifiable> type = field.getType();
