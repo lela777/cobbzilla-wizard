@@ -72,16 +72,16 @@ public class SqlViewSearchHelper {
         }
 
         String offset = " OFFSET " + resultPage.getPageOffset();
-        int limit = resultPage.getPageSize();
+        String limit = "LIMIT " + resultPage.getPageSize();
         if (searchByEncryptedField) {
             offset =  "";
-            limit += resultPage.getPageOffset();
+            limit = "";
         }
 
         final String uuidsSql = "select uuid " + sql.toString();
         final String query = "select * " + sql.toString()
                 + " ORDER BY " + sort
-                + " LIMIT " + limit
+                + limit
                 + offset;
 
         Integer totalCount = null;
@@ -114,7 +114,7 @@ public class SqlViewSearchHelper {
                 final String queryForEncrypted = "select * " + sqlWithoutFilters.toString()
                         + "AND uuid NOT IN (SELECT * FROM unnest( ? )) "
                         + " ORDER BY " + sort;
-
+                
                 final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
 
                 if (!rsEncrypted.isEmpty()) {
