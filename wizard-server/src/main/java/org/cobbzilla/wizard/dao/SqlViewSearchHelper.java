@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import com.google.code.yanf4j.util.ConcurrentHashSet;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -11,8 +12,14 @@ import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Integer.min;
+import static org.cobbzilla.util.daemon.Await.awaitAll;
+import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
@@ -22,6 +29,8 @@ import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 @Slf4j
 public class SqlViewSearchHelper {
 
+    public static final long SEARCH_TIMEOUT =  TimeUnit.SECONDS.toMillis(20);
+
     public static <E extends Identifiable, R extends SqlViewSearchResult>
     SearchResults<E> search(SqlViewSearchableDAO<E> dao,
                             ResultPage resultPage,
@@ -30,7 +39,8 @@ public class SqlViewSearchHelper {
                             HibernatePBEStringEncryptor hibernateEncryptor,
                             RestServerConfiguration configuration) {
 
-        final StringBuilder sql = new StringBuilder("from " + dao.getSearchView() + " where (").append(dao.fixedFilters()).append(") ");
+        final StringBuilder sql = new StringBuilder("from " + dao.getSearchView()
+                                                    + " where (").append(dao.fixedFilters()).append(") ");
         final StringBuilder sqlWithoutFilters = new StringBuilder(sql);
 
         final List<Object> params = new ArrayList<>();
@@ -65,7 +75,7 @@ public class SqlViewSearchHelper {
         int limit = resultPage.getPageSize();
         if (searchByEncryptedField) {
             offset =  "";
-            limit += resultPage.getPageSize();
+            limit += resultPage.getPageOffset();
         }
 
         final String uuidsSql = "select uuid " + sql.toString();
@@ -73,17 +83,29 @@ public class SqlViewSearchHelper {
                 + " ORDER BY " + sort
                 + " LIMIT " + limit
                 + offset;
+
         Integer totalCount = null;
-        final List<E> things = new ArrayList<>();
-        final Set<String> allUuids = new HashSet<>();
+        ArrayList<E> thingsList;
+        final Map<String,E> things = new ConcurrentHashMap<>();
+        final Set<String> allUuids = new ConcurrentHashSet<>();
+
         try {
             final Object[] args = params.toArray();
             ResultSetBean uuidsResult = configuration.execSql(uuidsSql, args);
             allUuids.addAll(uuidsResult.getColumnValues("uuid"));
 
-            final ResultSetBean rs = configuration.execSql(query, args);
-            for (Map<String, Object> row : rs.getRows()) {
-                things.add((E) populate(instantiate(resultClass), row, fields, hibernateEncryptor));
+            if (allUuids.size() > 0) {
+                final ResultSetBean rs = configuration.execSql(query, args);
+                final List<Future<?>> results = new ArrayList<>(rs.rowCount());
+                final ExecutorService exec = fixedPool(Math.min(20, rs.rowCount()));
+
+                for (Map<String, Object> row : rs.getRows()) {
+                    results.add(exec.submit(() -> {
+                        E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
+                        things.put(thing.getUuid(), thing);
+                    }));
+                }
+                awaitAll(results, SEARCH_TIMEOUT);
             }
 
             if (searchByEncryptedField) {
@@ -94,26 +116,25 @@ public class SqlViewSearchHelper {
                         + " ORDER BY " + sort;
 
                 final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
-                for (Map<String, Object> row : rsEncrypted.getRows()) {
-                    E thing = (E) populateAndFilter(instantiate(resultClass), row, fields, hibernateEncryptor,
-                                                    resultPage.getFilter());
-                    if (!empty(thing)) {
-                        if (!allUuids.contains(thing.getUuid())) {
-                            things.add(thing);
-                            allUuids.add(thing.getUuid());
-                        }
+
+                if (!rsEncrypted.isEmpty()) {
+                    int threadCount = Math.min(rsEncrypted.rowCount(), 20);
+                    final List<Future<?>> resultsEncrypted = new ArrayList<>(rsEncrypted.rowCount());
+                    final ExecutorService execEncrypted = fixedPool(threadCount);
+
+                    for (Map<String, Object> row : rsEncrypted.getRows()) {
+                        resultsEncrypted.add(execEncrypted.submit(() -> {
+                            E thing = (E) populateAndFilter(instantiate(resultClass), row, fields, hibernateEncryptor,
+                                                            resultPage.getFilter());
+                            if (!empty(thing)) {
+                                if (!allUuids.contains(thing.getUuid())) {
+                                    things.put(thing.getUuid(), thing);
+                                    allUuids.add(thing.getUuid());
+                                }
+                            }
+                        }));
                     }
-                    if (things.size() == resultPage.getPageOffset() + resultPage.getPageSize()) break;
-                }
-
-                final Comparator<E> comparator = new Comparator<E>() {
-                    @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField); }
-                };
-
-                if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
-                    things.sort(comparator);
-                } else {
-                    things.sort(comparator.reversed());
+                    awaitAll(resultsEncrypted, SEARCH_TIMEOUT);
                 }
             }
 
@@ -121,22 +142,53 @@ public class SqlViewSearchHelper {
             log.warn("error determining total count: "+e);
         }
 
+        thingsList = new ArrayList<>(things.values());
+        SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
+
+        if (searchByEncryptedField) {
+            final Comparator<E> comparator = new Comparator<E>() {
+                @Override public int compare(E o1, E o2) { return compareSelectedItems(o1, o2, sortedField, sqlViewField); }
+            };
+
+            if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
+                thingsList.sort(comparator);
+            } else {
+                thingsList.sort(comparator.reversed());
+            }
+        }
+
         totalCount = allUuids.size();
         int startIndex = resultPage.getPageOffset();
-        if (things.size() < startIndex) {
+        if (thingsList.size() < startIndex) {
             return new SearchResults<>(new ArrayList<>(), totalCount);
         } else {
 
             int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), things.size());
-            return new SearchResults<>(things.subList(startIndex, endIndex), totalCount);
+            return new SearchResults<>(thingsList.subList(startIndex, endIndex), totalCount);
         }
     }
 
-    private static <E extends Identifiable> int compareSelectedItems(E o1, E o2, String sortedField) {
-        Object fieldObject1 = ReflectionUtil.get(o1, sortedField);
-        Object fieldObject2 = ReflectionUtil.get(o2, sortedField);
-        Class sortedFieldClass = ReflectionUtil.getSimpleClass(fieldObject1);
+    private static <E extends Identifiable> int compareSelectedItems(E o1, E o2,
+                                                                     String sortedField,
+                                                                     SqlViewField field) {
+        Object fieldObject1;
+        Object fieldObject2;
 
+        if (field.hasEntity()) {
+            fieldObject1 = ReflectionUtil.get(ReflectionUtil.get(ReflectionUtil.get(o1, "related"),
+                                                                 field.getEntity()), field.getEntityProperty());
+            fieldObject2 = ReflectionUtil.get(ReflectionUtil.get(ReflectionUtil.get(o2, "related"),
+                                                                 field.getEntity()), field.getEntityProperty());
+        } else {
+            fieldObject1 = ReflectionUtil.get(o1, sortedField);
+            fieldObject2 = ReflectionUtil.get(o2, sortedField);
+        }
+
+        if (fieldObject1 == null && fieldObject2 == null) return 0;
+        if (fieldObject1 == null && fieldObject2 != null) return 1;
+        if (fieldObject1 != null && fieldObject2 == null) return -1;
+
+        Class sortedFieldClass = ReflectionUtil.getSimpleClass(fieldObject1);
         if (sortedFieldClass.equals(String.class)) {
             return ((String) fieldObject1).compareTo((String) fieldObject2);
         } else if (sortedFieldClass.equals(Long.class)) {
@@ -146,6 +198,7 @@ public class SqlViewSearchHelper {
         } else if (sortedFieldClass.equals(Boolean.class)) {
             return ((Boolean) fieldObject1).compareTo((Boolean) fieldObject2);
         }
+
         throw invalidEx("Sort field has invalid type");
     }
 
