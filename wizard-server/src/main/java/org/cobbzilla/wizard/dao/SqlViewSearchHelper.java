@@ -71,11 +71,14 @@ public class SqlViewSearchHelper {
             sortedField = sort.split(" ")[0];
         }
 
-        String offset = " OFFSET " + resultPage.getPageOffset();
-        String limit = "LIMIT " + resultPage.getPageSize();
+        final String offset;
+        final String limit;
         if (searchByEncryptedField) {
             offset =  "";
             limit = "";
+        } else {
+             offset = " OFFSET " + resultPage.getPageOffset();
+            limit = "LIMIT " + resultPage.getPageSize();
         }
 
         final String uuidsSql = "select uuid " + sql.toString();
@@ -124,12 +127,13 @@ public class SqlViewSearchHelper {
 
                     for (Map<String, Object> row : rsEncrypted.getRows()) {
                         resultsEncrypted.add(execEncrypted.submit(() -> {
-                            E thing = (E) populateAndFilter(instantiate(resultClass), row, fields, hibernateEncryptor,
-                                                            resultPage.getFilter());
+                            final E thing = (E) populateAndFilter(instantiate(resultClass), row, fields, hibernateEncryptor, resultPage.getFilter());
                             if (!empty(thing)) {
-                                if (!allUuids.contains(thing.getUuid())) {
-                                    things.put(thing.getUuid(), thing);
-                                    allUuids.add(thing.getUuid());
+                                synchronized (allUuids) {
+                                    if (!allUuids.contains(thing.getUuid())) {
+                                        things.put(thing.getUuid(), thing);
+                                        allUuids.add(thing.getUuid());
+                                    }
                                 }
                             }
                         }));
@@ -146,9 +150,7 @@ public class SqlViewSearchHelper {
         SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
 
         if (searchByEncryptedField) {
-            final Comparator<E> comparator = (E o1, E o2) -> {
-                return compareSelectedItems(o1, o2, sortedField, sqlViewField);
-            };
+            final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sortedField, sqlViewField);
 
             if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
                 thingsList.sort(comparator);
@@ -199,7 +201,7 @@ public class SqlViewSearchHelper {
             return ((Boolean) fieldObject1).compareTo((Boolean) fieldObject2);
         }
 
-        throw invalidEx("Sort field has invalid type");
+        throw invalidEx("err.sort.invalid", "Sort field has invalid type");
     }
 
     public static <T extends SqlViewSearchResult, E extends Identifiable> T populateAndFilter(T thing,
