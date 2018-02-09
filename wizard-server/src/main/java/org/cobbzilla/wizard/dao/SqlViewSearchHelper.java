@@ -90,14 +90,14 @@ public class SqlViewSearchHelper {
         Integer totalCount = null;
         ArrayList<E> thingsList;
         final Map<String,E> things = new ConcurrentHashMap<>();
-        final Set<String> allUuids = new ConcurrentHashSet<>();
+        final Set<String> allUuids = searchByEncryptedField ? new ConcurrentHashSet<>() : null;
 
         try {
             final Object[] args = params.toArray();
-            ResultSetBean uuidsResult = configuration.execSql(uuidsSql, args);
-            allUuids.addAll(uuidsResult.getColumnValues("uuid"));
+            final ResultSetBean uuidsResult = searchByEncryptedField ? configuration.execSql(uuidsSql, args) : null;
+            if (uuidsResult != null) allUuids.addAll(uuidsResult.getColumnValues("uuid"));
 
-            if (allUuids.size() > 0) {
+            if (!searchByEncryptedField || allUuids.size() > 0) {
                 final ResultSetBean rs = configuration.execSql(query, args);
                 final List<Future<?>> results = new ArrayList<>(rs.rowCount());
                 final ExecutorService exec = fixedPool(Math.min(16, rs.rowCount()));
