@@ -78,7 +78,7 @@ public class SqlViewSearchHelper {
             limit = "";
         } else {
              offset = " OFFSET " + resultPage.getPageOffset();
-            limit = "LIMIT " + resultPage.getPageSize();
+            limit = " LIMIT " + resultPage.getPageSize();
         }
 
         final String uuidsSql = "select uuid " + sql.toString();
