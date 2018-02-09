@@ -1,18 +1,13 @@
 package org.cobbzilla.wizard.dao;
 
-import com.google.code.yanf4j.util.ConcurrentHashSet;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
-import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.ResultPage;
-import org.cobbzilla.wizard.model.SqlViewField;
-import org.cobbzilla.wizard.model.SqlViewSearchResult;
+import org.cobbzilla.wizard.model.*;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -41,10 +36,8 @@ public class SqlViewSearchHelper {
 
         final StringBuilder sql = new StringBuilder("from " + dao.getSearchView()
                                                     + " where (").append(dao.fixedFilters()).append(") ");
-        final StringBuilder sqlWithoutFilters = new StringBuilder(sql);
 
         final List<Object> params = new ArrayList<>();
-        final List<Object> paramsForEncrypted = new ArrayList<>();
 
         if (resultPage.getHasFilter()) {
             sql.append(" AND (").append(dao.buildFilter(resultPage, params)).append(") ");
@@ -54,13 +47,10 @@ public class SqlViewSearchHelper {
             for (String bound : resultPage.getBounds().keySet()) {
                 sql.append(" AND (").append(dao.buildBound(bound, resultPage.getBounds().get(bound), params))
                                     .append(") ");
-                sqlWithoutFilters.append(" AND (")
-                                 .append(dao.buildBound(bound, resultPage.getBounds().get(bound), paramsForEncrypted))
-                                 .append(") ");
             }
         }
 
-        boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
+        final boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
         final String sort;
         final String sortedField;
         if (resultPage.getHasSortField()) {
@@ -81,75 +71,65 @@ public class SqlViewSearchHelper {
             limit = " LIMIT " + resultPage.getPageSize();
         }
 
-        final String uuidsSql = "select uuid " + sql.toString();
         final String query = "select * " + sql.toString()
                 + " ORDER BY " + sort
                 + limit
                 + offset;
 
         Integer totalCount = null;
-        ArrayList<E> thingsList;
-        final Map<String,E> things = new ConcurrentHashMap<>();
-        final Set<String> allUuids = searchByEncryptedField ? new ConcurrentHashSet<>() : null;
+        final ArrayList<E> thingsList = new ArrayList<>();
 
         try {
             final Object[] args = params.toArray();
-            final ResultSetBean uuidsResult = searchByEncryptedField ? configuration.execSql(uuidsSql, args) : null;
-            if (uuidsResult != null) allUuids.addAll(uuidsResult.getColumnValues("uuid"));
 
-            if (!searchByEncryptedField || allUuids.size() > 0) {
-                final ResultSetBean rs = configuration.execSql(query, args);
-                final List<Future<?>> results = new ArrayList<>(rs.rowCount());
-                final ExecutorService exec = fixedPool(Math.min(16, rs.rowCount()));
+            final ResultSetBean rs = configuration.execSql(query, args);
+            final List<Future<?>> results = new ArrayList<>(rs.rowCount());
+            final ExecutorService exec = searchByEncryptedField ? fixedPool(Math.min(16, rs.rowCount())) : null;
 
-                for (Map<String, Object> row : rs.getRows()) {
+            for (Map<String, Object> row : rs.getRows()) {
+                if (searchByEncryptedField) {
+                    // we'll sort them later and there might be many rows, populate in parallel
                     results.add(exec.submit(() -> {
-                        E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
-                        things.put(thing.getUuid(), thing);
+                        final E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
+                        synchronized (thingsList) {
+                            thingsList.add(thing);
+                        }
                     }));
+                } else {
+                    // no encrypted fields, SQL has an offset + limit + sort, just populate all rows
+                    final E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
+                    thingsList.add(thing);
                 }
-                awaitAll(results, SEARCH_TIMEOUT);
             }
 
-            if (searchByEncryptedField) {
-                paramsForEncrypted.add(allUuids.toArray());
-                final Object[] argsForEncrypted = paramsForEncrypted.toArray();
-                final String queryForEncrypted = "select * " + sqlWithoutFilters.toString()
-                        + "AND uuid NOT IN (SELECT * FROM unnest( ? )) "
-                        + " ORDER BY " + sort;
-                
-                final ResultSetBean rsEncrypted = configuration.execSql(queryForEncrypted, argsForEncrypted);
+            if (!searchByEncryptedField) {
+                totalCount = configuration.execSql("select count(*) "+sql.toString(), args).countOrZero();
+                return new SearchResults<>(thingsList, totalCount);
+            }
 
-                if (!rsEncrypted.isEmpty()) {
-                    int threadCount = Math.min(rsEncrypted.rowCount(), 16);
-                    final List<Future<?>> resultsEncrypted = new ArrayList<>(rsEncrypted.rowCount());
-                    final ExecutorService execEncrypted = fixedPool(threadCount);
+            // wait for encrypted rows to populate
+            awaitAll(results, SEARCH_TIMEOUT);
 
-                    for (Map<String, Object> row : rsEncrypted.getRows()) {
-                        resultsEncrypted.add(execEncrypted.submit(() -> {
-                            final E thing = (E) populateAndFilter(instantiate(resultClass), row, fields, hibernateEncryptor, resultPage.getFilter());
-                            if (!empty(thing)) {
-                                synchronized (allUuids) {
-                                    if (!allUuids.contains(thing.getUuid())) {
-                                        things.put(thing.getUuid(), thing);
-                                        allUuids.add(thing.getUuid());
-                                    }
-                                }
+            // find matches among all candidates
+            final List<Future<?>> resultsEncrypted = new ArrayList<>();
+            final List<E> matched = new ArrayList<>();
+            for (E thing : thingsList) {
+                if (thing instanceof FilterableSqlViewSearchResult) {
+                    if (resultPage.getHasFilter()) {
+                        resultsEncrypted.add(exec.submit(() -> {
+                            if (((FilterableSqlViewSearchResult) thing).matches(resultPage.getFilter())) {
+                                synchronized (matched) { matched.add(thing); }
                             }
                         }));
+                    } else {
+                        matched.add(thing);
                     }
-                    awaitAll(resultsEncrypted, SEARCH_TIMEOUT);
                 }
             }
+            awaitAll(resultsEncrypted, SEARCH_TIMEOUT);
 
-        } catch (Exception e) {
-            log.warn("error determining total count: "+e);
-        }
-
-        thingsList = new ArrayList<>(things.values());
-        SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
-
-        if (searchByEncryptedField) {
+            // manually sort and apply offset + limit
+            final SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
             final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sortedField, sqlViewField);
 
             if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
@@ -157,16 +137,18 @@ public class SqlViewSearchHelper {
             } else {
                 thingsList.sort(comparator.reversed());
             }
-        }
 
-        totalCount = allUuids.size();
-        int startIndex = resultPage.getPageOffset();
-        if (thingsList.size() < startIndex) {
-            return new SearchResults<>(new ArrayList<>(), totalCount);
-        } else {
+            totalCount = matched.size();
+            int startIndex = resultPage.getPageOffset();
+            if (thingsList.size() < startIndex) {
+                return new SearchResults<>(new ArrayList<>(), totalCount);
+            } else {
+                int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), totalCount);
+                return new SearchResults<>(thingsList.subList(startIndex, endIndex), totalCount);
+            }
 
-            int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), things.size());
-            return new SearchResults<>(thingsList.subList(startIndex, endIndex), totalCount);
+        } catch (Exception e) {
+            return die("search: "+e, e);
         }
     }
 
