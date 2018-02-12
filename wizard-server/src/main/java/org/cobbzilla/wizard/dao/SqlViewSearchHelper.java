@@ -16,6 +16,7 @@ import static java.lang.Integer.min;
 import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.cobbzilla.wizard.model.ResultPage.DEFAULT_SORT;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
@@ -40,7 +41,8 @@ public class SqlViewSearchHelper {
         final boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
 
         if (resultPage.getHasFilter() && !searchByEncryptedField) {
-            sql.append(" AND (").append(dao.buildFilter(resultPage, params)).append(") ");
+            final String filter = dao.buildFilter(resultPage, params);
+            if (!empty(filter)) sql.append(" AND (").append(filter).append(") ");
         }
 
         if (resultPage.getHasBounds()) {
@@ -54,7 +56,7 @@ public class SqlViewSearchHelper {
         final String sortedField;
         if (resultPage.getHasSortField()) {
             sortedField = dao.getSortField(resultPage.getSortField());
-            sort = " ORDER BY " + sortedField + " " + resultPage.getSortOrder();
+            sort = sortedField + " " + resultPage.getSortOrder();
         } else {
             sort = dao.getDefaultSort();
             sortedField = sort.split(" ")[0];

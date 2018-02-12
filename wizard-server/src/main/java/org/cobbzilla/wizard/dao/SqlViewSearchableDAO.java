@@ -5,7 +5,6 @@ import org.cobbzilla.wizard.model.ResultPage;
 import org.cobbzilla.wizard.model.SqlViewField;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.cobbzilla.wizard.dao.AbstractDAO.getFilterString;
 
@@ -38,7 +37,5 @@ public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
     String getSortField(String sortField);
 
     String getDefaultSort();
-
-    T buildResult(Map<String, Object> row);
 
 }
