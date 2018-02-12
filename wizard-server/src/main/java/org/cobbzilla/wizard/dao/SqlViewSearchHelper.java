@@ -112,22 +112,27 @@ public class SqlViewSearchHelper {
             awaitAll(results, SEARCH_TIMEOUT);
 
             // find matches among all candidates
-            final List<Future<?>> resultsEncrypted = new ArrayList<>();
+            final List<Future<?>> filterJobs = new ArrayList<>();
             final List<E> matched = new ArrayList<>();
-            for (E thing : thingsList) {
-                if (thing instanceof FilterableSqlViewSearchResult) {
-                    if (resultPage.getHasFilter()) {
-                        resultsEncrypted.add(exec.submit(() -> {
-                            if (((FilterableSqlViewSearchResult) thing).matches(resultPage.getFilter())) {
-                                synchronized (matched) { matched.add(thing); }
-                            }
-                        }));
-                    } else {
-                        matched.add(thing);
+            if (resultPage.getHasFilter()) {
+                for (E thing : thingsList) {
+                    if (thing instanceof FilterableSqlViewSearchResult) {
+                        if (resultPage.getHasFilter()) {
+                            filterJobs.add(exec.submit(() -> {
+                                if (((FilterableSqlViewSearchResult) thing).matches(resultPage.getFilter())) {
+                                    synchronized (matched) { matched.add(thing); }
+                                }
+                            }));
+                        } else {
+                            matched.add(thing);
+                        }
                     }
                 }
+                awaitAll(filterJobs, SEARCH_TIMEOUT);
+
+            } else {
+                matched.addAll(thingsList);
             }
-            awaitAll(resultsEncrypted, SEARCH_TIMEOUT);
 
             // manually sort and apply offset + limit
             final SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
