@@ -4,10 +4,11 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 
 public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
 
-    SqlViewField[] getMatchFields();
+    SqlViewField[] getFilterFields();
 
     default boolean matches(String filter) {
-        for (SqlViewField field : getMatchFields()) {
+        for (SqlViewField field : getFilterFields()) {
+            if (!field.isUsedForFiltering()) continue;
             final Class<? extends Identifiable> type = field.getType();
             final Object target;
             if (type != null) {
