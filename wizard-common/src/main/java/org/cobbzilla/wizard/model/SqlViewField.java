@@ -37,6 +37,9 @@ public class SqlViewField {
         this(null, name, property, encrypted, usedForFiltering, null, null);
     }
 
+    public SqlViewField(Class<? extends Identifiable> type, String name) {
+        this(type, name, name, false, false, null, null);
+    }
     public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted) {
         this(type, name, property, encrypted, false, null, null);
     }

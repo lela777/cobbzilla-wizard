@@ -4,11 +4,18 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 
 public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
 
-    String[] getMatchFields();
+    SqlViewField[] getMatchFields();
 
     default boolean matches(String filter) {
-        for (String field : getMatchFields()) {
-            final Object value = ReflectionUtil.get(this, field, null);
+        for (SqlViewField field : getMatchFields()) {
+            final Class<? extends Identifiable> type = field.getType();
+            final Object target;
+            if (type != null) {
+                target = field.hasEntity() ? getRelated().entity(type, field.getEntity()) : getRelated().entity(type);
+            } else {
+                target = this;
+            }
+            final Object value = ReflectionUtil.get(target, field.getEntityProperty(), null);
             if (value != null && value.toString().contains(filter)) return true;
         }
         return false;

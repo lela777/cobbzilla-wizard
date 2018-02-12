@@ -16,7 +16,6 @@ import static java.lang.Integer.min;
 import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 import static org.cobbzilla.wizard.model.ResultPage.DEFAULT_SORT;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
@@ -38,8 +37,9 @@ public class SqlViewSearchHelper {
                                                     + " where (").append(dao.fixedFilters()).append(") ");
 
         final List<Object> params = new ArrayList<>();
+        final boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
 
-        if (resultPage.getHasFilter()) {
+        if (resultPage.getHasFilter() && !searchByEncryptedField) {
             sql.append(" AND (").append(dao.buildFilter(resultPage, params)).append(") ");
         }
 
@@ -50,12 +50,11 @@ public class SqlViewSearchHelper {
             }
         }
 
-        final boolean searchByEncryptedField = Arrays.stream(fields).anyMatch(a -> a.isUsedForFiltering() && a.isEncrypted());
         final String sort;
         final String sortedField;
         if (resultPage.getHasSortField()) {
             sortedField = dao.getSortField(resultPage.getSortField());
-            sort = sortedField + " " + resultPage.getSortOrder();
+            sort = " ORDER BY " + sortedField + " " + resultPage.getSortOrder();
         } else {
             sort = dao.getDefaultSort();
             sortedField = sort.split(" ")[0];
@@ -63,18 +62,18 @@ public class SqlViewSearchHelper {
 
         final String offset;
         final String limit;
+        final String sortClause;
         if (searchByEncryptedField) {
             offset =  "";
             limit = "";
+            sortClause = "";
         } else {
-             offset = " OFFSET " + resultPage.getPageOffset();
+            offset = " OFFSET " + resultPage.getPageOffset();
             limit = " LIMIT " + resultPage.getPageSize();
+            sortClause = " ORDER BY "  + sort;
         }
 
-        final String query = "select * " + sql.toString()
-                + " ORDER BY " + sort
-                + limit
-                + offset;
+        final String query = "select * " + sql.toString() + sortClause + limit + offset;
 
         Integer totalCount = null;
         final ArrayList<E> thingsList = new ArrayList<>();
@@ -133,18 +132,19 @@ public class SqlViewSearchHelper {
             final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sortedField, sqlViewField);
 
             if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
-                thingsList.sort(comparator);
+                matched.sort(comparator);
             } else {
-                thingsList.sort(comparator.reversed());
+                matched.sort(comparator.reversed());
             }
 
             totalCount = matched.size();
             int startIndex = resultPage.getPageOffset();
-            if (thingsList.size() < startIndex) {
+            if (matched.size() < startIndex) {
                 return new SearchResults<>(new ArrayList<>(), totalCount);
             } else {
-                int endIndex = min(resultPage.getPageSize() + resultPage.getPageOffset(), totalCount);
-                return new SearchResults<>(thingsList.subList(startIndex, endIndex), totalCount);
+                int endIndex = startIndex + resultPage.getPageSize() + resultPage.getPageOffset();
+                endIndex = min(endIndex, matched.size()); // ensure we do not run past the end of our matches
+                return new SearchResults<>(matched.subList(startIndex, endIndex), totalCount);
             }
 
         } catch (Exception e) {
@@ -184,35 +184,6 @@ public class SqlViewSearchHelper {
         }
 
         throw invalidEx("err.sort.invalid", "Sort field has invalid type");
-    }
-
-    public static <T extends SqlViewSearchResult, E extends Identifiable> T populateAndFilter(T thing,
-                                                                                              Map<String, Object> row,
-                                                                                              SqlViewField[] fields,
-                                                                                              HibernatePBEStringEncryptor hibernateEncryptor,
-                                                                                              String filter) {
-        boolean containsFilterValue = false;
-        for (SqlViewField field : fields) {
-            final Class<? extends Identifiable> type = field.getType();
-            Object target = thing;
-            if (type != null) {
-                // sanity check, should never happen
-                if (!field.hasEntity()) die("populate: type was "+type.getName()+" but entity was null: "+field);
-                target = thing.getRelated().entity(type, field.getEntity());
-            }
-            final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
-            if (!containsFilterValue && !empty(value)
-                && field.isUsedForFiltering()
-                && value.toString().toLowerCase().contains(filter.toLowerCase())) {
-                containsFilterValue = true;
-            }
-            if (field.hasSetter()) {
-                field.getSetter().set(target, field.getEntityProperty(), value);
-            } else {
-                ReflectionUtil.set(target, field.getEntityProperty(), value);
-            }
-        }
-        return containsFilterValue ? thing : null;
     }
 
     public static <T extends SqlViewSearchResult> T populate(T thing,
