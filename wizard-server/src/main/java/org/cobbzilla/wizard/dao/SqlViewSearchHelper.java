@@ -141,7 +141,7 @@ public class SqlViewSearchHelper {
 
             totalCount = matched.size();
             int startIndex = resultPage.getPageOffset();
-            if (matched.size() < startIndex) {
+            if (totalCount == 0 || matched.size() < startIndex) {
                 return new SearchResults<>(new ArrayList<>(), totalCount);
             } else {
                 int endIndex = startIndex + resultPage.getPageSize() + resultPage.getPageOffset();
