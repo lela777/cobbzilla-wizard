@@ -8,7 +8,7 @@ public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
 
     default boolean matches(String filter) {
         for (SqlViewField field : getFilterFields()) {
-            if (!field.isUsedForFiltering()) continue;
+            if (!field.isFilter()) continue;
             final Class<? extends Identifiable> type = field.getType();
             final Object target;
             if (type != null) {

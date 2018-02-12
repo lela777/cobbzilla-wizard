@@ -22,7 +22,7 @@ public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
         int filterCount = 0;
         final StringBuilder b = new StringBuilder();
         for (SqlViewField f : fields) {
-            if (f.isUsedForFiltering()) {
+            if (f.isFilter()) {
                 filterCount++;
                 if (b.length() > 0) b.append(" OR ");
                 b.append(f.getName()).append(" ilike ?");

@@ -4,17 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.string.StringUtil.snakeCaseToCamelCase;
 
-@AllArgsConstructor @ToString
+@AllArgsConstructor @Accessors(chain=true) @ToString
 public class SqlViewField {
 
     @Getter @Setter private Class<? extends Identifiable> type;
     @Getter @Setter private String name;
     @Getter @Setter private String property;
     @Getter @Setter private boolean encrypted;
-    @Getter @Setter private boolean usedForFiltering;
+    @Getter @Setter private boolean filter;
+    public SqlViewField filter () { filter = true; return this; }
 
     @Getter @Setter private SqlViewFieldSetter setter;
     public boolean hasSetter () { return setter != null; }
@@ -27,14 +29,14 @@ public class SqlViewField {
     public SqlViewField(String name, boolean encrypted) {
         this(null, name, snakeCaseToCamelCase(name), encrypted, false, null, null);
     }
-    public SqlViewField(String name, boolean encrypted, boolean usedForFiltering) {
-        this(null, name, snakeCaseToCamelCase(name), encrypted, usedForFiltering, null, null);
+    public SqlViewField(String name, boolean encrypted, boolean filter) {
+        this(null, name, snakeCaseToCamelCase(name), encrypted, filter, null, null);
     }
     public SqlViewField(String name, String property, boolean encrypted) {
         this(null, name, property, encrypted, false, null, null);
     }
-    public SqlViewField(String name, String property, boolean encrypted, boolean usedForFiltering) {
-        this(null, name, property, encrypted, usedForFiltering, null, null);
+    public SqlViewField(String name, String property, boolean encrypted, boolean filter) {
+        this(null, name, property, encrypted, filter, null, null);
     }
 
     public SqlViewField(Class<? extends Identifiable> type, String name) {
@@ -56,12 +58,12 @@ public class SqlViewField {
         this(type, name, property, encrypted, false, entity);
     }
     public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
-                        boolean usedForFiltering) {
-        this(type, name, property, encrypted, usedForFiltering, null, null);
+                        boolean filter) {
+        this(type, name, property, encrypted, filter, null, null);
     }
     public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
-                        boolean usedForFiltering, String entity) {
-        this(type, name, property, encrypted, usedForFiltering, null, entity);
+                        boolean filter, String entity) {
+        this(type, name, property, encrypted, filter, null, entity);
     }
 
     private String entity;
