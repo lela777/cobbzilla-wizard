@@ -117,15 +117,11 @@ public class SqlViewSearchHelper {
             if (resultPage.getHasFilter()) {
                 for (E thing : thingsList) {
                     if (thing instanceof FilterableSqlViewSearchResult) {
-                        if (resultPage.getHasFilter()) {
-                            filterJobs.add(exec.submit(() -> {
-                                if (((FilterableSqlViewSearchResult) thing).matches(resultPage.getFilter())) {
-                                    synchronized (matched) { matched.add(thing); }
-                                }
-                            }));
-                        } else {
-                            matched.add(thing);
-                        }
+                        filterJobs.add(exec.submit(() -> {
+                            if (((FilterableSqlViewSearchResult) thing).matches(resultPage.getFilter())) {
+                                synchronized (matched) { matched.add(thing); }
+                            }
+                        }));
                     }
                 }
                 awaitAll(filterJobs, SEARCH_TIMEOUT);
