@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -8,7 +7,7 @@ import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.string.StringUtil.snakeCaseToCamelCase;
 
-@AllArgsConstructor @Accessors(chain=true) @ToString
+@Accessors(chain=true) @ToString
 public class SqlViewField {
 
     @Getter @Setter private Class<? extends Identifiable> type;
@@ -16,55 +15,30 @@ public class SqlViewField {
     @Getter @Setter private String property;
     @Getter @Setter private boolean encrypted;
     @Getter @Setter private boolean filter;
-    public SqlViewField filter () { filter = true; return this; }
+    @Getter @Setter private Class fieldType;
 
     @Getter @Setter private SqlViewFieldSetter setter;
     public boolean hasSetter () { return setter != null; }
 
-    public SqlViewField(String name) { this(null, name, snakeCaseToCamelCase(name), false, false, null, null); }
-    public SqlViewField(String name, String property) { this(null, name, property, false, false, null, null); }
-    public SqlViewField(String name, SqlViewFieldSetter setter) {
-        this(null, name, snakeCaseToCamelCase(name), false, false, setter, null);
-    }
-    public SqlViewField(String name, boolean encrypted) {
-        this(null, name, snakeCaseToCamelCase(name), encrypted, false, null, null);
-    }
-    public SqlViewField(String name, boolean encrypted, boolean filter) {
-        this(null, name, snakeCaseToCamelCase(name), encrypted, filter, null, null);
-    }
-    public SqlViewField(String name, String property, boolean encrypted) {
-        this(null, name, property, encrypted, false, null, null);
-    }
-    public SqlViewField(String name, String property, boolean encrypted, boolean filter) {
-        this(null, name, property, encrypted, filter, null, null);
+    public SqlViewField(String name) {
+        this.name = name;
+        this.property = snakeCaseToCamelCase(name);
     }
 
     public SqlViewField(Class<? extends Identifiable> type, String name) {
-        this(type, name, name, false, false, null, null);
+        this.type = type;
+        this.name = name;
     }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted) {
-        this(type, name, property, encrypted, false, null, null);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property) {
-        this(type, name, property, false, false, null, null);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, String entity) {
-        this(type, name, property, false, false, null, entity);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, boolean encrypted) {
-        this(type, name, snakeCaseToCamelCase(name), encrypted, false, null, null);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted, String entity) {
-        this(type, name, property, encrypted, false, entity);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
-                        boolean filter) {
-        this(type, name, property, encrypted, filter, null, null);
-    }
-    public SqlViewField(Class<? extends Identifiable> type, String name, String property, boolean encrypted,
-                        boolean filter, String entity) {
-        this(type, name, property, encrypted, filter, null, entity);
-    }
+
+    public SqlViewField property(String property) { this.property = property; return this; }
+    public SqlViewField setter(SqlViewFieldSetter setter) { this.setter = setter; return this; }
+    public SqlViewField encrypted() { encrypted = true; return this; }
+    public SqlViewField encrypted(Class type) { encrypted(); this.fieldType = type; return this; }
+    public SqlViewField encrypted(boolean encrypted) { this.encrypted = encrypted; return this; }
+    public SqlViewField entity(String entity) { this.entity = entity; return this; }
+    public SqlViewField filter () { filter = true; return this; }
+    public SqlViewField filter (boolean filter) { this.filter = filter; return this; }
+    public SqlViewField fieldType (Class type) { this.fieldType = type; return this; }
 
     private String entity;
 

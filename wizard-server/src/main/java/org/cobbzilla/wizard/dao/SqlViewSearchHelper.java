@@ -204,7 +204,7 @@ public class SqlViewSearchHelper {
             if (field.hasSetter()) {
                 field.getSetter().set(target, field.getEntityProperty(), value);
             } else {
-                ReflectionUtil.set(target, field.getEntityProperty(), value);
+                ReflectionUtil.set(target, field.getEntityProperty(), value, field.getFieldType());
             }
         }
         return thing;
