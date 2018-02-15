@@ -5,6 +5,7 @@ import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.model.*;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
+import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.util.*;
@@ -215,6 +216,11 @@ public class SqlViewSearchHelper {
                                   HibernatePBEStringEncryptor hibernateEncryptor,
                                   boolean encrypted) {
         final Object value = row.get(field);
-        return value == null || !encrypted ? value : hibernateEncryptor.decrypt(value.toString());
+        try {
+            return value == null || !encrypted ? value : hibernateEncryptor.decrypt(value.toString());
+        } catch (EncryptionOperationNotPossibleException e) {
+            log.warn("getValue: field maybe not encrypted, returning raw value: '"+field+"'");
+            return value;
+        }
     }
 }
