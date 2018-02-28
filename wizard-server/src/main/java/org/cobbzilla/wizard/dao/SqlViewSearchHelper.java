@@ -133,7 +133,7 @@ public class SqlViewSearchHelper {
 
             // manually sort and apply offset + limit
             final SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
-            final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sortedField, sqlViewField);
+            final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sqlViewField);
 
             if (!resultPage.getSortOrder().equals(DEFAULT_SORT)) {
                 matched.sort(comparator);
@@ -156,9 +156,7 @@ public class SqlViewSearchHelper {
         }
     }
 
-    private static <E extends Identifiable> int compareSelectedItems(E o1, E o2,
-                                                                     String sortedField,
-                                                                     SqlViewField field) {
+    private static <E extends Identifiable> int compareSelectedItems(E o1, E o2, SqlViewField field) {
         Object fieldObject1;
         Object fieldObject2;
 
@@ -168,8 +166,8 @@ public class SqlViewSearchHelper {
             fieldObject2 = ReflectionUtil.get(ReflectionUtil.get(ReflectionUtil.get(o2, "related"),
                                                                  field.getEntity()), field.getEntityProperty());
         } else {
-            fieldObject1 = ReflectionUtil.get(o1, sortedField);
-            fieldObject2 = ReflectionUtil.get(o2, sortedField);
+            fieldObject1 = ReflectionUtil.get(o1, field.getEntityProperty());
+            fieldObject2 = ReflectionUtil.get(o2, field.getEntityProperty());
         }
 
         if (fieldObject1 == null && fieldObject2 == null) return 0;
