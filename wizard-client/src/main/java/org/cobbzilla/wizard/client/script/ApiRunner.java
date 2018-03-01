@@ -107,8 +107,10 @@ public class ApiRunner {
 
     public ApiScript[] include (ApiScript script) {
         if (includeHandler != null) {
+            final Map<String, Object> context = new HashMap<>(System.getenv());
+            context.putAll(getContext());
             return jsonWithComments(handlebars(includeHandler.include(script.getInclude()),
-                    transformStrings(HandlebarsUtil.apply(getHandlebars(), script.getParams(), getContext()), o -> replaceRand(o)),
+                    transformStrings(HandlebarsUtil.apply(getHandlebars(), script.getParams(), context), o -> replaceRand(o)),
                     script.getParamStartDelim(), script.getParamEndDelim()), ApiScript[].class);
         }
         return notSupported("include("+script.getInclude()+"): no includeHandler set");
