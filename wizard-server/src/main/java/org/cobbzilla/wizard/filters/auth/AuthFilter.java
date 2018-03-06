@@ -16,7 +16,7 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
 
         final String uri = request.getRequestUri().getPath();
 
-        boolean canSkip =  getSkipAuthPaths().contains(uri) || startsWith(uri, getSkipAuthPrefixes());
+        boolean canSkip = canSkip(uri);
 
         final String token = request.getHeaderValue(getAuthTokenHeader());
         if (token == null) {
@@ -36,6 +36,10 @@ public abstract class AuthFilter<T extends TokenPrincipal> implements ContainerR
         request.setSecurityContext(getSecurityContext(request, principal));
 
         return request;
+    }
+
+    protected boolean canSkip(String uri) {
+        return getSkipAuthPaths().contains(uri) || startsWith(uri, getSkipAuthPrefixes());
     }
 
     protected SimpleSecurityContext getSecurityContext(ContainerRequest request, T principal) {
