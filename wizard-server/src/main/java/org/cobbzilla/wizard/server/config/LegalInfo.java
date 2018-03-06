@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.CLASSPATH_PREFIX;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.string.StringUtil.chop;
 import static org.cobbzilla.util.string.StringUtil.trimQuotes;
@@ -79,6 +80,7 @@ public class LegalInfo {
                 return "";
             }
         } else {
+            if (value.startsWith(CLASSPATH_PREFIX)) value = value.substring(CLASSPATH_PREFIX.length());
             try {
                 return StreamUtil.loadResourceAsString(value);
             } catch (Exception e) {

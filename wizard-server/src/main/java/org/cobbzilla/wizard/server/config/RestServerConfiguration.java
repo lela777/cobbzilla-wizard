@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.URIUtil.getHost;
+import static org.cobbzilla.util.http.URIUtil.getPort;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
@@ -202,10 +203,13 @@ public class RestServerConfiguration {
         final String dbUrl = config.getDatabase().getUrl();
 
         // here we assume URL is in the form 'jdbc:{driver}://{host}:{port}/{db_name}'
-        final String host = getHost(dbUrl.substring(dbUrl.indexOf(":")+1));
-        final String dbName = !empty(db) ? db : dbUrl.substring(dbUrl.lastIndexOf('/')+1);
+        final int colonPos = dbUrl.indexOf(":");
+        final String host = getHost(dbUrl.substring(colonPos+1));
+        final int port = getPort(dbUrl.substring(colonPos+1));
+        final int qPos = dbUrl.indexOf("?");
+        final String dbName = !empty(db) ? db : qPos == -1 ? dbUrl.substring(dbUrl.lastIndexOf('/')+1) : dbUrl.substring(dbUrl.lastIndexOf("/")+1, qPos);
 
-        return command + " -h " + host +" -U " + dbUser + " " + dbName;
+        return command + " -h " + host + " -p " + port +  " -U " + dbUser + " " + dbName;
     }
 
     public Map<String, String> pgEnv() {
