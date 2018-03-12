@@ -5,12 +5,16 @@ import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.util.io.FileUtil;
+import org.cobbzilla.util.jdbc.DbDumpMode;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.util.system.Command;
+import org.cobbzilla.util.system.CommandResult;
 import org.cobbzilla.wizard.analytics.AnalyticsConfiguration;
 import org.cobbzilla.wizard.analytics.AnalyticsHandler;
 import org.cobbzilla.wizard.asset.AssetStorageConfiguration;
@@ -30,20 +34,28 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.URIUtil.getHost;
 import static org.cobbzilla.util.http.URIUtil.getPort;
+import static org.cobbzilla.util.io.FileUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
+import static org.cobbzilla.util.system.CommandShell.exec;
+import static org.cobbzilla.util.system.CommandShell.execScript;
+import static org.cobbzilla.util.system.Sleep.sleep;
 
 @Slf4j
 public class RestServerConfiguration {
 
+    public static final int MAX_DUMP_TRIES = 5;
     @Getter(lazy=true) private final String id = initId();
     private String initId() { return getServerName() + "_" + RandomStringUtils.randomAlphanumeric(12); }
 
@@ -193,6 +205,7 @@ public class RestServerConfiguration {
     }
 
     public String pgCommand() { return pgCommand("psql"); }
+    public String pgOptions() { return pgCommand(""); }
 
     public String pgCommand(String command)            { return pgCommand(command, null, null); }
     public String pgCommand(String command, String db) { return pgCommand(command, db, null); }
@@ -331,4 +344,55 @@ public class RestServerConfiguration {
         });
     }
 
+    public File pgDump() { return pgDump(temp("pgDump-out", ".sql")); }
+
+    public File pgDump(File file) { return pgDump(file, null); }
+
+    public File pgDump(File file, DbDumpMode dumpMode) {
+        final File temp = temp("pgRestore-out", ".sql");
+        final String dumpOptions;
+        if (dumpMode == null) dumpMode = DbDumpMode.all;
+        switch (dumpMode) {
+            case all: dumpOptions = ""; break;
+            case schema: dumpOptions = "--schema-only"; break;
+            case data: dumpOptions = "--data-only"; break;
+            default: return die("pgDump: invalid dumpMode: "+dumpMode);
+        }
+        for (int i=0; i<MAX_DUMP_TRIES; i++) {
+            final String output;
+            try {
+                output = execScript(pgCommand("pg_dump " + dumpOptions) + " > " + abs(temp) + " || exit 1", pgEnv());
+                if (output.contains("ERROR")) die("pgDump: error dumping DB:\n" + output);
+                if (!temp.renameTo(file)) {
+                    log.warn("pgDump: error renaming file, trying copy");
+                    copyFile(temp, file);
+                    if (!temp.delete()) log.warn("pgDump: error deleting temp file: " + abs(temp));
+                }
+                log.info("pgDump: dumped DB to snapshot: " + abs(file));
+                return file;
+            } catch (Exception e) {
+                log.warn("pgDump: error occurred dumping to "+abs(file)+", "+(i<(MAX_DUMP_TRIES-1)?"will retry":"will NOT retry")+": "+e, e);
+                sleep(SECONDS.toMillis(5));
+            }
+        }
+        return die("pgDump: too many errors trying to dump DB to "+abs(file)+", bailing out");
+    }
+
+    public void pgRestore(File file) {
+        for (int i=0; i<MAX_DUMP_TRIES; i++) {
+            try {
+                final CommandResult result = exec(new Command(new CommandLine("psql").addArguments(pgOptions()))
+                        .setInput(FileUtil.toString(file))
+                        .setEnv(pgEnv()));
+                //if (result.getStderr().contains("ERROR")) die("pgRestore: error restoring DB:\n"+result.getStderr());
+                log.info("pgRestore: restored DB from snapshot: " + abs(file));
+                return;
+
+            } catch (Exception e) {
+                log.warn("pgRestore: error occurred restoring from "+abs(file)+", "+(i<(MAX_DUMP_TRIES-1)?"will retry":"will NOT retry")+": "+e, e);
+                sleep(SECONDS.toMillis(5));
+            }
+        }
+        die("pgRestore: too many errors trying to restore DB from "+abs(file)+", bailing out");
+    }
 }
