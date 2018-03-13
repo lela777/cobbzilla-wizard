@@ -13,7 +13,7 @@ import static org.cobbzilla.util.json.JsonUtil.toJson;
 @Slf4j
 public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBase<OPT> {
 
-    private static final String TOKEN_PREFIX = "token:";
+    public static final String TOKEN_PREFIX = "token:";
 
     @Getter(value=PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
     private ApiClientBase initApiClient() { return new ApiTokenClient<>(this); }
