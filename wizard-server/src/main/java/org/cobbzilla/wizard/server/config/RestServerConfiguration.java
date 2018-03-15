@@ -31,8 +31,6 @@ import org.springframework.context.ApplicationContext;
 
 import javax.persistence.Transient;
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,7 +63,10 @@ public class RestServerConfiguration {
     @Getter @Setter private Map<String, String> environment = new HashMap<>();
     @Getter @Setter private File tmpdir = FileUtil.getDefaultTempDir();
     @Getter @Setter private String serverName;
-    @Getter @Setter private String publicUriBase;
+
+    @Setter private String publicUriBase;
+    public String getPublicUriBase () { return !empty(publicUriBase) && publicUriBase.endsWith("/") ? publicUriBase.substring(0, publicUriBase.length()-1) : publicUriBase; }
+
     @Getter @Setter private String springContextPath = "classpath:/spring.xml";
     @Getter @Setter private String springShardContextPath = "classpath:/spring-shard.xml";
     @Getter @Setter private int bcryptRounds = 12;
@@ -73,20 +74,16 @@ public class RestServerConfiguration {
     @Getter @Setter private LogRelayAppenderConfig logRelay;
 
     private String appendPathToUriBase(String base, String... pathParts) {
-        try {
-            URL url = new URL(base);
-            for (String path : pathParts) {
-                url = new URL(url, path);
-            }
-            return url.toString();
-        } catch (MalformedURLException e) {
-            log.error("Wrong URI " + base + " and/or URI parts " + pathParts);
-            return null;
+        final StringBuilder b = new StringBuilder(base.endsWith("/") ? base.substring(0, base.length()-1) : base);
+        for (String path : pathParts) {
+            if (!path.startsWith("/")) b.append("/");
+            b.append(path.endsWith("/") ? path.substring(0, path.length()-1) : path);
         }
+        return b.toString();
     }
 
-    public String uri(String path) { return appendPathToUriBase(publicUriBase, path); }
-    public String api(String path) { return appendPathToUriBase(publicUriBase, getHttp().getBaseUri(), path); }
+    public String uri(String path) { return appendPathToUriBase(getPublicUriBase(), path); }
+    public String api(String path) { return appendPathToUriBase(getApiUriBase(), path); }
 
     @Getter @Setter private HttpConfiguration http;
     @Getter @Setter private JerseyConfiguration jersey;
