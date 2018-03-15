@@ -190,14 +190,19 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             for (HttpHandlerConfiguration config : configuration.getHandlers()) {
 
                 // which bean will handle this?
-                final HttpHandler bean = getBean(config.getBean());
+                final Object bean = getBean(config.getBean());
+                if (!(bean instanceof HttpHandler)) {
+                    log.warn("buildServer: bean is not an instance of HttpHandler: "+config.getBean());
+                    continue;
+                }
+                final HttpHandler handler = (HttpHandler) bean;
 
                 final HttpHandlerRegistration handlerRegistration = HttpHandlerRegistration.builder()
                         .contextPath(config.contextPath())
                         .urlPattern("/*")
                         .build();
 
-                serverConfig.addHttpHandler(bean, handlerRegistration);
+                serverConfig.addHttpHandler(handler, handlerRegistration);
             }
         }
 
