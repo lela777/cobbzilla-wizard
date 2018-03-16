@@ -110,7 +110,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     protected URI buildURI(String host) {
         verifyPort();
-        HttpConfiguration httpConfiguration = configuration.getHttp();
+        final HttpConfiguration httpConfiguration = configuration.getHttp();
         return UriBuilder.fromUri("http://" + host + httpConfiguration.getBaseUri()).port(httpConfiguration.getPort()).build();
     }
 
