@@ -10,9 +10,6 @@ import java.net.URI;
 
 public interface RestServer<C extends RestServerConfiguration> {
 
-    String ALL_ADDRS = "0.0.0.0";
-    String LOCALHOST = "127.0.0.1";
-
     HttpServer startServer() throws IOException;
     boolean isRunning ();
 

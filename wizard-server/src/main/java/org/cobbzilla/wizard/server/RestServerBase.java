@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.TRUE;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
+import static org.cobbzilla.util.network.NetworkUtil.IPv4_ALL_ADDRS;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.EMPTY_ARRAY;
 import static org.cobbzilla.util.system.Sleep.sleep;
@@ -90,11 +91,11 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
 
     public URI getBaseUri() { return buildURI(getListenAddress()); }
 
-    protected String getListenAddress() { return ALL_ADDRS; }
+    protected String getListenAddress() { return IPv4_ALL_ADDRS; }
 
     public String getPrimaryListenAddress() {
         String addr = getListenAddress();
-        if (!addr.equals(ALL_ADDRS)) return addr;
+        if (!addr.equals(IPv4_ALL_ADDRS)) return addr;
         addr = NetworkUtil.getFirstPublicIpv4();
         if (!empty(addr)) return addr;
         addr = NetworkUtil.getFirstEthernetIpv4();
