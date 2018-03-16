@@ -42,10 +42,15 @@ public class AnonColumn {
                 try {
                     value = decryptor.decrypt(value);
                 } catch (Exception e) {
-                    if (value.endsWith("==")) {
-                        die("setParam: error decrypting "+name+": "+value);
-                    } else {
-                        log.warn("setParam: error decrypting "+name+" (handling as plaintext): "+value);
+                    // Has it already been anonymized?
+                    try {
+                        value = encryptor.decrypt(value);
+                    } catch (Exception e2) {
+                        if (value.endsWith("==")) {
+                            die("setParam: error decrypting " + name + ": " + value);
+                        } else {
+                            log.warn("setParam: error decrypting " + name + " (handling as plaintext): " + value);
+                        }
                     }
                 }
             }
