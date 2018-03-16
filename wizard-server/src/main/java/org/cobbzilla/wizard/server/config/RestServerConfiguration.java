@@ -201,6 +201,8 @@ public class RestServerConfiguration {
         }
     }
 
+    @Getter @Setter private String pgServerDir;
+
     public String pgCommand() { return pgCommand("psql"); }
     public String pgOptions() { return pgCommand(""); }
 
@@ -219,7 +221,21 @@ public class RestServerConfiguration {
         final int qPos = dbUrl.indexOf("?");
         final String dbName = !empty(db) ? db : qPos == -1 ? dbUrl.substring(dbUrl.lastIndexOf('/')+1) : dbUrl.substring(dbUrl.lastIndexOf("/")+1, qPos);
 
-        return command + " -h " + host + " -p " + port +  " -U " + dbUser + " " + dbName;
+        final String options = " -h " + host + " -p " + port +  " -U " + dbUser + " " + dbName;
+
+        if (empty(command)) return options;
+
+        final String pgServerDir = getPgServerDir();
+        if (!empty(pgServerDir)) command = abs(new File(pgServerDir + File.separator + "bin" + File.separator + command));
+
+        return command + options;
+    }
+
+    public CommandLine pgCommandLine(String command) {
+        if (empty(command)) return die("pgCommandLine: no command provided");
+        final String pgServerDir = getPgServerDir();
+        if (!empty(pgServerDir)) command = abs(new File(pgServerDir + File.separator + "bin" + File.separator + command));
+        return new CommandLine(command).addArguments(pgOptions());
     }
 
     public Map<String, String> pgEnv() {
@@ -378,7 +394,7 @@ public class RestServerConfiguration {
     public void pgRestore(File file) {
         for (int i=0; i<MAX_DUMP_TRIES; i++) {
             try {
-                final CommandResult result = exec(new Command(new CommandLine("psql").addArguments(pgOptions()))
+                final CommandResult result = exec(new Command(pgCommandLine("psql"))
                         .setInput(FileUtil.toString(file))
                         .setEnv(pgEnv()));
                 //if (result.getStderr().contains("ERROR")) die("pgRestore: error restoring DB:\n"+result.getStderr());
@@ -392,4 +408,5 @@ public class RestServerConfiguration {
         }
         die("pgRestore: too many errors trying to restore DB from "+abs(file)+", bailing out");
     }
+
 }
