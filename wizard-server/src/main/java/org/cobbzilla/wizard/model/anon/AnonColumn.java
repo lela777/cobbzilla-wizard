@@ -42,7 +42,7 @@ public class AnonColumn {
                 try {
                     value = decryptor.decrypt(value);
                 } catch (Exception e) {
-                    // Has it already been anonymized?
+                    // Has it already been anonymized and encrypted?
                     try {
                         value = encryptor.decrypt(value);
                     } catch (Exception e2) {
