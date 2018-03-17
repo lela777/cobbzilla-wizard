@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ import static org.cobbzilla.wizard.model.ModelCryptUtil.getCryptor;
 @Accessors(chain=true) @Slf4j
 public class AnonScrubber {
 
-    @Getter @Setter private AnonTable[] tables;
+    @Getter @Setter private List<AnonTable> tables;
 
     public void anonymize(HasDatabaseConfiguration readConfig,
                           HasDatabaseConfiguration writeConfig,
