@@ -40,12 +40,12 @@ public abstract class AnonScrubOptions extends DbMainOptions {
         }
         if (tablesToAnonymize.size() != getTablesList().size()) {
             tableNamesToAnonymize.removeIf(t -> tablesToAnonymize.stream().anyMatch(a -> a.getTable().equals(t)));
-            return die("getScrubs: tables specified via "+USAGE_TABLES+"/"+LONGOPT_TABLES+" do not exist:\n"+StringUtil.toString(tableNamesToAnonymize, "\n"));
+            return die("getScrubs: tables specified via "+OPT_TABLES+"/"+LONGOPT_TABLES+" do not exist:\n"+StringUtil.toString(tableNamesToAnonymize, "\n"));
         }
         return tablesToAnonymize;
     }
 
-    public static final String USAGE_TABLES = "Only anonymze these tables. Use a comma-separated list with no spaces";
+    public static final String USAGE_TABLES = "Only anonymize these tables. Use a comma-separated list with no spaces";
     public static final String OPT_TABLES = "-t";
     public static final String LONGOPT_TABLES= "--tables";
     @Option(name=OPT_TABLES, aliases=LONGOPT_TABLES, usage=USAGE_TABLES)
