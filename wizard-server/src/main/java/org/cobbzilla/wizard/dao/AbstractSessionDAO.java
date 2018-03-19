@@ -7,9 +7,8 @@ import org.cobbzilla.wizard.cache.redis.RedisService;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.TimeUnit;
-
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.DAYS;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
@@ -51,9 +50,11 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     private void set(String uuid, T thing, boolean shouldExist) {
-        getSessionRedis().set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", TimeUnit.DAYS.toSeconds(30));
+        getSessionRedis().set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", getSessionTimeout());
         getSessionRedis().lpush(thing.getUuid(), uuid);
     }
+
+    protected long getSessionTimeout() { return DAYS.toSeconds(30); }
 
     // override these to keep the padding but do your own json I/O
     protected String toJson(T thing) { return JsonUtil.toJsonOrDie(thing); }
