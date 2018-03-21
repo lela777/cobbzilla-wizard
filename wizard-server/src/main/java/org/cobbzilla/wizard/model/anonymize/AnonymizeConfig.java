@@ -65,29 +65,27 @@ public class AnonymizeConfig {
                         .setType(AnonType.passthru));
             }
         }
-        doWithFields(
-                clazz,
+        doWithFields(clazz,
                 f -> {
                     if (f.getAnnotation(AnonymizeType.class) != null) {
-                        AnonymizeType anonymizeType = f.getAnnotation(AnonymizeType.class);
+                        final AnonymizeType anonymizeType = f.getAnnotation(AnonymizeType.class);
                         anonColumns.add(createAnonColumn(StringUtil.camelCaseToSnakeCase(f.getName()), anonymizeType));
                     }
                     if (f.getAnnotation(AnonymizeEmbedded.class) != null) {
-                        AnonymizeEmbedded anonymizeEmbedded = f.getAnnotation(AnonymizeEmbedded.class);
+                        final AnonymizeEmbedded anonymizeEmbedded = f.getAnnotation(AnonymizeEmbedded.class);
                         for(AnonymizeType anonymizeType : anonymizeEmbedded.list()){
                             anonColumns.add(createAnonColumn(StringUtil.camelCaseToSnakeCase(anonymizeType.name()), anonymizeType));
                         }
                     }
                 });
-        doWithMethods(
-                clazz,
+        doWithMethods(clazz,
                 m -> {
                     if (m.getAnnotation(AnonymizeType.class) != null) {
-                        AnonymizeType anonymizeType = m.getAnnotation(AnonymizeType.class);
+                        final AnonymizeType anonymizeType = m.getAnnotation(AnonymizeType.class);
                         anonColumns.add(createAnonColumn(StringUtil.camelCaseToSnakeCase(m.getName().substring(3)),anonymizeType ));
                     }
                     if (m.getAnnotation(AnonymizeEmbedded.class) != null) {
-                        AnonymizeEmbedded anonymizeEmbedded = m.getAnnotation(AnonymizeEmbedded.class);
+                        final AnonymizeEmbedded anonymizeEmbedded = m.getAnnotation(AnonymizeEmbedded.class);
                         for(AnonymizeType anonymizeType : anonymizeEmbedded.list()){
                             anonColumns.add(createAnonColumn(StringUtil.camelCaseToSnakeCase(anonymizeType.name()), anonymizeType));
                         }
@@ -160,4 +158,5 @@ public class AnonymizeConfig {
         }
         return false;
     }
+
 }
