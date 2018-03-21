@@ -51,9 +51,7 @@ public abstract class AnonScrubOptions extends DbMainOptions {
     @Option(name=OPT_TABLES, aliases=LONGOPT_TABLES, usage=USAGE_TABLES)
     @Getter @Setter private String tables = null;
 
-    public boolean shouldAnonymizeTable (String table) {
-        return empty(tables) || getTablesList().contains(table);
-    }
+    public boolean shouldAnonymizeTable (String table) { return empty(tables) || getTablesList().contains(table); }
 
     public List<String> getTablesList() { return empty(tables) ? null : StringUtil.split(tables, ", "); }
 
