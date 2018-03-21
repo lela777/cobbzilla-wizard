@@ -37,47 +37,48 @@ public class AnonColumn {
         String value = (val == null) ? null : val.toString();
         if (value == null) {
             ps.setNull(index, Types.VARCHAR);
-        } else {
-            if (encrypted) {
+            return;
+        }
+
+        if (encrypted) {
+            try {
+                value = decryptor.decrypt(value);
+            } catch (Exception e) {
+                // Has it already been anonymized and encrypted?
                 try {
-                    value = decryptor.decrypt(value);
-                } catch (Exception e) {
-                    // Has it already been anonymized and encrypted?
-                    try {
-                        value = encryptor.decrypt(value);
-                    } catch (Exception e2) {
-                        if (value.endsWith("==")) {
-                            die("setParam: error decrypting " + name + ": " + value);
-                        } else {
-                            log.warn("setParam: error decrypting " + name + " (handling as plaintext): " + value);
-                        }
-                    }
-                }
-            }
-
-            if (!shouldSkip(value)) {
-                if (this.value != null) {
-                    value = this.value;
-                } else {
-                    if (json == null) {
-                        value = getType().transform(value);
+                    value = encryptor.decrypt(value);
+                } catch (Exception e2) {
+                    if (value.endsWith("==")) {
+                        die("setParam: error decrypting " + name + ": " + value);
                     } else {
-                        value = transformJson(value);
+                        log.warn("setParam: error decrypting " + name + " (handling as plaintext): " + value);
                     }
                 }
             }
+        }
 
-            if (encrypted && value != null) value = encryptor.encrypt(value);
-
-            if (value == null) {
-                ps.setNull(index, Types.VARCHAR);
-            } else if (val instanceof Long){
-                ps.setLong(index, Long.parseLong(value));
-            } else if (val instanceof Integer){
-                ps.setInt(index, Integer.parseInt(value));
+        if (!shouldSkip(value)) {
+            if (this.value != null) {
+                value = this.value;
             } else {
-                ps.setString(index, value);
+                if (json == null) {
+                    value = getType().transform(value);
+                } else {
+                    value = transformJson(value);
+                }
             }
+        }
+
+        if (encrypted && value != null) value = encryptor.encrypt(value);
+
+        if (value == null) {
+            ps.setNull(index, Types.VARCHAR);
+        } else if (val instanceof Long){
+            ps.setLong(index, Long.parseLong(value));
+        } else if (val instanceof Integer){
+            ps.setInt(index, Integer.parseInt(value));
+        } else {
+            ps.setString(index, value);
         }
     }
 
