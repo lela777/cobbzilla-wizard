@@ -96,7 +96,7 @@ public class AnonColumn {
     @Getter(lazy=true) private final Pattern[] skipPatterns = initSkipPatterns();
     private Pattern[] initSkipPatterns() {
         final Pattern[] patterns = new Pattern[skip == null ? 0 : skip.length];
-        for (int i=0; i<skip.length; i++) patterns[i] = Pattern.compile(skip[i]);
+        if (skip != null) for (int i=0; i<skip.length; i++) patterns[i] = Pattern.compile(skip[i]);
         return patterns;
     }
 
