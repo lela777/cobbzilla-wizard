@@ -11,6 +11,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.DbDumpMode;
 import org.cobbzilla.util.jdbc.ResultSetBean;
+import org.cobbzilla.util.jdbc.UncheckedSqlException;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.util.system.Command;
 import org.cobbzilla.util.system.CommandResult;
@@ -141,8 +142,8 @@ public class RestServerConfiguration {
             @Cleanup Connection conn = config.getDatabase().getConnection();
             return execSql(conn, sql, args);
 
-        } catch (SQLException e) {
-            return die("SQLException: "+e, e);
+        } catch (UncheckedSqlException e) {
+            throw e;
 
         } catch (Exception e) {
             return die("Exception: "+e, e);
@@ -200,7 +201,7 @@ public class RestServerConfiguration {
             return ResultSetBean.EMPTY;
 
         } catch (SQLException e) {
-            return die("SQLException: "+e, e);
+            throw new UncheckedSqlException(e);
 
         } catch (Exception e) {
             return die("Exception: "+e, e);
