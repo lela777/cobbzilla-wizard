@@ -29,7 +29,7 @@ public class AuditLog extends StrongIdentifiableBase {
 
     @HasValue(message="err.entityType.empty")
     @Column(length=200+ENC_PAD, nullable=false, updatable=false)
-    @ECField(mode= EntityFieldMode.readOnly)
+    @ECField(mode=EntityFieldMode.readOnly)
     @Getter @Setter private String entityType;
 
     @HasValue(message="err.uuid.empty")

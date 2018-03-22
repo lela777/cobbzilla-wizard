@@ -6,7 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.HttpStatusCodes;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.wizard.client.ApiClientBase;
-import org.cobbzilla.wizard.server.*;
+import org.cobbzilla.wizard.server.RestServer;
+import org.cobbzilla.wizard.server.RestServerConfigurationFilter;
+import org.cobbzilla.wizard.server.RestServerHarness;
+import org.cobbzilla.wizard.server.RestServerLifecycleListener;
 import org.cobbzilla.wizard.server.config.DatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasDatabaseConfiguration;
 import org.cobbzilla.wizard.server.config.HasQuartzConfiguration;
@@ -28,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.json;
@@ -156,7 +158,7 @@ public abstract class AbstractResourceIT<C extends RestServerConfiguration, S ex
             database.addPostDataSourceSetupHandler(new Runnable() {
                 @Override public void run() {
                     try {
-                        configuration.execSql("select count(*) from qrtz_triggers", EMPTY_OBJECT_ARRAY);
+                        configuration.execSql("select count(*) from qrtz_triggers");
                     } catch (Exception e) {
                         log.debug("Quartz tables not found ("+e.getMessage()+"), creating them...");
                         configuration.execSqlCommands(QUARTZ_SQL_COMMANDS);

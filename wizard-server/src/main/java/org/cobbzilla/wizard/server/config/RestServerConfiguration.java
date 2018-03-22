@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.jdbc.DbDumpMode;
 import org.cobbzilla.util.jdbc.ResultSetBean;
@@ -39,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.cobbzilla.util.collection.ArrayUtil.EMPTY_OBJECT_ARRAY;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.URIUtil.getHost;
@@ -132,66 +132,83 @@ public class RestServerConfiguration {
 
     public String getLoopbackApiBase() { return "http://127.0.0.1:" + getHttp().getPort() + getHttp().getBaseUri(); }
 
-    public ResultSetBean execSql(String sql, Object[] args) throws SQLException {
+    public ResultSetBean execSql(String sql) { return execSql(sql, EMPTY_OBJECT_ARRAY); }
+    public ResultSetBean execSql(String sql, Object[] args) {
 
         final HasDatabaseConfiguration config = validatePgConfig("execSql");
 
-        @Cleanup Connection conn = config.getDatabase().getConnection();
-        return execSql(conn, sql, args);
+        try {
+            @Cleanup Connection conn = config.getDatabase().getConnection();
+            return execSql(conn, sql, args);
+
+        } catch (SQLException e) {
+            return die("SQLException: "+e, e);
+
+        } catch (Exception e) {
+            return die("Exception: "+e, e);
+        }
     }
 
     @Transient @JsonIgnore @Getter @Setter private Boolean execSqlStrictStrings = null;
 
-    public ResultSetBean execSql(Connection conn, String sql, Object[] args) throws SQLException {
-        @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
-        if (args != null) {
-            int i = 1;
-            for (Object o : args) {
-                if (o == null) {
-                    die("null arguments not supported. null value at parameter index=" + i + ", sql=" + sql);
-                }
-                if (o instanceof String) {
-                    if (execSqlStrictStrings == null || execSqlStrictStrings == false) {
-                        if (o.toString().equalsIgnoreCase(Boolean.TRUE.toString())) {
-                            ps.setBoolean(i++, true);
-                        } else if (o.toString().equalsIgnoreCase(Boolean.FALSE.toString())) {
-                            ps.setBoolean(i++, false);
+    public ResultSetBean execSql(Connection conn, String sql, Object[] args) {
+        try {
+            @Cleanup PreparedStatement ps = conn.prepareStatement(sql);
+            if (args != null) {
+                int i = 1;
+                for (Object o : args) {
+                    if (o == null) {
+                        die("null arguments not supported. null value at parameter index=" + i + ", sql=" + sql);
+                    }
+                    if (o instanceof String) {
+                        if (execSqlStrictStrings == null || execSqlStrictStrings == false) {
+                            if (o.toString().equalsIgnoreCase(Boolean.TRUE.toString())) {
+                                ps.setBoolean(i++, true);
+                            } else if (o.toString().equalsIgnoreCase(Boolean.FALSE.toString())) {
+                                ps.setBoolean(i++, false);
+                            } else {
+                                ps.setString(i++, (String) o);
+                            }
                         } else {
                             ps.setString(i++, (String) o);
                         }
-                    } else {
-                        ps.setString(i++, (String) o);
-                    }
-                } else if (o instanceof Long) {
-                    ps.setLong(i++, (Long) o);
-                } else if (o instanceof Integer) {
-                    ps.setInt(i++, (Integer) o);
-                } else if (o instanceof Boolean) {
-                    ps.setBoolean(i++, (Boolean) o);
-                } else if (o instanceof Object[]) {
-                    Array arrayParam = conn.createArrayOf("varchar", (Object[]) o);
-                    ps.setArray(i++, arrayParam);
+                    } else if (o instanceof Long) {
+                        ps.setLong(i++, (Long) o);
+                    } else if (o instanceof Integer) {
+                        ps.setInt(i++, (Integer) o);
+                    } else if (o instanceof Boolean) {
+                        ps.setBoolean(i++, (Boolean) o);
+                    } else if (o instanceof Object[]) {
+                        Array arrayParam = conn.createArrayOf("varchar", (Object[]) o);
+                        ps.setArray(i++, arrayParam);
 
-                } else {
-                    die("unsupported argument type: " + o.getClass().getName());
+                    } else {
+                        die("unsupported argument type: " + o.getClass().getName());
+                    }
                 }
             }
-        }
 
-        final boolean isQuery = sql.toLowerCase().trim().startsWith("select");
-        if (isQuery) {
-            @Cleanup ResultSet rs = ps.executeQuery();
-            log.info("execSql (query): "+sql);
-            return new ResultSetBean(rs);
-        }
+            final boolean isQuery = sql.toLowerCase().trim().startsWith("select");
+            if (isQuery) {
+                @Cleanup ResultSet rs = ps.executeQuery();
+                log.info("execSql (query): "+sql);
+                return new ResultSetBean(rs);
+            }
 
-        ps.executeUpdate();
-        log.info("execSql (update): "+sql);
-        return ResultSetBean.EMPTY;
+            ps.executeUpdate();
+            log.info("execSql (update): "+sql);
+            return ResultSetBean.EMPTY;
+
+        } catch (SQLException e) {
+            return die("SQLException: "+e, e);
+
+        } catch (Exception e) {
+            return die("Exception: "+e, e);
+        }
     }
 
     public int rowCount(String table) throws SQLException {
-        return execSql("select count(*) from " + table, ArrayUtil.EMPTY_OBJECT_ARRAY).count();
+        return execSql("select count(*) from " + table).count();
     }
 
     public int rowCountOrZero(String table) {
@@ -267,7 +284,7 @@ public class RestServerConfiguration {
     public void execSqlCommands(String sqlCommands) {
         for (String sql : StringUtil.split(sqlCommands, ";")) {
             try {
-                execSql(sql, StringUtil.EMPTY_ARRAY);
+                execSql(sql);
             } catch (Exception e) {
                 if (DROP_PATTERN.matcher(sql).find()) {
                     log.info("execSqlCommands ("+sql+"): " + e);
