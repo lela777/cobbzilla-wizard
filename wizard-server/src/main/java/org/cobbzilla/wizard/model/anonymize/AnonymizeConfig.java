@@ -1,6 +1,7 @@
 package org.cobbzilla.wizard.model.anonymize;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.wizard.model.anon.AnonColumn;
 import org.cobbzilla.wizard.model.anon.AnonJsonPath;
 import org.cobbzilla.wizard.model.anon.AnonTable;
@@ -15,7 +16,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.io.StreamUtil.loadResourceAsStringOrDie;
 import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
@@ -76,7 +79,8 @@ public class AnonymizeConfig {
                     final AnonymizeEmbedded anonEmbedded = f.getAnnotation(AnonymizeEmbedded.class);
                     final Type hibernateType = f.getAnnotation(Type.class);
                     final String fieldName = f.getName();
-                    anonField(columns, fieldName, anonEmbedded, hibernateType, anonType);
+                    final List<AnonColumn> found = anonField(fieldName, anonEmbedded, hibernateType, anonType);
+                    maybeAdd(columns, found);
                 });
 
         doWithMethods(clazz,
@@ -85,20 +89,9 @@ public class AnonymizeConfig {
                     final AnonymizeEmbedded anonEmbedded = m.getAnnotation(AnonymizeEmbedded.class);
                     final Type hibernateType = m.getAnnotation(Type.class);
                     final String fieldName = m.getName().startsWith("get") ? m.getName().substring(3) : m.getName();
-                    anonField(columns, fieldName, anonEmbedded, hibernateType, anonType);
+                    final List<AnonColumn> found = anonField(fieldName, anonEmbedded, hibernateType, anonType);
+                    maybeAdd(columns, found);
                 });
-
-        // Class-level AnonymizeList can override embedded stuff
-        final AnonymizeList anonymizeList = (AnonymizeList) clazz.getAnnotation(AnonymizeList.class);
-        if (anonymizeList != null) {
-            for (String name: anonymizeList.list()) {
-                final String colName = camelCaseToSnakeCase(name);
-                columns.put(colName, new AnonColumn()
-                        .setEncrypted(true)
-                        .setName(colName)
-                        .setType(AnonType.passthru));
-            }
-        }
 
         if (anonymizeTable == null && empty(columns)) return null;
 
@@ -106,41 +99,47 @@ public class AnonymizeConfig {
         return anonTable;
     }
 
-    private static void anonField(Map<String, AnonColumn> columns,
-                                  String fieldName,
-                                  AnonymizeEmbedded anonEmbedded,
-                                  Type hibernateType,
-                                  AnonymizeType anonType) {
+    private static void maybeAdd(Map<String, AnonColumn> columns, List<AnonColumn> found) {
+        if (!empty(found)) columns.putAll(found.stream().collect(Collectors.toMap(AnonColumn::getName, identity())));
+    }
+
+    private static List<AnonColumn> anonField(String fieldName,
+                                              AnonymizeEmbedded anonEmbedded,
+                                              Type hibernateType,
+                                              AnonymizeType anonType) {
+        // ensure field name is camel case...
+        fieldName = camelCaseToSnakeCase(fieldName);
         if (anonType != null) {
             if (anonEmbedded != null) die("createAnonTable: cannot specify both @AnonymizeType and @AnonymizeEmbedded on the same field");
-            anonColumn(columns, fieldName, anonType);
+            final AnonColumn c = anonColumn(fieldName, anonType);
+            return c == null ? null : new SingletonList<>(c);
 
         } else if (anonEmbedded != null) {
+            final List<AnonColumn> columns = new ArrayList<>();
             final AnonymizeEmbedded anonymizeEmbedded = anonEmbedded;
             for (AnonymizeType anonymizeType : anonymizeEmbedded.list()) {
-                anonColumn(columns, anonymizeType.name(), anonymizeType);
+                final AnonColumn c = anonColumn(anonymizeType.name(), anonymizeType);
+                if (c != null) columns.add(c);
             }
+            return empty(columns) ? null : columns;
 
         } else if (hibernateType != null && isEncryptedType(hibernateType.type())) {
-            columns.put(fieldName, new AnonColumn()
+            return new SingletonList<>(new AnonColumn()
                     .setEncrypted(true)
                     .setName(camelCaseToSnakeCase(fieldName))
                     .setType(AnonType.passthru));
         }
+        return null;
     }
 
-    private static void anonColumn(Map<String, AnonColumn> columns, String name, AnonymizeType anonymizeType) {
-        columns.put(anonymizeType.name(), createAnonColumn(camelCaseToSnakeCase(name), anonymizeType));
-    }
-
-    private static AnonColumn createAnonColumn(String columnName, AnonymizeType anonymizeType) {
+    private static AnonColumn anonColumn(String name, AnonymizeType anonymizeType) {
         String value = anonymizeType.value();
         if (value.startsWith(CLASSPATH_PREFIX)) {
             value = loadResourceAsStringOrDie(value.substring(CLASSPATH_PREFIX.length()));
         }
         final String[] skip = anonymizeType.skip();
 
-        final AnonColumn anonColumn = new AnonColumn().setName(columnName)
+        final AnonColumn anonColumn = new AnonColumn().setName(name)
                 .setValue(empty(value) ? null : value)
                 .setSkip(empty(skip) ? null : skip);
 
