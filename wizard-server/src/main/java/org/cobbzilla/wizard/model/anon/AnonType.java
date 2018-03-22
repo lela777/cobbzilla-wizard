@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.model.anon;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -13,7 +14,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 import static org.cobbzilla.wizard.util.TestNames.*;
 
-@AllArgsConstructor
+@AllArgsConstructor @Slf4j
 public enum AnonType {
 
     passthru(value -> value),
@@ -52,6 +53,9 @@ public enum AnonType {
     public interface SqlTransform { String transform (String value); }
 
     public static AnonType guessType(String name) {
+        if (empty(name)) {
+            return AnonType.passthru;
+        }
         final String c = name.toLowerCase();
         for (AnonType t : values()) if (c.contains(t.name())) return t;
         return die("guessType(" + name + "): no type could be determined");

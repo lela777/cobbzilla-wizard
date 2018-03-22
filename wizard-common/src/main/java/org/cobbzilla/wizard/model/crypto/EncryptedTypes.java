@@ -1,5 +1,7 @@
 package org.cobbzilla.wizard.model.crypto;
 
+import org.apache.commons.lang.ArrayUtils;
+
 public class EncryptedTypes {
 
     public static final int ENC_PAD  = 100;
@@ -14,5 +16,11 @@ public class EncryptedTypes {
 
     public static final String ENCRYPTED_LONG = "encryptedLong";
     public static final String LONG_ENCRYPTOR_NAME = "hibernateLongEncryptor";
+
+    public static final String[] ENCRYPTED_TYPES = {
+      ENCRYPTED_STRING, ENCRYPTED_LONG, ENCRYPTED_INTEGER
+    };
+
+    public static boolean isEncryptedType (String t) { return ArrayUtils.contains(ENCRYPTED_TYPES, t); }
 
 }

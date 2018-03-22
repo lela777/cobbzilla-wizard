@@ -8,6 +8,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
 
 import java.sql.PreparedStatement;
@@ -15,20 +16,31 @@ import java.sql.Types;
 import java.util.regex.Pattern;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.findNode;
 import static org.cobbzilla.util.json.JsonUtil.replaceNode;
 import static org.cobbzilla.util.json.JsonUtil.toJson;
 
-@Accessors(chain = true) @ToString(of="name") @Slf4j
+@Accessors(chain=true) @ToString(of="name") @Slf4j
 public class AnonColumn {
+
+    public static final String[] MERGE_FIELDS = {"encrypted", "value", "json", "skip", "type"};
 
     @Getter @Setter private String name;
     @Getter @Setter private boolean encrypted = false;
     @Getter @Setter private String value;
     @Getter @Setter private AnonJsonPath[] json;
-    @Getter @Setter private String[] skip;
+
+    @Setter private String[] skip;
+    public String[] getSkip() { return empty(skip) ? null : skip; }
+
     @Setter private AnonType type;
-    public AnonType getType() { return type != null ? type : AnonType.guessType(getName()); }
+    public AnonType getType() {
+        return type != null
+            ? type
+            : !empty(json) || !empty(value)
+                ? AnonType.passthru
+                : AnonType.guessType(getName()); }
 
     public void setParam(PreparedStatement ps,
                          HibernatePBEStringEncryptor decryptor,
@@ -96,7 +108,8 @@ public class AnonColumn {
 
     @Getter(lazy=true) private final Pattern[] skipPatterns = initSkipPatterns();
     private Pattern[] initSkipPatterns() {
-        final Pattern[] patterns = new Pattern[skip == null ? 0 : skip.length];
+        if (empty(skip)) return null;
+        final Pattern[] patterns = new Pattern[skip.length];
         if (skip != null) for (int i=0; i<skip.length; i++) patterns[i] = Pattern.compile(skip[i]);
         return patterns;
     }
@@ -109,4 +122,5 @@ public class AnonColumn {
         return false;
     }
 
+    public void merge(AnonColumn other) { ReflectionUtil.copy(this, other, MERGE_FIELDS); }
 }

@@ -10,7 +10,7 @@ public @interface AnonymizeType {
     String name() default  "";
     boolean encrypted() default false;
     String type() default "";
-    String[] skip() default "";
+    String[] skip() default {};
     String value() default "";
     AnonymizeJsonPath[] json() default {};
 }
