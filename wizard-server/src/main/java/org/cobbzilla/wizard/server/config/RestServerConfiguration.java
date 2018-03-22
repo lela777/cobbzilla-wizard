@@ -142,6 +142,9 @@ public class RestServerConfiguration {
             @Cleanup Connection conn = config.getDatabase().getConnection();
             return execSql(conn, sql, args);
 
+        } catch (SQLException e) {
+            throw new UncheckedSqlException(e);
+
         } catch (UncheckedSqlException e) {
             throw e;
 
