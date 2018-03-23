@@ -291,9 +291,9 @@ public class RestServerConfiguration {
                 execSql(sql);
             } catch (Exception e) {
                 if (DROP_PATTERN.matcher(sql).find()) {
-                    log.info("execSqlCommands ("+sql+"): " + e);
+                    log.info("execSqlCommands ("+sql+"): " + e.getMessage());
                 } else {
-                    log.warn("execSqlCommands ("+sql+"): " + e);
+                    log.warn("execSqlCommands ("+sql+"): " + e.getMessage());
                 }
             }
         }
