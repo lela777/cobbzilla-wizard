@@ -183,9 +183,8 @@ public class RestServerConfiguration {
                     } else if (o instanceof Boolean) {
                         ps.setBoolean(i++, (Boolean) o);
                     } else if (o instanceof Object[]) {
-                        Array arrayParam = conn.createArrayOf("varchar", (Object[]) o);
+                        final Array arrayParam = conn.createArrayOf("varchar", (Object[]) o);
                         ps.setArray(i++, arrayParam);
-
                     } else {
                         die("unsupported argument type: " + o.getClass().getName());
                     }
