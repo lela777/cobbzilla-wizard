@@ -37,6 +37,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.*;
 import static org.cobbzilla.util.string.StringUtil.replaceWithRandom;
+import static org.cobbzilla.util.string.StringUtil.trimQuotes;
 import static org.cobbzilla.util.system.Sleep.sleep;
 import static org.cobbzilla.wizard.client.script.ApiScript.PARAM_REQUIRED;
 
@@ -391,9 +392,7 @@ public class ApiRunner {
         String json = requestEntityJson(request);
         if (json != null) json = replaceRand(json);
         json = TestNames.replaceTestNames(json);
-        if (json != null && (json.startsWith("\"") && json.endsWith("\""))) {
-            json = json.substring(1, json.length()-1);
-        }
+        json = trimQuotes(json);
         return json;
     }
 
