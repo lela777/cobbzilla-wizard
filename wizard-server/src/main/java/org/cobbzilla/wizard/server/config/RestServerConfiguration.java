@@ -298,11 +298,13 @@ public class RestServerConfiguration {
         }
     }
 
+    // todo: consider a size or time-limited cache (use an LRU cache?)
+    private final Map<String, Map<String, Object>> subResourceCaches = new ConcurrentHashMap<>();
+
     /**
      * Allows forever-reuse of subresources, each instantiated with a particular set of immutable objects.
      * @param <R> the type of resource to return, so method calls can be typesafe.
      */
-    private final Map<String, Map<String, Object>> subResourceCaches = new ConcurrentHashMap<>();
     public <R> Map<String, R> getSubResourceCache(Class<R> resourceClass) {
         Map cache = subResourceCaches.get(resourceClass.getName());
         if (cache == null) {
@@ -319,21 +321,23 @@ public class RestServerConfiguration {
 
     public <R> R subResource(Class<R> resourceClass, Object... args) {
         final StringBuilder cacheKey = new StringBuilder(resourceClass.getName()).append(":").append(getId());
-        for (Object o : args) {
-            if (o == null) {
-                log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
-                continue;
-            }
-            if (o instanceof Identifiable) {
-                cacheKey.append(":").append(o.getClass().getName()).append("(").append(((Identifiable) o).getUuid()).append(")");
-            } else if (o instanceof String) {
-                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
-            } else if (o instanceof Number) {
-                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
-            } else if (o instanceof ParentResource) {
-                cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
-            } else if (!(o instanceof DAO)) {
-                log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
+        if (args != null) {
+            for (Object o : args) {
+                if (o == null) {
+                    log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
+                    continue;
+                }
+                if (o instanceof Identifiable) {
+                    cacheKey.append(":").append(o.getClass().getName()).append("(").append(((Identifiable) o).getUuid()).append(")");
+                } else if (o instanceof String) {
+                    cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
+                } else if (o instanceof Number) {
+                    cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
+                } else if (o instanceof ParentResource) {
+                    cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
+                } else if (!(o instanceof DAO)) {
+                    log.warn("forContext("+ArrayUtils.toString(args)+"): expected Identifiable or DAO, found "+o.getClass().getName()+": "+o);
+                }
             }
         }
         final Map<String, R> resourceCache = getSubResourceCache(resourceClass);
