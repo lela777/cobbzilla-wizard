@@ -321,7 +321,8 @@ public class RestServerConfiguration {
 
     public <R> R subResource(Class<R> resourceClass, Object... args) {
         final StringBuilder cacheKey = new StringBuilder(resourceClass.getName()).append(":").append(getId());
-        if (args != null) {
+        final boolean hasArgs = args != null && args.length > 0;
+        if (hasArgs) {
             for (Object o : args) {
                 if (o == null) {
                     log.warn("forContext("+ ArrayUtils.toString(args)+"): null arg");
@@ -348,7 +349,7 @@ public class RestServerConfiguration {
                 r = resourceCache.get(cacheKey.toString());
                 if (r == null) {
                     try {
-                        r = autowire(args == null ? instantiate(resourceClass) : instantiate(resourceClass, args));
+                        r = autowire(hasArgs ? instantiate(resourceClass, args) : instantiate(resourceClass));
                     } catch (Exception e) {
                         return die("subResource: "+e, e);
                     }
