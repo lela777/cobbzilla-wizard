@@ -348,7 +348,7 @@ public class RestServerConfiguration {
                 r = resourceCache.get(cacheKey.toString());
                 if (r == null) {
                     try {
-                        r = autowire(instantiate(resourceClass, args));
+                        r = autowire(args == null ? instantiate(resourceClass) : instantiate(resourceClass, args));
                     } catch (Exception e) {
                         return die("subResource: "+e, e);
                     }
