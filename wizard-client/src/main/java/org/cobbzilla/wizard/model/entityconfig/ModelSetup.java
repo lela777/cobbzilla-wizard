@@ -15,6 +15,7 @@ import org.cobbzilla.util.daemon.AwaitResult;
 import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.api.ValidationException;
 import org.cobbzilla.wizard.client.ApiClientBase;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -28,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.cobbzilla.util.daemon.Await.awaitAll;
 import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
@@ -338,7 +340,14 @@ public class ModelSetup {
                         futures.add(exec.submit(new CreateEntityJob(api, childConfig, child, childClass, context, listener, update, runName)));
                     }
                     final AwaitResult<?> result = awaitAll(futures, CHILD_TIMEOUT);
-                    if (!result.allSucceeded()) die("createEntity: "+result);
+                    if (!result.allSucceeded()) {
+                        final Map<Future, Exception> failures = result.getFailures();
+                        if (!empty(failures)) {
+                            final String failureMessages = StringUtil.toString(failures.values().stream().map(Throwable::getMessage).collect(Collectors.toList()), "\n");
+                            log.error("createEntity: failures: "+failureMessages);
+                        }
+                        die("createEntity: "+result);
+                    }
                 }
             }
         }
