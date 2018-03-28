@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Build Entit-config for the annotated class with `baseURI` as list and create URIs, and with appended
+ * Build Entity-config for the annotated class with `baseURI` as list and create URIs, and with appended
  * `identifierInURI` (automatically surrounded with curled brackets) for update and delete URIs. Default value for
  * `identifierInURI` is `uuid`.
  *
