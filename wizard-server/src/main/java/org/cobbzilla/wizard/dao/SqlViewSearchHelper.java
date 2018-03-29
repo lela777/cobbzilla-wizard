@@ -183,6 +183,8 @@ public class SqlViewSearchHelper {
             return ((Integer) fieldObject1).compareTo((Integer) fieldObject2);
         } else if (sortedFieldClass.equals(Boolean.class)) {
             return ((Boolean) fieldObject1).compareTo((Boolean) fieldObject2);
+        } else if (sortedFieldClass.getSuperclass().equals(Enum.class)) {
+            return ((Enum) fieldObject1).compareTo((Enum)fieldObject2);
         }
 
         throw invalidEx("err.sort.invalid", "Sort field has invalid type");
