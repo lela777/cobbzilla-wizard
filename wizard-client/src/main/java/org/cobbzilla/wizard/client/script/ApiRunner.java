@@ -412,10 +412,15 @@ public class ApiRunner {
     }
 
     private Map<String, Object> mergeEnv(Map<String, Object> ctx) {
+
         final Map<String, String> env = System.getenv();
+        if (empty(ctx)) return empty(env) ? ctx : new HashMap<>(env);
+        if (empty(env)) return ctx;
+
         final Map<String, Object> merged = new HashMap<>();
-        merged.putAll(env);
-        merged.putAll(ctx);
+        if (!empty(env)) merged.putAll(env);
+        if (!empty(ctx)) merged.putAll(ctx);
+
         return merged;
     }
 
