@@ -404,11 +404,19 @@ public class ApiRunner {
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
 
     protected String handlebars(String value, Map<String, Object> ctx) {
-        return HandlebarsUtil.apply(getHandlebars(), value, ctx);
+        return HandlebarsUtil.apply(getHandlebars(), value, mergeEnv(ctx));
     }
 
     protected String handlebars(String value, Map<String, Object> ctx, char altStart, char altEnd) {
-        return HandlebarsUtil.apply(getHandlebars(), value, ctx, altStart, altEnd);
+        return HandlebarsUtil.apply(getHandlebars(), value, mergeEnv(ctx), altStart, altEnd);
+    }
+
+    private Map<String, Object> mergeEnv(Map<String, Object> ctx) {
+        final Map<String, String> env = System.getenv();
+        final Map<String, Object> merged = new HashMap<>();
+        merged.putAll(env);
+        merged.putAll(ctx);
+        return merged;
     }
 
 }
