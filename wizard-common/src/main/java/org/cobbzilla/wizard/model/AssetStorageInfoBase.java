@@ -31,10 +31,10 @@ public class AssetStorageInfoBase extends IdentifiableBase implements AssetStora
     @Column(length=NAME_MAXLEN, nullable=false)
     @Getter @Setter private String name;
 
-    @Column(length=UUID_MAXLEN, updatable=false, nullable=false)
-    @Getter @Setter private String relatedEntity;
-
     @Column(columnDefinition="varchar("+(ASSET_MAXLEN+ENC_PAD)+")")
     @Type(type=ENCRYPTED_STRING) @Getter @Setter private String asset;
+
+    @Column(length=UUID_MAXLEN, updatable=false, nullable=false)
+    @Getter @Setter private String relatedEntity;
 
 }
