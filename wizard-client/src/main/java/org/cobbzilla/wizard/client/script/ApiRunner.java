@@ -264,7 +264,10 @@ public class ApiRunner {
             Object responseObject = responseEntity;
 
             if (response.getStatus() == HttpStatusCodes.UNPROCESSABLE_ENTITY) {
-                responseObject = new ValidationErrors(Arrays.asList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class)));
+                if (responseEntity != null) {
+                    responseObject = new ValidationErrors(
+                            Arrays.asList(fromJsonOrDie(responseEntity, ConstraintViolationBean[].class)));
+                }
             } else {
                 Class<?> storeClass = null;
                 if (response.hasType()) {
