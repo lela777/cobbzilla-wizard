@@ -34,6 +34,9 @@ public enum EntityFieldControl {
     /** a date and time field (calendar + time selection) */
     date_and_time,
 
+    /** a year and month field (two drop-down boxes) */
+    year_and_month,
+
     /** an auto-complete text field (WIP) */
     autocomplete,
 
