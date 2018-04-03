@@ -95,7 +95,7 @@ public class ModelMigration {
                                        String callerName) throws Exception {
         api.put(modelVersionEndpoint, migration);
         final long start = realNow();
-        ModelSetup.setupModel(api, entityConfigUrl, migration.getModels(), listener, callerName);
+        ModelSetup.setupModel(api, entityConfigUrl, migration.getModels(), new ManifestFileResolver(), listener, callerName);
         migration.setExecutionTime(realNow() - start).setSuccess(true);
         api.put(modelVersionEndpoint, migration);
     }

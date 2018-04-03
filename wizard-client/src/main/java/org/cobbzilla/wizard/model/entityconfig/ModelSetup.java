@@ -12,7 +12,6 @@ import net.sf.cglib.proxy.InvocationHandler;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.cobbzilla.util.daemon.AwaitResult;
-import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
@@ -22,7 +21,6 @@ import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.NamedEntity;
 import org.cobbzilla.wizard.util.RestResponse;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -36,7 +34,7 @@ import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.http.HttpStatusCodes.NOT_FOUND;
 import static org.cobbzilla.util.http.HttpStatusCodes.OK;
-import static org.cobbzilla.util.io.FileUtil.abs;
+import static org.cobbzilla.util.io.FileUtil.dirname;
 import static org.cobbzilla.util.io.StreamUtil.stream2string;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.json.JsonUtil.jsonWithComments;
@@ -68,16 +66,6 @@ public class ModelSetup {
     public static ModelVerifyLog getVerifyLog () { return verifyLog; }
     public static void setVerifyLog (ModelVerifyLog vlog) { verifyLog = vlog; }
 
-    public static LinkedHashMap<String, String> buildModel(File manifest) {
-        final String[] models = json(FileUtil.toStringOrDie(manifest), String[].class, JsonUtil.FULL_MAPPER_ALLOW_COMMENTS);
-        final LinkedHashMap<String, String> modelJson = new LinkedHashMap<>(models.length);
-        final File parent = empty(manifest.getParent()) ? new File(System.getProperty("user.dir")) : manifest.getParentFile();
-        for (String model : models) {
-            modelJson.put(model, FileUtil.toStringOrDie(abs(parent) + "/" + model + ".json"));
-        }
-        return modelJson;
-    }
-
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            String prefix,
@@ -97,20 +85,22 @@ public class ModelSetup {
         for (String model : models) {
             modelJson.put(model, stream2string(prefix + model + ".json"));
         }
-        return setupModel(api, entityConfigsEndpoint, modelJson, listener, runName);
+        return setupModel(api, entityConfigsEndpoint, modelJson, new ManifestClasspathResolver(prefix), listener, runName);
     }
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            LinkedHashMap<String, String> models,
+                                                           ModelManifestResolver resolver,
                                                            ModelSetupListener listener,
                                                            String runName) throws Exception {
-        return setupModel(api, entityConfigsEndpoint, models, listener, false, runName);
+        return setupModel(api, entityConfigsEndpoint, models, resolver, listener, false, runName);
     }
 
     public static LinkedHashMap<String, String> setupModel(ApiClientBase api,
                                                            String entityConfigsEndpoint,
                                                            LinkedHashMap<String, String> models,
+                                                           ModelManifestResolver resolver,
                                                            ModelSetupListener listener,
                                                            boolean update,
                                                            String runName) throws Exception {
@@ -120,12 +110,17 @@ public class ModelSetup {
             if (empty(json)) return die("JSON file not found or empty: "+modelName+".json");
 
             final String entityType = getEntityTypeFromString(modelName);
+            if (entityType.equals("manifest")) {
+                final LinkedHashMap<String, String> nested = resolver.buildModel(modelName + ".json");
+                setupModel(api, entityConfigsEndpoint, nested, resolver.subResolver(dirname(modelName)), listener, update, runName);
 
-            try {
-                setupJson(api, entityConfigsEndpoint, entityType, json, listener, update, runName);
-            } catch (Exception e) {
-                log.error("setupModel: api="+api.getBaseUri()+", model="+modelName+", exception="+e.getClass().getSimpleName()+": "+e.getMessage());
-                throw e;
+            } else {
+                try {
+                    setupJson(api, entityConfigsEndpoint, entityType, json, listener, update, runName);
+                } catch (Exception e) {
+                    log.error("setupModel: api=" + api.getBaseUri() + ", model=" + modelName + ", exception=" + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    throw e;
+                }
             }
         }
         return models;
@@ -205,6 +200,7 @@ public class ModelSetup {
     public static String getEntityTypeFromString(String entityType) {
         if (entityType.contains("_")) return entityType.substring(0, entityType.indexOf("_"));
         if (entityType.contains(".")) return entityType.substring(0, entityType.indexOf("."));
+        if (entityType.contains("/")) return entityType.substring(entityType.lastIndexOf("/")+1);
         return entityType;
     }
 
