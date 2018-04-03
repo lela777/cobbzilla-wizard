@@ -66,11 +66,16 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
     public EntityFieldControl getControl() {
         if (control != null && control != EntityFieldControl.unset) return control;
         switch (getTypeOrDefault()) {
+
             case flag:                  return EntityFieldControl.flag;
+
             case date_future: case date_past:
             case epoch_time: case date: return EntityFieldControl.date;
-            case year: case year_future:
-            case year_past: case age:   return EntityFieldControl.select;
+
+            case year:           case year_future:           case year_past:
+            case year_and_month: case year_and_month_future: case year_and_month_past:
+            case age:                   return EntityFieldControl.select;
+
             default:                    return defaultTextControl();
         }
     }

@@ -52,6 +52,15 @@ public enum EntityFieldType {
     /** a 4-digit year field that starts with the current year and goes into the future */
     year_future  (null),
 
+    /** a 4-digit year and 2-digit month field (YYYY-MM) */
+    year_and_month  (null),
+
+    /** a 4-digit year and 2-digit month field (YYYY-MM) field that starts with the current year and goes into the past */
+    year_and_month_past  (null),
+
+    /** a 4-digit year and 2-digit month field (YYYY-MM) field that starts with the current year and goes into the future */
+    year_and_month_future  (null),
+
     /** a date or date/time value  (null), represented as milliseconds since 1/1/1970 */
     epoch_time  (new EntityConfigFieldValidator_integer()),
 
