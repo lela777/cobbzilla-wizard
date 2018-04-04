@@ -198,9 +198,9 @@ public class ModelSetup {
 
     // strip off anything after the first underscore (or period, in case a ".json" file is given)
     public static String getEntityTypeFromString(String entityType) {
+        if (entityType.contains("/")) entityType = entityType.substring(entityType.lastIndexOf("/")+1);
         if (entityType.contains("_")) return entityType.substring(0, entityType.indexOf("_"));
         if (entityType.contains(".")) return entityType.substring(0, entityType.indexOf("."));
-        if (entityType.contains("/")) return entityType.substring(entityType.lastIndexOf("/")+1);
         return entityType;
     }
 
