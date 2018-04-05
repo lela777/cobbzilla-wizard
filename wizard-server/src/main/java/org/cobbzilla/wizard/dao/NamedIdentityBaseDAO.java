@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractCRUDDAO<E> {
 
     private final Map<String, E> cache = new ConcurrentHashMap<>();
@@ -23,6 +25,7 @@ public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractC
     }
 
     public E findByName (String name) {
+        if (empty(name)) return null;
         E thing = cache.get(name);
         if (thing == null) {
             thing = findByUniqueField("name", name);
@@ -36,6 +39,7 @@ public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractC
 
     public List<E> findByNameIn(List<String> names) {
         final List<E> found = new ArrayList<>();
+        if (empty(names)) return found;
         final List<String> notFoundNames = new ArrayList<>();
          for (String name : names) {
             if (cache.containsKey(name)) {
