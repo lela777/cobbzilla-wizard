@@ -49,4 +49,6 @@ public enum EntityFieldControl {
     /** Jackson-hook to create a new instance based on a string, case-insensitively */
     @JsonCreator public static EntityFieldControl create (String val) { return valueOf(val.toLowerCase()); }
 
+    public boolean hasDisplayValues() { return this == select || this == multi_select; }
+
 }

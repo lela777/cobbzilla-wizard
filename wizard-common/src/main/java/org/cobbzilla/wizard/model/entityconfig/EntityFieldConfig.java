@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.json;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
@@ -151,4 +152,34 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
     }
 
     public ValidationResult validate(Locale locale, Object o) { return getTypeOrDefault().validate(locale, this, o); }
+
+    public String displayValueFor(String answer) {
+        if (!getControl().hasDisplayValues()) return answer;
+        switch (getControl()) {
+            case select:
+                for (EntityFieldOption option : getOptionsList()) {
+                    if (option.getValue().equals(answer)) return option.getDisplayValue();
+                }
+                return answer;
+
+            case multi_select:
+                final StringBuilder b = new StringBuilder();
+                for (String val : answer.split(",")) {
+                    if (b.length() > 0) b.append(",");
+                    val = val.trim();
+                    boolean found = false;
+                    for (EntityFieldOption option : getOptionsList()) {
+                        if (option.getValue().equals(answer)) {
+                            b.append(option.getDisplayValue());
+                            found = true;
+                        }
+                    }
+                    if (!found) b.append(answer);
+                }
+                return b.toString();
+
+            default:
+                return die("displayValueFor("+answer+"): unsupported control type: "+getControl());
+        }
+    }
 }
