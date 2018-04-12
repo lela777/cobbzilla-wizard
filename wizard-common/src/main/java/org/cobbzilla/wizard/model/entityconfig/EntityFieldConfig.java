@@ -174,7 +174,7 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
                     val = val.trim();
                     boolean found = false;
                     for (EntityFieldOption option : optionsList) {
-                        if (option.getValue().equals(answer)) {
+                        if (option.getValue().equals(val)) {
                             b.append(option.getDisplayValue());
                             found = true;
                         }
