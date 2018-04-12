@@ -154,10 +154,15 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
     public ValidationResult validate(Locale locale, Object o) { return getTypeOrDefault().validate(locale, this, o); }
 
     public String displayValueFor(String answer) {
+
         if (!getControl().hasDisplayValues()) return answer;
+
+        final EntityFieldOption[] optionsList = getOptionsList();
+        if (empty(optionsList)) return answer;
+
         switch (getControl()) {
             case select:
-                for (EntityFieldOption option : getOptionsList()) {
+                for (EntityFieldOption option : optionsList) {
                     if (option.getValue().equals(answer)) return option.getDisplayValue();
                 }
                 return answer;
@@ -168,7 +173,7 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
                     if (b.length() > 0) b.append(",");
                     val = val.trim();
                     boolean found = false;
-                    for (EntityFieldOption option : getOptionsList()) {
+                    for (EntityFieldOption option : optionsList) {
                         if (option.getValue().equals(answer)) {
                             b.append(option.getDisplayValue());
                             found = true;
