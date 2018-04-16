@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.callFactoryMethod;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getDeclaredField;
@@ -22,16 +24,16 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
     private HibernatePBEStringEncryptor stringEncryptor;
     private HibernatePBEStringEncryptor longEncryptor;
 
-    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, ResultSet rs) throws SQLException {
-        super(clazz, rs);
+    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, ResultSet rs) throws SQLException {
+        super(rs);
         init(stringEncryptor, longEncryptor);
     }
-    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, PreparedStatement ps) throws SQLException {
-        super(clazz, ps);
+    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, PreparedStatement ps) throws SQLException {
+        super(ps);
         init(stringEncryptor, longEncryptor);
     }
-    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, Connection conn, String sql) throws SQLException {
-        super(clazz, conn, sql);
+    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, Connection conn, String sql) throws SQLException {
+        super(conn, sql);
         init(stringEncryptor, longEncryptor);
     }
     private void init(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor) {
@@ -67,5 +69,13 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
             }
         }
         super.readField(thing, field, value);
+    }
+
+    public <K> Map<K, T> map (String field) {
+        final Map<K, T> map = new HashMap<>();
+        for (T thing : this) {
+            map.put((K) ReflectionUtil.get(thing, field), thing);
+        }
+        return map;
     }
 }
