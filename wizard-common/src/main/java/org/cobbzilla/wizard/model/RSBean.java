@@ -24,16 +24,16 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
     private HibernatePBEStringEncryptor stringEncryptor;
     private HibernatePBEStringEncryptor longEncryptor;
 
-    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, ResultSet rs) throws SQLException {
-        super(rs);
+    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, ResultSet rs) throws SQLException {
+        super(clazz, rs);
         init(stringEncryptor, longEncryptor);
     }
-    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, PreparedStatement ps) throws SQLException {
-        super(ps);
+    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, PreparedStatement ps) throws SQLException {
+        super(clazz, ps);
         init(stringEncryptor, longEncryptor);
     }
-    public RSBean(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, Connection conn, String sql) throws SQLException {
-        super(conn, sql);
+    public RSBean(Class<T> clazz, HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor, Connection conn, String sql) throws SQLException {
+        super(clazz, conn, sql);
         init(stringEncryptor, longEncryptor);
     }
     private void init(HibernatePBEStringEncryptor stringEncryptor, HibernatePBEStringEncryptor longEncryptor) {
