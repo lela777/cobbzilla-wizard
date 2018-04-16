@@ -59,8 +59,7 @@ public abstract class AbstractElasticSearchDAO<E extends Identifiable, Q, R exte
     protected abstract String getTypeMappingJson();
     protected abstract String getSearchId(E thing);
 
-    @Getter(lazy=true) private final Class<E> entityType = initEntityType();
-    private Class<E> initEntityType() { return getFirstTypeParam(getClass(), Identifiable.class); }
+    @Getter(lazy=true) private final Class<E> entityType = getFirstTypeParam(getClass(), Identifiable.class);
 
     private final ObjectPool<ESClientReference> clientPool = new GenericObjectPool<>(new BasePooledObjectFactory<ESClientReference>() {
         @Override public ESClientReference create() throws Exception { return new ESClientReference(); }

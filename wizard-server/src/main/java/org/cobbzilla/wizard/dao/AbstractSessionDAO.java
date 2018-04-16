@@ -1,5 +1,6 @@
 package org.cobbzilla.wizard.dao;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
@@ -20,7 +21,7 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     private RedisService initSessionRedis() { return redis.prefixNamespace(getClass().getSimpleName()); }
 
     // what are we storing?
-    protected Class<T> getEntityClass() { return getFirstTypeParam(getClass(), Identifiable.class); }
+    @Getter(lazy=true, value=AccessLevel.PROTECTED) private final Class<T> entityClass = getFirstTypeParam(getClass(), Identifiable.class);
 
     public String create (T thing) {
         final String sessionId = randomUUID().toString();

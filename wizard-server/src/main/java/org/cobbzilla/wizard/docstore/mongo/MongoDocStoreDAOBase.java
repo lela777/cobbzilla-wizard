@@ -15,8 +15,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 /** a mongo docstore that also conforms to the DAO interface */
 public abstract class MongoDocStoreDAOBase<T extends MongoDocBase> extends MongoDocStore<T> implements DAO<T> {
 
-    @Getter(lazy=true) private final Class entityClass = initEntityClass();
-    private Class initEntityClass() { return getFirstTypeParam(getClass(), MongoDocBase.class); }
+    @Getter(lazy=true) private final Class entityClass = getFirstTypeParam(getClass(), MongoDocBase.class);
 
     @Override public T get(Serializable id) { return findByUuid(id.toString()); }
 

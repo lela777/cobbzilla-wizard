@@ -21,8 +21,7 @@ public class RedisMap<V> implements Map<String, V> {
     @Getter @Setter private Long duration;
     @Getter @Setter private RedisService redis;
 
-    @Getter(lazy=true) private final Class<V> valueClass = initValueClass();
-    private Class<V> initValueClass() { return getFirstTypeParam(getClass()); }
+    @Getter(lazy=true) private final Class<V> valueClass = getFirstTypeParam(getClass());
 
     @Override public int size() { return notSupported("size method not supported due to performance reasons"); }
     @Override public boolean containsValue(Object value) { return notSupported("containsValue method not supported due to performance reasons"); }

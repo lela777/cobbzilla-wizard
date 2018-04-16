@@ -14,8 +14,7 @@ import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 @Slf4j
 public abstract class EntityFilter<T> implements ContainerResponseFilter {
 
-    @Getter(lazy=true) private final Class<T> matchEntityClass = initMatchEntityClass();
-    private Class<T> initMatchEntityClass() { return getFirstTypeParam(getClass()); }
+    @Getter(lazy=true) private final Class<T> matchEntityClass = getFirstTypeParam(getClass());
 
     @Override public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
 
