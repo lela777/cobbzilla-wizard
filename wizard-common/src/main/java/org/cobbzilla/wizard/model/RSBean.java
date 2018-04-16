@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.callFactoryMethod;
@@ -78,4 +79,10 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
         }
         return map;
     }
+
+    public T firstObject() {
+        final Iterator<T> iter = iterator();
+        return iter.hasNext() ? iter.next() : null;
+    }
+
 }
