@@ -44,7 +44,7 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
     @Override protected void readField(T thing, String field, Object value) {
         final Field declaredField = getDeclaredField(thing.getClass(), field);
         if (declaredField == null) {
-            log.warn("set: field "+field+" does not exist in "+thing.getClass().getSimpleName());
+            log.info("set: field "+field+" does not exist in "+thing.getClass().getSimpleName()+", trying setter");
             super.readField(thing, field, value);
             return;
         }
