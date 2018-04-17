@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.dao.shard;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +8,7 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.wizard.util.ResultCollector;
 import org.cobbzilla.wizard.util.ResultCollectorBase;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
