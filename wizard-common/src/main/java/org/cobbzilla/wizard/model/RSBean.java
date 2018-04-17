@@ -11,9 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import static org.cobbzilla.util.reflect.ReflectionUtil.callFactoryMethod;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getDeclaredField;
@@ -70,19 +67,6 @@ public class RSBean<T extends Identifiable> extends TypedResultSetBean<T> {
             }
         }
         super.readField(thing, field, value);
-    }
-
-    public <K> Map<K, T> map (String field) {
-        final Map<K, T> map = new HashMap<>();
-        for (T thing : this) {
-            map.put((K) ReflectionUtil.get(thing, field), thing);
-        }
-        return map;
-    }
-
-    public T firstObject() {
-        final Iterator<T> iter = iterator();
-        return iter.hasNext() ? iter.next() : null;
     }
 
 }
