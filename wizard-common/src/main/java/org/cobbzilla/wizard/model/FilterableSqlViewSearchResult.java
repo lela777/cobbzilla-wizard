@@ -7,6 +7,7 @@ public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
     SqlViewField[] getFilterFields();
 
     default boolean matches(String filter) {
+        final String lowerCaseFilter = filter.toLowerCase();
         for (SqlViewField field : getFilterFields()) {
             if (!field.isFilter()) continue;
             final Class<? extends Identifiable> type = field.getType();
@@ -17,7 +18,7 @@ public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
                 target = this;
             }
             final Object value = ReflectionUtil.get(target, field.getEntityProperty(), null);
-            if (value != null && value.toString().contains(filter)) return true;
+            if (value != null && value.toString().toLowerCase().contains(lowerCaseFilter)) return true;
         }
         return false;
     }
