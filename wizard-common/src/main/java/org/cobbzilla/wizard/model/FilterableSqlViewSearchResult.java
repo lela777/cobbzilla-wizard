@@ -6,7 +6,8 @@ public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
 
     SqlViewField[] getFilterFields();
 
-    default boolean matches(String filter) {
+    default boolean matches(String filter, boolean caseSensitive) {
+        final String trueFilter = caseSensitive ? filter : filter.toLowerCase();
         for (SqlViewField field : getFilterFields()) {
             if (!field.isFilter()) continue;
             final Class<? extends Identifiable> type = field.getType();
@@ -17,9 +18,16 @@ public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
                 target = this;
             }
             final Object value = ReflectionUtil.get(target, field.getEntityProperty(), null);
-            if (value != null && value.toString().contains(filter)) return true;
+            if (value != null
+                    && (caseSensitive ? value.toString() : value.toString().toLowerCase()).contains(trueFilter)) {
+                return true;
+            }
         }
         return false;
+    }
+
+    default boolean matches(String filter) {
+        return matches(filter, false);
     }
 
 }
