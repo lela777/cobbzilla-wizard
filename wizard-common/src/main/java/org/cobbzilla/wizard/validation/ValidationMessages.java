@@ -6,7 +6,9 @@ public class ValidationMessages extends ResourceMessages {
 
     private static final ValidationMessages instance = new ValidationMessages();
 
-    @Override public String getBundleName() { return "ValidationMessages"; }
+    public static final String BUNDLE_NAME = ValidationMessages.class.getSimpleName();
+
+    @Override public String getBundleName() { return BUNDLE_NAME; }
 
     public static String translateMessage(String messageTemplate) { return instance.translate(messageTemplate); }
 
