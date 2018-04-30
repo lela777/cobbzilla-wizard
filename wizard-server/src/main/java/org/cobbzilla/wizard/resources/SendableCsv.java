@@ -7,8 +7,9 @@ import java.util.Collection;
 
 public class SendableCsv extends SendableResource {
 
-    public SendableCsv(Collection rows, String[] fields) {
+    public SendableCsv(String name, Collection rows, String[] fields) {
         super(new CsvStreamingOutput(rows, fields));
+        setName(name);
     }
 
     @Override public String getContentType() { return HttpContentTypes.TEXT_CSV; }
