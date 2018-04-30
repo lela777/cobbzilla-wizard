@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static javax.ws.rs.core.HttpHeaders.*;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.http.HttpContentTypes.APPLICATION_JSON;
 import static org.cobbzilla.util.http.HttpContentTypes.fileExt;
@@ -52,6 +53,8 @@ public class ResourceUtil {
             } else {
                 builder = builder.header("Content-Disposition", "attachment; filename=\"" + name + "\"");
             }
+        } else if (forceDownload != null && forceDownload) {
+            return die("send: forceDownload was true but no filename was set");
         }
         if (contentLength != null) builder = builder.header(CONTENT_LENGTH, contentLength);
         return builder.build();
