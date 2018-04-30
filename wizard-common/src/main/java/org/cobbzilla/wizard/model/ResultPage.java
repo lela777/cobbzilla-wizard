@@ -12,6 +12,7 @@ import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -174,11 +175,13 @@ public class ResultPage {
     public void unsetBound(String name) { bounds.remove(name); }
     public void unsetBounds() { bounds.clear(); }
 
+    @Getter @Setter private String[] fields;
+    @JsonIgnore public boolean getHasFields () { return !empty(fields); }
+
     @JsonIgnore @Getter @Setter private SearchScrubber scrubber;
     public boolean hasScrubber () { return scrubber != null; }
 
-    @Override
-    public boolean equals(Object o) {
+    @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -190,18 +193,19 @@ public class ResultPage {
         if (filter != null ? !filter.equals(that.filter) : that.filter != null) return false;
         if (sortField != null ? !sortField.equals(that.sortField) : that.sortField != null) return false;
         if (sortOrder != null ? !sortOrder.equals(that.sortOrder) : that.sortOrder != null) return false;
-
+        if (fields != null && (that.fields == null || !Arrays.equals(that.fields, fields))) return false;
+        if (fields == null && that.fields != null) return false;
         return true;
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         int result = getPageNumber();
         result = 31 * result + getPageSize();
         result = 31 * result + (sortField != null ? sortField.hashCode() : 0);
         result = 31 * result + (sortOrder != null ? sortOrder.hashCode() : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
         result = 31 * result + (bounds != null ? MapUtil.deepHash(bounds) : 0);
+        result = 31 * result + (fields != null ? Arrays.hashCode(fields) : 0);
         return result;
     }
 }
