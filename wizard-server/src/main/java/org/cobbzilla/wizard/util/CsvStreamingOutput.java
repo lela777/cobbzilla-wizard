@@ -44,7 +44,7 @@ public class CsvStreamingOutput implements StreamingOutput {
                 final Object value = row.get(field);
                 line[i] = empty(value) ? "" : escapeCsv(value.toString());
             }
-            writer.writeNext(line);
+            writer.writeNext(line, false);
         }
     }
 
