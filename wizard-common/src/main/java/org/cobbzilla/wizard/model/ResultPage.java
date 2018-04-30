@@ -121,6 +121,8 @@ public class ResultPage {
         return isInfinitePage() ? INFINITE_PAGE.pageSize : getPageOffset() + getPageSize();
     }
 
+    public ResultPage setReturnAllResults () { setPageNumber(INFINITE_PAGE.pageNumber); setPageSize(INFINITE_PAGE.pageSize); return this; }
+
     public static final int MAX_PAGE_BUFFER = 100;
     @JsonIgnore public int getPageBufferSize () {
         return isInfinitePage() || pageSize > MAX_PAGE_BUFFER ? MAX_PAGE_BUFFER : pageSize;
