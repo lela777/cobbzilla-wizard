@@ -12,6 +12,8 @@ public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
 
     String getSearchView();
 
+    String getSelectClause(ResultPage resultPage);
+
     default String fixedFilters() { return "1=1"; }
 
     SqlViewField[] getSearchFields();

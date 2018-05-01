@@ -76,7 +76,7 @@ public class SqlViewSearchHelper {
             sortClause = " ORDER BY "  + sort;
         }
 
-        final String query = "select * " + sql.toString() + sortClause + limit + offset;
+        final String query = "select " + dao.getSelectClause(resultPage) + " " + sql.toString() + sortClause + limit + offset;
 
         Integer totalCount = null;
         final ArrayList<E> thingsList = new ArrayList<>();

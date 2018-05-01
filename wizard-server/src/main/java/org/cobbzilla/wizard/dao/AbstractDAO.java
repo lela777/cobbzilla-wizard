@@ -265,21 +265,11 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
         }
         if (filterClause.length() > 0) filterClause = "where "+filterClause;
 
-        final StringBuilder qBuilder = new StringBuilder();
-        if (resultPage.getHasFields()) {
-            final SqlViewField[] searchFields = getSearchFields();
-            if (empty(searchFields)) {
-                return die("search: requested specific fields but "+getClass().getSimpleName()+" returned null/empty from getSearchFields()");
-            }
-            qBuilder.append("select ");
-            final StringBuilder selectFields = new StringBuilder();
-            for (String field : resultPage.getFields()) {
-                if (selectFields.length() > 0) selectFields.append(", ");
-                selectFields.append(field);
-            }
-            qBuilder.append(selectFields.toString()).append(" ");
-        }
-        qBuilder.append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause);
+        final String selectClause = getSelectClause(resultPage);
+        final StringBuilder qBuilder = new StringBuilder("select ")
+                .append(selectClause).append(" ")
+                .append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ")
+                .append(filterClause);
 
         final String countQuery = "select count(*) " + qBuilder.toString();
         final String query = qBuilder.append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();
@@ -293,6 +283,20 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
         }
 
         return new SearchResults<>(results, totalCount);
+    }
+
+    public String getSelectClause(ResultPage resultPage) {
+        final StringBuilder selectFields = new StringBuilder();
+        if (!resultPage.getHasFields()) return "*";
+
+        final SqlViewField[] searchFields = getSearchFields();
+        if (empty(searchFields)) die("search: requested specific fields but "+getClass().getSimpleName()+" returned null/empty from getSearchFields()");
+
+        for (String field : resultPage.getFields()) {
+            if (selectFields.length() > 0) selectFields.append(", ");
+            selectFields.append(field);
+        }
+        return selectFields.toString();
     }
 
     public List query(String queryString, ResultPage resultPage, String[] params, Object[] values) {
