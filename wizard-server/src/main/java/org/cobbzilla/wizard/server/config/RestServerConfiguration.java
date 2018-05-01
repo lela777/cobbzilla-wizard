@@ -298,6 +298,21 @@ public class RestServerConfiguration {
         }
     }
 
+    public String[] sqlColumns(String relation) {
+        final HasDatabaseConfiguration config = validatePgConfig("execSql");
+        try {
+            @Cleanup final Connection conn = config.getDatabase().getConnection();
+            @Cleanup final PreparedStatement ps = conn.prepareStatement("SELECT * FROM " + relation + " WHERE 1=0");
+            @Cleanup final ResultSet rs = ps.executeQuery();
+            final ResultSetMetaData rsmd = rs.getMetaData();
+            final String[] columns = new String[rsmd.getColumnCount()];
+            for (int i = 0; i < columns.length; i++) columns[i] = rsmd.getColumnName(i + 1);
+            return columns;
+        } catch (Exception e) {
+            return die("sqlColumns("+relation+"): "+e, e);
+        }
+    }
+
     // todo: consider a size or time-limited cache (use an LRU cache?)
     private final Map<String, Map<String, Object>> subResourceCaches = new ConcurrentHashMap<>();
 

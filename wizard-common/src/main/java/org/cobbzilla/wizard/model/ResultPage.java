@@ -50,6 +50,7 @@ public class ResultPage {
     public static final int INFINITE = Integer.MAX_VALUE;
     public static final ResultPage INFINITE_PAGE = new ResultPage(1, INFINITE);
 
+    public static final ResultPage EMPTY_PAGE = new ResultPage(1, 0);
     public static final ResultPage LARGE_PAGE = new ResultPage(1, 100);
 
     // for using ResultPage as a query-parameter

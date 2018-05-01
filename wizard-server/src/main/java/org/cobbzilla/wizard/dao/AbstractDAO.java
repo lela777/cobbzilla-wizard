@@ -12,6 +12,7 @@ import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.IdentifiableBase;
 import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.SqlViewField;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.notSupported;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
@@ -237,6 +239,8 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
     public static final Object[] EMPTY_VALUES = new Object[0];
     public static final String[] PARAM_FILTER = new String[]{FILTER_PARAM};
 
+    public SqlViewField[] getSearchFields() { return null; }
+
     @Override public SearchResults<E> search(ResultPage resultPage) {
         return search(resultPage, getEntityClass().getSimpleName());
     }
@@ -261,7 +265,21 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
         }
         if (filterClause.length() > 0) filterClause = "where "+filterClause;
 
-        final StringBuilder qBuilder = new StringBuilder().append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause);
+        final StringBuilder qBuilder = new StringBuilder();
+        if (resultPage.getHasFields()) {
+            final SqlViewField[] searchFields = getSearchFields();
+            if (empty(searchFields)) {
+                return die("search: requested specific fields but "+getClass().getSimpleName()+" returned null/empty from getSearchFields()");
+            }
+            qBuilder.append("select ");
+            final StringBuilder selectFields = new StringBuilder();
+            for (String field : resultPage.getFields()) {
+                if (selectFields.length() > 0) selectFields.append(", ");
+                selectFields.append(field);
+            }
+            qBuilder.append(selectFields.toString()).append(" ");
+        }
+        qBuilder.append("from ").append(getEntityClass().getSimpleName()).append(" ").append(entityAlias).append(" ").append(filterClause);
 
         final String countQuery = "select count(*) " + qBuilder.toString();
         final String query = qBuilder.append(" order by ").append(entityAlias).append(".").append(resultPage.getSortField()).append(" ").append(resultPage.getSortType().name()).toString();

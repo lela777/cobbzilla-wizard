@@ -16,6 +16,13 @@ public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
 
     SqlViewField[] getSearchFields();
 
+    default String[] getSearchFieldNames() {
+        final SqlViewField[] searchFields = getSearchFields();
+        final String[] names = new String[searchFields.length];
+        for (int i=0; i<searchFields.length; i++) names[i] = searchFields[i].getName();
+        return names;
+    }
+
     default String buildFilter(ResultPage resultPage, List<Object> params) {
         final String filter = getFilterString(resultPage.getFilter());
         final SqlViewField[] fields = getSearchFields();

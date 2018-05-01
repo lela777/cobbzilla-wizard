@@ -14,6 +14,7 @@ import java.io.OutputStreamWriter;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeCsv;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @AllArgsConstructor @Slf4j
@@ -24,13 +25,17 @@ public class CsvStreamingOutput implements StreamingOutput {
 
     @Override public void write(OutputStream out) throws IOException, WebApplicationException {
 
+        if (empty(fields)) die("write: no fields specified");
+
         @Cleanup CSVWriter writer = new CSVWriter(new OutputStreamWriter(out));
 
         final List<Map<String, Object>> data = new ArrayList<>();
         final Set<String> columns = new HashSet<>();
         for (Object row : rows) {
-            // convert all rows to maps
-            final Map<String, Object> map = ReflectionUtil.toMap(row, fields);
+            final Map<String, Object> map = new HashMap<>();
+            for (String field : fields) {
+                map.put(field, ReflectionUtil.get(row, field));
+            }
             data.add(map);
             columns.addAll(map.keySet());
         }

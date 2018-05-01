@@ -1,21 +1,28 @@
 package org.cobbzilla.wizard.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.forName;
 import static org.cobbzilla.util.string.StringUtil.snakeCaseToCamelCase;
 
-@Accessors(chain=true) @ToString
+@NoArgsConstructor @Accessors(chain=true) @ToString
 public class SqlViewField {
 
     @Getter @Setter private Class<? extends Identifiable> type;
     @Getter @Setter private String name;
     @Getter @Setter private String property;
-    @Getter @Setter private boolean encrypted;
-    @Getter @Setter private boolean filter;
-    @Getter @Setter private Class fieldType;
+    @Getter @Setter @JsonIgnore private boolean encrypted;
+    @Getter @Setter @JsonIgnore private boolean filter;
+    @Getter @Setter @JsonIgnore private Class fieldType;
+
+    public String getFieldTypeClass () { return fieldType == null ? null : fieldType.getName(); }
+    public void setFieldTypeClass(String clazz) { fieldType = empty(clazz) ? null : forName(clazz); }
 
     @Getter @Setter private SqlViewFieldSetter setter;
     public boolean hasSetter () { return setter != null; }
@@ -42,7 +49,7 @@ public class SqlViewField {
 
     private String entity;
 
-    public String getEntity () {
+    @JsonIgnore public String getEntity () {
         if (entity != null) return entity;
         if (type == null) return null;
         final int dotPos = property.indexOf('.');
@@ -51,7 +58,7 @@ public class SqlViewField {
 
     public boolean hasEntity () { return getEntity() != null; }
 
-    public String getEntityProperty () {
+    @JsonIgnore public String getEntityProperty () {
         if (type == null) return property;
         final int dotPos = property.indexOf('.');
         return dotPos == -1 ? property : property.substring(dotPos+1);
