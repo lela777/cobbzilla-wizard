@@ -1,7 +1,6 @@
 package org.cobbzilla.wizard.util;
 
 import com.opencsv.CSVWriter;
-import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.reflect.ReflectionUtil;
@@ -17,11 +16,22 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeCsv;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@AllArgsConstructor @Slf4j
+@Slf4j
 public class CsvStreamingOutput implements StreamingOutput {
 
-    private final Collection rows;
     private final String[] fields;
+    private final Collection rows;
+    private String[] header;
+
+    public CsvStreamingOutput(Collection rows, String[] fields, String[] header) {
+        this.rows = rows;
+        this.fields = fields;
+        this.header = header;
+    }
+
+    public CsvStreamingOutput(Collection rows, String[] fields) {
+        this(rows, fields, null);
+    }
 
     @Override public void write(OutputStream out) throws IOException, WebApplicationException {
 
@@ -30,22 +40,24 @@ public class CsvStreamingOutput implements StreamingOutput {
         @Cleanup CSVWriter writer = new CSVWriter(new OutputStreamWriter(out));
 
         final List<Map<String, Object>> data = new ArrayList<>();
-        final Set<String> columns = new HashSet<>();
+        final boolean defaultHeaders = empty(header);
+        final Set<String> columns = defaultHeaders ? new HashSet<>() : null;
         for (Object row : rows) {
             final Map<String, Object> map = new HashMap<>();
             for (String field : fields) {
                 map.put(field, ReflectionUtil.get(row, field));
             }
             data.add(map);
-            columns.addAll(map.keySet());
+            if (defaultHeaders) columns.addAll(map.keySet());
         }
 
-        final String[] fieldNames = columns.toArray(new String[columns.size()]);
-        writer.writeNext(fieldNames); // header row
+        if (defaultHeaders) header = columns.toArray(new String[columns.size()]);
+        writer.writeNext(header); // header row
+
         for (Map<String, Object> row : data) {
-            final String[] line = new String[fieldNames.length];
+            final String[] line = new String[fields.length];
             for (int i = 0; i < line.length; i++) {
-                final String field = fieldNames[i];
+                final String field = fields[i];
                 final Object value = row.get(field);
                 line[i] = empty(value) ? "" : escapeCsv(value.toString());
             }

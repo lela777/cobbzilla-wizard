@@ -7,6 +7,11 @@ import java.util.Collection;
 
 public class SendableCsv extends SendableResource {
 
+    public SendableCsv(String name, Collection rows, String[] fields, String[] header) {
+        super(new CsvStreamingOutput(rows, fields, header));
+        setName(name);
+    }
+
     public SendableCsv(String name, Collection rows, String[] fields) {
         super(new CsvStreamingOutput(rows, fields));
         setName(name);

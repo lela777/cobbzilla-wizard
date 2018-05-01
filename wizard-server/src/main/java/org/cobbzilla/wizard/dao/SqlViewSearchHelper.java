@@ -92,9 +92,13 @@ public class SqlViewSearchHelper {
                 if (searchByEncryptedField) {
                     // we'll sort them later and there might be many rows, populate in parallel
                     results.add(exec.submit(() -> {
-                        final E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
-                        synchronized (thingsList) {
-                            thingsList.add(thing);
+                        try {
+                            final E thing = (E) populate(instantiate(resultClass), row, fields, hibernateEncryptor);
+                            synchronized (thingsList) {
+                                thingsList.add(thing);
+                            }
+                        } catch (Exception e) {
+                            die("search: "+e, e);
                         }
                     }));
                 } else {
@@ -196,16 +200,20 @@ public class SqlViewSearchHelper {
                                                              HibernatePBEStringEncryptor hibernateEncryptor) {
         for (SqlViewField field : fields) {
             final Class<? extends Identifiable> type = field.getType();
-            Object target = thing;
-            if (type != null) {
-                if (!field.hasEntity()) die("populate: type was "+type.getName()+" but entity was null: "+field); // sanity check, should never happen
-                target = thing.getRelated().entity(type, field.getEntity());
-            }
-            final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
-            if (field.hasSetter()) {
-                field.getSetter().set(target, field.getEntityProperty(), value);
-            } else {
-                ReflectionUtil.set(target, field.getEntityProperty(), value, field.getFieldType());
+            try {
+                Object target = thing;
+                if (type != null) {
+                    if (!field.hasEntity()) die("populate: type was " + type.getName() + " but entity was null: " + field); // sanity check, should never happen
+                    target = thing.getRelated().entity(type, field.getEntity());
+                }
+                final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
+                if (field.hasSetter()) {
+                    field.getSetter().set(target, field.getEntityProperty(), value);
+                } else {
+                    ReflectionUtil.set(target, field.getEntityProperty(), value, field.getFieldType());
+                }
+            } catch (Exception e) {
+                log.info("populate("+thing.getClass().getSimpleName()+"), field="+field+": "+e, e);
             }
         }
         return thing;
