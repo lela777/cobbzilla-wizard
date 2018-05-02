@@ -4,7 +4,7 @@ import org.apache.commons.exec.CommandLine;
 import org.cobbzilla.util.system.Command;
 import org.cobbzilla.util.system.CommandResult;
 import org.cobbzilla.util.system.CommandShell;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.ldap.LdapBindException;
 import org.cobbzilla.wizard.server.config.LdapConfiguration;
 

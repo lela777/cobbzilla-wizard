@@ -1,7 +1,7 @@
 package org.cobbzilla.wizard.dao;
 
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;

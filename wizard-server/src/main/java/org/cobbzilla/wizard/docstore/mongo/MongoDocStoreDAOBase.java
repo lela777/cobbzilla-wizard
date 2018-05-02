@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.docstore.mongo;
 import lombok.Getter;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.dao.SearchResults;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 
 import javax.validation.Valid;
 import java.io.Serializable;

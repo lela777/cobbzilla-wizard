@@ -1,8 +1,8 @@
 package org.cobbzilla.wizard.dao;
 
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.ResultPage;
-import org.cobbzilla.wizard.model.SqlViewField;
+import org.cobbzilla.wizard.model.search.ResultPage;
+import org.cobbzilla.wizard.model.search.SqlViewField;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model;
+package org.cobbzilla.wizard.model.search;
 
 public interface SqlViewFieldSetter {
 

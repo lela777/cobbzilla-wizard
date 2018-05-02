@@ -14,7 +14,7 @@ import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableFindByUnique3FieldFind
 import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableIdentityFinder;
 import org.cobbzilla.wizard.dao.shard.cache.ShardCacheableUniqueFieldFinder;
 import org.cobbzilla.wizard.dao.shard.task.*;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.shard.ShardIO;
 import org.cobbzilla.wizard.model.shard.ShardMap;
 import org.cobbzilla.wizard.model.shard.ShardRange;

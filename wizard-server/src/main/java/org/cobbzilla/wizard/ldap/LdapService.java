@@ -1,7 +1,7 @@
 package org.cobbzilla.wizard.ldap;
 
 import org.cobbzilla.util.system.CommandResult;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.server.config.LdapConfiguration;
 
 public interface LdapService {

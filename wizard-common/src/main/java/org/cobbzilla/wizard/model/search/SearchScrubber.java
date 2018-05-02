@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model;
+package org.cobbzilla.wizard.model.search;
 
 import java.util.List;
 

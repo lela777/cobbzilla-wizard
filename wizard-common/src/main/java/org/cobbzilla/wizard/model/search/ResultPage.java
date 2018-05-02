@@ -1,4 +1,4 @@
-package org.cobbzilla.wizard.model;
+package org.cobbzilla.wizard.model.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -10,6 +10,7 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.util.collection.MapUtil;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.model.BasicConstraintConstants;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
 import java.util.Arrays;
@@ -140,7 +141,7 @@ public class ResultPage {
     }
     @JsonIgnore public boolean getHasSortField () { return sortField != null; }
 
-    @ValidEnum(type=SortOrder.class, emptyOk=true, message=BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
+    @ValidEnum(type=SortOrder.class, emptyOk=true, message= BasicConstraintConstants.ERR_SORT_ORDER_INVALID)
     @Getter private String sortOrder = ResultPage.DEFAULT_SORT;
     public ResultPage setSortOrder(Object thing) {
         if (thing == null) {

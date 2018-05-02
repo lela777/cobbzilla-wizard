@@ -1,6 +1,8 @@
 package org.cobbzilla.wizard.model;
 
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.model.search.SqlViewField;
+import org.cobbzilla.wizard.model.search.SqlViewSearchResult;
 
 public interface FilterableSqlViewSearchResult extends SqlViewSearchResult {
 

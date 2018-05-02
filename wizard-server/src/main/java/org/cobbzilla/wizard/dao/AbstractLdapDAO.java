@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.wizard.ldap.LdapService;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.ldap.LdapEntity;
 import org.cobbzilla.wizard.server.config.LdapConfiguration;
 

@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.SingletonSet;
 import org.cobbzilla.util.reflect.ReflectionUtil;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 
 import javax.persistence.Transient;

@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.model.*;
+import org.cobbzilla.wizard.model.search.ResultPage;
+import org.cobbzilla.wizard.model.search.SqlViewField;
+import org.cobbzilla.wizard.model.search.SqlViewSearchResult;
 import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 import org.jasypt.hibernate4.encryptor.HibernatePBEStringEncryptor;
@@ -19,7 +22,7 @@ import static org.cobbzilla.util.daemon.DaemonThreadFactory.fixedPool;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
-import static org.cobbzilla.wizard.model.ResultPage.DEFAULT_SORT;
+import static org.cobbzilla.wizard.model.search.ResultPage.DEFAULT_SORT;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 
 @Slf4j

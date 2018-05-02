@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.collection.MapUtil;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
-import org.cobbzilla.wizard.model.ResultPage;
+import org.cobbzilla.wizard.model.search.ResultPage;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
