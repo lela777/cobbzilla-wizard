@@ -251,7 +251,7 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
         Object[] values;
         if (resultPage.getHasFilter()) {
             params = PARAM_FILTER;
-            values = new Object[] { getFilterString(resultPage.getFilter()) };
+            values = new Object[] { StringUtil.sqlFilter(resultPage.getFilter()) };
             filterClause = getFilterClause(entityAlias, FILTER_PARAM);
         } else {
             params = EMPTY_PARAMS;
@@ -317,14 +317,6 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
 
     public static String caseInsensitiveLike(String entityAlias, String filterParam, final String attribute) {
         return new StringBuilder().append("lower(").append(entityAlias).append(".").append(attribute).append(") LIKE lower(:").append(filterParam).append(") ").toString();
-    }
-
-    private static final String PCT = "%";
-    private static final String ESC_PCT = "[%]";
-    public static String getFilterString(String value) {
-        // escape any embedded '%' chars, and then add '%' as the first and last chars
-        // also replace any embedded single-quote characters with '%', this helps prevent SQL injection attacks
-        return PCT + value.toLowerCase().replace(PCT, ESC_PCT).replace("'", PCT) + PCT;
     }
 
     protected String getFilterClause(String entityAlias, String filterParam) { return StringUtil.EMPTY; }

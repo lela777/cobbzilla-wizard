@@ -6,7 +6,7 @@ import org.cobbzilla.wizard.model.search.SqlViewField;
 
 import java.util.List;
 
-import static org.cobbzilla.wizard.dao.AbstractDAO.getFilterString;
+import static org.cobbzilla.util.string.StringUtil.sqlFilter;
 
 public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
 
@@ -26,7 +26,7 @@ public interface SqlViewSearchableDAO<T extends Identifiable> extends DAO<T> {
     }
 
     default String buildFilter(ResultPage resultPage, List<Object> params) {
-        final String filter = getFilterString(resultPage.getFilter());
+        final String filter = sqlFilter(resultPage.getFilter());
         final SqlViewField[] fields = getSearchFields();
         int filterCount = 0;
         final StringBuilder b = new StringBuilder();
