@@ -2,6 +2,7 @@ package org.cobbzilla.wizard.model.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.util.time.TimeUtil;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -15,13 +16,13 @@ public enum SearchBoundComparison {
 
     eq      (s -> s+" = ?"),
     ne      (s -> s+" != ?"),
-    gt      (s -> s+" > ?",  Long::valueOf),
-    ge      (s -> s+" >= ?", Long::valueOf),
-    lt      (s -> s+" < ?",  Long::valueOf),
-    le      (s -> s+" <= ?", Long::valueOf),
-    before  (s -> s+" <= ?", SearchBoundComparison::parseDateArgument),
-    after   (s -> s+" >= ?", SearchBoundComparison::parseDateArgument),
-    like    (s -> s+" ilike ?"),
+    gt      (s -> s+" > ?",     Long::valueOf),
+    ge      (s -> s+" >= ?",    Long::valueOf),
+    lt      (s -> s+" < ?",     Long::valueOf),
+    le      (s -> s+" <= ?",    Long::valueOf),
+    before  (s -> s+" <= ?",    SearchBoundComparison::parseDateArgument),
+    after   (s -> s+" >= ?",    SearchBoundComparison::parseDateArgument),
+    like    (s -> s+" ilike ?", StringUtil::sqlFilter),
     custom  (null);
 
     public static final DateTimeFormatter[] DATE_TIME_FORMATS = {
@@ -52,6 +53,10 @@ public enum SearchBoundComparison {
 
     @JsonCreator public static SearchBoundComparison fromString (String val) { return valueOf(val.toLowerCase()); }
 
+    public static SearchBoundComparison fromStringOrNull (String val) {
+        try { return fromString(val); } catch (Exception e) { return null; }
+    }
+
     public SearchBound bind(String name) {
         return this == custom
                 ? die("bind: cannot bind name to custom comparison: "+name)
@@ -60,6 +65,6 @@ public enum SearchBoundComparison {
 
     public Object prepareValue(String value) { return valueFunction != null ? valueFunction.apply(value) : value; }
 
-    public String sql(String name) { return sqlFunction.apply(name); }
+    public String sql(SearchBound bound) { return sqlFunction.apply(bound.getName()); }
 
 }

@@ -54,29 +54,44 @@ public interface SearchField {
         final String bound = field.name();
         if (!field.hasBounds()) throw invalid("err.bound.invalid", "bind is not valid", bound);
 
+        SearchBoundComparison comparison;
+        final SearchBound searchBound;
         final int colonPos = value.indexOf(":");
-        final SearchBoundComparison comparison;
         if (colonPos != -1) {
             final String[] parts = value.split(":");
             final String comparisonName = parts[0];
             if (comparisonName.startsWith(SearchBoundComparison.custom.name())) {
+                // custom comparison
                 if (parts.length <= 1) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
-                final SearchBound customBound = field.getCustomBound(parts[1]);
+                searchBound = field.getCustomBound(parts[1]);
                 params.add(parts[2]);
-                return customBound.getProcessor().sql(bound, value);
+                return searchBound.getProcessor().sql(bound, value);
+
             } else {
-                comparison = SearchBoundComparison.valueOf(comparisonName);
-                final SearchBound searchBound = field.getBound(comparison);
-                if (searchBound == null) throw invalid("err.bound.operation.invalid", "invalid comparison for bound "+bound+": "+comparisonName, comparisonName);
-                params.add(comparison.prepareValue(value.substring(colonPos+1)));
+                // standard comparison
+                comparison = SearchBoundComparison.fromStringOrNull(comparisonName);
+                if (comparison != null) {
+                    searchBound = field.getBound(comparison);
+                    if (searchBound == null) throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
+                    params.add(comparison.prepareValue(value.substring(colonPos + 1)));
+                } else {
+                    // whoops, might just be single value that contains a colon, try that
+                    searchBound = field.getBounds()[0];
+                    comparison = searchBound.getComparison();
+                    if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
+                    params.add(comparison.prepareValue(value));
+                }
             }
 
         } else {
-            comparison = field.getBounds()[0].getComparison();
-            params.add(value);
+            // no comparison specified, use first and assume default
+            searchBound = field.getBounds()[0];
+            comparison = searchBound.getComparison();
+            if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
+            params.add(comparison.prepareValue(value));
         }
 
-        return comparison.sql(bound);
+        return comparison.sql(searchBound);
     }
 
     static SimpleViolationException invalid(String messageTemplate, String message, String invalidValue) {
