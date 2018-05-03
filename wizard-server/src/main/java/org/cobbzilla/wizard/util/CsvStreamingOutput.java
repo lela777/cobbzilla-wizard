@@ -45,7 +45,7 @@ public class CsvStreamingOutput implements StreamingOutput {
         for (Object row : rows) {
             final Map<String, Object> map = new HashMap<>();
             for (String field : fields) {
-                map.put(field, ReflectionUtil.get(row, field));
+                map.put(field, ReflectionUtil.get(row, field, null));
             }
             data.add(map);
             if (defaultHeaders) columns.addAll(map.keySet());

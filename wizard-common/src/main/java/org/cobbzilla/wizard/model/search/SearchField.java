@@ -69,17 +69,17 @@ public interface SearchField {
                 comparison = SearchBoundComparison.valueOf(comparisonName);
                 final SearchBound searchBound = field.getBound(comparison);
                 if (searchBound == null) throw invalid("err.bound.operation.invalid", "invalid comparison for bound "+bound+": "+comparisonName, comparisonName);
-                value = value.substring(colonPos+1);
+                params.add(comparison.prepareValue(value.substring(colonPos+1)));
             }
 
         } else if (field.getBounds().length == 1) {
             comparison = field.getBounds()[0].getComparison();
+            params.add(value);
 
         } else {
             throw invalid("err.bound.operation.notFound", "comparison operator is required for bound "+ bound +". Use of one: "+StringUtil.toString(field.getComparisons()), bound);
         }
 
-        params.add(value);
         return comparison.sql(bound);
     }
 
