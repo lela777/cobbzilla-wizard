@@ -12,6 +12,15 @@ import static org.cobbzilla.wizard.model.search.SearchBoundComparison.custom;
 
 public interface SearchField {
 
+    String COMPARISON_SEPARATOR = ":";
+
+    static <SF extends SearchField> SF fromString (String val, SF[] values) {
+        for (SF f : values) {
+            if (f.name().equalsIgnoreCase(val)) return f;
+        }
+        throw invalid("err.searchField.invalid", "not a valid search field", val);
+    }
+
     String name();
 
     SearchBound[] getBounds();
@@ -56,9 +65,9 @@ public interface SearchField {
 
         SearchBoundComparison comparison;
         final SearchBound searchBound;
-        final int colonPos = value.indexOf(":");
-        if (colonPos != -1) {
-            final String[] parts = value.split(":");
+        final int cPos = value.indexOf(COMPARISON_SEPARATOR);
+        if (cPos != -1) {
+            final String[] parts = value.split(COMPARISON_SEPARATOR);
             final String comparisonName = parts[0];
             if (comparisonName.startsWith(SearchBoundComparison.custom.name())) {
                 // custom comparison
@@ -73,13 +82,13 @@ public interface SearchField {
                 if (comparison != null) {
                     searchBound = field.getBound(comparison);
                     if (searchBound == null) throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
-                    params.add(comparison.prepareValue(value.substring(colonPos + 1)));
+                    params.add(searchBound.prepareValue(value.substring(cPos + COMPARISON_SEPARATOR.length())));
                 } else {
                     // whoops, might just be single value that contains a colon, try that
                     searchBound = field.getBounds()[0];
                     comparison = searchBound.getComparison();
                     if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
-                    params.add(comparison.prepareValue(value));
+                    params.add(searchBound.prepareValue(value));
                 }
             }
 
@@ -88,7 +97,7 @@ public interface SearchField {
             searchBound = field.getBounds()[0];
             comparison = searchBound.getComparison();
             if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
-            params.add(comparison.prepareValue(value));
+            params.add(searchBound.prepareValue(value));
         }
 
         return comparison.sql(searchBound);

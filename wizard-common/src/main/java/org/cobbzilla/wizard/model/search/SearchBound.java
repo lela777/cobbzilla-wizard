@@ -16,6 +16,9 @@ public class SearchBound {
     @Getter @Setter private String name;
     @Getter @Setter private SearchBoundComparison comparison;
 
+    @Getter @Setter private SearchFieldType type;
+    public boolean hasType () { return type != null; }
+
     @Getter @Setter private String[] params;
     public boolean hasParams () { return !empty(params); }
 
@@ -24,4 +27,5 @@ public class SearchBound {
 
     @JsonIgnore public <T extends CustomSearchBoundProcessor> T getProcessor() { return instantiate(processorClass); }
 
+    public Object prepareValue(String value) { return comparison.prepareValue(value, type); }
 }
