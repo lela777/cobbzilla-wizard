@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
@@ -17,6 +18,9 @@ public class SearchBound {
     @Getter @Setter private SearchBoundComparison comparison;
 
     @Getter @Setter private SearchFieldType type;
+
+    public SearchBound(SearchBound bound) { copy(this, bound); }
+
     public boolean hasType () { return type != null; }
 
     @Getter @Setter private String[] params;

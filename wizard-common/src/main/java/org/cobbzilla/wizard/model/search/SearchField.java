@@ -55,8 +55,17 @@ public interface SearchField {
 
     static Map<String, SearchBound[]> initBounds(SearchField[] values) {
         final Map<String, SearchBound[]> fields = new HashMap<>();
-        for (SearchField f : values) if (f.hasBounds()) fields.put(f.name(), f.getBounds());
+        for (SearchField f : values) if (f.hasBounds()) {
+            fields.put(f.name(), copyBoundsWithoutNames(f));
+        }
         return fields;
+    }
+
+    static SearchBound[] copyBoundsWithoutNames(SearchField f) {
+        final SearchBound[] bounds = f.getBounds();
+        final SearchBound[] copy = new SearchBound[bounds.length];
+        for (int i=0; i<bounds.length; i++) copy[i] = new SearchBound(bounds[i]).setName(null);
+        return copy;
     }
 
     static String buildBound(SearchField field, String value, List<Object> params) {
