@@ -1,7 +1,7 @@
 package org.cobbzilla.wizard.resources;
 
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.collection.MapUtil;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.search.ResultPage;
@@ -11,12 +11,11 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.Collections;
-import java.util.Map;
 
+import static org.cobbzilla.util.collection.ArrayUtil.singletonArray;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.json.JsonUtil.NOTNULL_MAPPER;
+import static org.cobbzilla.util.json.JsonUtil.json;
 
 @Slf4j
 @Consumes(MediaType.APPLICATION_JSON)
@@ -41,17 +40,18 @@ public abstract class AbstractResource<T extends Identifiable> {
                           @QueryParam(ResultPage.PARAM_BOUNDS) String bounds) {
 
         if (usePagination == null || !usePagination) return findAll();
-
-        final DAO<T> dao = dao();
-        final Map<String, String> boundsMap = parseBounds(bounds);
-        return Response.ok(dao.search(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, boundsMap))).build();
+        return Response.ok(dao().search(new ResultPage(pageNumber, pageSize, sortField, sortOrder, filter, parseBounds(bounds)))).build();
     }
 
-    public static Map<String, String> parseBounds(String bounds) {
+    public static NameAndValue[] parseBounds(String bounds) {
         try {
-            return empty(bounds) ? Collections.EMPTY_MAP : (Map<String, String>) NOTNULL_MAPPER.readValue(bounds, MapUtil.JSON_STRING_STRING_MAP);
+            return empty(bounds) ? NameAndValue.EMPTY_ARRAY : json(bounds, NameAndValue[].class);
         } catch (Exception e) {
-            return die("parseBounds: invalid bounds (" + bounds + "): " + e);
+            try {
+                return singletonArray(json(bounds, NameAndValue.class));
+            } catch (Exception e2) {
+                return die("parseBounds: invalid bounds (" + bounds + "): " + e2);
+            }
         }
     }
 

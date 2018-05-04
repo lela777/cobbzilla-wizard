@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.wizard.ldap.LdapService;
 import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.ldap.LdapEntity;
@@ -12,7 +13,6 @@ import org.cobbzilla.wizard.server.config.LdapConfiguration;
 import javax.validation.Valid;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,11 +74,12 @@ public abstract class AbstractLdapDAO<E extends LdapEntity> implements DAO<E> {
         return results;
     }
 
-    private Map<String, String> mapBounds(ResultPage resultPage) {
+    private NameAndValue[] mapBounds(ResultPage resultPage) {
         if (!resultPage.getHasBounds()) return null;
-        final Map<String, String> mapped = new HashMap<>();
-        for (Map.Entry<String, String> bound : resultPage.getBounds().entrySet()) {
-            mapped.put(getTemplateObject().typeForJava(bound.getKey()).getLdapName(), bound.getValue());
+        final NameAndValue[] bounds = resultPage.getBounds();
+        final NameAndValue[] mapped = new NameAndValue[bounds.length];
+        for (int i=0; i<bounds.length; i++) {
+            mapped[i] = new NameAndValue(getTemplateObject().typeForJava(bounds[i].getName()).getLdapName(), bounds[i].getValue());
         }
         resultPage.setBounds(mapped);
         return mapped;

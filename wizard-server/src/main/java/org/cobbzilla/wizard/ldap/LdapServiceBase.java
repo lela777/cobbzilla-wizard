@@ -1,11 +1,12 @@
 package org.cobbzilla.wizard.ldap;
 
 import org.apache.commons.exec.CommandLine;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.system.Command;
 import org.cobbzilla.util.system.CommandResult;
 import org.cobbzilla.util.system.CommandShell;
-import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.ldap.LdapBindException;
+import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.server.config.LdapConfiguration;
 
 import java.util.Map;
@@ -51,7 +52,7 @@ public abstract class LdapServiceBase implements LdapService {
     @Override public String ldapsearch(String userDn, String password, ResultPage page) {
 
         final CommandLine command = ldapCommand("ldapsearch", userDn, password);
-        final Map<String, String> bounds = page.getBounds();
+        final Map<String, String> bounds = NameAndValue.toMap(page.getBounds());
         final String dn = bounds == null ? null : bounds.remove(BOUND_DN);
         final String base = bounds == null ? null : bounds.remove(BOUND_BASE);
         final String filter = page.getFilter();

@@ -1,9 +1,11 @@
 package org.cobbzilla.wizard.dao;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.jdbc.ResultSetBean;
 import org.cobbzilla.util.reflect.ReflectionUtil;
-import org.cobbzilla.wizard.model.*;
+import org.cobbzilla.wizard.model.FilterableSqlViewSearchResult;
+import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.search.ResultPage;
 import org.cobbzilla.wizard.model.search.SqlViewField;
 import org.cobbzilla.wizard.model.search.SqlViewSearchResult;
@@ -50,8 +52,8 @@ public class SqlViewSearchHelper {
         }
 
         if (resultPage.getHasBounds()) {
-            for (String bound : resultPage.getBounds().keySet()) {
-                sql.append(" AND (").append(dao.buildBound(bound, resultPage.getBounds().get(bound), params))
+            for (NameAndValue bound : resultPage.getBounds()) {
+                sql.append(" AND (").append(dao.buildBound(bound.getName(), bound.getValue(), params))
                                     .append(") ");
             }
         }

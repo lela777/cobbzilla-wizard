@@ -7,15 +7,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import org.cobbzilla.util.collection.MapUtil;
+import org.cobbzilla.util.collection.ArrayUtil;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.BasicConstraintConstants;
 import org.cobbzilla.wizard.validation.ValidEnum;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -68,7 +67,7 @@ public class ResultPage {
         this.setBounds(other.getBounds());
     }
 
-    public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, Map<String, String> bounds) {
+    public ResultPage(Integer pageNumber, Integer pageSize, String sortField, String sortOrder, String filter, NameAndValue[] bounds) {
         if (pageNumber != null) setPageNumber(pageNumber);
         if (pageSize != null) setPageSize(pageSize);
         if (sortField != null) this.sortField = sortField;
@@ -91,10 +90,6 @@ public class ResultPage {
 
     public ResultPage (int pageNumber, int pageSize, String sortField, String sortOrder, String filter) {
         this(pageNumber, pageSize, sortField, sortOrder, filter, null);
-    }
-
-    public ResultPage (int pageNumber, int pageSize, String sortField, SortOrder sortOrder, String filter, Map<String, String> bounds) {
-        this(pageNumber, pageSize, sortField, normalizeSortOrder(sortOrder), filter, bounds);
     }
 
     private static String normalizeSortOrder(SortOrder sortOrder) {
@@ -166,18 +161,14 @@ public class ResultPage {
     }
     @JsonIgnore public boolean getHasFilter() { return filter != null && filter.trim().length() > 0; }
 
-    @Getter @Setter private Map<String, String> bounds;
+    @Getter @Setter private NameAndValue[] bounds;
     @JsonIgnore public boolean getHasBounds() { return !empty(bounds); }
-    public boolean hasBound (String name) { return getHasBounds() && bounds.containsKey(name); }
 
     public ResultPage setBound(String name, String value) {
-        if (bounds == null) bounds = new LinkedHashMap<>();
-        bounds.put(name, value);
+        if (bounds == null) bounds = NameAndValue.EMPTY_ARRAY;
+        bounds = ArrayUtil.append(bounds, new NameAndValue(name, value));
         return this;
     }
-
-    public void unsetBound(String name) { bounds.remove(name); }
-    public void unsetBounds() { bounds.clear(); }
 
     @Getter @Setter private String[] fields;
     @JsonIgnore public boolean getHasFields () { return !empty(fields); }
@@ -193,12 +184,11 @@ public class ResultPage {
 
         if (getPageNumber() != that.getPageNumber()) return false;
         if (getPageSize() != that.getPageSize()) return false;
-        if (!MapUtil.deepEquals(bounds, that.bounds)) return false;
+        if (!Arrays.equals(that.bounds, bounds)) return false;
         if (filter != null ? !filter.equals(that.filter) : that.filter != null) return false;
         if (sortField != null ? !sortField.equals(that.sortField) : that.sortField != null) return false;
         if (sortOrder != null ? !sortOrder.equals(that.sortOrder) : that.sortOrder != null) return false;
-        if (fields != null && (that.fields == null || !Arrays.equals(that.fields, fields))) return false;
-        if (fields == null && that.fields != null) return false;
+        if (!Arrays.equals(that.fields, fields)) return false;
         return true;
     }
 
@@ -208,7 +198,7 @@ public class ResultPage {
         result = 31 * result + (sortField != null ? sortField.hashCode() : 0);
         result = 31 * result + (sortOrder != null ? sortOrder.hashCode() : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
-        result = 31 * result + (bounds != null ? MapUtil.deepHash(bounds) : 0);
+        result = 31 * result + (bounds != null ? Arrays.hashCode(bounds) : 0);
         result = 31 * result + (fields != null ? Arrays.hashCode(fields) : 0);
         return result;
     }

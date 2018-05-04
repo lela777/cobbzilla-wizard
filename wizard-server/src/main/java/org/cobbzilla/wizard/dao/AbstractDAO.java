@@ -7,6 +7,7 @@ package org.cobbzilla.wizard.dao;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.Identifiable;
@@ -258,9 +259,9 @@ public abstract class AbstractDAO<E extends Identifiable> implements DAO<E> {
             values = EMPTY_VALUES;
         }
         if (resultPage.getHasBounds()) {
-            for (String bound : resultPage.getBounds().keySet()) {
+            for (NameAndValue bound : resultPage.getBounds()) {
                 if (filterClause.length() > 0) filterClause += "and ";
-                filterClause += formatBound(entityAlias, bound, resultPage.getBounds().get(bound));
+                filterClause += formatBound(entityAlias, bound.getName(), bound.getValue());
             }
         }
         if (filterClause.length() > 0) filterClause = "where "+filterClause;

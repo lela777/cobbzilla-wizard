@@ -90,7 +90,9 @@ public interface SearchField {
                 comparison = SearchBoundComparison.fromStringOrNull(comparisonName);
                 if (comparison != null) {
                     searchBound = field.getBound(comparison);
-                    if (searchBound == null) throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
+                    if (searchBound == null) {
+                        throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
+                    }
                     params.add(searchBound.prepareValue(value.substring(cPos + COMPARISON_SEPARATOR.length())));
                 } else {
                     // whoops, might just be single value that contains a colon, try that
