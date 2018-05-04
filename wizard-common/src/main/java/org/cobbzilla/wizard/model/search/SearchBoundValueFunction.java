@@ -2,6 +2,6 @@ package org.cobbzilla.wizard.model.search;
 
 public interface SearchBoundValueFunction {
 
-    Object paramValue(String value, SearchBoundComparison comparison, SearchFieldType type);
+    Object paramValue(SearchBound bound, String value);
 
 }

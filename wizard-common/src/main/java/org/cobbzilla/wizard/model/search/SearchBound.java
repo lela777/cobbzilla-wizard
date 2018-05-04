@@ -31,5 +31,4 @@ public class SearchBound {
 
     @JsonIgnore public <T extends CustomSearchBoundProcessor> T getProcessor() { return instantiate(processorClass); }
 
-    public Object prepareValue(String value) { return comparison.prepareValue(value, type); }
 }

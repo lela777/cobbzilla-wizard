@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.wizard.model.search.SearchBoundComparison.custom;
+import static org.cobbzilla.wizard.model.search.SearchBoundComparison.*;
 
 public interface SearchField {
 
@@ -20,6 +20,8 @@ public interface SearchField {
         }
         throw invalid("err.searchField.invalid", "not a valid search field", val);
     }
+
+    static SearchBound[] bindTime(String name) { return new SearchBound[] { during.bind(name), after.bind(name), before.bind(name) }; }
 
     String name();
 
@@ -82,8 +84,7 @@ public interface SearchField {
                 // custom comparison
                 if (parts.length <= 1) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
                 searchBound = field.getCustomBound(parts[1]);
-                params.add(parts[2]);
-                return searchBound.getProcessor().sql(bound, value);
+                return searchBound.getProcessor().sql(bound, params, parts[2]);
 
             } else {
                 // standard comparison
@@ -93,13 +94,12 @@ public interface SearchField {
                     if (searchBound == null) {
                         throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
                     }
-                    params.add(searchBound.prepareValue(value.substring(cPos + COMPARISON_SEPARATOR.length())));
+                    value = value.substring(cPos + COMPARISON_SEPARATOR.length());
                 } else {
                     // whoops, might just be single value that contains a colon, try that
                     searchBound = field.getBounds()[0];
                     comparison = searchBound.getComparison();
                     if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
-                    params.add(searchBound.prepareValue(value));
                 }
             }
 
@@ -108,10 +108,9 @@ public interface SearchField {
             searchBound = field.getBounds()[0];
             comparison = searchBound.getComparison();
             if (comparison.isCustom()) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
-            params.add(searchBound.prepareValue(value));
         }
 
-        return comparison.sql(searchBound);
+        return comparison.sql(searchBound, params, value);
     }
 
     static SimpleViolationException invalid(String messageTemplate, String message, String invalidValue) {
