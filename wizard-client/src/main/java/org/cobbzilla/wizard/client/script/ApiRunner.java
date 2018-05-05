@@ -282,6 +282,9 @@ public class ApiRunner {
                 if (storeClass == null && restResponse.hasHeader(api.getEntityTypeHeaderName())) {
                     String entityTypeHeaderValue = restResponse.header(api.getEntityTypeHeaderName());
                     if (!empty(entityTypeHeaderValue) && !entityTypeHeaderValue.equals("[]")) {
+                        if (entityTypeHeaderValue.contains("<") && entityTypeHeaderValue.endsWith(">")) {
+                            entityTypeHeaderValue = entityTypeHeaderValue.substring(0, entityTypeHeaderValue.indexOf("<"));
+                        }
                         try {
                             storeClass = forName(entityTypeHeaderValue);
                         } catch (Exception e) {
