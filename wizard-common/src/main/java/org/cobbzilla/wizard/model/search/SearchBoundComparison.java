@@ -3,7 +3,7 @@ package org.cobbzilla.wizard.model.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import org.cobbzilla.util.collection.ComparisonOperator;
-import org.cobbzilla.util.time.PastTimePeriodType;
+import org.cobbzilla.util.time.TimePeriodType;
 import org.cobbzilla.util.time.TimeUtil;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -34,8 +34,8 @@ public enum SearchBoundComparison {
             ComparisonOperator.ge.sql,
             ComparisonOperator.le.sql
     }, new SearchBoundValueFunction[] {
-            (bound, value) -> PastTimePeriodType.valueOf(value).start(),
-            (bound, value) -> PastTimePeriodType.valueOf(value).end()
+            (bound, value) -> TimePeriodType.fromString(value).start(),
+            (bound, value) -> TimePeriodType.fromString(value).end()
     })),
 
     custom  (null);
