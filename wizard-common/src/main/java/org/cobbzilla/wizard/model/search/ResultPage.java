@@ -173,6 +173,9 @@ public class ResultPage {
     @Getter @Setter private String[] fields;
     @JsonIgnore public boolean getHasFields () { return !empty(fields); }
 
+    @Getter @Setter private NameAndValue[] fieldMappings;
+    @JsonIgnore public boolean hasFieldMappings() { return !empty(fieldMappings); }
+
     @JsonIgnore @Getter @Setter private SearchScrubber scrubber;
     public boolean hasScrubber () { return scrubber != null; }
 
