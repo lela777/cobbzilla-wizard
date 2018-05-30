@@ -41,7 +41,8 @@ public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractC
         final List<E> found = new ArrayList<>();
         if (empty(names)) return found;
         final List<String> notFoundNames = new ArrayList<>();
-         for (String name : names) {
+        for (String name : names) {
+            if (empty(name)) continue;
             if (cache.containsKey(name)) {
                 found.add(cache.get(name));
             } else {
