@@ -20,9 +20,8 @@ public abstract class UniquelyNamedEntity extends IdentifiableBase implements Na
     @Column(length=NAME_MAXLEN, unique=true, nullable=false, updatable=false)
     @Size(min=2, max=NAME_MAXLEN, message="err.name.length")
     protected String name;
-    public boolean hasName () { return !empty(name); }
-
-    public String getName () { return hasName() ? (forceLowercase() ? name.toLowerCase() : name) : name; }
+    public boolean hasName () { return !empty(getName()); }
+    public String getName () { return !empty(name) ? (forceLowercase() ? name.toLowerCase() : name) : name; }
     public UniquelyNamedEntity setName (String name) { this.name = (name == null ? null : forceLowercase() ? name.toLowerCase() : name); return this; }
 
     public boolean isSameName(UniquelyNamedEntity other) { return getName().equals(other.getName()); }
