@@ -18,6 +18,7 @@ import static org.cobbzilla.util.json.JsonUtil.json;
 public class ApiInnerScript {
 
     @Getter @Setter private ApiScript parent;
+    @Getter @Setter private ApiInnerScriptRunMode runMode = ApiInnerScriptRunMode.fail_fast;
 
     @Getter @Setter private Map<String, String> params;
     public boolean hasParams () { return !empty(params); }

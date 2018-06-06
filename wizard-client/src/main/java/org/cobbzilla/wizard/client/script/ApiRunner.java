@@ -25,10 +25,7 @@ import org.cobbzilla.wizard.validation.ConstraintViolationBean;
 import org.cobbzilla.wizard.validation.ValidationErrors;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
@@ -388,8 +385,27 @@ public class ApiRunner {
         final ApiInnerScript inner = script.getNested();
         inner.setParent(script);
         final List<ApiScript> scripts = inner.getAllScripts(js, getHandlebars(), ctx);
+        final Map<String, String> failedParams = new LinkedHashMap<>();
         for (ApiScript s : scripts) {
-            if (!run(s)) return false;
+            try {
+                if (!run(s)) {
+                    switch (inner.getRunMode()) {
+                        case fail_fast: return false;
+                        default: failedParams.put(json(s.getParams()), "(returned false)");
+                    }
+                }
+            } catch (Exception e) {
+                switch (inner.getRunMode()) {
+                    case fail_fast: throw e;
+                    default: failedParams.put(json(s.getParams()), e.getClass().getSimpleName()+": "+e.getMessage());
+                }
+            }
+        }
+        if (!empty(failedParams)) {
+            switch (inner.getRunMode()) {
+                case run_all: return die("runInner: failed iterations:\n"+StringUtil.toString(failedParams.keySet(), "\n"));
+                default: return die("runInner: failed iterations:\n"+json(failedParams));
+            }
         }
         return true;
     }
