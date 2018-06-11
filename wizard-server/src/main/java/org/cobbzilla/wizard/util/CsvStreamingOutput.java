@@ -1,8 +1,10 @@
 package org.cobbzilla.wizard.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.opencsv.CSVWriter;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.json.JsonUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import javax.ws.rs.WebApplicationException;
@@ -45,7 +47,14 @@ public class CsvStreamingOutput implements StreamingOutput {
         for (Object row : rows) {
             final Map<String, Object> map = new HashMap<>();
             for (String field : fields) {
-                map.put(field, ReflectionUtil.get(row, field, null));
+                if (field.contains("::")){
+                    String[] path = field.split("::");
+                    final JsonNode node = JsonUtil.json((String) ReflectionUtil.get(row, path[0], null),
+                                                        JsonNode.class);
+                    map.put(field, JsonUtil.json(JsonUtil.getNodeAsJava(node, path[1])));
+                } else {
+                    map.put(field, ReflectionUtil.get(row, field, null));
+                }
             }
             data.add(map);
             if (defaultHeaders) columns.addAll(map.keySet());
