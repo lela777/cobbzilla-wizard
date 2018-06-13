@@ -47,7 +47,7 @@ public class CsvStreamingOutput implements StreamingOutput {
 
         if (empty(fields)) die("write: no fields specified");
 
-        @Cleanup CSVWriter writer = new CSVWriter(new OutputStreamWriter(out));
+        @Cleanup final CSVWriter writer = new CSVWriter(new OutputStreamWriter(out));
 
         final List<Map<String, Object>> data = new ArrayList<>();
         final boolean defaultHeaders = empty(header);
