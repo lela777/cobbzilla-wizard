@@ -7,6 +7,7 @@ import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
+import org.cobbzilla.wizard.model.HasRelatedEntities;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
@@ -60,7 +61,9 @@ public class CsvStreamingOutput implements StreamingOutput {
                     map.put(field, field.substring(1, field.length()-1));
 
                 } else if (handlebars != null && field.contains("[[") && field.contains("]]")) {
-                    map.put(field, HandlebarsUtil.apply(handlebars, field, toMap(row), '[', ']'));
+                    final Map<String, Object> ctx = toMap(row);
+                    if (row instanceof HasRelatedEntities) ctx.putAll(((HasRelatedEntities) row).getRelated());
+                    map.put(field, HandlebarsUtil.apply(handlebars, field, ctx, '[', ']'));
 
                 } else if (field.contains("::")){
                     final String[] path = field.split("::");
