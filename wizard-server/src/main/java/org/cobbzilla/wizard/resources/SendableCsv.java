@@ -42,7 +42,7 @@ public class SendableCsv extends SendableResource {
                     if (value.equals(searchField.getName())
                             || (value.contains(".") && value.substring(0, value.indexOf(".")).equals(searchField.getName()))) {
                         if (value.contains(".")) {
-                            fields[i] = fieldGetter(searchField) + "::" + value.substring(value.indexOf('.') + 1);
+                            fields[i] = fieldGetter(searchField) + "." + value.substring(value.indexOf('.') + 1);
                         } else {
                             fields[i] = fieldGetter(searchField);
                         }

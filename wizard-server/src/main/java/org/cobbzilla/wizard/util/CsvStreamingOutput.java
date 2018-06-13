@@ -1,6 +1,5 @@
 package org.cobbzilla.wizard.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
 import com.opencsv.CSVWriter;
 import lombok.Cleanup;
@@ -19,7 +18,6 @@ import java.util.*;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeCsv;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.json.JsonUtil.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
 
 @Slf4j
@@ -64,19 +62,6 @@ public class CsvStreamingOutput implements StreamingOutput {
                     final Map<String, Object> ctx = toMap(row);
                     if (row instanceof HasRelatedEntities) ctx.putAll(((HasRelatedEntities) row).getRelated());
                     map.put(field, HandlebarsUtil.apply(handlebars, field, ctx, '[', ']'));
-
-                } else if (field.contains("::")){
-                    final String[] path = field.split("::");
-                    final Object target = ReflectionUtil.get(row, path[0], null);
-                    final Object val;
-                    if (target instanceof String) {
-                        final JsonNode node = json((String) target, JsonNode.class);
-                        val = getNodeAsJava(node, path[1]);
-                    } else {
-                        final JsonNode node = findNode(json(json(target), JsonNode.class), path[1]);
-                        val = getNodeAsJava(node, path[1]);
-                    }
-                    if (val != null) map.put(field, val.toString());
 
                 } else {
                     map.put(field, ReflectionUtil.get(row, field, null));
