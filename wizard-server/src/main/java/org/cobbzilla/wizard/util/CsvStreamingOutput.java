@@ -56,7 +56,10 @@ public class CsvStreamingOutput implements StreamingOutput {
         for (Object row : rows) {
             final Map<String, Object> map = new HashMap<>();
             for (String field : fields) {
-                if (handlebars != null && field.contains("[[") && field.contains("]]")) {
+                if (field.startsWith("'") && field.endsWith("'")) {
+                    map.put(field, field.substring(1, field.length()-1));
+
+                } else if (handlebars != null && field.contains("[[") && field.contains("]]")) {
                     map.put(field, HandlebarsUtil.apply(handlebars, field, toMap(row), '[', ']'));
 
                 } else if (field.contains("::")){
