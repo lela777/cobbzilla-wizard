@@ -1,10 +1,11 @@
 package org.cobbzilla.wizard.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.jknack.handlebars.Handlebars;
 import com.opencsv.CSVWriter;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.handlebars.HandlebarsUtil;
 import org.cobbzilla.util.reflect.ReflectionUtil;
 
 import javax.ws.rs.WebApplicationException;
@@ -17,6 +18,8 @@ import java.util.*;
 import static org.apache.commons.lang3.StringEscapeUtils.escapeCsv;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.json.JsonUtil.*;
+import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
 
 @Slf4j
 public class CsvStreamingOutput implements StreamingOutput {
@@ -24,11 +27,17 @@ public class CsvStreamingOutput implements StreamingOutput {
     private final String[] fields;
     private final Collection rows;
     private String[] header;
+    private Handlebars handlebars;
 
-    public CsvStreamingOutput(Collection rows, String[] fields, String[] header) {
+    public CsvStreamingOutput(Collection rows, String[] fields, String[] header, Handlebars handlebars) {
         this.rows = rows;
         this.fields = fields;
         this.header = header;
+        this.handlebars = handlebars;
+    }
+
+    public CsvStreamingOutput(Collection rows, String[] fields, String[] header) {
+        this(rows, fields, header, null);
     }
 
     public CsvStreamingOutput(Collection rows, String[] fields) {
@@ -47,11 +56,22 @@ public class CsvStreamingOutput implements StreamingOutput {
         for (Object row : rows) {
             final Map<String, Object> map = new HashMap<>();
             for (String field : fields) {
-                if (field.contains("::")){
-                    String[] path = field.split("::");
-                    final JsonNode node = JsonUtil.json((String) ReflectionUtil.get(row, path[0], null),
-                                                        JsonNode.class);
-                    map.put(field, JsonUtil.json(JsonUtil.getNodeAsJava(node, path[1])));
+                if (handlebars != null && field.contains("[[") && field.contains("]]")) {
+                    map.put(field, HandlebarsUtil.apply(handlebars, field, toMap(row), '[', ']'));
+
+                } else if (field.contains("::")){
+                    final String[] path = field.split("::");
+                    final Object target = ReflectionUtil.get(row, path[0], null);
+                    final Object val;
+                    if (target instanceof String) {
+                        final JsonNode node = json((String) target, JsonNode.class);
+                        val = getNodeAsJava(node, path[1]);
+                    } else {
+                        final JsonNode node = findNode(json(json(target), JsonNode.class), path[1]);
+                        val = getNodeAsJava(node, path[1]);
+                    }
+                    if (val != null) map.put(field, val.toString());
+
                 } else {
                     map.put(field, ReflectionUtil.get(row, field, null));
                 }

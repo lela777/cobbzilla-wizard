@@ -213,7 +213,7 @@ public class SqlViewSearchHelper {
                 }
                 final Object value = getValue(row, field.getName(), hibernateEncryptor, field.isEncrypted());
                 if (field.hasSetter()) {
-                    field.getSetter().set(target, field.getEntityProperty(), value);
+                    field.getSetter().set(target, field.getEntityProperty(), value, hibernateEncryptor);
                 } else {
                     ReflectionUtil.set(target, field.getEntityProperty(), value, field.getFieldType());
                 }
