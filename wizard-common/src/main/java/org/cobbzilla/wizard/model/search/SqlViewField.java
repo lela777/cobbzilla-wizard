@@ -25,7 +25,7 @@ public class SqlViewField {
     public String getFieldTypeClass () { return fieldType == null ? null : fieldType.getName(); }
     public void setFieldTypeClass(String clazz) { fieldType = empty(clazz) ? null : forName(clazz); }
 
-    @Getter @Setter private SqlViewFieldSetter setter;
+    @JsonIgnore @Getter @Setter private SqlViewFieldSetter setter;
     public boolean hasSetter () { return setter != null; }
 
     public SqlViewField(String name) {
