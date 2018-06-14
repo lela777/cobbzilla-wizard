@@ -5,13 +5,11 @@ import lombok.AllArgsConstructor;
 import org.cobbzilla.util.collection.ComparisonOperator;
 import org.cobbzilla.util.time.TimePeriodType;
 import org.cobbzilla.util.time.TimeUtil;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.string.StringUtil.sqlFilter;
-import static org.cobbzilla.util.time.TimeUtil.*;
 import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlAndCompare;
 import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlCompare;
 
@@ -61,18 +59,12 @@ public enum SearchBoundComparison {
         }
     }
 
-    public static final DateTimeFormatter[] DATE_TIME_FORMATS = {
-            DATE_FORMAT_YYYY_MM_DD, DATE_FORMAT_YYYY_MM_DD, DATE_FORMAT_YYYYMMDD,
-            DATE_FORMAT_YYYY_MM_DD_HH_mm_ss, DATE_FORMAT_YYYYMMDDHHMMSS
-    };
-
     private static Object parseDateArgument(SearchBound bound, String val) {
-        for (DateTimeFormatter f : DATE_TIME_FORMATS) {
-            try {
-                return TimeUtil.parse(val, f);
-            } catch (Exception ignored) {
-                // noop
-            }
+        try {
+            Object t = TimeUtil.parse(val);
+            if (t != null) return t;
+        } catch (Exception ignored) {
+            // noop
         }
         try {
             return Long.parseLong(val);
