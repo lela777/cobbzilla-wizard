@@ -62,6 +62,14 @@ public class ResourceUtil {
 
     public static Response accepted() { return Response.status(ACCEPTED).build(); }
 
+    public static Response nonAuthoritative(Object o) {
+        return Response.status(NON_AUTHORITATIVE_INFO).entity(o).build();
+    }
+
+    public static ResourceHttpException nonAuthoritativeEx(Object o) {
+        return new ResourceHttpException(NON_AUTHORITATIVE_INFO).setEntity(o);
+    }
+
     public static Response serverError() { return Response.serverError().build(); }
 
     public static Response notFound() { return notFound(null); }
