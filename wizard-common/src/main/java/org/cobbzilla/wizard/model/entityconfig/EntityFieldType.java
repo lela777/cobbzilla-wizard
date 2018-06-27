@@ -2,10 +2,7 @@ package org.cobbzilla.wizard.model.entityconfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
-import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_boolean;
-import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_decimal;
-import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_integer;
-import org.cobbzilla.wizard.model.entityconfig.validation.EntityConfigFieldValidator_string;
+import org.cobbzilla.wizard.model.entityconfig.validation.*;
 import org.cobbzilla.wizard.validation.ValidationResult;
 
 import java.util.Locale;
@@ -15,6 +12,9 @@ public enum EntityFieldType {
 
     /** a string of characters */
     string (new EntityConfigFieldValidator_string()),
+
+    /** a string containing an email address */
+    email (new EntityConfigFieldValidator_email()),
 
     /** an integer-valued number */
     integer (new EntityConfigFieldValidator_integer()),
