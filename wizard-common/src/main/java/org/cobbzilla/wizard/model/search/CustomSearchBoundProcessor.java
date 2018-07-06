@@ -6,6 +6,6 @@ public interface CustomSearchBoundProcessor {
 
     String getOperation();
 
-    String sql(String field, List<Object> params, String value);
+    String sql(SearchField searchField, SearchBound bound, String value, List<Object> params);
 
 }

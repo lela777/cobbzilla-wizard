@@ -12,6 +12,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.string.StringUtil.sqlFilter;
 import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlAndCompare;
 import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlCompare;
+import static org.cobbzilla.wizard.model.search.SearchField.OP_SEP;
 
 @AllArgsConstructor
 public enum SearchBoundComparison {
@@ -81,7 +82,7 @@ public enum SearchBoundComparison {
         try { return fromString(val); } catch (Exception ignored) { return null; }
     }
 
-    public SearchBound bind(String name) { return bind(name, null); }
+    public SearchBound bind(String name) { return bind(name, (SearchFieldType) null); }
 
     public SearchBound bind(String name, SearchFieldType type) {
         return this == custom
@@ -89,8 +90,22 @@ public enum SearchBoundComparison {
                 : new SearchBound(name, this, type, null, null);
     }
 
+    public SearchBound bind(String name, SearchFieldType type, String[] params, Class<? extends CustomSearchBoundProcessor> processorClass) {
+        return this != custom
+                ? die("bind: cannot bind name to non-custom comparison: "+name)
+                : new SearchBound(name, custom, type, params, processorClass.getName());
+    }
+
+    public SearchBound bind(String name, Class<? extends CustomSearchBoundProcessor> processorClass) {
+        return this != custom
+                ? die("bind: cannot bind name to non-custom comparison: "+name)
+                : new SearchBound(name, custom, SearchFieldType.string, null, processorClass.getName());
+    }
+
     public String sql(SearchBound bound, List<Object> params, String value) {
         return sqlFunction.generateSqlAndAddParams(bound, params, value);
     }
+
+    public static String customPrefix(String op) { return SearchBoundComparison.custom.name() + OP_SEP + op + OP_SEP; }
 
 }

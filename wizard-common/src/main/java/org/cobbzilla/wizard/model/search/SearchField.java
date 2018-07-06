@@ -12,7 +12,7 @@ import static org.cobbzilla.wizard.model.search.SearchBoundComparison.*;
 
 public interface SearchField {
 
-    String COMPARISON_SEPARATOR = ":";
+    String OP_SEP = ":";
 
     static <SF extends SearchField> SF fromString (String val, SF[] values) {
         for (SF f : values) {
@@ -76,15 +76,15 @@ public interface SearchField {
 
         SearchBoundComparison comparison;
         final SearchBound searchBound;
-        final int cPos = value.indexOf(COMPARISON_SEPARATOR);
+        final int cPos = value.indexOf(OP_SEP);
         if (cPos != -1) {
-            final String[] parts = value.split(COMPARISON_SEPARATOR);
+            final String[] parts = value.split(OP_SEP);
             final String comparisonName = parts[0];
             if (comparisonName.startsWith(SearchBoundComparison.custom.name())) {
                 // custom comparison
-                if (parts.length <= 1) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
+                if (parts.length <= 2) throw invalid("err.bound.custom.invalid", "custom bound was missing argument", value);
                 searchBound = field.getCustomBound(parts[1]);
-                return searchBound.getProcessor().sql(bound, params, parts[2]);
+                return searchBound.getProcessor().sql(field, searchBound, parts[2], params);
 
             } else {
                 // standard comparison
@@ -94,7 +94,7 @@ public interface SearchField {
                     if (searchBound == null) {
                         throw invalid("err.bound.operation.invalid", "invalid comparison for bound " + bound + ": " + comparisonName, comparisonName);
                     }
-                    value = value.substring(cPos + COMPARISON_SEPARATOR.length());
+                    value = value.substring(cPos + OP_SEP.length());
                 } else {
                     // whoops, might just be single value that contains a colon, try that
                     searchBound = field.getBounds()[0];
