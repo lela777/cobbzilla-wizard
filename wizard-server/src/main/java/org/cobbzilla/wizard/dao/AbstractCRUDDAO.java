@@ -52,6 +52,10 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
     public List<E> findByUuids(Collection<String> uuids) {
         return empty(uuids) ? new ArrayList<E>() : findByFieldIn("uuid", uuids);
     }
+    @Transactional(readOnly=true)
+    public List<E> findByUuids(Object[] uuids) {
+        return empty(uuids) ? new ArrayList<E>() : findByFieldIn("uuid", uuids);
+    }
 
     @Transactional(readOnly=true)
     public E findFirstByUuids(Collection<String> uuids) { return findFirstByFieldIn("uuid", uuids); }
