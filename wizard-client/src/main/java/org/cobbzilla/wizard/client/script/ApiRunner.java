@@ -90,6 +90,7 @@ public class ApiRunner {
         HandlebarsUtil.registerCurrencyHelpers(hb);
         HandlebarsUtil.registerDateHelpers(hb);
         HandlebarsUtil.registerJurisdictionHelpers(hb, SimpleJurisdictionResolver.instance);
+        HandlebarsUtil.registerJavaScriptHelper(hb, StandardJsEngine::new);
         return hb;
     }
 
