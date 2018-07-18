@@ -22,6 +22,7 @@ public interface SearchField {
     }
 
     static SearchBound[] bindTime(String name) { return new SearchBound[] { during.bind(name), after.bind(name), before.bind(name) }; }
+    static SearchBound[] bindNullable(String name) { return new SearchBound[] { eq.bind(name), is_null.bind(name), not_null.bind(name) }; }
 
     String name();
 

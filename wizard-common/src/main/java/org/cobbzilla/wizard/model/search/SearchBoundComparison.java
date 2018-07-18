@@ -6,12 +6,15 @@ import org.cobbzilla.util.collection.ComparisonOperator;
 import org.cobbzilla.util.time.TimePeriodType;
 import org.cobbzilla.util.time.TimeUtil;
 
+import java.util.Collections;
 import java.util.List;
 
+import static org.apache.commons.lang.StringUtils.isAlphanumericSpace;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.string.StringUtil.splitAndTrim;
 import static org.cobbzilla.util.string.StringUtil.sqlFilter;
-import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlAndCompare;
-import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.sqlCompare;
+import static org.cobbzilla.wizard.model.search.SearchBoundSqlFunction.*;
 import static org.cobbzilla.wizard.model.search.SearchField.OP_SEP;
 
 @AllArgsConstructor
@@ -26,6 +29,11 @@ public enum SearchBoundComparison {
 
     like    (sqlCompare( "ilike", SearchBoundComparison::parseLikeArgument)),
 
+    is_null (sqlNullCompare(true)),
+    not_null(sqlNullCompare(false)),
+    empty   (sqlCompare(ComparisonOperator.eq.sql, (b, v) -> "")),
+    in      (sqlCompare("in", SearchBoundComparison::parseInArgument)),
+
     before  (sqlCompare(ComparisonOperator.le.sql, SearchBoundComparison::parseDateArgument)),
     after   (sqlCompare(ComparisonOperator.ge.sql, SearchBoundComparison::parseDateArgument)),
 
@@ -38,6 +46,15 @@ public enum SearchBoundComparison {
     })),
 
     custom  (null);
+
+    private static Object parseInArgument(SearchBound bound, String val) {
+        if (empty(val)) return Collections.emptyList();
+        char delim = ',';
+        if (!isAlphanumericSpace(""+val.charAt(0))) {
+            delim = val.charAt(0);
+        }
+        return splitAndTrim(val.substring(1), ""+delim);
+    }
 
     private SearchBoundSqlFunction sqlFunction;
 

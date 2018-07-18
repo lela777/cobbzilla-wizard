@@ -25,4 +25,8 @@ public interface SearchBoundSqlFunction {
         };
     }
 
+    static SearchBoundSqlFunction sqlNullCompare(boolean isNull) {
+        return (bound, params, value) -> bound.getName() + " IS " + (!isNull ? "NOT " : "") + " NULL";
+    }
+
 }
