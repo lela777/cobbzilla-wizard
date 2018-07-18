@@ -13,6 +13,19 @@ public interface SearchBoundSqlFunction {
         };
     }
 
+    static SearchBoundSqlFunction sqlInCompare(SearchBoundValueFunction valueFunction) {
+        return (bound, params, value) -> {
+            final List<String> vals = (List<String>) valueFunction.paramValue(bound, value);
+            final StringBuilder sql = new StringBuilder();
+            for (String val : vals) {
+                params.add(val);
+                if (sql.length() > 0) sql.append(" OR ( ");
+                sql.append(bound.getName()).append(" = ? )");
+            }
+            return "( "+sql.toString();
+        };
+    }
+
     static SearchBoundSqlFunction sqlAndCompare(String[] operators, SearchBoundValueFunction[] valueFunctions) {
         return (bound, params, value) -> {
             final StringBuilder b = new StringBuilder();

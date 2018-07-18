@@ -32,7 +32,7 @@ public enum SearchBoundComparison {
     is_null (sqlNullCompare(true)),
     not_null(sqlNullCompare(false)),
     empty   (sqlCompare(ComparisonOperator.eq.sql, (b, v) -> "")),
-    in      (sqlCompare("in", SearchBoundComparison::parseInArgument)),
+    in      (sqlInCompare(SearchBoundComparison::parseInArgument)),
 
     before  (sqlCompare(ComparisonOperator.le.sql, SearchBoundComparison::parseDateArgument)),
     after   (sqlCompare(ComparisonOperator.ge.sql, SearchBoundComparison::parseDateArgument)),
@@ -52,8 +52,9 @@ public enum SearchBoundComparison {
         char delim = ',';
         if (!isAlphanumericSpace(""+val.charAt(0))) {
             delim = val.charAt(0);
+            val = val.substring(1);
         }
-        return splitAndTrim(val.substring(1), ""+delim);
+        return splitAndTrim(val, "" + delim);
     }
 
     private SearchBoundSqlFunction sqlFunction;
