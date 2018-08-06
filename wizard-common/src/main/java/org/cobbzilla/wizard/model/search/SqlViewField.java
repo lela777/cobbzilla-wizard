@@ -61,6 +61,7 @@ public class SqlViewField {
 
     @JsonIgnore public String getEntityProperty () {
         if (type == null) return property;
+        if (!empty(entity) && !property.startsWith(entity + ".")) return property;
         final int dotPos = property.indexOf('.');
         return dotPos == -1 ? property : property.substring(dotPos+1);
     }
