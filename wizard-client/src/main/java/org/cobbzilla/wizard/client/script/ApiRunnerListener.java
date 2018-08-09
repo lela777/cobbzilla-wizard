@@ -14,7 +14,7 @@ public interface ApiRunnerListener {
     void beforeCall(ApiScript script, Map<String, Object> ctx);
     void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response);
 
-    void statusCheckFailed(ApiScript script, RestResponse restResponse);
+    void statusCheckFailed(ApiScript script, String uri, RestResponse restResponse);
     void conditionCheckFailed(String message, ApiScript script, RestResponse restResponse, ApiScriptResponseCheck check,
                               Map<String, Object> ctx);
 
