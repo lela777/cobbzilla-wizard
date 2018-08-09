@@ -21,10 +21,10 @@ public class ApiRunnerListenerBase implements ApiRunnerListener {
     @Override public void beforeCall(ApiScript script, Map<String, Object> ctx) {}
     @Override public void afterCall(ApiScript script, Map<String, Object> ctx, RestResponse response) {}
 
-    @Override public void statusCheckFailed(ApiScript script, RestResponse restResponse) {
+    @Override public void statusCheckFailed(ApiScript script, String uri, RestResponse restResponse) {
         if (script.isTimedOut()) {
-            die("statusCheckFailed("+getId()+"): request "+script.getRequestLine()+" expected "+script.getResponse().getStatus()+" but was "+restResponse.status
-                    + (restResponse.status == 422 ? ", validation errors: "+restResponse.json : ""));
+            die("statusCheckFailed(" + getId() + "): request " + script.getRequestLine() + " (resulting with " + uri
+                + ") expected " + script.getResponse().getStatus() + ", returned response " + restResponse.toString());
         }
     }
 

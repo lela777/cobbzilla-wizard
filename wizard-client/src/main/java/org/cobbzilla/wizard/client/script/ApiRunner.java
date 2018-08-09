@@ -255,7 +255,7 @@ public class ApiRunner {
             final ApiScriptResponse response = script.getResponse();
 
             if (response.getStatus() != restResponse.status) {
-                if (listener != null) listener.statusCheckFailed(script, restResponse);
+                if (listener != null) listener.statusCheckFailed(script, uri, restResponse);
             }
 
             final JsonNode responseEntity = empty(restResponse.json) || response.isRaw() ? null : json(restResponse.json, JsonNode.class);
