@@ -64,7 +64,7 @@ public abstract class AbstractEntityConfigsResource implements EntityConfigSourc
         final AutoRefreshingReference<Map<String, EntityConfig>> configs = getConfigs();
         final Map<String, EntityConfig> configMap = configs.get();
         synchronized (configMap) {
-            Class<?> clazz = thing.getClass();
+            Class<?> clazz = thing instanceof Class ? (Class<?>) thing : thing.getClass();
             do {
                 final EntityConfig entityConfig = configMap.get(clazz.getName());
                 if (entityConfig != null) return entityConfig;
