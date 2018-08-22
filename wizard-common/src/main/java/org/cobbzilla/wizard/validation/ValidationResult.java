@@ -9,6 +9,7 @@ import org.cobbzilla.util.string.StringUtil;
 import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -59,7 +60,12 @@ public class ValidationResult {
     public void addViolation(String messageTemplate, String message) { addViolation(messageTemplate, message, null); }
 
     public void addViolation(String messageTemplate, String message, String invalidValue) {
-        final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue);
+        addViolation(messageTemplate, message, invalidValue, null);
+    }
+
+    public void addViolation(String messageTemplate, String message, String invalidValue,
+                             Map<String, String> additionalParams) {
+        final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue, additionalParams);
         synchronized (beans) {
             for (ConstraintViolationBean bean : beans.get()) {
                 if (bean.equals(err)) {

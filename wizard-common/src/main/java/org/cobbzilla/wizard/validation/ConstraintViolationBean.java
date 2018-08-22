@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
@@ -20,14 +21,15 @@ public class ConstraintViolationBean {
     @XmlElement @Getter @Setter private String messageTemplate;
     @XmlElement @Getter @Setter private String message;
     @XmlElement @Getter @Setter private String invalidValue;
+    @XmlElement @Getter @Setter private Map<String, String> additionalParams;
     public boolean hasInvalidValue () { return !empty(invalidValue); }
 
     public ConstraintViolationBean(String messageTemplate) {
-        this(messageTemplate, messageTemplate, null);
+        this(messageTemplate, messageTemplate, null, null);
     }
 
     public ConstraintViolationBean(String messageTemplate, String message) {
-        this(messageTemplate, message, null);
+        this(messageTemplate, message, null, null);
     }
 
     public ConstraintViolationBean(ConstraintViolation violation) {

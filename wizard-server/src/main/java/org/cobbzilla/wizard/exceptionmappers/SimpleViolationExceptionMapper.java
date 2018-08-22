@@ -22,7 +22,7 @@ public class SimpleViolationExceptionMapper implements ExceptionMapper<SimpleVio
 
     protected List<ConstraintViolationBean> getEntity(SimpleViolationException e) {
         final List<ConstraintViolationBean> jsonList = new ArrayList<>(1);
-        jsonList.add(new ConstraintViolationBean(e.getMessageTemplate(), e.getMessage(), e.getInvalidValue()));
+        jsonList.add(new ConstraintViolationBean(e.getMessageTemplate(), e.getMessage(), e.getInvalidValue(), null));
         return jsonList;
     }
 

@@ -21,6 +21,6 @@ public class SimpleViolationException extends RuntimeException {
     }
 
     @JsonIgnore public ConstraintViolationBean getBean () {
-        return new ConstraintViolationBean(messageTemplate, message, invalidValue);
+        return new ConstraintViolationBean(messageTemplate, message, invalidValue, null);
     }
 }

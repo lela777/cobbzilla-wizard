@@ -23,7 +23,8 @@ public class DataIntegrityViolationExceptionMapper
 
     @Override protected List<ConstraintViolationBean> exception2json(DataIntegrityViolationException e) {
         final String messageTemplate = "db.integrity." + e.getMessage().replaceAll("\\W", "_");
-        final ConstraintViolationBean bean = new ConstraintViolationBean(messageTemplate, e.getLocalizedMessage(), "");
+        final ConstraintViolationBean bean = new ConstraintViolationBean(messageTemplate, e.getLocalizedMessage(), "",
+                                                                         null);
         return Collections.singletonList(bean);
     }
 }

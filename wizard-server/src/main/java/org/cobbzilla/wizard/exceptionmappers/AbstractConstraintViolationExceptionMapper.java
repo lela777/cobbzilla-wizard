@@ -21,7 +21,9 @@ public abstract class AbstractConstraintViolationExceptionMapper<E extends Excep
     }
 
     protected ConstraintViolationBean mapGenericExceptionToConstraintViolationBean(E e) {
-        return new ConstraintViolationBean(scrubMessage(e.getMessage()), ValidationMessages.translateMessage(e.getMessage()), getInvalidValue(e));
+        return new ConstraintViolationBean(scrubMessage(e.getMessage()),
+                                           ValidationMessages.translateMessage(e.getMessage()),
+                                           getInvalidValue(e), null);
     }
 
     protected List<ConstraintViolationBean> getConstraintViolationBeans(List<ConstraintViolation> violations) {
