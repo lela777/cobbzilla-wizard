@@ -23,7 +23,7 @@ public class HibernateConstraintViolationExceptionMapper
     @Override
     protected List<ConstraintViolationBean> exception2json(ConstraintViolationException e) {
         final String messageTemplate = "db.constraint." + e.getConstraintName();
-        final ConstraintViolationBean bean = new ConstraintViolationBean(messageTemplate, ValidationMessages.translateMessage(messageTemplate),"");
+        final ConstraintViolationBean bean = new ConstraintViolationBean(messageTemplate, ValidationMessages.translateMessage(messageTemplate), "");
         return Collections.singletonList(bean);
     }
 }
