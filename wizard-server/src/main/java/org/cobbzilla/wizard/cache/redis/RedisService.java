@@ -111,8 +111,6 @@ public class RedisService {
 
     public String get_plaintext(String key) { return __get(key, 0, MAX_RETRIES); }
 
-    public String lpop(String data) { return decrypt(__lpop(data, 0, MAX_RETRIES)); }
-
     public void set(String key, String value, String nxxx, String expx, long time) {
         __set(key, value, nxxx, expx, time, 0, MAX_RETRIES);
     }
@@ -130,7 +128,16 @@ public class RedisService {
 
     public <T> void setObject(String key, T thing) { __set(key, toJsonOrDie(thing), 0, MAX_RETRIES); }
 
+    public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
     public void lpush(String key, String value) { __lpush(key, value, 0, MAX_RETRIES); }
+    public String lpop(String data) { return decrypt(__lpop(data, 0, MAX_RETRIES)); }
+    public void rpush(String key, String value) { __rpush(key, value, 0, MAX_RETRIES); }
+    public String rpop(String data) { return decrypt(__rpop(data, 0, MAX_RETRIES)); }
+
+    public void hset(String key, String field, String value) { __hset(key, field, value, 0, MAX_RETRIES); }
+    public String hget(String key, String field) { return decrypt(__hget(key, field, 0, MAX_RETRIES)); }
+    public Long hdel(String key, String field) { return __hdel(key, field, 0, MAX_RETRIES); }
+    public Set<String> hkeys(String key) { return __hkeys(key, 0, MAX_RETRIES); }
 
     public void del(String key) { __del(key, 0, MAX_RETRIES); }
 
@@ -170,8 +177,6 @@ public class RedisService {
     public Long decr(String key) { return __decrBy(key, 1, 0, MAX_RETRIES); }
 
     public Long decrBy(String key, long value) { return __decrBy(key, value, 0, MAX_RETRIES); }
-
-    public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
 
     public Collection<String> keys(String key) { return __keys(key, 0, MAX_RETRIES); }
 
@@ -295,6 +300,78 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__lpop");
             return __lpop(data, attempt+1, maxRetries);
+        }
+    }
+
+    private Long __rpush(String key, String value, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().rpush(prefix(key), encrypt(value));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__rpush");
+            return __rpush(key, value, attempt + 1, maxRetries);
+        }
+    }
+
+    private String __rpop(String data, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().rpop(data);
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__rpop");
+            return __rpop(data, attempt+1, maxRetries);
+        }
+    }
+
+    private String __hget(String key, String field, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hget(prefix(key), encrypt(field));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hget");
+            return __hget(key, field, attempt + 1, maxRetries);
+        }
+    }
+
+    private Long __hset(String key, String field, String value, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hset(prefix(key), encrypt(field), encrypt(value));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hget");
+            return __hset(key, field, value, attempt + 1, maxRetries);
+        }
+    }
+
+    private Long __hdel(String key, String field, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hdel(prefix(key), encrypt(field));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hdel");
+            return __hdel(key, field, attempt + 1, maxRetries);
+        }
+    }
+
+    private Set<String> __hkeys(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hkeys(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hget");
+            return __hkeys(key, attempt + 1, maxRetries);
         }
     }
 
