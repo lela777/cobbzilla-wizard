@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -442,7 +443,7 @@ public class RedisService {
     private Set<String> __spop(String key, long count, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return getRedis().spop(prefix(key), count);
+                return count == 1 ? new SingletonSet<>(getRedis().spop(prefix(key))) : getRedis().spop(prefix(key), count);
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
