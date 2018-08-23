@@ -28,8 +28,7 @@ public abstract class NamedResource<E extends NamedIdentityBase> {
         return ok(getDao().findAll());
     }
 
-    @GET
-    @Path("/{name}")
+    @GET @Path("/{name}")
     public Response findOne (@Context HttpContext ctx,
                              @PathParam("name") String name) {
         final E found = getDao().findByName(name);
@@ -45,8 +44,7 @@ public abstract class NamedResource<E extends NamedIdentityBase> {
         return ok(getDao().create(getDao().newEntity(thing)));
     }
 
-    @POST
-    @Path("/{name}")
+    @POST @Path("/{name}")
     public Response update (@Context HttpContext ctx,
                             @PathParam("name") String name,
                             @Valid E thing) {
@@ -57,8 +55,7 @@ public abstract class NamedResource<E extends NamedIdentityBase> {
         return ok(getDao().update((E) found.update(thing)));
     }
 
-    @DELETE
-    @Path("/{name}")
+    @DELETE @Path("/{name}")
     public Response delete (@Context HttpContext ctx,
                             @PathParam("name") String name) {
         if (!canDelete(ctx)) return forbidden();
