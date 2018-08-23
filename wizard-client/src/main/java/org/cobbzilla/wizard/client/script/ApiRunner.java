@@ -63,7 +63,7 @@ public class ApiRunner {
         this.api.setHttpClient(httpClient);
         this.api.setHttpContext(HttpClientContext.create());
         this.listener = copy(other.listener);
-        this.ctx.putAll(other.ctx);
+        this.ctx.putAll(other.getContext());
     }
 
     public void setScriptForThread(ApiScript script) {
@@ -165,7 +165,7 @@ public class ApiRunner {
         } else {
             setScriptForThread(script);
             if (script.hasDelay()) sleep(script.getDelayMillis(), "delaying before starting script: " + script);
-            if (listener != null) listener.beforeScript(script.getBefore(), ctx);
+            if (listener != null) listener.beforeScript(script.getBefore(), getContext());
             try {
                 script.setStart(now());
                 do {
@@ -180,7 +180,7 @@ public class ApiRunner {
                 throw e;
 
             } finally {
-                if (listener != null) listener.afterScript(script.getAfter(), ctx);
+                if (listener != null) listener.afterScript(script.getAfter(), getContext());
             }
         }
     }
@@ -207,13 +207,13 @@ public class ApiRunner {
             api.setHeaders(request.getHeaders());
         }
 
-        String uri = handlebars(request.getUri(), ctx);
+        String uri = handlebars(request.getUri(), getContext());
         if (!uri.startsWith("/")) uri = "/" + uri;
 
         boolean success = true;
         final RestResponse restResponse;
 
-        if (listener != null) listener.beforeCall(script, ctx);
+        if (listener != null) listener.beforeCall(script, getContext());
         switch (method) {
             case HttpMethods.GET:
                 restResponse = api.doGet(uri);
@@ -249,7 +249,7 @@ public class ApiRunner {
             default:
                 return die("run("+script+"): invalid request method: "+method);
         }
-        if (listener != null) listener.afterCall(script, ctx, restResponse);
+        if (listener != null) listener.afterCall(script, getContext(), restResponse);
 
         if (script.hasResponse()) {
             final ApiScriptResponse response = script.getResponse();
@@ -337,7 +337,7 @@ public class ApiRunner {
                 if (response.hasDelay()) sleep(response.getDelayMillis(), "runOnce: delaying "+response.getDelay()+" before checking response conditions");
 
                 final Map<String, Object> localCtx = new HashMap<>();
-                localCtx.putAll(ctx);
+                localCtx.putAll(getContext());
                 localCtx.put(CTX_JSON, responseObject);
 
                 for (ApiScriptResponseCheck check : response.getCheck()) {
@@ -385,7 +385,7 @@ public class ApiRunner {
     private boolean runInner(ApiScript script) throws Exception {
         final ApiInnerScript inner = script.getNested();
         inner.setParent(script);
-        final List<ApiScript> scripts = inner.getAllScripts(js, getHandlebars(), ctx);
+        final List<ApiScript> scripts = inner.getAllScripts(js, getHandlebars(), getContext());
         final Map<String, String> failedParams = new LinkedHashMap<>();
         for (ApiScript s : scripts) {
             try {
@@ -420,8 +420,8 @@ public class ApiRunner {
     }
 
     protected String requestEntityJson(ApiScriptRequest request) {
-        final String json = request.getJsonEntity(ctx);
-        return request.isHandlebarsEnabled() ? handlebars(json, ctx) : json;
+        final String json = request.getJsonEntity(getContext());
+        return request.isHandlebarsEnabled() ? handlebars(json, getContext()) : json;
     }
 
     protected String scriptName(ApiScript script, String name) { return "api-runner(" + script + "):" + name; }
