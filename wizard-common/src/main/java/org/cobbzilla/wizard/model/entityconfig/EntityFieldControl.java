@@ -40,6 +40,9 @@ public enum EntityFieldControl {
     /** an auto-complete text field (WIP) */
     autocomplete,
 
+    /** a duration text field - for example 7d for 7 days, or a millisecond duration value */
+    duration,
+
     /** a hidden field (do not display to user) */
     hidden,
 
