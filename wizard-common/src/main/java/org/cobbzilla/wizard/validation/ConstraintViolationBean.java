@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.json.JsonUtil;
+import org.omg.DynamicAny.NameValuePair;
 
 import javax.validation.ConstraintViolation;
 import javax.xml.bind.annotation.XmlElement;
@@ -11,7 +12,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
@@ -21,7 +21,7 @@ public class ConstraintViolationBean {
     @XmlElement @Getter @Setter private String messageTemplate;
     @XmlElement @Getter @Setter private String message;
     @XmlElement @Getter @Setter private String invalidValue;
-    @XmlElement @Getter @Setter private Map<String, String> additionalParams;
+    @XmlElement @Getter @Setter private NameValuePair[] params;
     public boolean hasInvalidValue () { return !empty(invalidValue); }
 
     public ConstraintViolationBean(String messageTemplate) {

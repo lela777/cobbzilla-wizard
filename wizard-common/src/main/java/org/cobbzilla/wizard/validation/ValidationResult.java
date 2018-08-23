@@ -5,11 +5,11 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.cobbzilla.util.string.StringUtil;
+import org.omg.DynamicAny.NameValuePair;
 
 import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -64,8 +64,8 @@ public class ValidationResult {
     }
 
     public void addViolation(String messageTemplate, String message, String invalidValue,
-                             Map<String, String> additionalParams) {
-        final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue, additionalParams);
+                             NameValuePair[] params) {
+        final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue, params);
         synchronized (beans) {
             for (ConstraintViolationBean bean : beans.get()) {
                 if (bean.equals(err)) {
