@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.string.StringUtil;
-import org.omg.DynamicAny.NameValuePair;
 
 import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public class ValidationResult {
     }
 
     public void addViolation(String messageTemplate, String message, String invalidValue,
-                             NameValuePair[] params) {
+                             NameAndValue[] params) {
         final ConstraintViolationBean err = new ConstraintViolationBean(messageTemplate, message, invalidValue, params);
         synchronized (beans) {
             for (ConstraintViolationBean bean : beans.get()) {
