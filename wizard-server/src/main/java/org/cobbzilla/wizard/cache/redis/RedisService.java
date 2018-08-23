@@ -172,6 +172,10 @@ public class RedisService {
     public long scard(String key) { return __scard(key, 0, MAX_RETRIES); }
 
     public Long incr(String key) { return __incrBy(key, 1, 0, MAX_RETRIES); }
+    public Long counterValue(String key) {
+        final String value = get_plaintext(key);
+        return value == null ? null : Long.parseLong(value);
+    }
 
     public Long incrBy(String key, long value) { return __incrBy(key, value, 0, MAX_RETRIES); }
     public Long decr(String key) { return __decrBy(key, 1, 0, MAX_RETRIES); }
