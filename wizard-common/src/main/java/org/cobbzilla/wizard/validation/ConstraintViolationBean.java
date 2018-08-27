@@ -3,6 +3,7 @@ package org.cobbzilla.wizard.validation;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.NameAndValue;
 import org.cobbzilla.util.json.JsonUtil;
 
 import javax.validation.ConstraintViolation;
@@ -20,14 +21,19 @@ public class ConstraintViolationBean {
     @XmlElement @Getter @Setter private String messageTemplate;
     @XmlElement @Getter @Setter private String message;
     @XmlElement @Getter @Setter private String invalidValue;
+    @XmlElement @Getter @Setter private NameAndValue[] params;
     public boolean hasInvalidValue () { return !empty(invalidValue); }
 
     public ConstraintViolationBean(String messageTemplate) {
-        this(messageTemplate, messageTemplate, null);
+        this(messageTemplate, messageTemplate, null, null);
     }
 
     public ConstraintViolationBean(String messageTemplate, String message) {
-        this(messageTemplate, message, null);
+        this(messageTemplate, message, null, null);
+    }
+
+    public ConstraintViolationBean(String messageTemplate, String message, String invalidValue) {
+        this(messageTemplate, message, invalidValue, null);
     }
 
     public ConstraintViolationBean(ConstraintViolation violation) {
