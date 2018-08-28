@@ -35,7 +35,9 @@ import static org.cobbzilla.util.time.TimeUtil.formatDuration;
 import static org.hibernate.criterion.Restrictions.*;
 
 @Transactional @Slf4j
-public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDAO<E> {
+public abstract class AbstractCRUDDAO<E extends Identifiable>
+        extends AbstractDAO<E>
+        implements CacheFlushable {
 
     public static final String NO_SUB_KEY = "__no_subkey";
 
@@ -83,6 +85,8 @@ public abstract class AbstractCRUDDAO<E extends Identifiable> extends AbstractDA
             }
         }
     }
+
+    @Override public void flush () { flushObjectCache(); }
 
     public void flushObjectCache(E entity) {
         synchronized (ocache) {

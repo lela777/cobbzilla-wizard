@@ -19,6 +19,7 @@ import org.cobbzilla.wizard.analytics.AnalyticsConfiguration;
 import org.cobbzilla.wizard.analytics.AnalyticsHandler;
 import org.cobbzilla.wizard.asset.AssetStorageConfiguration;
 import org.cobbzilla.wizard.asset.AssetStorageService;
+import org.cobbzilla.wizard.dao.CacheFlushable;
 import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.filters.ApiRateLimit;
 import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
@@ -395,6 +396,20 @@ public class RestServerConfiguration {
             }
             return die("getDaoForEntityClass("+className+"): DAO not found");
         });
+    }
+
+    public void flushDAOs() {
+        if (!getServer().isRunning() && applicationContext == null) {
+            log.warn("flushDAOs: server not running, cannot enumerate DAOs, quietly returning");
+            return;
+        }
+        try {
+            for (DAO dao : getAllDAOs()) {
+                if (dao instanceof CacheFlushable) ((CacheFlushable) dao).flush();
+            }
+        } catch (Exception e) {
+            log.warn("flushDAOs: error: "+e.getClass().getSimpleName()+": "+e.getMessage());
+        }
     }
 
     public File pgDump() { return pgDump(temp("pgDump-out", ".sql")); }

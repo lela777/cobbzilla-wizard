@@ -1,62 +1,60 @@
 package org.cobbzilla.wizard.dao;
 
+import org.cobbzilla.util.collection.ArrayUtil;
+import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.NamedIdentityBase;
 
-import javax.validation.Valid;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.sorted;
+import static org.cobbzilla.util.daemon.ZillaRuntime.sortedList;
+import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 
 public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractCRUDDAO<E> {
 
-    private final Map<String, E> cache = new ConcurrentHashMap<>();
-
-    @Override public Object preCreate(@Valid E entity) {
-        cache.remove(entity.getName());
-        return super.preCreate(entity);
-    }
-
-    @Override public Object preUpdate(@Valid E entity) {
-        cache.remove(entity.getName());
-        return super.preUpdate(entity);
-    }
-
-    public E findByName (String name) {
-        if (empty(name)) return null;
-        E thing = cache.get(name);
-        if (thing == null) {
-            thing = findByUniqueField("name", name);
-            if (thing == null) return null;
-            cache.put(name, thing);
-        }
-        return thing;
-    }
-
     public E findByUuid (String name) { return findByName(name); }
 
+    public E findByName(String name) {
+        return cacheLookup("findByName_"+name, o -> findByUniqueField("name", name));
+    }
+
     public List<E> findByNameIn(List<String> names) {
-        final List<E> found = new ArrayList<>();
-        if (empty(names)) return found;
-        final List<String> notFoundNames = new ArrayList<>();
-        for (String name : names) {
-            if (empty(name)) continue;
-            if (cache.containsKey(name)) {
-                found.add(cache.get(name));
-            } else {
-                notFoundNames.add(name);
-            }
-        }
-        if (found.size() != names.size()) {
-            final List<E> lookedUp = findByFieldIn("name", notFoundNames);
-            for (E toCache : lookedUp) cache.put(toCache.getName(), toCache);
-            found.addAll(lookedUp);
-        }
+        return cacheLookup("findByNameIn_"+sha256_hex(StringUtil.toString(sorted(names), getNameCacheKeySeparator())),
+                o -> findByNames(names));
+    }
+
+    public List<E> findByNameIn(String[] names) {
+        return cacheLookup("findByNameIn_"+sha256_hex(ArrayUtil.arrayToString(sorted(names), getNameCacheKeySeparator())),
+                o -> findByNames(names));
+    }
+
+    protected List<E> findByNames(Object names) { // names can be array or Collection, sortedList ensures we get a List back
+        final List<E> found = findByFieldIn("name", sortedList(names));
+        synchronized (cachedNames) { cachedNames.addAll((Collection) names); }
         return found;
     }
 
-    public List<E> findByNameIn(String[] names) { return findByFieldIn("name", names); }
+    protected String getNameCacheKeySeparator() { return "\n"; }
+    private final Set<String> cachedNames = new HashSet<>();
+
+    @Override public void flushObjectCache(E entity) {
+        super.flushObjectCache(entity);
+        if (cachedNames.contains(entity.getName())) {
+            synchronized (cachedNames) {
+                flushObjectCache(); // have to flush everything to be safe. something deleted or otherwise getting flushed was included elsewhere in the cache
+                cachedNames.clear();
+            }
+        }
+    }
+
+    @Override public boolean flushObjectCache() {
+        synchronized (cachedNames) {
+            cachedNames.clear();
+            return super.flushObjectCache();
+        }
+    }
 
 }
