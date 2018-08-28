@@ -42,6 +42,8 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
         }
     }
 
+    public void touch(String uuid, T thing) { rawSet(uuid, thing, true); }
+
     public void invalidateAllSessions(String uuid) {
         String sessionId;
         while ((sessionId = getSessionRedis().lpop(uuid)) != null) {
@@ -51,8 +53,12 @@ public abstract class AbstractSessionDAO<T extends Identifiable> {
     }
 
     private void set(String uuid, T thing, boolean shouldExist) {
-        getSessionRedis().set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", getSessionTimeout(thing));
+        rawSet(uuid, thing, shouldExist);
         getSessionRedis().lpush(thing.getUuid(), uuid);
+    }
+
+    private void rawSet(String uuid, T thing, boolean shouldExist) {
+        getSessionRedis().set(uuid, toJson(thing), shouldExist ? "XX" : "NX", "EX", getSessionTimeout(thing));
     }
 
     private long getSessionTimeout(T thing) { return getSessionTimeout(); }
