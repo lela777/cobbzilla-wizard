@@ -139,6 +139,7 @@ public class RedisService {
     public String hget(String key, String field) { return decrypt(__hget(key, field, 0, MAX_RETRIES)); }
     public Long hdel(String key, String field) { return __hdel(key, field, 0, MAX_RETRIES); }
     public Set<String> hkeys(String key) { return __hkeys(key, 0, MAX_RETRIES); }
+    public Long hlen(String key) { return __hlen(key, 0, MAX_RETRIES); }
 
     public void del(String key) { __del(key, 0, MAX_RETRIES); }
 
@@ -377,6 +378,18 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__hget");
             return __hkeys(key, attempt + 1, maxRetries);
+        }
+    }
+
+    private Long __hlen(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hlen(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hlen");
+            return __hlen(key, attempt + 1, maxRetries);
         }
     }
 
