@@ -158,6 +158,7 @@ public class RedisService {
     public Long srem(String key, String[] values) { return __srem(key, values, 0, MAX_RETRIES); }
 
     public Set<String> smembers(String key) { return __smembers(key, 0, MAX_RETRIES); }
+    public boolean sismember(String key, String value) { return __sismember(key, value, 0, MAX_RETRIES); }
 
     public List<String> srandmembers(String key, int count) { return __srandmember(key, count, 0, MAX_RETRIES); }
     public String srandmember(String key) {
@@ -226,10 +227,36 @@ public class RedisService {
         return string_encrypt(data, getKey());
     }
 
+    protected String[] encrypt(String[] data) {
+        if (!hasKey() || empty(data)) return data;
+        final String[] encrypted = new String[data.length];
+        for (int i=0; i<data.length; i++) {
+            encrypted[i] = string_encrypt(data[i], getKey());
+        }
+        return encrypted;
+    }
+
     protected String decrypt(String data) {
         if (!hasKey()) return data;
         if (data == null) return null;
         return string_decrypt(data, getKey());
+    }
+
+    protected <T extends Collection<String>> T decrypt(T data) {
+        if (!hasKey() || empty(data)) return data;
+        final T decrypted = (T) new ArrayList<String>();
+        for (String value : data) {
+            decrypted.add(string_decrypt(value, getKey()));
+        }
+        return decrypted;
+    }
+    protected String[] decrypt(String[] data) {
+        if (!hasKey() || empty(data)) return data;
+        final String[] decrypted = new String[data.length];
+        for (int i=0; i<data.length; i++) {
+            decrypted[i] = string_decrypt(data[i], getKey());
+        }
+        return decrypted;
     }
 
     private void resetForRetry(int attempt, String reason) {
@@ -408,7 +435,7 @@ public class RedisService {
     private Long __sadd(String key, String[] members, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return getRedis().sadd(prefix(key), members);
+                return getRedis().sadd(prefix(key), encrypt(members));
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
@@ -420,7 +447,7 @@ public class RedisService {
     private Long __srem(String key, String[] members, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return getRedis().srem(prefix(key), members);
+                return getRedis().srem(prefix(key), encrypt(members));
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
@@ -432,7 +459,7 @@ public class RedisService {
     private Set<String> __smembers(String key, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return getRedis().smembers(prefix(key));
+                return decrypt(getRedis().smembers(prefix(key)));
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
@@ -441,10 +468,22 @@ public class RedisService {
         }
     }
 
+    private boolean __sismember(String key, String value, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().sismember(prefix(key), encrypt(value));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__sismember");
+            return __sismember(key, value, attempt+1, maxRetries);
+        }
+    }
+
     private List<String> __srandmember(String key, int count, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return getRedis().srandmember(prefix(key), count);
+                return decrypt(getRedis().srandmember(prefix(key), count));
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
@@ -456,7 +495,7 @@ public class RedisService {
     private Set<String> __spop(String key, long count, int attempt, int maxRetries) {
         try {
             synchronized (redis) {
-                return count == 1 ? new SingletonSet<>(getRedis().spop(prefix(key))) : getRedis().spop(prefix(key), count);
+                return decrypt(count == 1 ? new SingletonSet<>(getRedis().spop(prefix(key))) : getRedis().spop(prefix(key), count));
             }
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
