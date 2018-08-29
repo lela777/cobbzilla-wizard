@@ -115,7 +115,7 @@ public class ResourceUtil {
     public static Response invalid(List<ConstraintViolationBean> violations) { return status(UNPROCESSABLE_ENTITY, violations); }
 
     public static Response invalid(ConstraintViolationBean violation) {
-        List<ConstraintViolationBean> violations = new ArrayList<>();
+        final List<ConstraintViolationBean> violations = new ArrayList<>();
         violations.add(violation);
         return invalid(violations);
     }
