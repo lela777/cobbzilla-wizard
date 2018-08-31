@@ -137,6 +137,17 @@ public class RedisService {
 
     public void hset(String key, String field, String value) { __hset(key, field, value, 0, MAX_RETRIES); }
     public String hget(String key, String field) { return decrypt(__hget(key, field, 0, MAX_RETRIES)); }
+    public Map<String, String> hgetall(String key) { return decrypt(__hgetall(key, 0, MAX_RETRIES)); }
+
+    private Map<String, String> decrypt(Map<String, String> map) {
+        if (!hasKey()) return map;
+        final Map<String, String> decrypted = new HashMap<>();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            decrypted.put(decrypt(entry.getKey()), decrypt(entry.getValue()));
+        }
+        return decrypted;
+    }
+
     public Long hdel(String key, String field) { return __hdel(key, field, 0, MAX_RETRIES); }
     public Set<String> hkeys(String key) { return __hkeys(key, 0, MAX_RETRIES); }
     public Long hlen(String key) { return __hlen(key, 0, MAX_RETRIES); }
@@ -369,6 +380,18 @@ public class RedisService {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__hget");
             return __hget(key, field, attempt + 1, maxRetries);
+        }
+    }
+
+    private Map<String, String> __hgetall(String key, int attempt, int maxRetries) {
+        try {
+            synchronized (redis) {
+                return getRedis().hgetAll(prefix(key));
+            }
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__hgetall");
+            return __hgetall(key, attempt + 1, maxRetries);
         }
     }
 
