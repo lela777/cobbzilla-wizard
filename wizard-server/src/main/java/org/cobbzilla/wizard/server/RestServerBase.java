@@ -38,10 +38,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -72,6 +69,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     @Override public void removeLifecycleListener(RestServerLifecycleListener<C> listener) {
         synchronized (listeners) { listeners.remove(listenerKey(listener)); }
     }
+    @Override public Collection<RestServerLifecycleListener<C>> removeAllLifecycleListeners() {
+        final List<RestServerLifecycleListener<C>> saved = new ArrayList<>();
+        synchronized (listeners) {
+            saved.addAll(listeners.values());
+            listeners.clear();
+        }
+        return saved;
+    }
+
     protected String listenerKey(RestServerLifecycleListener<C> listener) { return listener.getClass().getName()+listener.hashCode(); }
 
     private ConfigurableApplicationContext applicationContext;

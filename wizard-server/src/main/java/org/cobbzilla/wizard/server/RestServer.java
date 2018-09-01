@@ -7,6 +7,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 
 public interface RestServer<C extends RestServerConfiguration> {
 
@@ -24,9 +25,6 @@ public interface RestServer<C extends RestServerConfiguration> {
     ConfigurableApplicationContext buildSpringApplicationContext();
     ConfigurableApplicationContext buildSpringApplicationContext(final ApplicationContextConfig ctxConfig);
 
-    void addLifecycleListener (RestServerLifecycleListener<C> listener);
-    void removeLifecycleListener (RestServerLifecycleListener<C> listener);
-
     void stopServer();
 
     String getClientUri();
@@ -34,4 +32,13 @@ public interface RestServer<C extends RestServerConfiguration> {
     ApplicationContext getApplicationContext();
 
     URI getBaseUri();
+
+    void addLifecycleListener (RestServerLifecycleListener<C> listener);
+    default void addLifecycleListeners (Collection<RestServerLifecycleListener<C>> listeners) {
+        for (RestServerLifecycleListener<C> listener : listeners) addLifecycleListener(listener);
+    }
+
+    void removeLifecycleListener (RestServerLifecycleListener<C> listener);
+    Collection<RestServerLifecycleListener<C>> removeAllLifecycleListeners ();
+
 }
