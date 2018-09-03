@@ -129,7 +129,9 @@ public class RedisService {
 
     public <T> void setObject(String key, T thing) { __set(key, toJsonOrDie(thing), 0, MAX_RETRIES); }
 
-    public List<String> list(String key) { return __list(key, 0, MAX_RETRIES); }
+    public List<String> list(String key) { return lrange(key, 0, -1); }
+    public Long llen(String key) { return __llen(key, 0, MAX_RETRIES); }
+    public List<String> lrange(String key, int start, int end) { return __lrange(key, start, end, 0, MAX_RETRIES); }
     public void lpush(String key, String value) { __lpush(key, value, 0, MAX_RETRIES); }
     public String lpop(String data) { return decrypt(__lpop(data, 0, MAX_RETRIES)); }
     public void rpush(String key, String value) { __rpush(key, value, 0, MAX_RETRIES); }
@@ -563,17 +565,24 @@ public class RedisService {
         }
     }
 
-    private List<String> __list(String key, int attempt, int maxRetries) {
+    private Long __llen(String key, int attempt, int maxRetries) {
         try {
-            final Long llen;
             synchronized (redis) {
-                llen = getRedis().llen(prefix(key));
+                return getRedis().llen(prefix(key));
             }
-            if (llen == null) return null;
 
+        } catch (RuntimeException e) {
+            if (attempt > maxRetries) throw e;
+            resetForRetry(attempt, "retrying RedisService.__llen");
+            return __llen(key, attempt + 1, maxRetries);
+        }
+    }
+
+    private List<String> __lrange(String key, int start, int end, int attempt, int maxRetries) {
+        try {
             final List<String> range;
             synchronized (redis) {
-                range = getRedis().lrange(prefix(key), 0, llen);
+                range = getRedis().lrange(prefix(key), start, end);
             }
             final List<String> list = new ArrayList<>(range.size());
             for (String item : range) list.add(decrypt(item));
@@ -582,8 +591,8 @@ public class RedisService {
 
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
-            resetForRetry(attempt, "retrying RedisService.__list");
-            return __list(key, attempt + 1, maxRetries);
+            resetForRetry(attempt, "retrying RedisService.__lrange");
+            return __lrange(key, start, end, attempt + 1, maxRetries);
         }
     }
 
@@ -598,7 +607,7 @@ public class RedisService {
         } catch (RuntimeException e) {
             if (attempt > maxRetries) throw e;
             resetForRetry(attempt, "retrying RedisService.__keys");
-            return __list(key, attempt + 1, maxRetries);
+            return __keys(key, attempt + 1, maxRetries);
         }
     }
 
