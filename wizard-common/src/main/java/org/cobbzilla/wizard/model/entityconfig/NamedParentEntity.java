@@ -29,12 +29,16 @@ public abstract class NamedParentEntity extends NamedIdentityBase implements Par
 
     private static Map<String, Class<? extends Identifiable>> childClasses = new ConcurrentHashMap<>();
 
-    public <T extends Identifiable> List<T> getChildren (Class<T> clazz) { return getChildren(clazz.getSimpleName()); }
+    public <T extends Identifiable> List<T> getChildren (Class<T> clazz) { return getChildren(clazz.getSimpleName(), clazz); }
 
     public <T extends Identifiable> List<T> getChildren (String childType) {
+        return getChildren(childType, null);
+    }
+
+    public <T extends Identifiable> List<T> getChildren (String childType, Class<T> clazz) {
         if (!hasChildren() || empty(childType)) return new ArrayList<>();
         final JsonNode[] nodes = getChildren().get(childType);
-        final Class<T> clazz = (Class<T>) childClasses.get(childType);
+        if (clazz == null) clazz = (Class<T>) childClasses.get(childType);
         return empty(nodes) || clazz == null ? new ArrayList<>() : json(nodes, clazz);
     }
 
