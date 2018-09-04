@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static net.sf.cglib.core.CollectionUtils.transform;
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
@@ -374,6 +375,7 @@ public class RedisService {
     }
 
     private String __hget(String key, String field, int attempt, int maxRetries) {
+        if (empty(field)) return die("__hget("+key+"/): field was empty");
         try {
             synchronized (redis) {
                 return getRedis().hget(prefix(key), encrypt(field));
