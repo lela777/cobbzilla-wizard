@@ -9,6 +9,7 @@ import lombok.experimental.Delegate;
 
 import javax.persistence.Transient;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -17,6 +18,8 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 public class ValidationErrors implements List<ConstraintViolationBean> {
 
     @Transient @Getter @Setter @Delegate private List<ConstraintViolationBean> errors = new ArrayList<>();
+
+    public ValidationErrors (ConstraintViolationBean[] violations) { errors.addAll(Arrays.asList(violations)); }
 
     public ConstraintViolationBean err(String messageTemplate) {
         if (!empty(errors)) {
