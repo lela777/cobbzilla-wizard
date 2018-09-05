@@ -4,10 +4,7 @@ import org.cobbzilla.util.collection.ArrayUtil;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.NamedIdentityBase;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.sorted;
 import static org.cobbzilla.util.daemon.ZillaRuntime.sortedList;
@@ -33,6 +30,7 @@ public class NamedIdentityBaseDAO<E extends NamedIdentityBase> extends AbstractC
 
     protected List<E> findByNames(Object names) { // names can be array or Collection, sortedList ensures we get a List back
         final List<E> found = findByFieldIn("name", sortedList(names));
+        if (names.getClass().isArray()) names = Arrays.asList(names);
         synchronized (cachedNames) { cachedNames.addAll((Collection) names); }
         return found;
     }
