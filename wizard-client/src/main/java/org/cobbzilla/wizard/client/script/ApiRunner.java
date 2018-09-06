@@ -46,6 +46,7 @@ public class ApiRunner {
     public static final String RAND = "@@@";
     public static final String DEFAULT_SESSION_NAME = "default";
     public static final String NEW_SESSION = "new";
+    public static final String TEMPORAL_NEW_SESSION = "temp-new";
 
     private StandardJsEngine js = new StandardJsEngine();
 
@@ -193,8 +194,12 @@ public class ApiRunner {
         final String method = request.getMethod().toUpperCase();
         ctx.put("now", script.getStart());
 
+        String oldSessionsId = null;
         if (request.hasSession()) {
             if (request.getSession().equals(NEW_SESSION)) {
+                api.logout();
+            } else if (request.getSession().equals(TEMPORAL_NEW_SESSION)) {
+                oldSessionsId = api.getToken();
                 api.logout();
             } else {
                 final String sessionId = namedSessions.get(request.getSession());
@@ -379,6 +384,9 @@ public class ApiRunner {
         }
 
         if (listener != null) listener.scriptCompleted(script);
+
+        if (!empty(oldSessionsId)) api.setToken(oldSessionsId);
+
         return success;
     }
 
