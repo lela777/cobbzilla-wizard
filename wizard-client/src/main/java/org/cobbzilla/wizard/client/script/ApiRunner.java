@@ -118,9 +118,7 @@ public class ApiRunner {
 
     public String replaceRand(Object o) { return replaceWithRandom(o.toString(), RAND, 10); }
 
-    public void run(String script) throws Exception {
-        run(jsonWithComments(script, ApiScript[].class));
-    }
+    public void run(String script) throws Exception { run(jsonWithComments(script, ApiScript[].class)); }
 
     public boolean run(ApiScript[] scripts) throws Exception {
         boolean allSucceeded = true;
@@ -159,7 +157,11 @@ public class ApiRunner {
                 }
             }
             if (paramsChanged) include = include(script); // re-include because params have changed
+
+            if (script.hasBefore() && listener != null) listener.beforeCall(script, getContext());
             final boolean ok = run(include);
+            if (ok && script.hasAfter() && listener != null) listener.afterCall(script, getContext(), null);
+
             log.info(">>> included script completed: '"+script.getInclude()+"'"+(script.hasParams()?" {"+ StringUtil.toString(NameAndValue.map2list(script.getParams()), ", ")+"}":"")+", ok="+ok);
             return ok;
 
