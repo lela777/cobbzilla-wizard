@@ -77,7 +77,10 @@ public enum EntityFieldType {
     base64_png  (null),
 
     /** an embedded sub-object */
-    embedded  (null);
+    embedded  (null),
+
+    /** a US phone number */
+    us_phone (new EntityConfigFieldValidator_USPhone());
 
     private EntityConfigFieldValidator fieldValidator;
 
