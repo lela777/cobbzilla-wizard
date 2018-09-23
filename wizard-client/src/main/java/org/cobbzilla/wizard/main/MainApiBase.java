@@ -16,7 +16,7 @@ public abstract class MainApiBase<OPT extends MainApiOptionsBase> extends MainBa
     public static final String TOKEN_PREFIX = "token:";
 
     @Getter(value=PROTECTED, lazy=true) private final ApiClientBase apiClient = initApiClient();
-    private ApiClientBase initApiClient() { return new ApiTokenClient<>(this); }
+    protected ApiClientBase initApiClient() { return new ApiTokenClient<>(this); }
 
     @Override protected void preRun() { if (getOptions().requireAccount()) login(); }
 

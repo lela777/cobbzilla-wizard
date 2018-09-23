@@ -20,7 +20,7 @@ public abstract class MainApiOptionsBase extends BaseMainOptions {
         if (requireAccount() && empty(name)) die("No account provided (use option "+OPT_ACCOUNT+"/"+LONGOPT_ACCOUNT+")");
         return name;
     }
-    public boolean hasAccount () { return !empty(getAccount()); }
+    public boolean hasAccount () { return !empty(getAccount()) && !getAccount().startsWith("@"); }
 
     public static final String USAGE_TWO_FACTOR = "The token for two-factor authentication";
     public static final String OPT_TWO_FACTOR = "-F";
