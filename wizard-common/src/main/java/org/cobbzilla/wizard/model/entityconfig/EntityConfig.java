@@ -9,6 +9,7 @@ import org.cobbzilla.util.string.HasLocale;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.model.entityconfig.annotations.*;
 import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Column;
@@ -620,13 +621,13 @@ public class EntityConfig {
         return cfg;
     }
 
-    public ValidationResult validate(Object o) {
+    public ValidationResult validate(Validator validator, Object o) {
         ValidationResult validation = null;
         final Locale locale = (o instanceof HasLocale) ? ((HasLocale) o).getLocale() : Locale.getDefault();
         for (EntityFieldConfig field : getFields().values()) {
             final Object value = ReflectionUtil.get(o, field.getName());
             if (value != null) {
-                ValidationResult fieldValidation = field.validate(locale, value);
+                ValidationResult fieldValidation = field.validate(locale, validator, value);
                 if (fieldValidation != null) {
                     if (validation == null) validation = new ValidationResult();
                     validation.addAll(fieldValidation);

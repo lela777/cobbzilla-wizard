@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfigFieldValidator;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 
 import java.text.DecimalFormat;
 import java.util.Locale;
@@ -14,7 +15,8 @@ import static org.cobbzilla.util.string.StringUtil.firstWord;
 @Slf4j
 public class EntityConfigFieldValidator_integer implements EntityConfigFieldValidator {
 
-    @Override public ValidationResult validate(Locale locale, EntityFieldConfig fieldConfig, Object value) {
+    @Override public ValidationResult validate(Locale locale, Validator validator, EntityFieldConfig fieldConfig,
+                                               Object value) {
         String val = empty(value) ? "" : firstWord(value.toString());
         final DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
         try {

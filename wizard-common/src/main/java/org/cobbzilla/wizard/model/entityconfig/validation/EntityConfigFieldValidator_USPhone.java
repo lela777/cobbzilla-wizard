@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.model.entityconfig.EntityConfigFieldValidator;
 import org.cobbzilla.wizard.model.entityconfig.EntityFieldConfig;
 import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 
 import javax.swing.text.MaskFormatter;
 import java.text.ParseException;
@@ -26,7 +27,8 @@ public class EntityConfigFieldValidator_USPhone implements EntityConfigFieldVali
         }
     }
 
-    @Override public ValidationResult validate(Locale locale, EntityFieldConfig fieldConfig, Object value) {
+    @Override public ValidationResult validate(Locale locale, Validator validator, EntityFieldConfig fieldConfig,
+                                               Object value) {
         if (empty(value)) return null;
 
         final int expectedLength = fieldConfig.hasLength() ? fieldConfig.getLength() : DEFAULT_LENGTH;
