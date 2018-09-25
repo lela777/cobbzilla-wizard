@@ -17,24 +17,40 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @Slf4j
 public class EntityConfigFieldValidator_USPhone implements EntityConfigFieldValidator {
     private static final int DEFAULT_LENGTH = 10;
+    private static final String US_PHONE_MASK_STRING = "(###) ###-####";
     private static final MaskFormatter US_PHONE_MASK = buildUSPhoneMask();
 
     private static MaskFormatter buildUSPhoneMask() {
+        MaskFormatter formatter;
         try {
-            return new MaskFormatter("(###) ###-####");
+            formatter = new MaskFormatter(US_PHONE_MASK_STRING);
         } catch (ParseException e) {
             return die("invalid phone mask in code", e);
         }
+        formatter.setValueContainsLiteralCharacters(false);
+        formatter.setValidCharacters("0123456789");
+        return formatter;
     }
 
     @Override public ValidationResult validate(Locale locale, Validator validator, EntityFieldConfig fieldConfig,
                                                Object value) {
         if (empty(value)) return null;
+        final String strippedPhoneString = stripPhoneString(value);
 
         final int expectedLength = fieldConfig.hasLength() ? fieldConfig.getLength() : DEFAULT_LENGTH;
-        if (stripPhoneString(value).length() == expectedLength) return null;
+        if (strippedPhoneString.length() != expectedLength) {
+            return new ValidationResult("err." + fieldConfig.getName() + ".length");
+        }
 
-        return new ValidationResult("err." + fieldConfig.getName() + ".length");
+        try {
+            // just try to create mask-formatted string from the value.
+            US_PHONE_MASK.valueToString(strippedPhoneString);
+        } catch (ParseException e) {
+            return new ValidationResult("err." + fieldConfig.getName() + ".format",
+                                        "Wrong format or length of given phone number",
+                                        value.toString());
+        }
+        return null;
     }
 
     @Override public Object toObject(Locale locale, String value) {
