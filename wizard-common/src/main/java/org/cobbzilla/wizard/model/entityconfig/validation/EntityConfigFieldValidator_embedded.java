@@ -8,6 +8,8 @@ import org.cobbzilla.wizard.validation.Validator;
 
 import java.util.Locale;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 @Slf4j
 public class EntityConfigFieldValidator_embedded implements EntityConfigFieldValidator {
 
@@ -17,7 +19,7 @@ public class EntityConfigFieldValidator_embedded implements EntityConfigFieldVal
             return new ValidationResult("err.validation.unsupported", "Cannot validate field without validator object",
                                         fieldConfig.getName());
         }
-        return validator.validate(value);
+        return !empty(value) ? validator.validate(value) : null;
     }
 
     @Override public Object toObject(Locale locale, String value) {
