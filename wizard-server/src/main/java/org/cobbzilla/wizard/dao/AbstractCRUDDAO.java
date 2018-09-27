@@ -11,10 +11,14 @@ import org.cobbzilla.util.reflect.ReflectionUtil;
 import org.cobbzilla.wizard.api.CrudOperation;
 import org.cobbzilla.wizard.model.AuditLog;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.server.config.RestServerConfiguration;
+import org.cobbzilla.wizard.validation.MultiViolationException;
+import org.cobbzilla.wizard.validation.ValidationResult;
 import org.hibernate.FlushMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate4.HibernateTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +42,8 @@ import static org.hibernate.criterion.Restrictions.*;
 public abstract class AbstractCRUDDAO<E extends Identifiable>
         extends AbstractDAO<E>
         implements CacheFlushable {
+
+    @Autowired private RestServerConfiguration serverConfiguration;
 
     public static final String NO_SUB_KEY = "__no_subkey";
 
@@ -65,7 +71,15 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     @Transactional(readOnly=true)
     @Override public boolean exists(String uuid) { return findByUuid(uuid) != null; }
 
+    public void validateOrException(@Valid E entity) {
+        // Note that @Valid is for java's support. The validation here will include custom validation accordin to
+        // EntityConfig.
+        final ValidationResult validationResult = serverConfiguration.getValidator().validate(entity);
+        if (validationResult.isInvalid()) throw new MultiViolationException(validationResult.getViolationBeans());
+    }
+
     @Override public Object preCreate(@Valid E entity) {
+        validateOrException(entity);
         try {
             return auditingEnabled() ? audit(null, entity, CrudOperation.create) : entity;
         } finally {
@@ -140,6 +154,7 @@ public abstract class AbstractCRUDDAO<E extends Identifiable>
     }
 
     @Override public Object preUpdate(@Valid E entity) {
+        validateOrException(entity);
         try {
             return auditingEnabled() ? audit(findByUuid(entity.getUuid()), entity, CrudOperation.update) : entity;
         } finally {

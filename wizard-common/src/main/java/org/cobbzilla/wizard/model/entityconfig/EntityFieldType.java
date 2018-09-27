@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import org.cobbzilla.wizard.model.entityconfig.validation.*;
 import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 
 import java.util.Locale;
 
@@ -77,7 +78,10 @@ public enum EntityFieldType {
     base64_png  (null),
 
     /** an embedded sub-object */
-    embedded  (null);
+    embedded  (new EntityConfigFieldValidator_embedded()),
+
+    /** a US phone number */
+    us_phone (new EntityConfigFieldValidator_USPhone());
 
     private EntityConfigFieldValidator fieldValidator;
 
@@ -88,8 +92,8 @@ public enum EntityFieldType {
         return fieldValidator == null ? value : fieldValidator.toObject(locale, value);
     }
 
-    public ValidationResult validate(Locale locale, EntityFieldConfig fieldConfig, Object value) {
-        return fieldValidator == null ? null : fieldValidator.validate(locale, fieldConfig, value);
+    public ValidationResult validate(Locale locale, Validator validator, EntityFieldConfig fieldConfig, Object value) {
+        return fieldValidator == null ? null : fieldValidator.validate(locale, validator, fieldConfig, value);
     }
 
 }

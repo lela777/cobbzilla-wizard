@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.validation.ValidationResult;
+import org.cobbzilla.wizard.validation.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -151,7 +152,9 @@ public class EntityFieldConfig implements VerifyLogAware<EntityFieldConfig> {
         return e;
     }
 
-    public ValidationResult validate(Locale locale, Object o) { return getTypeOrDefault().validate(locale, this, o); }
+    public ValidationResult validate(Locale locale, Validator validator, Object o) {
+        return getTypeOrDefault().validate(locale, validator, this, o);
+    }
 
     public String displayValueFor(String answer) {
 

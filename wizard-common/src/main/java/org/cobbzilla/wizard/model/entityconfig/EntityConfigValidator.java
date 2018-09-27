@@ -16,7 +16,7 @@ public class EntityConfigValidator extends Validator {
         if (entityConfigSource != null) {
             final EntityConfig entityConfig = entityConfigSource.getEntityConfig(o);
             if (entityConfig != null) {
-                validation.addAll(entityConfig.validate(o));
+                validation.addAll(entityConfig.validate(this, o));
             }
         }
         return validation;
