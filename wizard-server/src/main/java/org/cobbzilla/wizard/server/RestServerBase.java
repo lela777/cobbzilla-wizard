@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 import org.cobbzilla.util.collection.SingletonList;
 import org.cobbzilla.util.daemon.ErrorApi;
 import org.cobbzilla.util.json.JsonUtil;
@@ -34,10 +35,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -117,7 +118,16 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
     protected URI buildURI(String host) {
         verifyPort();
         final HttpConfiguration httpConfiguration = configuration.getHttp();
-        return UriBuilder.fromUri("http://" + host + httpConfiguration.getBaseUri()).port(httpConfiguration.getPort()).build();
+        try {
+            return new URIBuilder()
+                    .setScheme("http")
+                    .setHost(host)
+                    .setPort(httpConfiguration.getPort())
+                    .setPath(httpConfiguration.getBaseUri())
+                    .build();
+        } catch (URISyntaxException e) {
+            return die("buildURI:" +e, e);
+        }
     }
 
     public synchronized HttpServer startServer() throws IOException {
@@ -171,8 +181,15 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
         // add handlers -- first the optional webapps
         if (configuration.hasWebapps()) {
             for (WebappConfiguration config : configuration.getWebapps()) {
-//                config.build(applicationContext).deploy(httpServer);
-                config.build(applicationContext).deploy(httpServer);
+                if (config.isUseServletContainer()) {
+                    final WizardServletContainer servletContainer = configuration.getServletContainer();
+                    if (servletContainer == null) {
+                        return die("buildServer: useServletContainer was true (for webapp "+config.getName()+"), but configuration.getServletContainer returned null");
+                    }
+                    servletContainer.deploy(config, applicationContext);
+                } else {
+                    config.build(applicationContext).deploy(httpServer);
+                }
             }
         }
 
@@ -186,7 +203,7 @@ public abstract class RestServerBase<C extends RestServerConfiguration> implemen
             final StaticHttpConfiguration staticAssets = configuration.getStaticAssets();
             final String staticBase = staticAssets.getBaseUri();
             if (staticBase == null || staticBase.trim().length() == 0 || staticBase.trim().equals(restBase)) {
-                throw new IllegalArgumentException("staticAssetBaseUri not defined, or is same as restServerBaseUri");
+                return die("buildServer: staticAssetBaseUri not defined, or is same as restServerBaseUri");
             }
             final StaticAssetHandler staticHandler = new StaticAssetHandler(staticAssets, getClass().getClassLoader());
             serverConfig.addHttpHandler(staticHandler, staticBase);

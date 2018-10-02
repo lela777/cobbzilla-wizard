@@ -15,6 +15,7 @@ public class WebappConfiguration {
 
     @Getter @Setter private String name;
     @Getter @Setter private String path;
+    @Getter @Setter private boolean useServletContainer = false;
     @Getter @Setter private ServletConfiguration[] servlets;
 
     public WebappContext build(ConfigurableApplicationContext applicationContext) {
@@ -26,7 +27,6 @@ public class WebappConfiguration {
 
 //            final ResourceConfig rc = new PackagesResourceConfig(servletConfiguration.getResourcePackages());
 //            final IoCComponentProviderFactory factory = new SpringComponentProviderFactory(rc, applicationContext);
-
 
             for (Map.Entry<String, String> initParam : servletConfiguration.getInitParams().entrySet()) {
                 registration.setInitParameter(initParam.getKey(), initParam.getValue());
