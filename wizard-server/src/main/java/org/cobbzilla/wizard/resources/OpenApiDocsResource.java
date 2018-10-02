@@ -5,8 +5,11 @@ import io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.util.collection.SingletonList;
+import org.cobbzilla.wizard.server.config.RestServerConfiguration;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -24,20 +27,18 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Produces(APPLICATION_JSON) @Slf4j
 public abstract class OpenApiDocsResource {
 
+    protected abstract RestServerConfiguration getConfiguration();
     protected abstract String[] getPackagesToScan();
 
     @Getter(lazy=true) private final OpenAPI swagger = initSwagger();
-
-    protected OpenAPI initSwagger() {
-        final ApiDocsConfiguration apiConfig = new ApiDocsConfiguration(getPackagesToScan());
-        return apiConfig.scan();
-    }
+    protected OpenAPI initSwagger() { return new ApiDocsConfiguration(getPackagesToScan()).scan(); }
 
     @GET @Path("/swagger.json")
     @Operation(description = "The swagger definition in JSON", hidden = true)
     public Response getListingJson() { return Response.ok().entity(getSwagger()).build(); }
 
     private class ApiDocsConfiguration implements OpenAPIConfiguration {
+
         @Getter private final JaxrsAnnotationScanner scanner = new JaxrsAnnotationScanner();
         private final String[] packagesToScan;
 
@@ -79,10 +80,15 @@ public abstract class OpenApiDocsResource {
         @Override public Long getCacheTTL() { return TimeUnit.DAYS.toMillis(1); }
 
         public OpenAPI scan() {
+            final Server server = new Server();
+            server.setUrl(getConfiguration().getApiUriBase());
+
             final OpenAPI api = new OpenAPI();
+            api.setServers(new SingletonList<>(server));
+
             final Reader reader = new Reader(api);
-            final Set<Class<?>> classes = scanner.classes();
-            return reader.read(classes);
+            return reader.read(scanner.classes());
         }
     }
+
 }
