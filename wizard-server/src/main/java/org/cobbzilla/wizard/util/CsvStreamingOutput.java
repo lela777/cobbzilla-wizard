@@ -15,7 +15,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.*;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeCsv;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.reflect.ReflectionUtil.toMap;
@@ -79,7 +78,7 @@ public class CsvStreamingOutput implements StreamingOutput {
             for (int i = 0; i < line.length; i++) {
                 final String field = fields[i];
                 final Object value = row.get(field);
-                line[i] = empty(value) ? "" : escapeCsv(value.toString());
+                line[i] = value == null ? "" : String.valueOf(value);
             }
             writer.writeNext(line, false);
         }
