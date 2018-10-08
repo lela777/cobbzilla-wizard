@@ -24,6 +24,7 @@ import org.cobbzilla.wizard.dao.DAO;
 import org.cobbzilla.wizard.filters.ApiRateLimit;
 import org.cobbzilla.wizard.log.LogRelayAppenderConfig;
 import org.cobbzilla.wizard.model.Identifiable;
+import org.cobbzilla.wizard.model.IdentifiableBase;
 import org.cobbzilla.wizard.resources.ParentResource;
 import org.cobbzilla.wizard.server.RestServer;
 import org.cobbzilla.wizard.util.SpringUtil;
@@ -346,6 +347,7 @@ public class RestServerConfiguration {
                 }
                 if (o instanceof Identifiable) {
                     cacheKey.append(":").append(o.getClass().getName()).append("(").append(((Identifiable) o).getUuid()).append(")");
+                    if (o instanceof IdentifiableBase) cacheKey.append("(").append(((IdentifiableBase) o).getMtime()).append(")");
                 } else if (o instanceof String) {
                     cacheKey.append(":").append(o.getClass().getName()).append("(").append(o).append(")");
                 } else if (o instanceof Number) {
