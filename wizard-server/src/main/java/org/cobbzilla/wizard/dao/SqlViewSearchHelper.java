@@ -140,6 +140,14 @@ public class SqlViewSearchHelper {
                 matched.addAll(thingsList);
             }
 
+            matched.stream().forEach(a -> {
+                for (Map.Entry<String, Identifiable> relatedEntry : ((R) a).getRelated().entrySet()) {
+                    if (relatedEntry.getValue().getUuid() == null) {
+                        ((R) a).getRelated().remove(relatedEntry.getKey());
+                    }
+                }
+            });
+
             // manually sort and apply offset + limit
             final SqlViewField sqlViewField = Arrays.stream(fields).filter(a -> a.getName().equals(sortedField)).findFirst().get();
             final Comparator<E> comparator = (E o1, E o2) -> compareSelectedItems(o1, o2, sqlViewField);
